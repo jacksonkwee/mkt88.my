@@ -142,8 +142,7 @@ function parseCardHtml(cardHtml: string): { prize: string[]; special: string[]; 
   return { prize: prize.slice(0, 3), special: special.slice(0, 13), cons: cons.slice(0, 10) };
 }
 
-async function fetchNineLatest(): Promise<Set | null> {
-  const html = await httpGet("https://9lotto.com/result");
+function parseNineSetHtml(html: string): Set | null {
   const lines = textLines(html);
   let idx = lines.findIndex((l) => /DRAW NO/i.test(l));
   if (idx < 0) return null;
@@ -176,6 +175,10 @@ async function fetchNineLatest(): Promise<Set | null> {
   }
   while (prize.length < 3) prize.push("----");
   return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo: dm ? dm[1] + "/" + dm[2] : undefined };
+}
+
+async function fetchNineLatest(): Promise<Set | null> {
+  return parseNineSetHtml(await httpGet("https://9lotto.com/result"));
 }
 
 
@@ -323,6 +326,11 @@ export async function GET(req: NextRequest) {
     const khHtml = getViewHtml(date, "kh");
     const gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
     let nine = khHtml ? parseCardHtml(extractCard(khHtml, "table-17")) : null;
+    if (!nine || !nine.prize || !nine.prize[0]) {
+      try {
+        nine = parseNineSetHtml(await httpGet("https://9lotto.com/result/" + ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2])));
+      } catch { /* ignore */ }
+    }
     if ((!nine || !nine.prize || !nine.prize[0]) && date === "2026-09-07") {
       nine = { ...NINE_0709 };
     }
