@@ -1,0 +1,796 @@
+{
+ "title": "Singapore Pools › singapore 4d results.",
+ "scrollH": 1304,
+ "banner": [
+  "logo_appstore.png?v=1",
+  "logo_playstore.png?v=1"
+ ],
+ "childrenInfo": [
+  {
+   "tag": "div",
+   "cls": "",
+   "id": "",
+   "hasCards": false,
+   "first": "",
+   "html": "<div style=\"display: flex; justify-content: center; padding: 0; margin-bottom: 0; margin-top: 1rem\">\n    <a href=\"https://apps.apple.com/ae/app/4d2u-live/id6467018137\" target=\"_blank\">\n    <!-- <a hre"
+  },
+  {
+   "tag": "br",
+   "cls": "",
+   "id": "",
+   "hasCards": false,
+   "first": "",
+   "html": "<br>"
+  },
+  {
+   "tag": "div",
+   "cls": "",
+   "id": "row",
+   "hasCards": true,
+   "first": "Singapore 4D Date: 06-09-2026 (Sun) Draw No: 5532 1st Prize",
+   "html": "<div id=\"row\">\n        <div class=\"row\">\n    <div class=\"col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1\">\n        \n    <div class=\"card outer-box table-11\" id=\"table-11-2026-09-06\">\n        <div class=\""
+  },
+  {
+   "tag": "div",
+   "cls": "description",
+   "id": "",
+   "hasCards": false,
+   "first": "Advertisements",
+   "html": "<div class=\"description\">\n        <div style=\"margin: 20px 0\">\n    <div class=\"text-center\">Advertisements</div>\n    <div style=\"min-width: 300px; min-height: 250px;\">\n        <!-- Horizontal Ads -->\n"
+  }
+ ],
+ "datepicker": null,
+ "datepickerBlocks": [],
+ "h2h": [],
+ "activeBtn": [
+  {
+   "i": 0,
+   "cls": "btn",
+   "href": "https://live4dresult.net",
+   "text": "4D Result 马来西亚"
+  },
+  {
+   "i": 1,
+   "cls": "btn",
+   "href": "https://live4dresult.net/lotto-4d/",
+   "text": "Lotto 4D 柬埔寨"
+  },
+  {
+   "i": 2,
+   "cls": "btn",
+   "href": "https://live4dresult.net/sabah-sarawak-4d-results/",
+   "text": "East 4D 東馬"
+  },
+  {
+   "i": 3,
+   "cls": "btn",
+   "href": "https://live4dresult.net/singapore-4d-results/",
+   "text": "SG 新加坡"
+  }
+ ],
+ "gridCols": [],
+ "seo": [
+  {
+   "tag": "div",
+   "style": "margin: 20px 0",
+   "html": "<div class=\"text-center\">Advertisements</div>\n    <div style=\"min-width: 300px; min-height: 250px;\">\n        <!-- Horizontal Ads -->\n        <ins class=\"adsbygoogle\" style=\"display:block\" data-ad-client=\"ca-pub-4556689808583332\" data-ad-slot=\"4912768295\" data-ad-format=\"auto\" data-full-width-responsive=\"true\"></ins>\n        <script>\n            (adsbygoogle = window.adsbygoogle || []).push({});\n        </script>\n    </div>",
+   "text": "Advertisements"
+  }
+ ],
+ "cards": [
+  {
+   "id": "table-11-2026-09-06",
+   "cardCls": "card outer-box table-11",
+   "header": {
+    "bgCls": "singapore-bg",
+    "logo": {
+     "src": "",
+     "alt": ""
+    },
+    "name": "Singapore 4D",
+    "date": "06-09-2026 (Sun)",
+    "drawNo": "5532"
+   },
+   "tables": [
+    {
+     "cls": "my-1",
+     "widthAttr": "100%",
+     "rows": [
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "lottery-prize-title text-center",
+         "attrs": {
+          "width": "45%"
+         },
+         "html": "1st Prize 首獎"
+        },
+        {
+         "tag": "td",
+         "cls": "lottery-prize-number border text-center",
+         "attrs": {
+          "data-id": "first_prize"
+         },
+         "html": "8579"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "lottery-prize-title text-center",
+         "attrs": {
+          "width": "45%"
+         },
+         "html": "2nd Prize 二獎"
+        },
+        {
+         "tag": "td",
+         "cls": "lottery-prize-number border text-center",
+         "attrs": {
+          "data-id": "second_prize"
+         },
+         "html": "1090"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "lottery-prize-title text-center",
+         "attrs": {
+          "width": "45%"
+         },
+         "html": "3rd Prize 三獎"
+        },
+        {
+         "tag": "td",
+         "cls": "lottery-prize-number border text-center",
+         "attrs": {
+          "data-id": "third_prize"
+         },
+         "html": "0703"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "cls": "my-1",
+     "widthAttr": "100%",
+     "rows": [
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "lottery-prize-title text-center",
+         "attrs": {
+          "colspan": "5"
+         },
+         "html": "Special 特別獎"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-1"
+         },
+         "html": "0425"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-2"
+         },
+         "html": "0760"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-3"
+         },
+         "html": "0833"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-4"
+         },
+         "html": "1774"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-5"
+         },
+         "html": "2312"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-6"
+         },
+         "html": "3871"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-7"
+         },
+         "html": "4919"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-8"
+         },
+         "html": "8832"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-9"
+         },
+         "html": "9427"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "special-10"
+         },
+         "html": "9525"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "colspan": "5",
+          "data-id": "special-11"
+         },
+         "html": "&nbsp;"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "cls": "my-1",
+     "widthAttr": "100%",
+     "rows": [
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "lottery-prize-title text-center",
+         "attrs": {
+          "colspan": "5"
+         },
+         "html": "Consolation 安慰獎"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-1"
+         },
+         "html": "0090"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-2"
+         },
+         "html": "0574"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-3"
+         },
+         "html": "1122"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-4"
+         },
+         "html": "1614"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-5"
+         },
+         "html": "2695"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-6"
+         },
+         "html": "3140"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-7"
+         },
+         "html": "6758"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-8"
+         },
+         "html": "7969"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-9"
+         },
+         "html": "8660"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center lottery-number",
+         "attrs": {
+          "width": "20%",
+          "data-id": "consolation-10"
+         },
+         "html": "9103"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "cls": "text-center",
+     "widthAttr": "100%",
+     "rows": [
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "",
+         "attrs": {},
+         "html": "<a href=\"https://live4dresult.net/singapore-4d\" style=\"text-decoration: none\">\n                            <div class=\"anchor\">\n                                More Singapore 4D Result\n                            </div>\n                        </a>"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "table-12-2026-09-03",
+   "cardCls": "card outer-box table-12",
+   "header": {
+    "bgCls": "singapore-bg",
+    "logo": {
+     "src": "",
+     "alt": ""
+    },
+    "name": "Singapore Toto",
+    "date": "03-09-2026 (Thu)",
+    "drawNo": "4214"
+   },
+   "tables": [
+    {
+     "cls": "my-1",
+     "widthAttr": "100%",
+     "rows": [
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "lottery-prize-title text-center",
+         "attrs": {
+          "colspan": "8"
+         },
+         "html": "Toto"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_1"
+         },
+         "html": "29"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_2"
+         },
+         "html": "33"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_3"
+         },
+         "html": "39"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_4"
+         },
+         "html": "42"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_5"
+         },
+         "html": "43"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_6"
+         },
+         "html": "44"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number plus",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_7"
+         },
+         "html": "+"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_number",
+         "attrs": {
+          "width": "12.5%",
+          "data-id": "number_8"
+         },
+         "html": "49"
+        }
+       ]
+      },
+      {
+       "cls": "line-height-dense",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "",
+         "attrs": {
+          "colspan": "8"
+         },
+         "html": "&nbsp;"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border text-center singapore-title",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Prize Group"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center singapore-title",
+         "attrs": {
+          "colspan": "3"
+         },
+         "html": "Share Amount (Each)"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center singapore-title",
+         "attrs": {
+          "colspan": "3"
+         },
+         "html": "No. of Winning Shares"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border grey text-center",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Group 1"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_amount_1"
+         },
+         "html": "-"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_share_1"
+         },
+         "html": "-"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border grey text-center",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Group 2"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_amount_2"
+         },
+         "html": "$178,569"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_share_2"
+         },
+         "html": "2"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border grey text-center",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Group 3"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_amount_3"
+         },
+         "html": "$2,361"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_share_3"
+         },
+         "html": "104"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border grey text-center",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Group 4"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_amount_4"
+         },
+         "html": "$418"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_share_4"
+         },
+         "html": "321"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border grey text-center",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Group 5"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_amount_5"
+         },
+         "html": "$50"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_share_5"
+         },
+         "html": "5,818"
+        }
+       ]
+      },
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "border grey text-center",
+         "attrs": {
+          "colspan": "2"
+         },
+         "html": "Group 6"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_amount_6"
+         },
+         "html": "$25"
+        },
+        {
+         "tag": "td",
+         "cls": "border text-center jackpot_prize",
+         "attrs": {
+          "colspan": "3",
+          "data-id": "group_share_6"
+         },
+         "html": "8,564"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "cls": "text-center",
+     "widthAttr": "100%",
+     "rows": [
+      {
+       "cls": "",
+       "cells": [
+        {
+         "tag": "td",
+         "cls": "",
+         "attrs": {},
+         "html": "<a href=\"https://live4dresult.net/singapore-toto\" style=\"text-decoration: none\">\n                            <div class=\"anchor\">\n                                More Singapore Toto Result\n                            </div>\n                        </a>"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "hasSectionDataLive": false,
+ "hasDesc": true
+}

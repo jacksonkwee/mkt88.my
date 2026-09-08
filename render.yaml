@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: mkt88-4d
+    runtime: node
+    plan: free
+    buildCommand: npm i -g pnpm && pnpm install && pnpm build
+    startCommand: pnpm run start-render
+    envVars:
+      - key: ADMIN_USER
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: ADMIN_SECRET
+        generateValue: true

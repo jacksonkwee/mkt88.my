@@ -1,0 +1,41 @@
+{
+  "notice": {
+    "enabled": false,
+    "text": "",
+    "bg": "#fff3cd",
+    "color": "#664d03",
+    "fx": "none"
+  },
+  "copyright": "Copyright © 2016 - 2026 mkt88.my. All Rights Reserved.",
+  "settings": {
+    "primary": "#cc0000",
+    "fontSize": 16,
+    "logo": {
+      "src": "/api/media/logo_2.png",
+      "size": 99
+    },
+    "banner": {
+      "enabled": false,
+      "src": ""
+    }
+  },
+  "ads": {
+    "enabled": false,
+    "client": "",
+    "topSlot": "",
+    "inContentSlot": "",
+    "footerSlot": "",
+    "direct": {
+      "top": {
+        "enabled": false,
+        "image": "",
+        "link": ""
+      },
+      "placeholder": {
+        "enabled": false,
+        "text": "Advertise Here — contact mkt88.my",
+        "link": ""
+      }
+    }
+  }
+}

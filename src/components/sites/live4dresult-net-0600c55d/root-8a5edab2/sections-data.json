@@ -1,0 +1,61 @@
+{
+ "headerHtml": "<nav class=\"navbar navbar-expand-lg navbar-light p-lg-0 py-1\">\n\t\t\t<div class=\"container\">\n\t\t\t\t<a href=\"\" style=\"text-decoration: none\">\n\t\t\t\t\t<div class=\"d-flex flex-column align-items-center mr-4\">\n\t\t\t\t\t\t\t\t\t\t\t\t\t<img src=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_header.png\" width=\"40\" height=\"39\">\n\t\t\t\t\t\t\t<span style=\"font-size: 12px; color: #d35842\">4dresult.co</span>\n\t\t\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t</a>\n\t\t\t\t<div class=\"d-flex align-items-center\">\n\t\t\t\t\t<button class=\"border-0 navbar-toggler pr-3\" type=\"button\" onclick=\"window.location.reload();\">\n\t\t\t\t\t\t<i class=\"fa fa-refresh text-danger\" aria-hidden=\"true\"></i>\n\t\t\t\t\t</button>\n\t\t\t\t\t<button class=\"border-0 navbar-toggler pr-3\" type=\"button\" data-toggle=\"collapse\" data-target=\"#navbarSupportedContent\" aria-controls=\"navbarSupportedContent\" aria-expanded=\"false\" aria-label=\"Toggle navigation\">\n\t\t\t\t\t\t<small><span class=\"navbar-toggler-icon\"></span></small>\n\t\t\t\t\t</button>\n\t\t\t\t</div>\n\t\t\t\t<div class=\"collapse navbar-collapse\" id=\"navbarSupportedContent\">\n\t\t\t\t\t<div class=\"container px-0\">\n\t\t\t\t\t\t<div class=\"menu-top-menu-container\"><ul id=\"menu-top-menu\" class=\"navbar-nav\"><li id=\"menu-item-12\" class=\"menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown\"><a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/\" aria-current=\"page\" class=\"nav-link\">Live 4d Results</a></li>\n<li id=\"menu-item-13\" class=\"menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-13 nav-item dropdown\"><a href=\"#\" class=\"nav-link dropdown-toggle\" data-toggle=\"dropdown\">Results by Regions</a>\n<ul class=\"sub-menu dropdown-menu\">\n\t<li id=\"menu-item-14\" class=\"menu-item menu-item-type-post_type menu-item-object-page menu-item-14 nav-item dropdown\"><a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/sabah-sarawak-4d-results/\" class=\"nav-link dropdown-item\">Sabah Sarawak 4D Results</a></li>\n\t<li id=\"menu-item-15\" class=\"menu-item menu-item-type-post_type menu-item-object-page menu-item-15 nav-item dropdown\"><a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/singapore-4d-results/\" class=\"nav-link dropdown-item\">Singapore 4D Results</a></li>\n\t<li id=\"menu-item-16\" class=\"menu-item menu-item-type-post_type menu-item-object-page menu-item-16 nav-item dropdown\"><a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/cambodia-4d-results/\" class=\"nav-link dropdown-item\">Cambodia 4D Results</a></li>\n</ul>\n</li>\n<li id=\"menu-item-17\" class=\"menu-item menu-item-type-post_type menu-item-object-page menu-item-17 nav-item dropdown\"><a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/past-results/\" class=\"nav-link\">Past Results</a></li>\n</ul></div>\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t</nav>",
+ "regionHtml": "<div class=\"btn-group border w-100\" role=\"group\" aria-label=\"Basic example\">\n\t\t\t\t<a href=\"\" class=\"btn\">4D Result <br> 马来西亚</a>\n\t\t\t\t<a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/lotto-4d/\" class=\"btn\">Lotto 4D <br> 柬埔寨</a>\n\t\t\t\t<a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/sabah-sarawak-4d-results/\" class=\"btn\">East 4D <br> 東馬</a>\n\t\t\t\t<a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/singapore-4d-results/\" class=\"btn\">SG <br> 新加坡</a>\n\t\t\t</div>",
+ "footerHtml": "<div class=\"container\">\n        <div class=\"row flex-column py-2\">\n            <div class=\"footer-menu text-center\">\n                <a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/disclaimer\">Disclaimer</a> | <a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/privacy-policy\">Privacy Policy</a>\n            </div>\n            <div class=\"text-center\">\n                Copyright © 2018 - 2026 live4dresult.net. All Rights Reserved.\n            </div>\n        </div>\n    </div>",
+ "seo": [
+  {
+   "tag": "h2",
+   "style": "font-size: 14px; text-align: left;",
+   "html": "Live 4D – <em>Latest Live 4D Results<br>\n</em>Magnum 4D, Sports Toto 4D, Damacai 1+3D, Diriwan 88 Lotto 4D, Sarawak Special Cash Sweep 4D, STC 4D, Singapore Pools 4D + Toto.",
+   "text": "Live 4D – Latest Live 4D Results Magnum 4D, Sports Toto 4D, Damacai 1+3D, Diriwan 88 Lotto 4D, Sarawak Special Cash Sweep 4D, STC 4D, Singapore Pools 4D + Toto."
+  },
+  {
+   "tag": "p",
+   "style": "font-size: 11px; text-align: left;",
+   "html": "Welcome to the fastest and most accurate 4D platform.<br>\nHere, you can check real-time 4D draw updates from Malaysia and Singapore — including Magnum 4D, Sports Toto, Damacai, Cash Sweep, Sabah 4D, Sarawak 4D, and Singapore Pools 4D.<br>\nOur live system updates within seconds of official release, giving you the results faster than any other source. Checkout The Pass 4D Result On Our Website –&nbsp;<a href=\"https://www.live4dresult.net/past-results/\">Past Draw Results</a>",
+   "text": "Welcome to the fastest and most accurate 4D platform. Here, you can check real-time 4D draw updates from Malaysia and Singapore — including Magnum 4D, Sports Toto, Damacai, Cash Sweep, Sabah 4D, Sarawak 4D, and Singapore Pools 4D. Our live system updates within seconds of official release, giving you the results faster than any other source. Checkout The Pass 4D Result On Our Website – Past Draw Results"
+  },
+  {
+   "tag": "p",
+   "style": "text-align: left;",
+   "dataStart": "878",
+   "dataEnd": "911",
+   "html": "We provide real-time updates for:",
+   "text": "We provide real-time updates for:"
+  },
+  {
+   "tag": "h3",
+   "style": "font-size: 13px; text-align: left;",
+   "html": "Check 4D Result – 4D Toto | Magnum 4D | Damacai 4D",
+   "text": "Check 4D Result – 4D Toto | Magnum 4D | Damacai 4D"
+  },
+  {
+   "tag": "p",
+   "style": "font-size: 11px; text-align: left;",
+   "html": "Latest 4D result is an essential routine for many Malaysian players, and accuracy matters more than ever. Our platform provides real-time 4D for Magnum 4D, Sports Toto 4D, and DaMaCai 1+3D, updated immediately after every official draw. With years of experience monitoring local lottery data and publishing verified results, we ensure each update meets strict accuracy and transparency standards.",
+   "text": "Latest 4D result is an essential routine for many Malaysian players, and accuracy matters more than ever. Our platform provides real-time 4D for Magnum 4D, Sports Toto 4D, and DaMaCai 1+3D, updated immediately after every official draw. With years of experience monitoring local lottery data and publishing verified results, we ensure each update meets strict accuracy and transparency standards."
+  },
+  {
+   "tag": "p",
+   "style": "font-size: 11px; text-align: left;",
+   "html": "Whether you’re checking Magnum’s latest number, tracking Toto’s Jackpot-related data, or reviewing DaMaCai’s 1+3D outcomes, the information you see is updated promptly based on official releases. You may also check other&nbsp;<a href=\"https://loto4d.com/\">lotto 4d</a>",
+   "text": "Whether you’re checking Magnum’s latest number, tracking Toto’s Jackpot-related data, or reviewing DaMaCai’s 1+3D outcomes, the information you see is updated promptly based on official releases. You may also check other lotto 4d"
+  },
+  {
+   "tag": "h2",
+   "style": "font-size: 14px; text-align: left;",
+   "html": "Cambodia 4D – Live4dresult",
+   "text": "Cambodia 4D – Live4dresult"
+  },
+  {
+   "tag": "p",
+   "style": "font-size: 11px; text-align: left;",
+   "html": "Cambodia 4D, Lotto 4D, Grand Dragon Lotto 4D/6D, Magnum 4D, Sports Toto 4D/5D/6D, Da Ma Cai, Sabah 88 4D, Sarawak Special Cash Sweep 4D, and STC 4D. <a href=\"https://live4dresult.net/cambodia-4d-results/\">Check Here.&nbsp;</a>",
+   "text": "Cambodia 4D, Lotto 4D, Grand Dragon Lotto 4D/6D, Magnum 4D, Sports Toto 4D/5D/6D, Da Ma Cai, Sabah 88 4D, Sarawak Special Cash Sweep 4D, and STC 4D. Check Here."
+  }
+ ],
+ "descriptionHtml": "<h2 style=\"font-size: 14px; text-align: left;\">Live 4D – <em>Latest Live 4D Results<br>\n</em>Magnum 4D, Sports Toto 4D, Damacai 1+3D, Diriwan 88 Lotto 4D, Sarawak Special Cash Sweep 4D, STC 4D, Singapore Pools 4D + Toto.</h2>\n<p style=\"font-size: 11px; text-align: left;\">Welcome to the fastest and most accurate 4D platform.<br>\nHere, you can check real-time 4D draw updates from Malaysia and Singapore — including Magnum 4D, Sports Toto, Damacai, Cash Sweep, Sabah 4D, Sarawak 4D, and Singapore Pools 4D.<br>\nOur live system updates within seconds of official release, giving you the results faster than any other source. Checkout The Pass 4D Result On Our Website –&nbsp;<a href=\"https://www.live4dresult.net/past-results/\">Past Draw Results</a></p>\n<p style=\"text-align: left;\" data-start=\"878\" data-end=\"911\">We provide real-time updates for:</p>\n<h3 style=\"font-size: 13px; text-align: left;\">Check 4D Result – 4D Toto | Magnum 4D | Damacai 4D</h3>\n<p style=\"font-size: 11px; text-align: left;\">Latest 4D result is an essential routine for many Malaysian players, and accuracy matters more than ever. Our platform provides real-time 4D for Magnum 4D, Sports Toto 4D, and DaMaCai 1+3D, updated immediately after every official draw. With years of experience monitoring local lottery data and publishing verified results, we ensure each update meets strict accuracy and transparency standards.</p>\n<p style=\"font-size: 11px; text-align: left;\">Whether you’re checking Magnum’s latest number, tracking Toto’s Jackpot-related data, or reviewing DaMaCai’s 1+3D outcomes, the information you see is updated promptly based on official releases. You may also check other&nbsp;<a href=\"https://loto4d.com/\">lotto 4d</a></p>\n<h2 style=\"font-size: 14px; text-align: left;\">Cambodia 4D – Live4dresult</h2>\n<p style=\"font-size: 11px; text-align: left;\">Cambodia 4D, Lotto 4D, Grand Dragon Lotto 4D/6D, Magnum 4D, Sports Toto 4D/5D/6D, Da Ma Cai, Sabah 88 4D, Sarawak Special Cash Sweep 4D, and STC 4D. <a href=\"/sites/live4dresult-net-0600c55d/root-8a5edab2/cambodia-4d-results/\">Check Here.&nbsp;</a></p>",
+ "metaTitle": "Live 4d results - Magnum, Damacai, Sportstoto, Perdana 4D",
+ "bodyClass": "home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-",
+ "htmlClass": "h-100"
+}

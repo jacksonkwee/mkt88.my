@@ -1,0 +1,513 @@
+/*
+Theme Name: Old Theme
+Author: Eric Yam
+*/
+.text-normal {
+  font-size: 14px;
+}
+
+.text-title {
+  font-size: 16px;
+}
+
+@media (min-width: 1200px) {
+  .container,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl {
+    max-width: 1050px;
+  }
+}
+
+@media (min-width: 992px) {
+  /* Modify this based on column def */
+  .custom-gutter > [class*="col-"]:nth-child(odd) {
+    padding-right: 10px;
+  }
+
+  .custom-gutter > [class*="col-"]:nth-child(even) {
+    padding-left: 10px;
+  }
+}
+
+body {
+  background: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button:focus {
+  outline: none;
+}
+
+.header-btn-group {
+  position: sticky;
+  top: 65px;
+  z-index: 1019;
+}
+
+.header-btn-group .btn {
+  background-color: #1633c7;
+  color: #fff;
+  border-radius: 0;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 0 25px;
+  height: 35px;
+  font-size: 16px;
+  line-height: 35px;
+  border-radius: 25px;
+  background-color: #f1f1f1;
+}
+
+.c-pointer {
+  cursor: pointer;
+}
+
+@media only screen and (max-width: 991px) {
+  .navbar-collapse {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 65px;
+    background: #f7f7f7;
+    border-top: 1px solid #c3c3c3;
+    border-bottom-width: 2px;
+    box-shadow: 0 5px 5px 0px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.menu-top-menu-container {
+  width: 100%;
+}
+
+@media only screen and (max-width: 370px) {
+  .btn-group .btn {
+    font-size: 11px;
+  }
+}
+
+.dark {
+  color: #fff !important;
+  background-color: #333;
+  border: 1px solid #333;
+}
+
+.grey {
+  background-color: #ccc;
+}
+
+.current-menu-item {
+  font-weight: 700;
+}
+
+.loading {
+  background-color: rgba(0, 0, 0, 0.9);
+}
+
+.footer {
+  font-size: 12px;
+}
+
+.footer-menu {
+  font-size: 14px;
+}
+
+.footer-menu a {
+  color: #fff !important;
+}
+
+.line-height-dense {
+  line-height: 1.2;
+}
+
+.navbar-inverse {
+  background-color: #f7f7f7;
+  border-bottom-width: 2px;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.9);
+  border-color: #eee;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Background of Lottery */
+.magnum-bg {
+  color: #444;
+  background-color: #ff0;
+}
+
+.damacai-bg {
+  color: #fff;
+  background-color: navy;
+}
+
+.sportstoto-bg {
+  color: #fff;
+  background-color: #ad0006;
+}
+
+.sandakan-bg {
+  color: #060;
+  background-color: #f8c100;
+}
+
+.cashsweep-bg {
+  color: #fff;
+  background-color: green;
+}
+
+.sabah88-bg {
+  color: #fff;
+  background-color: #3333ff;
+}
+
+.singapore-bg {
+  color: #fff;
+  background-color: #0378bb;
+}
+
+.granddragon-bg {
+  color: #fff;
+  background-color: #e81409;
+}
+
+.nine {
+  color: #fff;
+  background-color: #f28120;
+}
+
+.nine img {
+  height: 45px;
+}
+
+.newwin-bg {
+  color: #fff;
+  background-color: #0eb612;
+}
+
+.luckyharihari-bg {
+  color: #fff;
+  background-color: navy;
+}
+
+.perdana-bg {
+  color: #fff;
+  background-color: #0065ca;
+}
+
+.mylotto-bg {
+  color: #fff;
+  background-color: #814e16;
+}
+
+/* End - Background of Lottery */
+
+.categories li {
+  display: block;
+  font-size: 15px;
+  padding: 10px 15px;
+  color: #555;
+  /* background: url(../images/drop_arrow.png) no-repeat 0; */
+  border-bottom: 1px solid #d6d6d6;
+}
+
+.date {
+  font-size: 14px;
+  color: #333;
+  padding: 5px 0;
+}
+
+.datepicker-icon {
+  font-size: 26px !important;
+}
+
+.dropdown-menu {
+  border-radius: 0;
+}
+
+.navbar-nav {
+  margin: 0 -15px;
+}
+
+/* @media (min-width: 1000px) { */
+@media (min-width: 992px) {
+  .navbar-nav > li {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}
+
+.navbar-nav .nav-link {
+  padding: 10px 1rem !important;
+  line-height: 20px;
+  color: inherit !important;
+}
+
+.dropdown-item.active,
+.dropdown-item:active {
+  background-color: #333;
+  color: #fff !important;
+}
+
+.dropdown.show {
+  background-color: #333;
+  color: #fff !important;
+}
+
+:focus {
+  outline: none;
+}
+
+@media (max-width: 1000px) {
+  .navbar-nav .show.dropdown-menu {
+    position: static;
+    float: none;
+    width: auto;
+    border-radius: 0;
+    margin-top: 0;
+    background-color: #fff;
+    border: 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+  }
+}
+
+.navbar-collapse {
+  padding-right: 15px;
+  padding-left: 15px;
+}
+
+/* CSS on Lottery Table */
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blinker 1s linear infinite;
+  color: red;
+  font-size: 14px;
+  font-weight: bold;
+  padding-left: 5px;
+}
+
+.border {
+  border-color: #aaa !important;
+}
+
+.border-dark {
+  border-color: #555 !important;
+}
+
+.outer-box {
+  border: #b4b4b4 1px solid;
+  border-radius: 5px 5px 5px 5px;
+  box-shadow: 0 0 2px 1px #ddd;
+}
+
+.jackpot_indicator {
+  color: #c00;
+  font-weight: bold;
+}
+
+.jackpot_number {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.jackpot_number.blank {
+  background-color: #aaa;
+}
+
+.jackpot_prize {
+  font-size: 16px;
+  font-weight: 700;
+  color: #c00;
+}
+
+.lottery-logo {
+  width: 20%;
+  text-align: center;
+  min-height: 38px;
+}
+
+.lottery-name {
+  width: 80%;
+  text-align: center;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.lottery-number {
+  font-size: 22px;
+}
+
+.lottery-rank {
+  font-size: 16px;
+}
+
+.lottery-prize-title {
+  color: #fff;
+  background-color: #333;
+  border: 1px solid #333;
+  font-weight: 700;
+  font-size: 14px;
+  min-height: 25px;
+}
+
+.lottery-prize-number {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.plus {
+  color: #fff;
+  background-color: #cc0000;
+}
+
+.singapore-title {
+  color: #fff;
+  background-color: #48486f;
+}
+
+.zodiac {
+  color: #fff;
+  font-size: 16px;
+  background-color: #cc0000;
+}
+
+/* Paragraph */
+.product-articles p {
+  font-size: 16px;
+  color: #333;
+  line-height: 1.5em;
+  padding: 5px 0;
+}
+
+.product-articles ul {
+  line-height: 2;
+}
+
+.page-404 span {
+  font-weight: 700;
+}
+
+.page-404 a {
+  font-size: 14px;
+}
+
+.img-container {
+  background-color: #cecece;
+  width: 165px;
+  height: 165px;
+  position: relative;
+}
+
+.bottom {
+  bottom: 0 !important;
+}
+
+#foxads {
+  position: fixed;
+  width: 320px !important;
+  z-index: 1000000;
+  text-align: center;
+  bottom: -1000px;
+  -webkit-transition: bottom 0.5s ease 0s;
+  transition: bottom 0.5s ease 0s;
+  left: 50%;
+  margin-left: -160px;
+}
+
+.sticky-ads {
+  bottom: 0;
+  left: 0;
+  width: 320px;
+  /* height: 100px; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(247, 247, 247);
+  z-index: 9995;
+}
+
+.sticky-ads-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 9996;
+  cursor: pointer;
+}
+
+.sticky-ads .sticky-ads-content {
+  overflow: hidden;
+  display: block;
+  position: relative;
+  /* height: 100px; */
+  width: 320px;
+  padding: 0px;
+}
+
+#foxCloseBtn {
+  width: 24px;
+  height: 26px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+#topads {
+  width: 320px !important;
+  height: 100px !important;
+}
+
+.top-sticky-ads {
+  width: 320px !important;
+  height: 100px !important;
+  overflow: hidden;
+  display: block;
+  position: relative;
+  padding: 0px;
+}
+
+.m-row-negative {
+  margin-right: -2px !important;
+}
+
+.m-col-negative {
+  margin-top: -1px;
+  margin-left: -1px;
+}
+
+.hide span {
+  display: none;
+}
+
+.hide::after {
+  content: "*";
+}
+
+.anchor {
+  background-color: #3273dc;
+  color: #fff;
+  border: 1px solid #3273dc;
+  margin: 0 -1px;
+}
+
+.ui-datepicker-trigger {
+  width: 52px;
+}

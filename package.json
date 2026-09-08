@@ -1,0 +1,23 @@
+{
+  "name": "gongxifacai",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -H 0.0.0.0 -p 8888",
+    "build": "next build",
+    "start": "next start -H 0.0.0.0 -p 8888",
+    "start-render": "next start -H 0.0.0.0 -p ${PORT:-8888}",
+    "start-railway": "next start -H 0.0.0.0 -p ${PORT:-8888}"
+  },
+  "dependencies": {
+    "next": "15.3.3",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.8.0"
+  }
+}
