@@ -154,6 +154,16 @@ function parseNineSetHtml(html: string): Set | null {
   for (let k = idx + 1; k < lines.length - 1; k++) {
     const a = lines[k];
     if (/^(2D|3D|6D|JACKPOT|SUPER|CONTACT)$/i.test(a)) break;
+    const colonM = /^([A-W])\s*:$/.exec(a);
+    if (colonM) {
+      const nv = /^(----|\d{4})$/.exec(lines[k + 1] || "");
+      if (nv) {
+        const L = colonM[1];
+        if (L >= "N" && L <= "W") cons.push(nv[1]); else special.push(nv[1]);
+        k++;
+        continue;
+      }
+    }
     if (/^[A-W]$/.test(a) && lines[k + 1] === ":") {
       const nv = /^(----|\d{4})$/.exec(lines[k + 2] || "");
       if (nv) { if (a >= "N" && a <= "W") cons.push(nv[1]); else special.push(nv[1]); k += 2; continue; }
