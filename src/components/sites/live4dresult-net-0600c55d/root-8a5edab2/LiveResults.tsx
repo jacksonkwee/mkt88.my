@@ -189,7 +189,13 @@ function hariSetFromJson(j: any): PrizeSet | null {
 }
 
 function dateStrNoPad(d: Date): string {
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kuala_Lumpur",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+  return parts; // YYYY-MM-DD
 }
 
 async function refreshOnce() {
