@@ -372,6 +372,78 @@
           ]
         },
         {
+          "cls": "my-1",
+          "widthAttr": "100%",
+          "rows": [
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Jackpot Pool 積宝奖金池"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp4_pool",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Jackpot Letter 开彩字母"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp4_letter",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Winning Units 中奖注数"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp4_units",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "cls": "text-center",
           "widthAttr": "100%",
           "rows": [
@@ -2339,6 +2411,72 @@
                   "html": "<span class=\"lottery-number\" data-id=\"six_5a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----</span>"
                 }
               ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "6+1D JP Pool 奖金池"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp7_pool",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "6+1D Grand Prize 头奖"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp7_grand",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "6+1D Consolation 安慰奖"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp7_cons",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
             }
           ]
         }
@@ -2378,6 +2516,50 @@
                   "cls": "lottery-prize-number border text-center",
                   "attrs": {
                     "data-id": "six_main",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "6+1D JP Result 头奖结果"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "n9_result",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "6+1D JP Pool 奖金池"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "n9_pool",
                     "width": "55%"
                   },
                   "html": "----"
