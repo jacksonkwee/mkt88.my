@@ -1911,6 +1911,56 @@
           ]
         },
         {
+          "cls": "my-1",
+          "widthAttr": "100%",
+          "rows": [
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Jackpot Pool 奖金池"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp_pool",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Jackpot No. 开奖号码"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp_no",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "cls": "text-center",
           "widthAttr": "100%",
           "rows": [
@@ -2270,6 +2320,56 @@
           ]
         },
         {
+          "cls": "my-1",
+          "widthAttr": "100%",
+          "rows": [
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Jackpot Pool 奖金池"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp_pool",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Jackpot No. 开奖号码"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "jp_no",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "cls": "text-center",
           "widthAttr": "100%",
           "rows": [
@@ -2450,28 +2550,6 @@
                   "cls": "lottery-prize-number border text-center",
                   "attrs": {
                     "data-id": "jp7_grand",
-                    "width": "55%"
-                  },
-                  "html": "----"
-                }
-              ]
-            },
-            {
-              "cls": "",
-              "cells": [
-                {
-                  "tag": "td",
-                  "cls": "lottery-prize-title text-center",
-                  "attrs": {
-                    "width": "45%"
-                  },
-                  "html": "6+1D Consolation 安慰奖"
-                },
-                {
-                  "tag": "td",
-                  "cls": "lottery-prize-number border text-center",
-                  "attrs": {
-                    "data-id": "jp7_cons",
                     "width": "55%"
                   },
                   "html": "----"

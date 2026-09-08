@@ -399,12 +399,11 @@ async function gdInfo(): Promise<GdInfo | null> {
   const pool7 = doc.getElementsByClassName("7d_JPool")[0];
   if (pool7) jp7.jp7_pool = (pool7.textContent || "").trim();
   const resBlocks = [...doc.querySelectorAll(".dragonjp .djp-res")];
-  if (resBlocks.length >= 2) {
+  if (resBlocks.length >= 1) {
     const grand = [...resBlocks[0].querySelectorAll("span")].map((s) => s.textContent.trim()).join("");
-    const cons = [...resBlocks[1].querySelectorAll("span")].map((s) => s.textContent.trim()).join("");
-    if (grand && !/^-+$/.test(grand)) jp7.jp7_grand = grand;
-    const consTxt = cons.replace(/^-+/, "");
-    if (consTxt) jp7.jp7_cons = consTxt;
+    const gd7 = grand.replace(/[^0-9]/g, "");
+    // 6+1D shown as six digits + a bonus digit
+    if (/^\d{7}$/.test(gd7)) jp7.jp7_grand = gd7.slice(0, 6) + " + " + gd7[6];
   }
   return { six, jp4, jp7 };
 }
@@ -433,6 +432,50 @@ function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons
   while (prize.length < 3) prize.push("----");
   return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo: dm ? dm[1] + "/" + dm[2] : undefined };
 }
+async function updateGdNineCards() {
+  // Grand Dragon 6D + 4D jackpot + 6+1D jackpot (official gdlotto endpoint)
+  try {
+    const gd = await gdInfo();
+    if (gd) {
+      applySixValues("table-14-2026-09-06-6d", gd.six);
+      applyIdValues("table-13-2026-09-06", gd.jp4);
+      applyIdValues("table-14-2026-09-06-6d", gd.jp7);
+    }
+  } catch {
+    // ignore
+  }
+  // Nine Lotto (official) + derived 6D + 6+1D jackpot
+  try {
+    const nd = await fetchDoc("https://9lotto.com/result");
+    if (!nd) return;
+    const ns = parseNineDoc(nd);
+    const nineCard = document.querySelector(".card.outer-box.table-17");
+    const nineDate = nd.body ? dateFromNineText(nd.body.innerText) : undefined;
+    if (nineCard && ns) {
+      if (nineDate) {
+        const dt = nineCard.querySelector('[data-id="date"]');
+        if (dt && dt.textContent !== nineDate) setText(dt, nineDate);
+      }
+      if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: nineDate });
+      const six = ns.prize ? nineSixFromPrizes(ns.prize) : null;
+      if (six && six.main && !isDash(six.main)) {
+        applySixValues("table-18-2026-09-06-6d", { ...six, date: nineDate });
+      } else if (nineDate) {
+        applySixValues("table-18-2026-09-06-6d", { main: "----", date: nineDate });
+      }
+      const jp9 = nineJpFromDoc(nd);
+      if (jp9) {
+        const vals: Record<string, string> = {};
+        if (jp9.result) vals.n9_result = jp9.result;
+        if (jp9.pool) vals.n9_pool = jp9.pool;
+        applyIdValues("table-18-2026-09-06-6d", vals);
+      }
+    }
+  } catch {
+    // ignore
+  }
+}
+
 async function refreshOnce() {
   const path = window.location.pathname;
   try {
@@ -440,48 +483,14 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/", [
         "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13", "table-17",
       ]);
+      await updateGdNineCards();
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
     } else if (path === "/singapore-4d-results") {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13", "table-17"]);
-      // Grand Dragon 6D + Jackpots (official gdlotto endpoint)
-      {
-        const gd = await gdInfo();
-        if (gd) {
-          applySixValues("table-14-2026-09-06-6d", gd.six);
-          applyIdValues("table-13-2026-09-06", gd.jp4);
-          applyIdValues("table-14-2026-09-06-6d", gd.jp7);
-        }
-      }
-      // Nine Lotto (official) + derived 6D
-      const nd = await fetchDoc("https://9lotto.com/result");
-      if (nd) {
-        const ns = parseNineDoc(nd);
-        const nineCard = document.querySelector(".card.outer-box.table-17");
-        const nineDate = nd.body ? dateFromNineText(nd.body.innerText) : undefined;
-        if (nineCard && ns) {
-          if (nineDate) {
-            const dt = nineCard.querySelector('[data-id="date"]');
-            if (dt && dt.textContent !== nineDate) setText(dt, nineDate);
-          }
-          if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: nineDate });
-          const six = ns.prize ? nineSixFromPrizes(ns.prize) : null;
-          if (six && six.main && !isDash(six.main)) {
-            applySixValues("table-18-2026-09-06-6d", { ...six, date: nineDate });
-          } else if (nineDate) {
-            applySixValues("table-18-2026-09-06-6d", { main: "----", date: nineDate });
-          }
-          const jp9 = nineJpFromDoc(nd);
-          if (jp9) {
-            const vals: Record<string, string> = {};
-            if (jp9.result) vals.n9_result = jp9.result;
-            if (jp9.pool) vals.n9_pool = jp9.pool;
-            applyIdValues("table-18-2026-09-06-6d", vals);
-          }
-        }
-      }
+      await updateGdNineCards();
       // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
       for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
         for (const off of [0, -1]) {
@@ -507,6 +516,23 @@ async function refreshOnce() {
             if (card && set && set.prize && !set.prize.every(isDash)) {
               applySet(card, set);
               applySixValues(id + "-6d", sixFromHariJson(j));
+              // Lucky HariHari Bonus Jackpot pool (official API, same draw slot)
+              try {
+                const jr = await fetchText(`https://api.hari4d.com/Jackpot/GetJackpot?date=${d}T${time}:00`);
+                if (jr) {
+                  const jp = JSON.parse(jr);
+                  if (jp && jp.jackpotAmount != null) {
+                    const vals: Record<string, string> = {
+                      jp_pool: "USD " + Number(jp.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    };
+                    const nums: string[] = [];
+                    if (jp.number) nums.push(String(jp.number));
+                    if (jp.number2) nums.push(String(jp.number2));
+                    if (nums.length) vals.jp_no = nums.join(" ? ");
+                    applyIdValues(id, vals);
+                  }
+                }
+              } catch { /* ignore */ }
               break;
             }
           } catch { /* ignore */ }
