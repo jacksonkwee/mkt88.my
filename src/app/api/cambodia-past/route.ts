@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import https from "https";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
-import lottoRaw from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/lotto-data.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -188,22 +187,138 @@ const NINE_0709 = {
   drawNo: "1482/2026",
 };
 
+type SixParts = { main: string; subs: Record<string, string> };
+function deriveSixParts(p0: string, p1: string, p2: string): SixParts | null {
+  if (!/^\d{4}$/.test(p0) || !/^\d{4}$/.test(p1) || !/^\d{4}$/.test(p2)) return null;
+  const main = p0[0] + p1[0] + p2[0] + p0[3] + p1[3] + p2[3];
+  return {
+    main,
+    subs: {
+      six_2a: main.slice(0, 5), six_2b: main.slice(1),
+      six_3a: main.slice(0, 4), six_3b: main.slice(2),
+      six_4a: main.slice(0, 3), six_4b: main.slice(3),
+      six_5a: main.slice(0, 2), six_5b: main.slice(4),
+    },
+  };
+}
+function cleanHtml(html: string): string {
+  return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ");
+}
+
+/** Grand Dragon 6D + jackpot info for a past draw date. */
+async function gdPastParts(date: string): Promise<{ gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } | null> {
+  try {
+    const [y, m, d] = date.split("-");
+    const html = await httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);
+    const txt = cleanHtml(html);
+    const out: { gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } = {};
+    const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
+    if (m6) {
+      const main = m6[1].replace(/\s+/g, "");
+      out.gd6 = { main, subs: mainSubs(main) };
+    }
+    const pool4 = /id="4d_jpool">([^<]+)</.exec(html);
+    const letter4 = /id="4d_jpalphnum">([^<]*)</.exec(html);
+    const units4 = /id="4d_jptotalunit">([^<]*)</.exec(html);
+    if (pool4 || letter4 || units4) {
+      out.gdjp4 = {};
+      if (pool4) out.gdjp4.jp4_pool = pool4[1].trim();
+      if (letter4 && letter4[1].trim()) out.gdjp4.jp4_letter = letter4[1].trim();
+      if (units4 && units4[1].trim()) out.gdjp4.jp4_units = units4[1].trim();
+    }
+    const pool7 = /class="7d_JPool">([^<]+)</.exec(html);
+    const gdDigits: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const mm = new RegExp('class="L7_' + i + '">([^<]+)</span>').exec(html);
+      if (mm) gdDigits.push(mm[1].trim());
+    }
+    if (pool7 || gdDigits.length === 7) {
+      out.gdjp7 = {};
+      if (pool7) out.gdjp7.jp7_pool = pool7[1].trim();
+      if (gdDigits.length === 7) {
+        const g7 = gdDigits.join("");
+        if (/^\d{7}$/.test(g7)) out.gdjp7.jp7_grand = g7.slice(0, 6) + " + " + g7[6];
+      }
+    }
+    return out;
+  } catch {
+    return null;
+  }
+}
+function mainSubs(main: string): Record<string, string> {
+  return {
+    six_2a: main.slice(0, 5), six_2b: main.slice(1),
+    six_3a: main.slice(0, 4), six_3b: main.slice(2),
+    six_4a: main.slice(0, 3), six_4b: main.slice(3),
+    six_5a: main.slice(0, 2), six_5b: main.slice(4),
+  };
+}
+
+/** Nine Lotto 6D (derived) + Super Jackpot for a past draw date (/result/YYYY-M-D). */
+async function ninePastParts(date: string): Promise<{ nine6?: SixParts; nineJp?: Record<string, string> } | null> {
+  try {
+    const [y, m, d] = date.split("-");
+    const html = await httpGet("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(d));
+    const txt = cleanHtml(html);
+    const out: { nine6?: SixParts; nineJp?: Record<string, string> } = {};
+    const poolM = /result-sjp-lg">\s*([^<]+)</.exec(html) || /USD\s*([\d,]+\.\d{2})/.exec(txt);
+    const pool = poolM ? poolM[1].replace(/\s+/g, " ").trim() : undefined;
+    const rows: Record<string, string> = {};
+    const nums: string[] = [];
+    const trRe = /<tr class="result-numbersjp">([\s\S]*?)<\/tr>/g;
+    let mm2: RegExpExecArray | null;
+    let guard = 0;
+    while ((mm2 = trRe.exec(html)) && guard++ < 20) {
+      const block = mm2[1];
+      const lblM = /class="char1">([^<]+)</.exec(block);
+      const valM = [...block.matchAll(/class="result-sjp-prize"[^>]*>([^<]+)</g)].map((x) => x[1].trim());
+      const label = lblM ? lblM[1].trim() : "";
+      const key = "n9_sj_" + label.replace(/\s*prize$/i, "").trim().toLowerCase();
+      if (key && valM.length >= 3) rows[key] = valM.join(" + ");
+      if (valM.length >= 3) nums.push(valM[valM.length - 1]);
+    }
+    const jp: Record<string, string> = {};
+    if (pool) jp.n9_sj_pool = pool;
+    for (const [k, v] of Object.entries(rows)) if (v) jp[k] = v;
+    if (Object.keys(jp).length) out.nineJp = jp;
+    if (nums.length >= 3) {
+      const sp = deriveSixParts(nums[0], nums[1], nums[2]);
+      if (sp) out.nine6 = sp;
+    }
+    return out;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date") || "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "bad date" }, { status: 400 });
   try {
-    if (date === "2026-09-06") {
-      const all = (lottoRaw as unknown as { cards: any[] }).cards;
-      const wanted = ["table-13-2026-09-06", "table-16-2026-09-06-1530", "table-16-2026-09-06-1930", "table-17-2026-09-06", "table-15-2026-09-06-1530", "table-15-2026-09-06-1930"];
-      return NextResponse.json({ date, cards: all.filter((c) => wanted.includes(c.id)) });
-    }
     const ymd = date.split("-");
     const perdanaHtml = await httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date);
     const perd = parsePerdanaHtml(perdanaHtml);
-    const hari: Record<string, Set | null> = { "15:30": null, "19:30": null };
+    const hari: Record<string, any> = { "15:30": null, "19:30": null };
     for (const t of ["15:30", "19:30"] as const) {
-      const u = "https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + Number(ymd[0]) + "-" + Number(ymd[1]) + "-" + Number(ymd[2]) + "T" + t + ":00";
-      try { hari[t] = parseHariJson(JSON.parse(await httpGet(u))); } catch { hari[t] = null; }
+      try {
+        const u = "https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2]) + "T" + t + ":00";
+        const j = JSON.parse(await httpGet(u));
+        const set = parseHariJson(j);
+        const six = j && j.prize6D ? { main: String(j.prize6D), subs: mainSubs(String(j.prize6D)) } : null;
+        let jp: Record<string, string> | null = null;
+        try {
+          const ju = "https://api.hari4d.com/Jackpot/GetJackpot?date=" + ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2]) + "T" + t + ":00";
+          const jj = JSON.parse(await httpGet(ju));
+          if (jj && jj.jackpotAmount != null) {
+            jp = { jp_pool: "USD " + Number(jj.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
+            const nums: string[] = [];
+            if (jj.number) nums.push(String(jj.number));
+            if (jj.number2) nums.push(String(jj.number2));
+            if (nums.length) jp.jp_no = nums.join(" or ");
+          }
+        } catch { jp = null; }
+        hari[t] = { set, six, jp };
+      } catch { hari[t] = null; }
     }
     const khHtml = getViewHtml(date, "kh");
     const gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
@@ -211,7 +326,13 @@ export async function GET(req: NextRequest) {
     if ((!nine || !nine.prize || !nine.prize[0]) && date === "2026-09-07") {
       nine = { ...NINE_0709 };
     }
-    return NextResponse.json({ date, gd, nine, perdana: perd, hari });
+    const [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
+    return NextResponse.json({
+      date, gd, nine,
+      gd6: gdParts?.gd6 || null, gdjp4: gdParts?.gdjp4 || null, gdjp7: gdParts?.gdjp7 || null,
+      nine6: nineParts?.nine6 || null, nineJp: nineParts?.nineJp || null,
+      perdana: perd, hari,
+    });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 502 });
   }
