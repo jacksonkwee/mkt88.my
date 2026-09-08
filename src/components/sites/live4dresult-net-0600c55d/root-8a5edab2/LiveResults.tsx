@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
  *  - Lucky HariHari: two draws/day from api.hari4d.com
  */
 
-const INTERVAL = 60000;
+const INTERVAL = 20000;
 
 type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
 
@@ -58,18 +58,45 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
     const srcCard = doc.querySelector(".card.outer-box." + cls);
     const target = document.querySelector(".card.outer-box." + cls);
     if (!srcCard || !target) continue;
-    const ids = [...target.querySelectorAll("[data-id]")].map((x) => x.getAttribute("data-id") || "");
-    for (const id of ids) {
+    // Mirror the source exactly (both directions). When the official draw is
+    // cleared for the new draw date the numbers are wiped to "----" first;
+    // when the draw is released the numbers are revealed one by one in draw
+    // order (1st -> 2nd -> 3rd -> special -> consolation).
+    const pending = new Map<string, string>();
+    let hasClear = false;
+    const els = [...target.querySelectorAll("[data-id]")];
+    for (const tgtEl of els) {
+      const id = tgtEl.getAttribute("data-id") || "";
+      if (!id) continue;
       const srcEl = srcCard.querySelector('[data-id="' + id + '"]');
-      const tgtEl = target.querySelector('[data-id="' + id + '"]');
-      if (!srcEl || !tgtEl) continue;
+      if (!srcEl) continue;
       const v = (srcEl.textContent || "").trim();
       const cur = (tgtEl.textContent || "").trim();
-      if (!v) continue;
-      if (isDash(v) && !isDash(cur)) continue;
-      if (v !== cur) setText(tgtEl, v);
+      if (v === cur) continue;
+      pending.set(id, v);
+      if (isDash(v) && !isDash(cur)) hasClear = true;
     }
-    flash(target);
+    if (pending.size === 0) continue;
+    if (hasClear) {
+      // New draw date / draw not out yet: wipe instantly (including the date).
+      for (const [id, v] of pending) {
+        const el = target.querySelector('[data-id="' + id + '"]');
+        setText(el, v);
+      }
+      flash(target);
+      continue;
+    }
+    // Filling / updating: reveal each changed number one by one in draw order.
+    const changed: { el: Element; v: string }[] = [];
+    for (const tgtEl of els) {
+      const id = tgtEl.getAttribute("data-id") || "";
+      if (!id || !pending.has(id)) continue;
+      changed.push({ el: tgtEl, v: pending.get(id)! });
+    }
+    changed.forEach((c, i) => {
+      window.setTimeout(() => setText(c.el, c.v), 140 * i);
+    });
+    window.setTimeout(() => flash(target), 140 * changed.length);
   }
 }
 
@@ -311,3 +338,4 @@ export default function LiveResults() {
     </div>
   );
 }
+
