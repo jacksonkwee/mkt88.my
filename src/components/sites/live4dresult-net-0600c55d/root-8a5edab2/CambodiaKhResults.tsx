@@ -13,7 +13,7 @@ function prizeTable(rows: Array<[string, string]>) {
   return {
     cls: "my-1", widthAttr: "100%",
     rows: rows.map(([label, num]) => {
-      const isJp = /(pool|jackpot|amount)/i.test(label);
+      const isJp = /(pool|jackpot|amount)/i.test(label) || (/(prize|Prize)/.test(label) && num.includes(" + "));
       const v = isJp ? '<span class="jp-amount">' + num + "</span>" : num;
       return { cls: "", cells: [td("lottery-prize-title text-center", label, { width: "45%" }), td("lottery-prize-number border text-center", v)] };
     }),

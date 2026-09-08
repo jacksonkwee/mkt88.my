@@ -64,8 +64,7 @@ body {
   text-shadow: 0 0 10px #ffd700;
   -webkit-text-fill-color: initial;
 }
-/* Jackpot / pool amounts: keep on one line with a smaller font */
-td[data-id$="pool"], td[data-id$="grand"], td[data-id$="letter"], td[data-id$="units"], td[data-id$="no"], .jp-amount {
+/* Jackpot / pool amounts: keep on one line at the standard font size */
+td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="minor"], td[data-id$="letter"], td[data-id$="units"], td[data-id$="no"], .jp-amount {
   white-space: nowrap;
-  font-size: 12px;
 }
