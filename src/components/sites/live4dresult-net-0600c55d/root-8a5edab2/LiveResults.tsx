@@ -260,31 +260,29 @@ async function refreshOnce() {
         const nineCard = document.querySelector(".card.outer-box.table-17");
         if (nineCard && ns && ns.prize && ns.prize.length) applySet(nineCard, ns);
       }
-      // Perdana 4D - two draws a day
-      const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + dateStrNoPad(new Date()));
-      if (pd) {
-        const map = parsePerdana(pd);
-        const c15 = document.getElementById("table-16-2026-09-06-1530");
-        const c19 = document.getElementById("table-16-2026-09-06-1930");
-        if (c15 && map["15:30"]) applySet(c15, map["15:30"]);
-        if (c19 && map["19:30"]) applySet(c19, map["19:30"]);
-      }
-      // Lucky HariHari - two draws a day (JSON API)
-      const today = dateStrNoPad(new Date());
-      const slots: Array<[string, string]> = [
-        ["15:30", "table-15-2026-09-06-1530"],
-        ["19:30", "table-15-2026-09-06-1930"],
-      ];
-      for (const [time, id] of slots) {
-        const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${today}T${time}:00`);
-        if (!txt) continue;
-        try {
-          const json = JSON.parse(txt);
+      // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
+      for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
+        for (const off of [0, -1]) {
+          const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
+          const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + d);
+          if (!pd) continue;
+          const mp = parsePerdana(pd);
+          const st = mp[time];
           const card = document.getElementById(id);
-          const set = hariSetFromJson(json);
-          if (card && set) applySet(card, set);
-        } catch {
-          // ignore
+          if (card && st && st.prize && !st.prize.every(isDash)) { applySet(card, st); break; }
+        }
+      }
+      // Lucky HariHari - two draws a day (JSON API, fallback yesterday)
+      for (const [time, id] of [["15:30", "table-15-2026-09-06-1530"], ["19:30", "table-15-2026-09-06-1930"]]) {
+        for (const off of [0, -1]) {
+          const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
+          const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${d}T${time}:00`);
+          if (!txt) continue;
+          try {
+            const set = hariSetFromJson(JSON.parse(txt));
+            const card = document.getElementById(id);
+            if (card && set && set.prize && !set.prize.every(isDash)) { applySet(card, set); break; }
+          } catch { /* ignore */ }
         }
       }
     }
