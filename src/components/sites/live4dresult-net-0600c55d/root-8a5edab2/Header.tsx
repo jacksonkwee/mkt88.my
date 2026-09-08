@@ -69,7 +69,7 @@ export default function Header() {
                   <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
                     <a
                       href="#"
-                      className="nav-link"
+                      className="nav-link fx-gongxi"
                       style={{ cursor: "pointer" }}
                       onClick={(e) => {
                         e.preventDefault();
@@ -183,3 +183,4 @@ export default function Header() {
     </header>
   );
 }
+

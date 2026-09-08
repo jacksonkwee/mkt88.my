@@ -1,9 +1,8 @@
 id : admin
-pw : mkt88@2026
+pw : MKT88@2026
 
 
 
 https://mkt88-4d.onrender.com
 https://mkt88-4d.onrender.com/admin
 
-ADMIN_PASSWORD

@@ -29,3 +29,23 @@ body {
 .fx-marquee { overflow: hidden; white-space: nowrap; }
 .fx-marquee span { display: inline-block; padding-left: 100%; animation: fxscroll 10s linear infinite; }
 @keyframes fxscroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+/* 恭喜发财 motion effect */
+.fx-gongxi {
+  display: inline-block;
+  background: linear-gradient(90deg, #f7d000, #ff2e2e, #f7d000, #ff2e2e, #f7d000);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  animation: fx-gongxi 3s linear infinite, fx-gongxi-pulse 1.6s ease-in-out infinite;
+}
+@keyframes fx-gongxi {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+@keyframes fx-gongxi-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
