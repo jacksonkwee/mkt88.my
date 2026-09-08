@@ -17,9 +17,9 @@ type ColItem = { type: "card"; id: string } | { type: "br" };
  */
 const COLUMNS: ColItem[][] = [
   [{ type: "card", id: "table-13-2026-09-06" }],
+  [{ type: "card", id: "table-17-2026-09-06" }],
   [{ type: "card", id: "table-16-2026-09-06-1530" }],
   [{ type: "card", id: "table-16-2026-09-06-1930" }],
-  [{ type: "card", id: "table-17-2026-09-06" }],
   [{ type: "card", id: "table-15-2026-09-06-1530" }],
   [{ type: "card", id: "table-15-2026-09-06-1930" }],
 ];
@@ -49,4 +49,5 @@ export default function MultiDrawResults() {
     </main>
   );
 }
+
 
