@@ -1,6 +1,7 @@
 import { rewriteHtml, stripAdHtml } from "./site-paths";
 import { getPastEntry, getViewHtml, splitParts } from "./past-data";
 import PastToolbar from "./PastToolbar";
+import CambodiaKhResults from "./CambodiaKhResults";
 
 export default function PastResultsView({ date, view }: { date: string; view?: "my" | "kh" }) {
   const entry = getPastEntry(date);
@@ -12,11 +13,13 @@ export default function PastResultsView({ date, view }: { date: string; view?: "
       <div className="row">
         <div className="col-sm-12">
           <PastToolbar current={date} view={resolved} />
-          {parts && parts.grid ? (
+          {resolved === "kh" ? (
+            <CambodiaKhResults date={date} />
+          ) : parts && parts.grid ? (
             <div dangerouslySetInnerHTML={{ __html: stripAdHtml(rewriteHtml(parts.grid)) }} />
           ) : (
             <div className="alert alert-warning mt-3 text-center font-weight-bold">
-              No results are included for {date} ({resolved === "kh" ? "Cambodia" : "Malaysia & Singapore"}) in this demo.
+              No results are included for {date} in this demo.
             </div>
           )}
         </div>
