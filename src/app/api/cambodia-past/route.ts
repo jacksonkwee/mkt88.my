@@ -143,34 +143,24 @@ function parseCardHtml(cardHtml: string): { prize: string[]; special: string[]; 
 }
 
 function parseNineSetHtml(html: string): Set | null {
-  const lines = textLines(html);
-  let idx = lines.findIndex((l) => /DRAW NO/i.test(l));
+  const lines = textLines(html).filter(Boolean);
+  const idx = lines.findIndex((l) => /^DRAW NO:$/i.test(l) || /^DRAW$/i.test(l) || /^NO:$/i.test(l));
   if (idx < 0) return null;
-  const around = (lines[idx] + " " + (lines[idx + 1] || "")).replace(/\s+/g, " ");
+  const around = (lines[idx] + " " + (lines[idx + 1] || "") + " " + (lines[idx + 2] || "")).replace(/\s+/g, " ");
   const dm = /(\d+)\/(\d{4})/.exec(around);
   const prize: string[] = [];
   const special: string[] = [];
   const cons: string[] = [];
-  let sawSpecial = false;
-  for (let i = idx + 1; i < lines.length; i++) {
-    const l = lines[i];
-    if (!l) continue;
-    if (/^(2D|3D|6D|JACKPOT)/i.test(l)) break;
-    const colon = /^([A-Z])\s*:$/.exec(l);
-    const letterOnly = /^([A-Z])$/.exec(l);
-    if (colon) {
-      const nv = /^(----|\d{4})$/.exec(lines[i + 1] || "");
-      if (nv) {
-        const L = colon[1];
-        if (L >= "N" && L <= "W") cons.push(nv[1]); else special.push(nv[1]);
-        if (L === "A") sawSpecial = true;
-        i++;
-        continue;
-      }
+  for (let k = idx + 1; k < lines.length - 1; k++) {
+    const a = lines[k];
+    if (/^(2D|3D|6D|JACKPOT|SUPER|CONTACT)$/i.test(a)) break;
+    if (/^[A-W]$/.test(a) && lines[k + 1] === ":") {
+      const nv = /^(----|\d{4})$/.exec(lines[k + 2] || "");
+      if (nv) { if (a >= "N" && a <= "W") cons.push(nv[1]); else special.push(nv[1]); k += 2; continue; }
     }
-    if (letterOnly && !sawSpecial && prize.length < 3) {
-      const nv = /^(----|\d{4})$/.exec(lines[i + 1] || "");
-      if (nv) { prize.push(nv[1]); i++; }
+    if (/^[A-W]$/.test(a) && /^(----|\d{4})$/.test(lines[k + 1]) && lines[k + 2] !== ":") {
+      if (prize.length < 3) prize.push(lines[k + 1]);
+      k++;
     }
   }
   while (prize.length < 3) prize.push("----");
@@ -258,12 +248,12 @@ function mainSubs(main: string): Record<string, string> {
 }
 
 /** Nine Lotto 6D (derived) + Super Jackpot for a past draw date (/result/YYYY-M-D). */
-async function ninePastParts(date: string): Promise<{ nine6?: SixParts; nineJp?: Record<string, string> } | null> {
+async function ninePastParts(date: string): Promise<{ four?: Set; nine6?: SixParts; nineJp?: Record<string, string> } | null> {
   try {
     const [y, m, d] = date.split("-");
     const html = await httpGet("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(d));
     const txt = cleanHtml(html);
-    const out: { nine6?: SixParts; nineJp?: Record<string, string> } = {};
+    const out: { four?: Set; nine6?: SixParts; nineJp?: Record<string, string> } = {};
     const poolM = /result-sjp-lg">\s*([^<]+)</.exec(html) || /USD\s*([\d,]+\.\d{2})/.exec(txt);
     const pool = poolM ? poolM[1].replace(/\s+/g, " ").trim() : undefined;
     const rows: Record<string, string> = {};
@@ -287,6 +277,11 @@ async function ninePastParts(date: string): Promise<{ nine6?: SixParts; nineJp?:
     if (nums.length >= 3) {
       const sp = deriveSixParts(nums[0], nums[1], nums[2]);
       if (sp) out.nine6 = sp;
+      // 4D prizes come from the same draw numbers shown on the Super Jackpot lines
+      const four = parseNineSetHtml(html);
+      const special = four && four.special ? four.special : [];
+      const cons = four && four.cons ? four.cons : [];
+      out.four = { prize: [nums[0], nums[1], nums[2]], special, cons };
     }
     return out;
   } catch {
@@ -335,6 +330,9 @@ export async function GET(req: NextRequest) {
       nine = { ...NINE_0709 };
     }
     const [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
+    if ((!nine || !nine.prize || !nine.prize[0]) && nineParts && nineParts.four) {
+      nine = nineParts.four;
+    }
     return NextResponse.json({
       date, gd, nine,
       gd6: gdParts?.gd6 || null, gdjp4: gdParts?.gdjp4 || null, gdjp7: gdParts?.gdjp7 || null,
