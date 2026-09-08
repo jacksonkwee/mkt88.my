@@ -3,8 +3,8 @@ services:
     name: mkt88-4d
     runtime: node
     plan: free
-    buildCommand: npm i -g pnpm && pnpm install && pnpm build
-    startCommand: pnpm run start-render
+    buildCommand: npm install && npm run build
+    startCommand: npm run start-render
     envVars:
       - key: ADMIN_USER
         value: admin
