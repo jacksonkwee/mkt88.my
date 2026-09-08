@@ -198,6 +198,48 @@ function dateStrNoPad(d: Date): string {
   return parts; // YYYY-MM-DD
 }
 
+
+function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string } | null {
+  const lines = (doc.body ? doc.body.innerText : "").split("\n").map((l) => l.trim());
+  let idx = lines.findIndex((l) => /DRAW NO/i.test(l));
+  if (idx < 0) return null;
+  const drawM = /(\d+)\/\d{4}/.exec(lines[idx] + " " + (lines[idx + 1] || ""));
+  const drawNo = drawM ? drawM[1] + "/" + ((lines[idx] + " " + (lines[idx + 1] || "")).match(/\/\d{4}/) || [""])[0].slice(1) : undefined;
+  const prize: string[] = [];
+  const special: string[] = [];
+  const cons: string[] = [];
+  let sawSpecial = false;
+  for (let i = idx + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (!l) continue;
+    if (/^(2D|3D|6D|JACKPOT)/i.test(l)) break;
+    const colon = /^([A-Z])\s*:$/.exec(l);
+    const letterOnly = /^([A-Z])$/.exec(l);
+    const num = /^(----|\d{4})$/.exec(l);
+    if (colon && num && i + 1 < lines.length) {
+      const nv = /^(----|\d{4})$/.exec(lines[i + 1]);
+      if (nv) {
+        const L = colon[1];
+        (L >= "N" && L <= "W" ? cons : special).push(nv[1]);
+        i++;
+        if (L === "A") sawSpecial = true;
+        continue;
+      }
+    }
+    if (letterOnly && num && i + 1 < lines.length) {
+      const nv = /^(----|\d{4})$/.exec(lines[i + 1]);
+      if (nv) {
+        if (!sawSpecial && prize.length < 3) prize.push(nv[1]);
+        i++;
+        continue;
+      }
+    }
+    if (num && i > idx && prize.length < 3 && !sawSpecial && lines[i - 1] && /^[A-Z]$/.test(lines[i - 1])) prize.push(l);
+  }
+  while (prize.length < 3) prize.push("----");
+  return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo };
+}
+
 async function refreshOnce() {
   const path = window.location.pathname;
   try {
@@ -211,6 +253,13 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13", "table-17"]);
+      // Nine Lotto (official)
+      const nd = await fetchDoc("https://9lotto.com/result");
+      if (nd) {
+        const ns = parseNineDoc(nd);
+        const nineCard = document.querySelector(".card.outer-box.table-17");
+        if (nineCard && ns && ns.prize && ns.prize.length) applySet(nineCard, ns);
+      }
       // Perdana 4D - two draws a day
       const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + dateStrNoPad(new Date()));
       if (pd) {
