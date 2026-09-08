@@ -396,7 +396,7 @@ async function gdInfo(): Promise<GdInfo | null> {
 
   // ---- Dragon Jackpot 6+1D ----
   const jp7: Record<string, string> = {};
-  const pool7 = doc.querySelector(".dragonjp .7d_JPool");
+  const pool7 = doc.getElementsByClassName("7d_JPool")[0];
   if (pool7) jp7.jp7_pool = (pool7.textContent || "").trim();
   const resBlocks = [...doc.querySelectorAll(".dragonjp .djp-res")];
   if (resBlocks.length >= 2) {
