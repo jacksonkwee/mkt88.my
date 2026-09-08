@@ -387,11 +387,11 @@ async function gdInfo(): Promise<GdInfo | null> {
 
   // ---- 4D jackpot (pool + letter) ----
   const jp4: Record<string, string> = {};
-  const pool4 = doc.querySelector("#4d_jpool");
+  const pool4 = doc.getElementById("4d_jpool");
   if (pool4) jp4.jp4_pool = (pool4.textContent || "").trim();
-  const letter4 = doc.querySelector("#4d_jpalphnum");
+  const letter4 = doc.getElementById("4d_jpalphnum");
   if (letter4) jp4.jp4_letter = (letter4.textContent || "").trim() || "-";
-  const units4 = doc.querySelector("#4d_jptotalunit");
+  const units4 = doc.getElementById("4d_jptotalunit");
   if (units4 && (units4.textContent || "").trim() !== "") jp4.jp4_units = (units4.textContent || "").trim();
 
   // ---- Dragon Jackpot 6+1D ----
