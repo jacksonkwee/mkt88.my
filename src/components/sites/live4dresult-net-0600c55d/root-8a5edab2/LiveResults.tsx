@@ -93,7 +93,7 @@ function applySet(card: Element, s: PrizeSet) {
     const cell = specialCells[i];
     if (cell && !isDash(v)) setText(cell, v);
   });
-  if (specialCells.length > s.special.length) {
+  if (s.special.length > 0 && specialCells.length > s.special.length) {
     for (let i = s.special.length; i < specialCells.length; i++) {
       if (specialCells[i]) (specialCells[i] as HTMLElement).innerHTML = "&nbsp;";
     }
@@ -200,46 +200,29 @@ function dateStrNoPad(d: Date): string {
 
 
 function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string } | null {
-  const lines = (doc.body ? doc.body.innerText : "").split("\n").map((l) => l.trim());
-  let idx = lines.findIndex((l) => /DRAW NO/i.test(l));
+  const text = doc.body ? doc.body.innerText : "";
+  const tokens = text.split(/\s+/).map((l) => l.trim()).filter(Boolean);
+  const idx = tokens.findIndex((l) => /^DRAW$/.test(l) || /^NO:$/.test(l));
   if (idx < 0) return null;
-  const drawM = /(\d+)\/\d{4}/.exec(lines[idx] + " " + (lines[idx + 1] || ""));
-  const drawNo = drawM ? drawM[1] + "/" + ((lines[idx] + " " + (lines[idx + 1] || "")).match(/\/\d{4}/) || [""])[0].slice(1) : undefined;
+  const dm = /(\d+)\/(\d{4})/.exec(tokens.slice(idx, idx + 6).join(" "));
   const prize: string[] = [];
   const special: string[] = [];
   const cons: string[] = [];
-  let sawSpecial = false;
-  for (let i = idx + 1; i < lines.length; i++) {
-    const l = lines[i];
-    if (!l) continue;
-    if (/^(2D|3D|6D|JACKPOT)/i.test(l)) break;
-    const colon = /^([A-Z])\s*:$/.exec(l);
-    const letterOnly = /^([A-Z])$/.exec(l);
-    const num = /^(----|\d{4})$/.exec(l);
-    if (colon && num && i + 1 < lines.length) {
-      const nv = /^(----|\d{4})$/.exec(lines[i + 1]);
-      if (nv) {
-        const L = colon[1];
-        (L >= "N" && L <= "W" ? cons : special).push(nv[1]);
-        i++;
-        if (L === "A") sawSpecial = true;
-        continue;
-      }
+  for (let k = idx + 1; k < tokens.length - 1; k++) {
+    const a = tokens[k];
+    if (/^(2D|3D|6D|JACKPOT|SUPER|CONTACT)$/i.test(a)) break;
+    if (/^[A-W]$/.test(a) && tokens[k + 1] === ":") {
+      const nv = /^(----|\d{4})$/.exec(tokens[k + 2] || "");
+      if (nv) { if (a >= "N" && a <= "W") cons.push(nv[1]); else special.push(nv[1]); k += 2; continue; }
     }
-    if (letterOnly && num && i + 1 < lines.length) {
-      const nv = /^(----|\d{4})$/.exec(lines[i + 1]);
-      if (nv) {
-        if (!sawSpecial && prize.length < 3) prize.push(nv[1]);
-        i++;
-        continue;
-      }
+    if (/^[A-W]$/.test(a) && /^(----|\d{4})$/.test(tokens[k + 1]) && tokens[k + 2] !== ":") {
+      if (prize.length < 3) prize.push(tokens[k + 1]);
+      k++;
     }
-    if (num && i > idx && prize.length < 3 && !sawSpecial && lines[i - 1] && /^[A-Z]$/.test(lines[i - 1])) prize.push(l);
   }
   while (prize.length < 3) prize.push("----");
-  return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo };
+  return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo: dm ? dm[1] + "/" + dm[2] : undefined };
 }
-
 async function refreshOnce() {
   const path = window.location.pathname;
   try {
