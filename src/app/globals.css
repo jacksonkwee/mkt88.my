@@ -6,7 +6,18 @@ body {
   margin: 0;
 }
 .header-btn-group {
-  top: 70px !important;
+  position: sticky;
+  top: 99px !important;
+}
+@media (max-width: 991px) {
+  .header-btn-group {
+    top: 107px !important;
+  }
+}
+@media (max-width: 575px) {
+  .header-btn-group {
+    top: 140px !important;
+  }
 }
 @media only screen and (max-width: 991px) {
   .navbar-collapse {

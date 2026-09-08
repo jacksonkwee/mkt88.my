@@ -93,7 +93,7 @@ export default function PastToolbar({ current, view }: Props) {
             }}
           >
             <input type="radio" name="options" id="selmy" value="1" style={{ position: "relative" }} checked={view === "my"} readOnly />
-            Malaysia &amp; Singapore
+            Malaysia &amp; Singapore 马来西亚·新加坡
           </label>
           <label
             className={"btn btn-danger" + (view === "kh" ? " active" : "")}
@@ -103,7 +103,7 @@ export default function PastToolbar({ current, view }: Props) {
             }}
           >
             <input type="radio" name="options" id="selcam" value="2" style={{ position: "relative" }} checked={view === "kh"} readOnly />
-            Cambodia
+            Cambodia 柬埔寨
           </label>
         </div>
       </div>
