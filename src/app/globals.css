@@ -51,3 +51,16 @@ body {
   50% { transform: scale(1.08); }
 }
 
+
+/* 恭喜发财 end-of-menu styling */
+.fx-gongxi {
+  font-size: 44px;
+  line-height: 1.15;
+  letter-spacing: 3px;
+  padding: 0 6px;
+  text-shadow: 0 0 8px #ffd700, 0 0 22px rgba(255, 215, 0, 0.85);
+}
+.fx-gongxi i {
+  text-shadow: 0 0 10px #ffd700;
+  -webkit-text-fill-color: initial;
+}

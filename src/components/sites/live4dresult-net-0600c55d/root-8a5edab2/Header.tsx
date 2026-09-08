@@ -66,20 +66,7 @@ export default function Header() {
             <div className="container px-0">
               <div className="menu-top-menu-container">
                 <ul id="menu-top-menu" className="navbar-nav">
-                  <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
-                    <a
-                      href="#"
-                      className="nav-link fx-gongxi"
-                      style={{ cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        closeAll();
-                        lucky();
-                      }}
-                    >
-                      恭喜发财
-                    </a>
-                  </li>
+
                   <li
                     className={LI_BASE + " menu-item-13" + (regionsOpen ? " show" : "")}
                   >
@@ -107,6 +94,21 @@ export default function Header() {
                   <li className={LI_BASE + " menu-item-17"}>
                     <a href="/past-results" className="nav-link" onClick={closeAll}>
                       Past Results
+                    </a>
+                  </li>
+                  <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
+                    <a
+                      href="#"
+                      className="nav-link fx-gongxi"
+                      style={{ cursor: "pointer" }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        closeAll();
+                        lucky();
+                      }}
+                    >
+                      <i className="fa fa-hand-pointer" aria-hidden="true" style={{ color: "#ffd700", marginRight: 8, fontSize: "0.8em" }}></i>
+                      恭喜发财
                     </a>
                   </li>
                 </ul>
@@ -183,4 +185,5 @@ export default function Header() {
     </header>
   );
 }
+
 
