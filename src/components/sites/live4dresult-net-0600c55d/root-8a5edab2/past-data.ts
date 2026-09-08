@@ -8,7 +8,28 @@ interface PastEntry {
 
 const parsed = raw as unknown as { dates: string[]; entries: Record<string, PastEntry> };
 
-export const PAST_DATES: string[] = parsed.dates;
+function todayIso(): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+  } catch {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+}
+
+// Keep the stored history, and always include the latest date (today) so the
+// newest results are reachable from the past-results calendar/next button.
+function buildDates(): string[] {
+  const dates = parsed.dates.slice();
+  const last = dates[dates.length - 1];
+  const today = todayIso();
+  if (today && last && today > last) dates.push(today);
+  return dates;
+}
+
+export const PAST_DATES: string[] = buildDates();
 
 export function getPastEntry(date: string): PastEntry | undefined {
   return parsed.entries[date];

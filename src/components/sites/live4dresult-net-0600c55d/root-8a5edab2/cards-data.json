@@ -4763,7 +4763,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "6D Result ?????"
+                  "html": "1st Prize 首獎"
                 },
                 {
                   "tag": "td",
@@ -4785,7 +4785,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "2nd Prize ??"
+                  "html": "2nd Prize 二獎"
                 },
                 {
                   "tag": "td",
@@ -4806,7 +4806,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "3rd Prize ??"
+                  "html": "3rd Prize 三獎"
                 },
                 {
                   "tag": "td",
@@ -4827,7 +4827,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "4th Prize ??"
+                  "html": "4th Prize 四獎"
                 },
                 {
                   "tag": "td",
@@ -4848,7 +4848,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "5th Prize ??"
+                  "html": "5th Prize 五獎"
                 },
                 {
                   "tag": "td",
@@ -4869,7 +4869,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "Super Jackpot Pool ??"
+                  "html": "Super Jackpot Pool 奖池"
                 },
                 {
                   "tag": "td",
@@ -4891,7 +4891,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "Grand Prize ??"
+                  "html": "Grand Prize 头奖"
                 },
                 {
                   "tag": "td",
@@ -4913,7 +4913,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "Super Prize ??"
+                  "html": "Super Prize 大奖"
                 },
                 {
                   "tag": "td",
@@ -4935,7 +4935,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "Minor Prize ??"
+                  "html": "Minor Prize 小奖"
                 },
                 {
                   "tag": "td",

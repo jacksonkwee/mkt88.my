@@ -12,7 +12,11 @@ const numberRow = (arr: string[]) => ({ cls: "", cells: arr.map((v) => td("borde
 function prizeTable(rows: Array<[string, string]>) {
   return {
     cls: "my-1", widthAttr: "100%",
-    rows: rows.map(([label, num]) => ({ cls: "", cells: [td("lottery-prize-title text-center", label, { width: "45%" }), td("lottery-prize-number border text-center", num)] })),
+    rows: rows.map(([label, num]) => {
+      const isJp = /(pool|jackpot|amount)/i.test(label);
+      const v = isJp ? '<span class="jp-amount">' + num + "</span>" : num;
+      return { cls: "", cells: [td("lottery-prize-title text-center", label, { width: "45%" }), td("lottery-prize-number border text-center", v)] };
+    }),
   };
 }
 function gridTable(title: string, values: string[], chunk = 5) {
@@ -43,8 +47,8 @@ function labelDate(iso: string): string {
 }
 
 function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; set: SetData; more: string; extra?: Array<[string, string]> }): LotteryCardData {
-  const prize: Array<[string, string]> = [["1st Prize ??", o.set.prize[0] || "----"], ["2nd Prize ??", o.set.prize[1] || "----"], ["3rd Prize ??", o.set.prize[2] || "----"]];
-  const tables: LotteryCardData["tables"] = [prizeTable(prize), gridTable("Special ???", o.set.special), gridTable("Consolation ???", o.set.cons)];
+  const prize: Array<[string, string]> = [["1st Prize 首獎", o.set.prize[0] || "----"], ["2nd Prize 二獎", o.set.prize[1] || "----"], ["3rd Prize 三獎", o.set.prize[2] || "----"]];
+  const tables: LotteryCardData["tables"] = [prizeTable(prize), gridTable("Special 特別獎", o.set.special), gridTable("Consolation 安慰獎", o.set.cons)];
   if (o.extra && o.extra.length) tables.push(prizeTable(o.extra));
   tables.push(moreTable(o.more));
   return {
@@ -57,11 +61,11 @@ function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; na
 function sixCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; main?: string; subs?: Record<string, string>; extras?: Array<[string, string]> }): LotteryCardData {
   const s = o.subs || {};
   const or = (a?: string, b?: string) => (a && a !== "----" ? a : "----") + " or " + (b && b !== "----" ? b : "----");
-  const rows: Array<[string, string]> = [["1st Prize ??", o.main || "----"]];
-  rows.push(["2nd Prize ??", or(s.six_2a, s.six_2b)]);
-  rows.push(["3rd Prize ??", or(s.six_3a, s.six_3b)]);
-  rows.push(["4th Prize ??", or(s.six_4a, s.six_4b)]);
-  rows.push(["5th Prize ??", or(s.six_5a, s.six_5b)]);
+  const rows: Array<[string, string]> = [["1st Prize 首獎", o.main || "----"]];
+  rows.push(["2nd Prize 二獎", or(s.six_2a, s.six_2b)]);
+  rows.push(["3rd Prize 三獎", or(s.six_3a, s.six_3b)]);
+  rows.push(["4th Prize 四獎", or(s.six_4a, s.six_4b)]);
+  rows.push(["5th Prize 五獎", or(s.six_5a, s.six_5b)]);
   if (o.extras) for (const e of o.extras) rows.push(e);
   return {
     id: o.id, cardCls: o.cardCls,
@@ -101,19 +105,19 @@ export default function CambodiaKhResults({ date }: { date: string }) {
         if (j.gd && j.gd.prize && j.gd.prize.length) {
           const extra: Array<[string, string]> = [];
           if (j.gdjp4) {
-            if (j.gdjp4.jp4_pool) extra.push(["Jackpot Pool ?????", j.gdjp4.jp4_pool]);
-            if (j.gdjp4.jp4_letter) extra.push(["Jackpot Letter ????", j.gdjp4.jp4_letter]);
-            if (j.gdjp4.jp4_units) extra.push(["Winning Units ????", j.gdjp4.jp4_units]);
+            if (j.gdjp4.jp4_pool) extra.push(["Jackpot Pool 積宝奖金池", j.gdjp4.jp4_pool]);
+            if (j.gdjp4.jp4_letter) extra.push(["Jackpot Letter 开彩字母", j.gdjp4.jp4_letter]);
+            if (j.gdjp4.jp4_units) extra.push(["Winning Units 中奖注数", j.gdjp4.jp4_units]);
           }
-          gdCol.push(fourCard({ id: date + "-gd4", cardCls: "card outer-box table-13", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 4D ??", date: j.gd.date || d, set: j.gd, more: "More GrandDragon 4D Result", extra: extra.length ? extra : undefined }));
+          gdCol.push(fourCard({ id: date + "-gd4", cardCls: "card outer-box table-13", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 4D 豪龙", date: j.gd.date || d, set: j.gd, more: "More GrandDragon 4D Result", extra: extra.length ? extra : undefined }));
         }
         if (j.gd6) {
           const extras: Array<[string, string]> = [];
           if (j.gdjp7) {
-            if (j.gdjp7.jp7_pool) extras.push(["6+1D JP Pool ???", j.gdjp7.jp7_pool]);
-            if (j.gdjp7.jp7_grand) extras.push(["6+1D Grand Prize ??", j.gdjp7.jp7_grand]);
+            if (j.gdjp7.jp7_pool) extras.push(["6+1D JP Pool 奖金池", j.gdjp7.jp7_pool]);
+            if (j.gdjp7.jp7_grand) extras.push(["6+1D Grand Prize 头奖", j.gdjp7.jp7_grand]);
           }
-          gdCol.push(sixCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D ??", date: d, main: j.gd6.main, subs: j.gd6.subs, extras }));
+          gdCol.push(sixCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, main: j.gd6.main, subs: j.gd6.subs, extras }));
         }
         if (gdCol.length) columns.push(gdCol);
 
@@ -125,10 +129,10 @@ export default function CambodiaKhResults({ date }: { date: string }) {
         if (j.nine6) {
           const extras: Array<[string, string]> = [];
           if (j.nineJp) {
-            if (j.nineJp.n9_sj_pool) extras.push(["Super Jackpot Pool ??", j.nineJp.n9_sj_pool]);
-            if (j.nineJp.n9_sj_grand) extras.push(["Grand Prize ??", j.nineJp.n9_sj_grand]);
-            if (j.nineJp.n9_sj_super) extras.push(["Super Prize ??", j.nineJp.n9_sj_super]);
-            if (j.nineJp.n9_sj_minor) extras.push(["Minor Prize ??", j.nineJp.n9_sj_minor]);
+            if (j.nineJp.n9_sj_pool) extras.push(["Super Jackpot Pool 奖池", j.nineJp.n9_sj_pool]);
+            if (j.nineJp.n9_sj_grand) extras.push(["Grand Prize 头奖", j.nineJp.n9_sj_grand]);
+            if (j.nineJp.n9_sj_super) extras.push(["Super Prize 大奖", j.nineJp.n9_sj_super]);
+            if (j.nineJp.n9_sj_minor) extras.push(["Minor Prize 小奖", j.nineJp.n9_sj_minor]);
           }
           nineCol.push(sixCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, main: j.nine6.main, subs: j.nine6.subs, extras }));
         }
@@ -154,16 +158,16 @@ export default function CambodiaKhResults({ date }: { date: string }) {
           }
           const extras: Array<[string, string]> = [];
           if (slot.jp) {
-            if (slot.jp.jp_pool) extras.push(["Jackpot Pool ???", slot.jp.jp_pool]);
-            if (slot.jp.jp_no) extras.push(["Jackpot No. ????", slot.jp.jp_no]);
+            if (slot.jp.jp_pool) extras.push(["Jackpot Pool 奖金池", slot.jp.jp_pool]);
+            if (slot.jp.jp_no) extras.push(["Jackpot No. 开奖号码", slot.jp.jp_no]);
           }
           if (slot.six || extras.length) {
             col.push(sixCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, main: slot.six ? slot.six.main : "----", subs: slot.six ? slot.six.subs : undefined, extras }));
           }
           if (col.length) columns.push(col);
         };
-        hari("15:30", date + "-hari330", "Lucky HariHari ???? (3:30PM)");
-        hari("19:30", date + "-hari730", "Lucky HariHari ???? (7:30PM)");
+        hari("15:30", date + "-hari330", "Lucky HariHari 天天好运 (3:30PM)");
+        hari("19:30", date + "-hari730", "Lucky HariHari 天天好运 (7:30PM)");
 
         if (columns.length) setCols(columns);
         else setErr("No results are included for " + date + ".");
@@ -173,7 +177,7 @@ export default function CambodiaKhResults({ date }: { date: string }) {
   }, [date]);
 
   if (err) return <div className="alert alert-warning mt-3 text-center">{err}</div>;
-  if (!cols) return <div className="alert alert-info mt-3 text-center">Loading Cambodia results?</div>;
+  if (!cols) return <div className="alert alert-info mt-3 text-center">Loading Cambodia results…</div>;
   return (
     <div className="row">
       {cols.map((col, ci) => (
