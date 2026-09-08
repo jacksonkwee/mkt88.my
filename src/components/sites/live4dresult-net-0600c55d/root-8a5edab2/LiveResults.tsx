@@ -332,21 +332,30 @@ function nineSixFromPrizes(prize: string[]): SixSet | null {
   const p = [prize[0] || "----", prize[1] || "----", prize[2] || "----"];
   if (!p.every((x) => /^\d{4}$/.test(x))) return null;
   const main = p[0][0] + p[1][0] + p[2][0] + p[0][3] + p[1][3] + p[2][3];
-  return { main };
+  return {
+    main,
+    subs: {
+      six_2a: main.slice(0, 5), six_2b: main.slice(1),
+      six_3a: main.slice(0, 4), six_3b: main.slice(2),
+      six_4a: main.slice(0, 3), six_4b: main.slice(3),
+      six_5a: main.slice(0, 2), six_5b: main.slice(4),
+    },
+  };
 }
 
-function nineJpFromDoc(doc: Document): { result?: string; pool?: string } | null {
-  const text = doc.body ? (doc.body.innerText || "").replace(/\s+/g, " ") : "";
-  const res = /GRAND PRIZE\s*(\d{6})\s*\+\s*(\d)/.exec(text);
-  const usdAll = [...text.matchAll(/USD\s*([\d,]+)\.\d{2}/g)].map((x) => x[1].replace(/,/g, ""));
-  const rmAll = [...text.matchAll(/RM\s*([\d,]+)\.\d{2}/g)].map((x) => x[1].replace(/,/g, ""));
-  const maxN = (a: string[]) => (a.length ? a.reduce((x, y) => (Number(y) > Number(x) ? y : x)) : undefined);
-  const u = maxN(usdAll), r = maxN(rmAll);
-  const parts: string[] = [];
-  if (u) parts.push("USD " + Number(u).toLocaleString("en-US"));
-  if (r) parts.push("RM " + Number(r).toLocaleString("en-US"));
-  const pool = parts.length ? parts.join(" · ") : undefined;
-  return { result: res ? res[1] + " + " + res[2] : undefined, pool };
+function nineJpFromDoc(doc: Document): { pool?: string; rows?: Record<string, string> } | null {
+  const poolEl = doc.querySelector("#sjp");
+  const pool = poolEl ? (poolEl.textContent || "").trim() : undefined;
+  const rows: Record<string, string> = {};
+  const trs = doc.querySelectorAll(".result-numbersjp");
+  for (const tr of trs) {
+    const lbl = tr.querySelector(".char1");
+    const label = lbl ? (lbl.textContent || "").trim() : "";
+    const nums = [...tr.querySelectorAll(".result-sjp-prize")].map((n) => (n.textContent || "").trim());
+    const key = "n9_sj_" + label.replace(/\s*prize$/i, "").trim().toLowerCase();
+    if (nums.length) rows[key] = nums.join(" + ");
+  }
+  return { pool, rows };
 }
 
 function dateFromNineText(text: string): string | undefined {
@@ -466,8 +475,8 @@ async function updateGdNineCards() {
       const jp9 = nineJpFromDoc(nd);
       if (jp9) {
         const vals: Record<string, string> = {};
-        if (jp9.result) vals.n9_result = jp9.result;
-        if (jp9.pool) vals.n9_pool = jp9.pool;
+        if (jp9.pool) vals.n9_sj_pool = jp9.pool;
+        if (jp9.rows) for (const [k, v] of Object.entries(jp9.rows)) if (v) vals[k] = v;
         applyIdValues("table-18-2026-09-06-6d", vals);
       }
     }
@@ -528,7 +537,7 @@ async function refreshOnce() {
                     const nums: string[] = [];
                     if (jp.number) nums.push(String(jp.number));
                     if (jp.number2) nums.push(String(jp.number2));
-                    if (nums.length) vals.jp_no = nums.join(" ? ");
+                    if (nums.length) vals.jp_no = nums.join(" or ");
                     applyIdValues(id, vals);
                   }
                 }
@@ -582,4 +591,6 @@ export default function LiveResults() {
     </div>
   );
 }
+
+
 

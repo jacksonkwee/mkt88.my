@@ -4763,7 +4763,7 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "6D Result 六合彩結果"
+                  "html": "6D Result ?????"
                 },
                 {
                   "tag": "td",
@@ -4785,13 +4785,97 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "6+1D JP Result 头奖结果"
+                  "html": "2nd Prize ??"
+                },
+                {
+                  "tag": "td",
+                  "cls": "border text-center",
+                  "attrs": {
+                    "width": "55%"
+                  },
+                  "html": "<span class=\"lottery-number\" data-id=\"six_2a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----</span>"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "3rd Prize ??"
+                },
+                {
+                  "tag": "td",
+                  "cls": "border text-center",
+                  "attrs": {
+                    "width": "55%"
+                  },
+                  "html": "<span class=\"lottery-number\" data-id=\"six_3a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----</span>"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "4th Prize ??"
+                },
+                {
+                  "tag": "td",
+                  "cls": "border text-center",
+                  "attrs": {
+                    "width": "55%"
+                  },
+                  "html": "<span class=\"lottery-number\" data-id=\"six_4a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----</span>"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "5th Prize ??"
+                },
+                {
+                  "tag": "td",
+                  "cls": "border text-center",
+                  "attrs": {
+                    "width": "55%"
+                  },
+                  "html": "<span class=\"lottery-number\" data-id=\"six_5a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----</span>"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Super Jackpot Pool ??"
                 },
                 {
                   "tag": "td",
                   "cls": "lottery-prize-number border text-center",
                   "attrs": {
-                    "data-id": "n9_result",
+                    "data-id": "n9_sj_pool",
                     "width": "55%"
                   },
                   "html": "----"
@@ -4807,13 +4891,57 @@
                   "attrs": {
                     "width": "45%"
                   },
-                  "html": "6+1D JP Pool 奖金池"
+                  "html": "Grand Prize ??"
                 },
                 {
                   "tag": "td",
                   "cls": "lottery-prize-number border text-center",
                   "attrs": {
-                    "data-id": "n9_pool",
+                    "data-id": "n9_sj_grand",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Super Prize ??"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "n9_sj_super",
+                    "width": "55%"
+                  },
+                  "html": "----"
+                }
+              ]
+            },
+            {
+              "cls": "",
+              "cells": [
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-title text-center",
+                  "attrs": {
+                    "width": "45%"
+                  },
+                  "html": "Minor Prize ??"
+                },
+                {
+                  "tag": "td",
+                  "cls": "lottery-prize-number border text-center",
+                  "attrs": {
+                    "data-id": "n9_sj_minor",
                     "width": "55%"
                   },
                   "html": "----"
