@@ -39,3 +39,12 @@ export function splitParts(html: string): { grid: string; desc: string } {
   const gridEnd = d === -1 ? html.length : d;
   return { grid: html.slice(g, gridEnd), desc: d === -1 ? "" : html.slice(d) };
 }
+
+export function formatDateWithDay(date: string): string {
+  const [y, m, d] = date.split("-");
+  const dt = new Date(date + "T12:00:00");
+  const wk = Number.isNaN(dt.getTime())
+    ? ""
+    : dt.toLocaleDateString("en-US", { weekday: "short" });
+  return `${d}-${m}-${y} (${wk})`;
+}

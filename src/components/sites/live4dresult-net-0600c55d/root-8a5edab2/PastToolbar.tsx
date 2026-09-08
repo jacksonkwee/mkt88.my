@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PAST_DATES, formatDate } from "./past-data";
+import { PAST_DATES, formatDateWithDay } from "./past-data";
 
 interface Props {
   current: string;
@@ -58,7 +58,7 @@ export default function PastToolbar({ current, view }: Props) {
                   .reverse()
                   .map((d) => (
                     <a key={d} className="dropdown-item" href={"/past-results/" + d} onClick={() => setOpen(false)}>
-                      {formatDate(d)}
+                      {formatDateWithDay(d)}
                       {d === current ? " (current)" : ""}
                     </a>
                   ))}
@@ -110,5 +110,6 @@ export default function PastToolbar({ current, view }: Props) {
     </>
   );
 }
+
 
 
