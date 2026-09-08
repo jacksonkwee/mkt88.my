@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   description: "Real time 4d result. Live 4d updates Magnum 4D, Sports Toto, and DaMaCai 1+3D. Fast, Accurate, and Easy Access.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "恭喜发财", statusBarStyle: "default" },
+  other: {
+    "google-adsense-account": "ca-pub-3670692731712446",
+  },
   icons: {
     icon: [
       { url: ASSET + "/favicon.ico", sizes: "any" },
@@ -53,3 +56,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+
