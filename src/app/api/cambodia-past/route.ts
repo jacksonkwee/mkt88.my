@@ -208,13 +208,55 @@ function cleanHtml(html: string): string {
   return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ");
 }
 
+/** Parse Grand Dragon 4D (prize/special/consolation) from an official results page. */
+function parseGdFourHtml(html: string): Set | null {
+  const lines = textLines(html).filter(Boolean);
+  const idx4d = lines.findIndex((l) => /^4D$/.test(l));
+  if (idx4d < 0) return null;
+  const prize: string[] = [];
+  const takeP = (label: string) => {
+    const li = lines.indexOf(label, idx4d);
+    if (li < 0) return "----";
+    for (let k = li + 1; k < lines.length && k < li + 8; k++) {
+      const m = /^(----|\d{4})$/.exec(lines[k]);
+      if (m) return m[1];
+    }
+    return "----";
+  };
+  prize.push(takeP("1st Prize"), takeP("2nd Prize"), takeP("3rd Prize"));
+  const special: string[] = [];
+  const cons: string[] = [];
+  const si = lines.indexOf("Special Prize", idx4d);
+  const ci = lines.indexOf("Consolation Prize", idx4d);
+  const grab = (from: number, to: number, letters: string[]) => {
+    const out: string[] = [];
+    let li = from;
+    while (li >= 0 && li < to && out.length < letters.length) {
+      const L = letters[out.length];
+      const ai = lines.indexOf(L, li);
+      if (ai < 0 || ai >= to) break;
+      const nv = /^(----|\d{4})$/.exec(lines[ai + 1] || "");
+      out.push(nv ? nv[1] : "----");
+      li = ai + 2;
+    }
+    return out;
+  };
+  const A_M = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
+  const N_W = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
+  if (si >= 0) special.push(...grab(si + 1, ci > si ? ci : lines.length, A_M));
+  if (ci >= 0) cons.push(...grab(ci + 1, lines.length, N_W));
+  while (special.length < 13) special.push("----");
+  while (cons.length < 10) cons.push("----");
+  return { prize: prize.slice(0, 3), special: special.slice(0, 13), cons: cons.slice(0, 10) };
+}
+
 /** Grand Dragon 6D + jackpot info for a past draw date. */
-async function gdPastParts(date: string): Promise<{ gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } | null> {
+async function gdPastParts(date: string): Promise<{ four?: Set; gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } | null> {
   try {
     const [y, m, d] = date.split("-");
     const html = await httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);
     const txt = cleanHtml(html);
-    const out: { gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } = {};
+    const out: { four?: Set; gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } = {};
     const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
     if (m6) {
       const main = m6[1].replace(/\s+/g, "");
@@ -243,6 +285,8 @@ async function gdPastParts(date: string): Promise<{ gd6?: SixParts; gdjp4?: Reco
         if (/^\d{7}$/.test(g7)) out.gdjp7.jp7_grand = g7.slice(0, 6) + " + " + g7[6];
       }
     }
+    const gdFour = parseGdFourHtml(html);
+    if (gdFour) out.four = gdFour;
     return out;
   } catch {
     return null;
@@ -329,7 +373,7 @@ export async function GET(req: NextRequest) {
       } catch { hari[t] = null; }
     }
     const khHtml = getViewHtml(date, "kh");
-    const gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
+    let gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
     let nine = khHtml ? parseCardHtml(extractCard(khHtml, "table-17")) : null;
     if (!nine || !nine.prize || !nine.prize[0]) {
       try {
@@ -340,6 +384,9 @@ export async function GET(req: NextRequest) {
       nine = { ...NINE_0709 };
     }
     const [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
+    if ((!gd || !gd.prize || !gd.prize[0]) && gdParts && gdParts.four) {
+      gd = gdParts.four;
+    }
     if ((!nine || !nine.prize || !nine.prize[0]) && nineParts && nineParts.four) {
       nine = nineParts.four;
     }
