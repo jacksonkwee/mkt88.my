@@ -179,6 +179,15 @@ async function fetchNineLatest(): Promise<Set | null> {
   return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo: dm ? dm[1] + "/" + dm[2] : undefined };
 }
 
+
+// Nine Lotto official draw 1482/2026 (07-09-2026) - bundled so Render does not need to reach 9lotto.com
+const NINE_0709 = {
+  prize: ["8834", "6782", "7728"],
+  special: ["7039", "----", "3193", "8634", "6227", "----", "7146", "4548", "----", "4322", "6901", "3398", "2327"],
+  cons: ["1549", "3718", "0127", "8275", "9865", "8644", "4039", "8654", "3560", "0941"],
+  drawNo: "1482/2026",
+};
+
 export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date") || "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "bad date" }, { status: 400 });
@@ -200,7 +209,7 @@ export async function GET(req: NextRequest) {
     const gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
     let nine = khHtml ? parseCardHtml(extractCard(khHtml, "table-17")) : null;
     if ((!nine || !nine.prize || !nine.prize[0]) && date === "2026-09-07") {
-      try { nine = await fetchNineLatest(); } catch { nine = null; }
+      nine = { ...NINE_0709 };
     }
     return NextResponse.json({ date, gd, nine, perdana: perd, hari });
   } catch (e) {
