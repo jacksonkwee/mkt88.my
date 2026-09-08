@@ -299,7 +299,7 @@ export default function LiveResults() {
       await refreshOnce();
       if (alive) setStatus(new Date().toLocaleTimeString());
     };
-    const id = window.setTimeout(tick, 900);
+    const id = window.setTimeout(tick, 150);
     const iv = window.setInterval(tick, INTERVAL);
     return () => {
       alive = false;
