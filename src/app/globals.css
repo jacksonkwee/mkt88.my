@@ -37,7 +37,8 @@ body {
   background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
   font-weight: 700;
   animation: fx-gongxi 3s linear infinite, fx-gongxi-pulse 1.6s ease-in-out infinite;
 }
@@ -49,3 +50,4 @@ body {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
 }
+
