@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://www.mkt88.my/sitemap.xml
