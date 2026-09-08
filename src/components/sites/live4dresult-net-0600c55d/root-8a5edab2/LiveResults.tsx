@@ -10,7 +10,21 @@ import { useEffect, useState } from "react";
  *  - Lucky HariHari: two draws/day from api.hari4d.com
  */
 
-const INTERVAL = 20000;
+// Poll faster during evening draw windows (6pm-10pm Malaysia time) so live
+// draws appear one by one in near real time, slower the rest of the day.
+function myHourNow(): number {
+  try {
+    return Number(
+      new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Kuala_Lumpur" }).format(new Date())
+    );
+  } catch {
+    return new Date().getHours();
+  }
+}
+function nextInterval(): number {
+  const h = myHourNow();
+  return h >= 18 && h <= 21 ? 10000 : 25000;
+}
 
 type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
 
@@ -108,37 +122,40 @@ function flash(card: Element) {
 function applySet(card: Element, s: PrizeSet) {
   if (!s || !s.prize || s.prize.length === 0) return;
   if (s.prize.every(isDash)) return; // draw not available yet
+  const pending: { el: Element; v: string }[] = [];
+  const stage = (el: Element | null, v: string | undefined) => {
+    if (!el || v === undefined) return;
+    const cur = (el.textContent || "").trim();
+    if (cur === v.trim() || isDash(v)) return;
+    pending.push({ el, v: v.trim() });
+  };
   const tables = [...card.querySelectorAll("table")];
   const prizeRows = tables[0] ? [...tables[0].querySelectorAll("tr")] : [];
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
-    const cell = row ? row.querySelector("td.lottery-prize-number") : null;
-    if (cell && !isDash(v)) setText(cell, v);
+    stage(row ? row.querySelector("td.lottery-prize-number") : null, v);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
-  s.special.forEach((v, i) => {
-    const cell = specialCells[i];
-    if (cell && !isDash(v)) setText(cell, v);
-  });
+  s.special.forEach((v, i) => stage(specialCells[i], v));
   if (s.special.length > 0 && specialCells.length > s.special.length) {
     for (let i = s.special.length; i < specialCells.length; i++) {
       if (specialCells[i]) (specialCells[i] as HTMLElement).innerHTML = "&nbsp;";
     }
   }
   const consCells = tables[2] ? [...tables[2].querySelectorAll("td.lottery-number")] : [];
-  s.cons.forEach((v, i) => {
-    const cell = consCells[i];
-    if (cell && !isDash(v)) setText(cell, v);
-  });
+  s.cons.forEach((v, i) => stage(consCells[i], v));
   if (s.date) {
     const dt = card.querySelector('[data-id="date"]');
-    if (dt) setText(dt, s.date);
+    if (dt && dt.textContent !== s.date) pending.unshift({ el: dt, v: s.date });
   }
   if (s.drawNo) {
     const dn = card.querySelector('[data-id="draw_no"]');
-    if (dn) setText(dn, s.drawNo);
+    if (dn && dn.textContent !== s.drawNo) pending.push({ el: dn, v: s.drawNo });
   }
-  flash(card);
+  if (pending.length === 0) return;
+  // Reveal one by one in draw order, then flash the card.
+  pending.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 90 * i));
+  window.setTimeout(() => flash(card), 90 * pending.length);
 }
 
 /** Parse perdana4d.com innerText into { time -> set }. */
@@ -225,6 +242,98 @@ function dateStrNoPad(d: Date): string {
   return parts; // YYYY-MM-DD
 }
 
+type SixSet = { main: string; date?: string; subs?: Record<string, string> };
+
+function applySixValues(cardId: string, s: SixSet | null) {
+  if (!s) return;
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const pending = new Map<string, string>();
+  let hasClear = false;
+  const stage = (id: string, v: string | undefined) => {
+    if (v === undefined) return;
+    const el = card.querySelector('[data-id="' + id + '"]');
+    if (!el) return;
+    const cur = (el.textContent || "").trim();
+    if (cur === v.trim()) return;
+    pending.set(id, v.trim());
+    if (isDash(v) && !isDash(cur)) hasClear = true;
+  };
+  stage("six_main", s.main);
+  if (s.date) stage("date", s.date);
+  if (s.subs) for (const [k, v] of Object.entries(s.subs)) stage(k, v);
+  if (pending.size === 0) return;
+  if (hasClear) {
+    for (const [id, v] of pending) {
+      const el = card.querySelector('[data-id="' + id + '"]');
+      setText(el, v);
+    }
+    flash(card);
+    return;
+  }
+  const els = [...card.querySelectorAll("[data-id]")];
+  const changed: { el: Element; v: string }[] = [];
+  for (const el of els) {
+    const id = el.getAttribute("data-id") || "";
+    if (!pending.has(id)) continue;
+    changed.push({ el, v: pending.get(id)! });
+  }
+  changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
+  window.setTimeout(() => flash(card), 140 * changed.length);
+}
+
+/** SixD values included in the same hari4d.com draw payload. */
+function sixFromHariJson(j: any): SixSet | null {
+  if (!j) return null;
+  const main = String(j.prize6D ?? "----");
+  const iso = typeof j.drawDate === "string" ? j.drawDate.slice(0, 10) : undefined;
+  const subs: Record<string, string> = {};
+  for (const k of ["2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"]) {
+    subs["six_" + k.toLowerCase()] = String(j["prize6D_" + k] ?? "----");
+  }
+  return { main, subs, date: iso ? weekdayOf(iso) : undefined };
+}
+
+/** Nine Lotto 6D is built from its 4D 1st/2nd/3rd prizes (official rule). */
+function nineSixFromPrizes(prize: string[]): SixSet | null {
+  const p = [prize[0] || "----", prize[1] || "----", prize[2] || "----"];
+  if (!p.every((x) => /^\d{4}$/.test(x))) return null;
+  const main = p[0][0] + p[1][0] + p[2][0] + p[0][3] + p[1][3] + p[2][3];
+  return { main };
+}
+
+function dateFromNineText(text: string): string | undefined {
+  const m = /([A-Za-z]{3}),\s*([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{4})/.exec(text || "");
+  if (!m) return undefined;
+  const months: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
+  const mo = months[m[2]];
+  if (!mo) return undefined;
+  return weekdayOf(m[4] + "-" + mo + "-" + m[3].padStart(2, "0"));
+}
+
+/** Grand Dragon 6D from the official gdlotto results endpoint. */
+async function gdSix(): Promise<SixSet | null> {
+  const doc = await fetchDoc("https://gdlotto.net/results/ajax/_result.aspx?live=1");
+  if (!doc || !doc.body) return null;
+  const text = (doc.body.innerText || "").replace(/\s+/g, " ");
+  const dm = /Date\s*:\s*(\d{2})\/(\d{2})\/(\d{4})/.exec(text);
+  let date: string | undefined;
+  if (dm) date = weekdayOf(dm[3] + "-" + dm[2] + "-" + dm[1]);
+  const m = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(text);
+  if (!m) return { main: "----", date };
+  const main = m[1].replace(/\s+/g, "");
+  return {
+    main,
+    date,
+    subs: {
+      six_2a: main.slice(0, 5), six_2b: main.slice(1),
+      six_3a: main.slice(0, 4), six_3b: main.slice(2),
+      six_4a: main.slice(0, 3), six_4b: main.slice(3),
+      six_5a: main.slice(0, 2), six_5b: main.slice(4),
+    },
+  };
+}
+
 
 function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string } | null {
   const text = doc.body ? doc.body.innerText : "";
@@ -263,12 +372,27 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13", "table-17"]);
-      // Nine Lotto (official)
+      // Grand Dragon 6D (official gdlotto endpoint)
+      applySixValues("table-14-2026-09-06-6d", await gdSix());
+      // Nine Lotto (official) + derived 6D
       const nd = await fetchDoc("https://9lotto.com/result");
       if (nd) {
         const ns = parseNineDoc(nd);
         const nineCard = document.querySelector(".card.outer-box.table-17");
-        if (nineCard && ns && ns.prize && ns.prize.length) applySet(nineCard, ns);
+        const nineDate = nd.body ? dateFromNineText(nd.body.innerText) : undefined;
+        if (nineCard && ns) {
+          if (nineDate) {
+            const dt = nineCard.querySelector('[data-id="date"]');
+            if (dt && dt.textContent !== nineDate) setText(dt, nineDate);
+          }
+          if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: nineDate });
+          const six = ns.prize ? nineSixFromPrizes(ns.prize) : null;
+          if (six && six.main && !isDash(six.main)) {
+            applySixValues("table-18-2026-09-06-6d", { ...six, date: nineDate });
+          } else if (nineDate) {
+            applySixValues("table-18-2026-09-06-6d", { main: "----", date: nineDate });
+          }
+        }
       }
       // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
       for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
@@ -289,9 +413,14 @@ async function refreshOnce() {
           const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${d}T${time}:00`);
           if (!txt) continue;
           try {
-            const set = hariSetFromJson(JSON.parse(txt));
+            const j = JSON.parse(txt);
+            const set = hariSetFromJson(j);
             const card = document.getElementById(id);
-            if (card && set && set.prize && !set.prize.every(isDash)) { applySet(card, set); break; }
+            if (card && set && set.prize && !set.prize.every(isDash)) {
+              applySet(card, set);
+              applySixValues(id + "-6d", sixFromHariJson(j));
+              break;
+            }
           } catch { /* ignore */ }
         }
       }
@@ -305,16 +434,17 @@ export default function LiveResults() {
   const [status, setStatus] = useState("…");
   useEffect(() => {
     let alive = true;
+    let timer: number | undefined;
     const tick = async () => {
       await refreshOnce();
-      if (alive) setStatus(new Date().toLocaleTimeString());
+      if (!alive) return;
+      setStatus(new Date().toLocaleTimeString());
+      timer = window.setTimeout(tick, nextInterval());
     };
-    const id = window.setTimeout(tick, 150);
-    const iv = window.setInterval(tick, INTERVAL);
+    timer = window.setTimeout(tick, 150);
     return () => {
       alive = false;
-      window.clearTimeout(id);
-      window.clearInterval(iv);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
   return (

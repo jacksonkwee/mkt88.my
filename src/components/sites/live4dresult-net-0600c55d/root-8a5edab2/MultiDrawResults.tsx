@@ -16,12 +16,28 @@ type ColItem = { type: "card"; id: string } | { type: "br" };
  * the Lotto 4D results are identical.
  */
 const COLUMNS: ColItem[][] = [
-  [{ type: "card", id: "table-13-2026-09-06" }],
-  [{ type: "card", id: "table-17-2026-09-06" }],
+  [
+    { type: "card", id: "table-13-2026-09-06" },
+    { type: "br" },
+    { type: "card", id: "table-14-2026-09-06-6d" },
+  ],
+  [
+    { type: "card", id: "table-17-2026-09-06" },
+    { type: "br" },
+    { type: "card", id: "table-18-2026-09-06-6d" },
+  ],
   [{ type: "card", id: "table-16-2026-09-06-1530" }],
   [{ type: "card", id: "table-16-2026-09-06-1930" }],
-  [{ type: "card", id: "table-15-2026-09-06-1530" }],
-  [{ type: "card", id: "table-15-2026-09-06-1930" }],
+  [
+    { type: "card", id: "table-15-2026-09-06-1530" },
+    { type: "br" },
+    { type: "card", id: "table-15-2026-09-06-1530-6d" },
+  ],
+  [
+    { type: "card", id: "table-15-2026-09-06-1930" },
+    { type: "br" },
+    { type: "card", id: "table-15-2026-09-06-1930-6d" },
+  ],
 ];
 
 export default function MultiDrawResults() {
