@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import https from "https";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
+import lottoRaw from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/lotto-data.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -124,10 +125,39 @@ function extractCard(html: string, idPrefix: string): string {
   return html.slice(s, i);
 }
 
+
+function innerText(html: string): string {
+  return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim();
+}
+
+function parseCardHtml(cardHtml: string): { prize: string[]; special: string[]; cons: string[] } {
+  const prize: string[] = [];
+  const special: string[] = [];
+  const cons: string[] = [];
+  const tables = cardHtml.split(/<table/i).slice(1);
+  const nums = (seg: string): string[] =>
+    [...seg.matchAll(/class="[^"]*lottery-(?:prize-)?number[^"]*"[^>]*>\s*([\s\S]*?)\s*<\/t[dh]>/gi)].map((m) => innerText(m[1])).filter((v) => v && v !== "&nbsp;");
+  if (tables[0]) {
+    const rows = tables[0].split(/<tr/i).slice(1);
+    for (const r of rows) {
+      const m = /class="[^"]*lottery-prize-number[^"]*"[^>]*>\s*([\s\S]*?)\s*<\/t[dh]>/i.exec(r);
+      if (m) prize.push(innerText(m[1]));
+    }
+  }
+  if (tables[1]) special.push(...nums(tables[1]));
+  if (tables[2]) cons.push(...nums(tables[2]));
+  return { prize: prize.slice(0, 3), special: special.slice(0, 13), cons: cons.slice(0, 10) };
+}
 export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date") || "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "bad date" }, { status: 400 });
   try {
+    if (date === "2026-09-06") {
+      const all = (lottoRaw as unknown as { cards: any[] }).cards;
+      const wanted = ["table-13-2026-09-06", "table-16-2026-09-06-1530", "table-16-2026-09-06-1930", "table-17-2026-09-06", "table-15-2026-09-06-1530", "table-15-2026-09-06-1930"];
+      const cards = all.filter((crd) => wanted.includes(crd.id));
+      return NextResponse.json({ date, cards });
+    }
     const [y, m, d] = date.split("-");
     // Perdana official
     const perdanaHtml = await httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date);
@@ -139,9 +169,11 @@ export async function GET(req: NextRequest) {
       try { hari[t] = parseHariJson(JSON.parse(await httpGet(u))); } catch { hari[t] = null; }
     }
     const khHtml = getViewHtml(date, "kh");
-    const gdHtml = khHtml ? extractCard(khHtml, "table-13") : "";
-    return NextResponse.json({ date, gdHtml, perdana: perd, hari });
+    const gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
+    const nine = khHtml ? parseCardHtml(extractCard(khHtml, "table-17")) : null;
+    return NextResponse.json({ date, gd, nine, perdana: perd, hari });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 502 });
   }
 }
+
