@@ -617,6 +617,18 @@ async function updateCambodiaFeed() {
     const txt = await fetchText(u);
     if (!txt) return;
     const j = JSON.parse(txt);
+    // Sports Toto zodiac (12 animals) changes with each draw.
+    if (j.T && j.T.ZODIAC) {
+      const m = /src=['"]([^'"]+)['"]/.exec(String(j.T.ZODIAC));
+      if (m) {
+        const src = m[1].startsWith("http") ? m[1] : "https://www.live4d2u.net/" + m[1].replace(/^\/?/, "");
+        for (const img of document.querySelectorAll(".card.outer-box.table-6 img, .card.outer-box.table-7 img")) {
+          const im = img as HTMLImageElement;
+          const cur = im.getAttribute("src") || "";
+          if (cur.includes("zodiac") || (!cur.includes("logo") && cur !== src)) im.src = src;
+        }
+      }
+    }
     if (!j || !j.G) return;
     const g = j.G;
     const cards = [...document.querySelectorAll(".card.outer-box.table-13")];

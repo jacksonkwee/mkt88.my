@@ -20,10 +20,10 @@ export default function EastFilter() {
       if (c.className.includes(table)) { shown = c as HTMLElement; continue; }
       (c as HTMLElement).style.display = "none";
     }
-    // Centre the single visible result on the page.
+    // Match the same column size/location as the other single-game pages.
     if (shown && shown.parentElement) {
       const p = shown.parentElement;
-      p.className = "col-12 col-sm-12 col-md-8 col-lg-7 mx-auto mt-3 px-1";
+      p.className = "col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1";
     }
   }, []);
   return null;
