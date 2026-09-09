@@ -31,7 +31,20 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   const { game } = await params;
   const def = gameBySlug[game];
   if (!def) notFound();
-  const cards = def.cardIds.map((id) => byId.get(id)).filter((c): c is LotteryCardData => Boolean(c));
+  // Build columns: a "6D" card (id ends with -6d) is placed directly under
+  // its matching base draw (e.g. Lucky HariHari 3:30PM 4D -> 3:30PM 6D below it).
+  const cards: LotteryCardData[] = def.cardIds.map((id) => byId.get(id)).filter((c): c is LotteryCardData => Boolean(c));
+  const cols: { key: string; items: LotteryCardData[] }[] = [];
+  for (const c of cards) {
+    if (/-6d$/.test(c.id)) {
+      const base = c.id.replace(/-6d$/, "");
+      const col = cols.find((x) => x.key === base);
+      if (col) col.items.push(c);
+      else cols.push({ key: c.id, items: [c] });
+    } else {
+      cols.push({ key: c.id, items: [c] });
+    }
+  }
   return (
     <>
       <Header />
@@ -43,9 +56,13 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
           </div>
         </div>
         <div className="row">
-          {cards.map((c) => (
-            <div key={c.id} className="col-12 col-sm-12 col-md-6 col-lg-4 mt-2 px-1">
-              <LotteryCard card={c} />
+          {cols.map((col) => (
+            <div key={col.key} className="col-12 col-sm-12 col-md-6 col-lg-4 mt-2 px-1">
+              {col.items.map((c, i) => (
+                <div key={c.id} className={i > 0 ? "mt-3" : ""}>
+                  <LotteryCard card={c} />
+                </div>
+              ))}
             </div>
           ))}
         </div>
