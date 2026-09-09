@@ -10,7 +10,7 @@ const BUTTONS = [
 export default function RegionButtons() {
   return (
     <div className="header-btn-group container px-0">
-      <div className="btn-group border w-100" role="group" aria-label="Basic example">
+      <div className="btn-group border w-100 d-none d-lg-flex" role="group" aria-label="Basic example">
         {BUTTONS.map((b) => (
           <a key={b.label1 + b.label2} href={b.href} className="btn">
             {b.label1} <br /> {b.label2}
