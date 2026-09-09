@@ -24,7 +24,7 @@ function myHourNow(): number {
 }
 function nextInterval(): number {
   const h = myHourNow();
-  return h >= 18 && h <= 21 ? 10000 : 25000;
+  return h >= 18 && h <= 21 ? 5000 : 15000;
 }
 
 type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
@@ -672,17 +672,31 @@ export default function LiveResults() {
   const [status, setStatus] = useState("…");
   useEffect(() => {
     let alive = true;
+    let busy = false;
     let timer: number | undefined;
     const tick = async () => {
-      await refreshOnce();
+      if (busy) return;
+      busy = true;
+      try {
+        await refreshOnce();
+      } finally {
+        busy = false;
+      }
       if (!alive) return;
       setStatus(new Date().toLocaleTimeString());
       timer = window.setTimeout(tick, nextInterval());
     };
     timer = window.setTimeout(tick, 0);
+    const onVis = () => {
+      if (document.visibilityState === "visible" && alive) {
+        tick();
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       alive = false;
       if (timer) window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
   return (

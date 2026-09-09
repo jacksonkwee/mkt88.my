@@ -5062,41 +5062,46 @@
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-1",
                     "width": "20%"
                   },
-                  "html": "special-1"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-2",
                     "width": "20%"
                   },
-                  "html": "special-2"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-3",
                     "width": "20%"
                   },
-                  "html": "special-3"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-4",
                     "width": "20%"
                   },
-                  "html": "special-4"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-5",
                     "width": "20%"
                   },
-                  "html": "special-5"
+                  "html": "----"
                 }
               ]
             },
@@ -5107,41 +5112,46 @@
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-6",
                     "width": "20%"
                   },
-                  "html": "special-6"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-7",
                     "width": "20%"
                   },
-                  "html": "special-7"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-8",
                     "width": "20%"
                   },
-                  "html": "special-8"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-9",
                     "width": "20%"
                   },
-                  "html": "special-9"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "special-10",
                     "width": "20%"
                   },
-                  "html": "special-10"
+                  "html": "----"
                 }
               ]
             }
@@ -5171,41 +5181,46 @@
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-1",
                     "width": "20%"
                   },
-                  "html": "consolation-1"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-2",
                     "width": "20%"
                   },
-                  "html": "consolation-2"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-3",
                     "width": "20%"
                   },
-                  "html": "consolation-3"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-4",
                     "width": "20%"
                   },
-                  "html": "consolation-4"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-5",
                     "width": "20%"
                   },
-                  "html": "consolation-5"
+                  "html": "----"
                 }
               ]
             },
@@ -5216,41 +5231,46 @@
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-6",
                     "width": "20%"
                   },
-                  "html": "consolation-6"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-7",
                     "width": "20%"
                   },
-                  "html": "consolation-7"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-8",
                     "width": "20%"
                   },
-                  "html": "consolation-8"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-9",
                     "width": "20%"
                   },
-                  "html": "consolation-9"
+                  "html": "----"
                 },
                 {
                   "tag": "td",
                   "cls": "border text-center lottery-number",
                   "attrs": {
+                    "data-id": "consolation-10",
                     "width": "20%"
                   },
-                  "html": "consolation-10"
+                  "html": "----"
                 }
               ]
             }

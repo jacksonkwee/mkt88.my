@@ -79,3 +79,6 @@ body {
 td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="minor"], td[data-id$="letter"], td[data-id$="units"], td[data-id$="no"], .jp-amount {
   white-space: nowrap;
 }
+
+/* Singapore 4D card logo size */
+.card.outer-box.table-11 .lottery-logo img { width: 44px; height: 44px; object-fit: contain; }
