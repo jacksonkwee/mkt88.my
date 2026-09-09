@@ -602,7 +602,7 @@ async function refreshOnce() {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       await Promise.all([
         syncLiveTable("https://live4dresult.net/", [
-          "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13", "table-17",
+          "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13",
         ]),
         updateGdNineCards(),
         updateSGOfficial(),
@@ -613,7 +613,7 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
       await updateSGOfficial();
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
-      await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13", "table-17"]);
+      await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13"]);
       await updateGdNineCards();
       // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
       for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
