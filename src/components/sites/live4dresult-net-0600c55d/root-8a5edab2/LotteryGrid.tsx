@@ -1,3 +1,6 @@
+"use client";
+
+import { useRef } from "react";
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import rawCards from "./cards-data.json";
 
@@ -41,14 +44,36 @@ const PAGES = [
 ];
 
 function MobilePager() {
+  const track = useRef<HTMLDivElement>(null);
+  const start = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    start.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!start.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.current.x;
+    const dy = t.clientY - start.current.y;
+    start.current = null;
+    if (Math.abs(dx) < 40 || Math.abs(dy) > Math.abs(dx)) return;
+    const el = track.current;
+    if (!el) return;
+    const w = el.clientWidth;
+    el.scrollBy({ left: dx < 0 ? w : -w, behavior: "smooth" });
+  };
   return (
     <div
+      ref={track}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       style={{
         display: "flex",
         overflowX: "auto",
         overflowY: "hidden",
         scrollSnapType: "x mandatory",
         WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
       }}
     >
       {PAGES.map((pg) => (
