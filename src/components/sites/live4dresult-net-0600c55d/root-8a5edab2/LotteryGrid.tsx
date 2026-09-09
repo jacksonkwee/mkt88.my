@@ -7,36 +7,25 @@ const byId = new Map<string, LotteryCardData>(cardList.map((c) => [c.id, c]));
 type ColItem = { type: "card"; id: string } | { type: "br" };
 
 /**
- * Column arrangement mirrors the live page markup exactly:
- *  - row 1: Magnum, SportsToto 4D, DaMaCai 1+3D
- *  - row 2: Magnum Life + <br> + Magnum Jackpot Gold (same column),
- *           SportsToto 5D/6D/Lotto, Da Ma Cai 3+3D
- *  - row 3: Grand Dragon 4D, Nine Lotto
- * (Dynamic ad wrappers the original injects between cards are not reproduced;
- * they collapse to zero height on ad-blocked renders.)
+ * Home "4D Result 马来西亚" order (each result its own card/column):
+ * Magnum 4D -> Magnum Life -> Magnum Jackpot Gold -> Da Ma Cai 1+3D ->
+ * Da Ma Cai 3+3D -> Sports Toto 4D -> Sports Toto 5D/6D -> Grand Dragon 4D ->
+ * Grand Dragon 6D -> Nine Lotto 4D -> Nine Lotto 6D
  */
-const COLUMNS: ColItem[][] = [
-  [{ type: "card", id: "table-1-2026-09-06" }],
-  [{ type: "card", id: "table-4-2026-09-06" }],
-  [{ type: "card", id: "table-6-2026-09-06" }],
-  [
-    { type: "card", id: "table-3-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-2-2026-09-06" },
-  ],
-  [{ type: "card", id: "table-5-2026-09-06" }],
-  [{ type: "card", id: "table-7-2026-09-06" }],
-  [
-    { type: "card", id: "table-13-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-14-2026-09-06-6d" },
-  ],
-  [
-    { type: "card", id: "table-17-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-18-2026-09-06-6d" },
-  ],
+const ORDER = [
+  "table-1-2026-09-06",   // Magnum 4D
+  "table-3-2026-09-06",   // Magnum Life
+  "table-2-2026-09-06",   // Magnum Jackpot Gold
+  "table-4-2026-09-06",   // Da Ma Cai 1+3D
+  "table-5-2026-09-06",   // Da Ma Cai 3+3D
+  "table-6-2026-09-06",   // Sports Toto 4D
+  "table-7-2026-09-06",   // Sports Toto 5D, 6D
+  "table-13-2026-09-06",  // Grand Dragon 4D
+  "table-14-2026-09-06-6d", // Grand Dragon 6D
+  "table-17-2026-09-06",  // Nine Lotto 4D
+  "table-18-2026-09-06-6d", // Nine Lotto 6D
 ];
+const COLUMNS: ColItem[][] = ORDER.map((id) => [{ type: "card", id }]);
 
 export default function LotteryGrid() {
   return (
