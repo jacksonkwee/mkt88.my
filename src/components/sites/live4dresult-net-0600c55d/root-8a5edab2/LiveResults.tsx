@@ -370,9 +370,10 @@ function dateFromNineText(text: string): string | undefined {
 
 type GdInfo = { six: SixSet; jp4: Record<string, string>; jp7: Record<string, string> };
 
-/** Grand Dragon 6D + Jackpots - only for a date that actually has results
- *  (today first, then yesterday), so old numbers are never labelled with a
- *  new date. */
+/** Grand Dragon 6D + Jackpots - today and yesterday are compared. The official
+ *  dated feed returns the previous draw again until today's is published, so a
+ *  result is only labelled "today" when today's six-digit number differs from
+ *  yesterday's. Otherwise yesterday is shown with its own date. */
 function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string } | null {
   const text = doc.body ? doc.body.innerText : "";
   const tokens = text.split(/\s+/).map((l) => l.trim()).filter(Boolean);
@@ -399,6 +400,7 @@ function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons
 }
 
 async function gdInfo(): Promise<GdInfo | null> {
+  const cand: GdInfo[] = [];
   for (let off = 0; off <= 1; off++) {
     const iso = dateStrNoPad(new Date(Date.now() - off * 86400000));
     const [y, mo, dd] = iso.split("-");
@@ -440,9 +442,16 @@ async function gdInfo(): Promise<GdInfo | null> {
           },
         }
       : { main: "----", date };
-    return { six, jp4, jp7 };
+    cand.push({ six, jp4, jp7 });
   }
-  return null;
+  if (!cand.length) return null;
+  let use = cand[0];
+  if (cand.length >= 2) {
+    const a = cand[0].six.main;
+    const b = cand[1].six.main;
+    if (isDash(a) || a === b) use = cand[1];
+  }
+  return use;
 }
 
 async function updateGdNineCards() {
@@ -457,11 +466,13 @@ async function updateGdNineCards() {
   } catch {
     // ignore
   }
-  // Nine Lotto (official) - show results ONLY for a date that actually has
-  // data. Today's draw is tried first; if it is not published yet, yesterday's
-  // completed draw is shown with its own correct date label.
+  // Nine Lotto - today and yesterday are compared. The official dated page
+  // returns yesterday's numbers again when today's draw is not published yet,
+  // so we only label results "today" when today's six-digit draw differs from
+  // yesterday's (i.e. a genuinely new draw). Otherwise yesterday's date is shown.
   try {
     const nineCard = document.querySelector(".card.outer-box.table-17");
+    const cand: { dateLbl: string; ns: ReturnType<typeof parseNineDoc>; six: SixSet | null; jp9: ReturnType<typeof nineJpFromDoc> }[] = [];
     for (let off = 0; off <= 1; off++) {
       const d = dateStrNoPad(new Date(Date.now() - off * 86400000));
       const [y, m, dd] = d.split("-");
@@ -472,30 +483,34 @@ async function updateGdNineCards() {
       const six = ns ? nineSixFromPrizes(ns.prize) : null;
       const hasAny = (arr?: string[]) => !!arr && arr.some((v) => /^\d{4}$/.test(v));
       const jpRows = (jp9 && jp9.rows) || {};
-      const hasJp = !!jp9 && (!!jp9.pool || Object.values(jpRows).some((v) => /^\d{6} \+ \d( \+ \d{4})?$/.test(v)));
-      const hasData =
-        (ns && (hasAny(ns.prize) || hasAny(ns.special) || hasAny(ns.cons))) ||
-        (six && six.main && !isDash(six.main)) ||
-        hasJp;
-      if (!hasData) continue;
-      const dateLbl = weekdayOf(d);
-      if (nineCard && ns) {
-        const dt = nineCard.querySelector('[data-id="date"]');
-        if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
-        if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
-      }
-      if (six && six.main && !isDash(six.main)) {
-        applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl });
-      } else {
-        applySixValues("table-18-2026-09-06-6d", { main: "----", date: dateLbl });
-      }
-      if (jp9) {
-        const vals: Record<string, string> = {};
-        if (jp9.pool) vals.n9_sj_pool = jp9.pool;
-        if (jp9.rows) for (const [k, v] of Object.entries(jp9.rows)) if (v) vals[k] = v;
-        applyIdValues("table-18-2026-09-06-6d", vals);
-      }
-      break;
+      const hasJp = !!jp9 && (!!jp9.pool || Object.values(jpRows).some((v) => /\d/.test(v)));
+      const hasData = (ns && (hasAny(ns.prize) || hasAny(ns.special) || hasAny(ns.cons))) || (six && six.main && !isDash(six.main)) || hasJp;
+      if (hasData) cand.push({ dateLbl: weekdayOf(d), ns, six, jp9 });
+    }
+    if (!cand.length) return;
+    let use = cand[0];
+    if (cand.length >= 2) {
+      const a = cand[0].six ? cand[0].six.main : "----";
+      const b = cand[1].six ? cand[1].six.main : "----";
+      // If today has no new draw yet (blank, or identical to yesterday), show yesterday.
+      if (isDash(a) || a === b) use = cand[1];
+    }
+    const { dateLbl, ns, six, jp9 } = use;
+    if (nineCard && ns) {
+      const dt = nineCard.querySelector('[data-id="date"]');
+      if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
+      if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
+    }
+    if (six && six.main && !isDash(six.main)) {
+      applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl });
+    } else {
+      applySixValues("table-18-2026-09-06-6d", { main: "----", date: dateLbl });
+    }
+    if (jp9) {
+      const vals: Record<string, string> = {};
+      if (jp9.pool) vals.n9_sj_pool = jp9.pool;
+      if (jp9.rows) for (const [k, v] of Object.entries(jp9.rows)) if (v) vals[k] = v;
+      applyIdValues("table-18-2026-09-06-6d", vals);
     }
   } catch {
     // ignore
