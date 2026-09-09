@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { gameBySlug } from "./GameDefs";
 
 /**
  * LiveResults - polls the original sources through the server proxy and
@@ -486,7 +487,12 @@ async function updateGdNineCards() {
 }
 
 async function refreshOnce() {
-  const path = window.location.pathname;
+  let path = window.location.pathname;
+  // Single-game pages (e.g. /result/magnum) update from the same live sources.
+  const gm = /^\/result\/([^/?#]+)/.exec(path);
+  if (gm && gameBySlug[gm[1]]) {
+    path = gameBySlug[gm[1]].mode === 'home' ? '/' : '/lotto-4d';
+  }
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       await syncLiveTable("https://live4dresult.net/", [
