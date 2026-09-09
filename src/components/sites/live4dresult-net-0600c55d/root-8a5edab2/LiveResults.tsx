@@ -71,47 +71,46 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
   if (!doc) return;
   for (const cls of tableClasses) {
     const srcCard = doc.querySelector(".card.outer-box." + cls);
-    const target = document.querySelector(".card.outer-box." + cls);
-    if (!srcCard || !target) continue;
-    // Mirror the source exactly (both directions). When the official draw is
-    // cleared for the new draw date the numbers are wiped to "----" first;
-    // when the draw is released the numbers are revealed one by one in draw
-    // order (1st -> 2nd -> 3rd -> special -> consolation).
-    const pending = new Map<string, string>();
-    let hasClear = false;
-    const els = [...target.querySelectorAll("[data-id]")];
-    for (const tgtEl of els) {
-      const id = tgtEl.getAttribute("data-id") || "";
-      if (!id) continue;
-      const srcEl = srcCard.querySelector('[data-id="' + id + '"]');
-      if (!srcEl) continue;
-      const v = (srcEl.textContent || "").trim();
-      const cur = (tgtEl.textContent || "").trim();
-      if (v === cur) continue;
-      pending.set(id, v);
-      if (isDash(v) && !isDash(cur)) hasClear = true;
-    }
-    if (pending.size === 0) continue;
-    if (hasClear) {
-      // New draw date / draw not out yet: wipe instantly (including the date).
-      for (const [id, v] of pending) {
-        const el = target.querySelector('[data-id="' + id + '"]');
-        setText(el, v);
+    const targets = [...document.querySelectorAll(".card.outer-box." + cls)];
+    if (!srcCard || targets.length === 0) continue;
+    for (const target of targets) {
+      // Mirror the source exactly (both directions). When the official draw is
+      // cleared for the new draw date the numbers are wiped to "----" first;
+      // when the draw is released the numbers are revealed one by one.
+      const pending = new Map<string, string>();
+      let hasClear = false;
+      const els = [...target.querySelectorAll("[data-id]")];
+      for (const tgtEl of els) {
+        const id = tgtEl.getAttribute("data-id") || "";
+        if (!id) continue;
+        const srcEl = srcCard.querySelector('[data-id="' + id + '"]');
+        if (!srcEl) continue;
+        const v = (srcEl.textContent || "").trim();
+        const cur = (tgtEl.textContent || "").trim();
+        if (v === cur) continue;
+        pending.set(id, v);
+        if (isDash(v) && !isDash(cur)) hasClear = true;
       }
-      flash(target);
-      continue;
+      if (pending.size === 0) continue;
+      if (hasClear) {
+        for (const [id, v] of pending) {
+          const el = target.querySelector('[data-id="' + id + '"]');
+          setText(el, v);
+        }
+        flash(target);
+        continue;
+      }
+      const changed: { el: Element; v: string }[] = [];
+      for (const tgtEl of els) {
+        const id = tgtEl.getAttribute("data-id") || "";
+        if (!id || !pending.has(id)) continue;
+        changed.push({ el: tgtEl, v: pending.get(id)! });
+      }
+      changed.forEach((c, i) => {
+        window.setTimeout(() => setText(c.el, c.v), 140 * i);
+      });
+      window.setTimeout(() => flash(target), 140 * changed.length);
     }
-    // Filling / updating: reveal each changed number one by one in draw order.
-    const changed: { el: Element; v: string }[] = [];
-    for (const tgtEl of els) {
-      const id = tgtEl.getAttribute("data-id") || "";
-      if (!id || !pending.has(id)) continue;
-      changed.push({ el: tgtEl, v: pending.get(id)! });
-    }
-    changed.forEach((c, i) => {
-      window.setTimeout(() => setText(c.el, c.v), 140 * i);
-    });
-    window.setTimeout(() => flash(target), 140 * changed.length);
   }
 }
 
@@ -245,75 +244,80 @@ function dateStrNoPad(d: Date): string {
 
 type SixSet = { main: string; date?: string; subs?: Record<string, string> };
 
+function applyToCardsById(cardId: string, apply: (card: Element) => void) {
+  const cards = [...document.querySelectorAll('[id="' + cardId + '"]')];
+  for (const card of cards) apply(card);
+}
+
 function applySixValues(cardId: string, s: SixSet | null) {
   if (!s) return;
-  const card = document.getElementById(cardId);
-  if (!card) return;
-  const pending = new Map<string, string>();
-  let hasClear = false;
-  const stage = (id: string, v: string | undefined) => {
-    if (v === undefined) return;
-    const el = card.querySelector('[data-id="' + id + '"]');
-    if (!el) return;
-    const cur = (el.textContent || "").trim();
-    if (cur === v.trim()) return;
-    pending.set(id, v.trim());
-    if (isDash(v) && !isDash(cur)) hasClear = true;
-  };
-  stage("six_main", s.main);
-  if (s.date) stage("date", s.date);
-  if (s.subs) for (const [k, v] of Object.entries(s.subs)) stage(k, v);
-  if (pending.size === 0) return;
-  if (hasClear) {
-    for (const [id, v] of pending) {
+  applyToCardsById(cardId, (card) => {
+    const pending = new Map<string, string>();
+    let hasClear = false;
+    const stage = (id: string, v: string | undefined) => {
+      if (v === undefined) return;
       const el = card.querySelector('[data-id="' + id + '"]');
-      setText(el, v);
+      if (!el) return;
+      const cur = (el.textContent || "").trim();
+      if (cur === v.trim()) return;
+      pending.set(id, v.trim());
+      if (isDash(v) && !isDash(cur)) hasClear = true;
+    };
+    stage("six_main", s.main);
+    if (s.date) stage("date", s.date);
+    if (s.subs) for (const [k, v] of Object.entries(s.subs)) stage(k, v);
+    if (pending.size === 0) return;
+    if (hasClear) {
+      for (const [id, v] of pending) {
+        const el = card.querySelector('[data-id="' + id + '"]');
+        setText(el, v);
+      }
+      flash(card);
+      return;
     }
-    flash(card);
-    return;
-  }
-  const els = [...card.querySelectorAll("[data-id]")];
-  const changed: { el: Element; v: string }[] = [];
-  for (const el of els) {
-    const id = el.getAttribute("data-id") || "";
-    if (!pending.has(id)) continue;
-    changed.push({ el, v: pending.get(id)! });
-  }
-  changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
-  window.setTimeout(() => flash(card), 140 * changed.length);
+    const els = [...card.querySelectorAll("[data-id]")];
+    const changed: { el: Element; v: string }[] = [];
+    for (const el of els) {
+      const id = el.getAttribute("data-id") || "";
+      if (!pending.has(id)) continue;
+      changed.push({ el, v: pending.get(id)! });
+    }
+    changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
+    window.setTimeout(() => flash(card), 140 * changed.length);
+  });
 }
 
 function applyIdValues(cardId: string, vals: Record<string, string>) {
-  const card = document.getElementById(cardId);
-  if (!card) return;
-  const pending = new Map<string, string>();
-  let hasClear = false;
-  for (const [id, v] of Object.entries(vals)) {
-    const el = card.querySelector('[data-id="' + id + '"]');
-    if (!el) continue;
-    const cur = (el.textContent || "").trim();
-    if (cur === v.trim()) continue;
-    pending.set(id, v.trim());
-    if (isDash(v) && !isDash(cur)) hasClear = true;
-  }
-  if (pending.size === 0) return;
-  if (hasClear) {
-    for (const [id, v] of pending) {
+  applyToCardsById(cardId, (card) => {
+    const pending = new Map<string, string>();
+    let hasClear = false;
+    for (const [id, v] of Object.entries(vals)) {
       const el = card.querySelector('[data-id="' + id + '"]');
-      setText(el, v);
+      if (!el) continue;
+      const cur = (el.textContent || "").trim();
+      if (cur === v.trim()) continue;
+      pending.set(id, v.trim());
+      if (isDash(v) && !isDash(cur)) hasClear = true;
     }
-    flash(card);
-    return;
-  }
-  const els = [...card.querySelectorAll("[data-id]")];
-  const changed: { el: Element; v: string }[] = [];
-  for (const el of els) {
-    const id = el.getAttribute("data-id") || "";
-    if (!pending.has(id)) continue;
-    changed.push({ el, v: pending.get(id)! });
-  }
-  changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
-  window.setTimeout(() => flash(card), 140 * changed.length);
+    if (pending.size === 0) return;
+    if (hasClear) {
+      for (const [id, v] of pending) {
+        const el = card.querySelector('[data-id="' + id + '"]');
+        setText(el, v);
+      }
+      flash(card);
+      return;
+    }
+    const els = [...card.querySelectorAll("[data-id]")];
+    const changed: { el: Element; v: string }[] = [];
+    for (const el of els) {
+      const id = el.getAttribute("data-id") || "";
+      if (!pending.has(id)) continue;
+      changed.push({ el, v: pending.get(id)! });
+    }
+    changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
+    window.setTimeout(() => flash(card), 140 * changed.length);
+  });
 }
 
 /** SixD values included in the same hari4d.com draw payload. */
@@ -471,7 +475,7 @@ async function updateGdNineCards() {
   // so we only label results "today" when today's six-digit draw differs from
   // yesterday's (i.e. a genuinely new draw). Otherwise yesterday's date is shown.
   try {
-    const nineCard = document.querySelector(".card.outer-box.table-17");
+    const nineCards = [...document.querySelectorAll(".card.outer-box.table-17")];
     const cand: { dateLbl: string; ns: ReturnType<typeof parseNineDoc>; six: SixSet | null; jp9: ReturnType<typeof nineJpFromDoc> }[] = [];
     for (let off = 0; off <= 1; off++) {
       const d = dateStrNoPad(new Date(Date.now() - off * 86400000));
@@ -496,10 +500,12 @@ async function updateGdNineCards() {
       if (isDash(a) || a === b) use = cand[1];
     }
     const { dateLbl, ns, six, jp9 } = use;
-    if (nineCard && ns) {
-      const dt = nineCard.querySelector('[data-id="date"]');
-      if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
-      if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
+    for (const nineCard of nineCards) {
+      if (ns) {
+        const dt = nineCard.querySelector('[data-id="date"]');
+        if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
+        if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
+      }
     }
     if (six && six.main && !isDash(six.main)) {
       applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl });
