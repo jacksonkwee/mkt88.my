@@ -2,13 +2,11 @@ import { GAME_DEFS, EAST_LINKS } from "./GameDefs";
 
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
 
-function Tile({ href, logo, name, zh, external }: { href: string; logo: string; name: string; zh?: string; external?: boolean }) {
+function Tile({ href, logo, name, zh }: { href: string; logo: string; name: string; zh?: string }) {
   return (
     <a
       href={href}
       title={name}
-      target={external ? "_blank" : undefined}
-      rel={external ? "noreferrer" : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -34,7 +32,26 @@ function Tile({ href, logo, name, zh, external }: { href: string; logo: string; 
   );
 }
 
+// Display order: magnum, damacai, sportstoto, singapore, grand dragon,
+// nine lotto, sabah 88, sandakan, cash sweep, perdana, lucky harihari
+const ORDER = [
+  "magnum", "damacai", "sportstoto", "sg",
+  "grand-dragon", "nine-lotto",
+  "sabah88", "stc", "cashsweep",
+  "perdana", "lucky-harihari",
+];
+
 export default function GameQuickLinks() {
+  const defsBySlug: Record<string, (typeof GAME_DEFS)[number]> = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
+  const eastBySlug: Record<string, (typeof EAST_LINKS)[number]> = Object.fromEntries(EAST_LINKS.map((g) => [g.slug, g]));
+  const tiles = ORDER.map((slug) => {
+    if (slug === "sg") return <Tile key="sg" href="/singapore-4d-results" logo={SG_LOGO} name="Singapore 4D" zh="新加坡" />;
+    const d = defsBySlug[slug];
+    if (d) return <Tile key={d.slug} href={"/result/" + d.slug} logo={d.logo} name={d.name} zh={d.zh} />;
+    const e = eastBySlug[slug];
+    if (e) return <Tile key={e.slug} href={e.href} logo={e.logo} name={e.name} zh={e.zh} />;
+    return null;
+  });
   return (
     <div
       style={{
@@ -49,13 +66,7 @@ export default function GameQuickLinks() {
         WebkitOverflowScrolling: "touch",
       }}
     >
-      {GAME_DEFS.map((g) => (
-        <Tile key={g.slug} href={"/result/" + g.slug} logo={g.logo} name={g.name} zh={g.zh} />
-      ))}
-      {EAST_LINKS.map((g) => (
-        <Tile key={g.slug} href={g.href} logo={g.logo} name={g.name} zh={g.zh} />
-      ))}
-      <Tile href="/singapore-4d-results" logo={SG_LOGO} name="Singapore 4D" zh="新加坡" />
+      {tiles}
     </div>
   );
 }
