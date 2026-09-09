@@ -137,7 +137,8 @@ function flash(card: Element) {
 
 function applySet(card: Element, s: PrizeSet) {
   if (!s || !s.prize || s.prize.length === 0) return;
-  if (s.prize.every(isDash)) return; // draw not available yet
+  const hasAny = (arr?: string[]) => !!arr && arr.some((v) => !isDash(v));
+  if (!hasAny(s.prize) && !hasAny(s.special) && !hasAny(s.cons)) return; // nothing drawn yet
   const pending: { el: Element; v: string }[] = [];
   const stage = (el: Element | null, v: string | undefined) => {
     if (!el || v === undefined) return;
@@ -474,6 +475,12 @@ async function gdInfo(): Promise<GdInfo | null> {
   return use;
 }
 
+function clearCardNumbers(card: Element) {
+  for (const el of card.querySelectorAll("td.lottery-prize-number, td.lottery-number")) {
+    if ((el.textContent || "") !== "") el.textContent = "----";
+  }
+}
+
 async function updateGdNineCards() {
   // Grand Dragon 6D + 4D jackpot + 6+1D jackpot (official gdlotto endpoint)
   try {
@@ -510,16 +517,20 @@ async function updateGdNineCards() {
     if (!cand.length) return;
     let use = cand[0];
     if (cand.length >= 2) {
-      const a = cand[0].six ? cand[0].six.main : "----";
-      const b = cand[1].six ? cand[1].six.main : "----";
-      // If today has no new draw yet (blank, or identical to yesterday), show yesterday.
-      if (isDash(a) || a === b) use = cand[1];
+      const t = cand[0];
+      const y = cand[1];
+      const a = t.six ? t.six.main : "----";
+      const b = y.six ? y.six.main : "----";
+      const newDraw = !!(t.ns && t.ns.drawNo && y.ns && y.ns.drawNo && t.ns.drawNo !== y.ns.drawNo);
+      // Show today as soon as today's new draw number appears (even mid-draw).
+      if (!newDraw && (isDash(a) || a === b)) use = y;
     }
     const { dateLbl, ns, six, jp9 } = use;
     for (const nineCard of nineCards) {
       if (ns) {
         const dt = nineCard.querySelector('[data-id="date"]');
         if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
+        clearCardNumbers(nineCard);
         if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
       }
     }
