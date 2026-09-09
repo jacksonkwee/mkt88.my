@@ -12,11 +12,12 @@ function Tile({ href, logo, name, zh, external }: { href: string; logo?: string;
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minWidth: 86,
-        maxWidth: 96,
-        flex: "0 0 auto",
-        margin: "0 4px",
-        padding: "8px 4px",
+        justifySelf: "center",
+        width: "100%",
+        maxWidth: 120,
+        boxSizing: "border-box",
+        minWidth: 0,
+        padding: "10px 2px",
         border: "1px solid #eee",
         borderRadius: 10,
         background: "#fff",
@@ -27,29 +28,34 @@ function Tile({ href, logo, name, zh, external }: { href: string; logo?: string;
     >
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logo} alt={name} style={{ width: 54, height: 54, objectFit: "contain", marginBottom: 4 }} />
+        <img src={logo} alt={name} style={{ width: 46, height: 46, objectFit: "contain", marginBottom: 4 }} />
       ) : (
-        <div style={{ width: 54, height: 54, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, marginBottom: 4 }}>
+        <div style={{ width: 46, height: 46, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 4 }}>
           🎰
         </div>
       )}
-      <span style={{ fontSize: 11, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
-      {zh ? <span style={{ fontSize: 10, color: "#666", textAlign: "center" }}>{zh}</span> : null}
+      <span style={{ fontSize: 10, fontWeight: 700, textAlign: "center", lineHeight: 1.2 }}>{name}</span>
+      {zh ? <span style={{ fontSize: 9, color: "#666", textAlign: "center" }}>{zh}</span> : null}
     </a>
   );
 }
 
 export default function GameQuickLinks() {
   return (
-    <div style={{ margin: "8px 0 4px" }}>
-      <div style={{ display: "flex", overflowX: "auto", paddingBottom: 6 }}>
+    <div style={{ maxWidth: 640, margin: "10px auto 6px", padding: "0 4px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 6, justifyItems: "center" }}>
         {GAME_DEFS.map((g) => (
           <Tile key={g.slug} href={"/result/" + g.slug} logo={g.logo} name={g.name} zh={g.zh} />
         ))}
         {EAST_LINKS.map((g) => (
           <Tile key={g.slug} href={g.href} logo={g.logo} name={g.name} zh={g.zh} />
         ))}
-        <Tile href="https://www.singaporepools.com.sg/en/product/pages/4d_results.aspx" name="Singapore 4D" zh="新加坡" external />
+        <Tile
+          href="https://www.singaporepools.com.sg/en/product/pages/4d_results.aspx"
+          name="Singapore 4D"
+          zh="新加坡"
+          external
+        />
       </div>
     </div>
   );
