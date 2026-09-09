@@ -645,6 +645,8 @@ async function refreshOnce() {
   if (gm && gameBySlug[gm[1]]) {
     path = gameBySlug[gm[1]].mode === 'home' ? '/' : '/lotto-4d';
   }
+  // East single pages (Sandakan / Sabah 88 / Cash Sweep) sync like the East page.
+  if (/^\/east\//.test(path)) path = "/sabah-sarawak-4d-results";
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       await Promise.all([

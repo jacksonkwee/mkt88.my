@@ -2,6 +2,7 @@ import { rewriteHtml, stripAdHtml } from "./site-paths";
 import { getPastEntry, getViewHtml, splitParts } from "./past-data";
 import PastToolbar from "./PastToolbar";
 import CambodiaKhResults from "./CambodiaKhResults";
+import MalaysiaPastFallback from "./MalaysiaPastFallback";
 
 export default function PastResultsView({ date, view }: { date: string; view?: "my" | "kh" }) {
   const entry = getPastEntry(date);
@@ -18,9 +19,7 @@ export default function PastResultsView({ date, view }: { date: string; view?: "
           ) : parts && parts.grid ? (
             <div dangerouslySetInnerHTML={{ __html: stripAdHtml(rewriteHtml(parts.grid)) }} />
           ) : (
-            <div className="alert alert-warning mt-3 text-center font-weight-bold">
-              No results are included for {date} in this demo.
-            </div>
+            <MalaysiaPastFallback date={date} />
           )}
         </div>
       </div>
