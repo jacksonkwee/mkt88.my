@@ -73,7 +73,7 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
   const moved = useRef(false);
   useEffect(() => {
     const el = track.current;
-    if (!el) return;
+    if (!el || el.getClientRects().length === 0) return; // hidden (e.g. desktop) -> no highlight
     el.scrollLeft = Math.max(0, Math.min(idx, PAGES.length - 1)) * el.clientWidth;
     dispatchIdx(el);
     let raf = 0;
