@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://www.mkt88.my/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.mkt88.my/4dresults</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.mkt88.my/lotto-4d</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.mkt88.my/cambodia-4d-results</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.mkt88.my/sabah-sarawak-4d-results</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
   <url><loc>https://www.mkt88.my/singapore-4d-results</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.mkt88.my/result/magnum</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.mkt88.my/result/sportstoto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.mkt88.my/result/damacai</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.mkt88.my/result/grand-dragon</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.mkt88.my/result/nine-lotto</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.mkt88.my/result/perdana</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.mkt88.my/result/lucky-harihari</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://www.mkt88.my/past-results</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
 </urlset>
