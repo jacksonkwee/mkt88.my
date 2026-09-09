@@ -3,6 +3,7 @@ import PWARegister from "../components/PWARegister";
 import NoticeBar from "../components/NoticeBar";
 import TopBanner from "../components/TopBanner";
 import SiteCustomizer from "../components/SiteCustomizer";
+import AppTools from "../components/AppTools";
 import "./vendor/bootstrap.min.css";
 import "./vendor/font-awesome.min.css";
 import "./vendor/theme-style.css";
@@ -45,8 +46,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {children}
         <PWARegister />
         <SiteCustomizer />
+        <AppTools />
       </body>
     </html>
   );
 }
-

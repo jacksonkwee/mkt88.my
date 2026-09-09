@@ -8,3 +8,13 @@ out/
 .DS_Store
 Thumbs.db
 npm-debug.log*
+
+# mkt88 Android app build (local only - contains keystore)
+mkt88-app/
+.pnpm-store/
+_icon-*.js
+cap-run.js
+
+# local backups
+backups/
+
