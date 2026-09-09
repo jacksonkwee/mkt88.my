@@ -680,6 +680,8 @@ async function refreshOnce() {
   }
   // East single pages (Sandakan / Sabah 88 / Cash Sweep) sync like the East page.
   if (/^\/east\//.test(path)) path = "/sabah-sarawak-4d-results";
+  // Sabah88/Sandakan/Cash Sweep opened with ?op show the full pager -> full live refresh.
+  if (path === "/sabah-sarawak-4d-results" && window.location.search.includes("op=")) path = "/";
   // Past-results for TODAY (Malaysia & Singapore) shows live cards, so refresh
   // them from the same live sources as the home page.
   const pastM = /^\/past-results\/(\d{4}-\d{2}-\d{2})$/.exec(path);

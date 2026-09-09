@@ -15,17 +15,22 @@ const byId = new Map<string, LotteryCardData>(allCards.map((c) => [c.id, c]));
 
 const eastHtml = (eastRaw as { colHtml: string }).colHtml || "";
 function extractEast(cls: string): string {
-  const key = "card outer-box " + cls;
-  const s = eastHtml.indexOf(key);
-  if (s < 0) return "";
-  let i = s, depth = 0;
+  // Anchor on the real class attribute to avoid matching text/comment copies.
+  const key = 'class="card outer-box ' + cls + '"';
+  const ci = eastHtml.indexOf(key);
+  if (ci < 0) return "";
+  // Find the opening <div> tag that contains this class attribute.
+  const open = eastHtml.lastIndexOf("<div", ci);
+  if (open < 0) return "";
+  if (!eastHtml.slice(open, ci).includes("class=")) return "";
+  let i = open, depth = 0;
   while (i < eastHtml.length) {
-    const open = eastHtml.indexOf("<div", i);
+    const o2 = eastHtml.indexOf("<div", i);
     const close = eastHtml.indexOf("</div>", i);
-    if (close === -1 || (open !== -1 && open < close)) { depth++; i = open + 4; }
+    if (close === -1 || (o2 !== -1 && o2 < close)) { depth++; i = o2 + 4; }
     else { depth--; i = close + 6; if (depth === 0) break; }
   }
-  return rewriteHtml(eastHtml.slice(s, i));
+  return rewriteHtml(eastHtml.slice(open, i));
 }
 
 type PageDef = { title: string; ids?: string[]; html?: string };
