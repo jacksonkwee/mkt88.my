@@ -1,10 +1,12 @@
 import { GAME_DEFS, EAST_LINKS } from "./GameDefs";
 
-function Tile({ href, logo, name, zh }: { href: string; logo?: string; name: string; zh?: string }) {
+function Tile({ href, logo, name, zh, external }: { href: string; logo?: string; name: string; zh?: string; external?: boolean }) {
   return (
     <a
       href={href}
       title={name}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
       style={{
         display: "flex",
         flexDirection: "column",
@@ -47,8 +49,7 @@ export default function GameQuickLinks() {
         {EAST_LINKS.map((g) => (
           <Tile key={g.slug} href={g.href} logo={g.logo} name={g.name} zh={g.zh} />
         ))}
-        <Tile href="/singapore-4d-results" name="Singapore 4D" zh="新加坡" />
-        <Tile href="/lotto-4d" name="Lotto 4D" zh="柬埔寨" />
+        <Tile href="https://www.singaporepools.com.sg/en/product/pages/4d_results.aspx" name="Singapore 4D" zh="新加坡" external />
       </div>
     </div>
   );
