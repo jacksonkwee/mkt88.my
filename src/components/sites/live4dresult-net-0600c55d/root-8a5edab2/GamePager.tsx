@@ -46,7 +46,10 @@ const PAGES: PageDef[] = [
   { title: "Sandakan 山打根", html: extractEast("table-8") },
   { title: "Cash Sweep 沙捞越", html: extractEast("table-9") },
   { title: "Perdana 4D", ids: ["table-16-2026-09-06-1530", "table-16-2026-09-06-1930"] },
-  { title: "Lucky HariHari 天天好运", ids: ["table-15-2026-09-06-1530", "table-15-2026-09-06-1930"] },
+  { title: "Lucky HariHari 天天好运", ids: [
+    "table-15-2026-09-06-1530", "table-15-2026-09-06-1930",
+    "table-15-2026-09-06-1530-6d", "table-15-2026-09-06-1930-6d",
+  ] },
 ];
 
 /** Game name order used by the icon pages to pick the starting slide. */

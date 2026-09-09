@@ -23,7 +23,7 @@ export default function EastFilter() {
     // Match the same column size/location as the other single-game pages.
     if (shown && shown.parentElement) {
       const p = shown.parentElement;
-      p.className = "col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1";
+      p.className = "col-12 col-sm-12 col-md-8 col-lg-7 mx-auto mt-3 px-1";
     }
   }, []);
   return null;

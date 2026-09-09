@@ -676,7 +676,24 @@ async function updateHariHome() {
         const j = JSON.parse(txt);
         const set = hariSetFromJson(j);
         const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-        if (set && !set.prize.every(isDash)) { for (const card of cards) applySet(card, set); break; }
+        if (!set || set.prize.every(isDash)) continue;
+        for (const card of cards) applySet(card, set);
+        applySixValues(id + "-6d", sixFromHariJson(j));
+        try {
+          const jr = await fetchText(`https://api.hari4d.com/Jackpot/GetJackpot?date=${d}T${time}:00`);
+          if (jr) {
+            const jp = JSON.parse(jr);
+            if (jp && jp.jackpotAmount != null) {
+              const vals: Record<string, string> = { jp_pool: "USD " + Number(jp.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
+              const nums: string[] = [];
+              if (jp.number) nums.push(String(jp.number));
+              if (jp.number2) nums.push(String(jp.number2));
+              if (nums.length) vals.jp_no = nums.join(" or ");
+              applyIdValues(id, vals);
+            }
+          }
+        } catch { /* ignore */ }
+        break;
       } catch { /* ignore */ }
     }
   }
