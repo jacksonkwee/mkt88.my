@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
 import RegionButtons from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import GameQuickLinks from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GameQuickLinks";
 import LotteryCard, { type LotteryCardData } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LotteryCard";
 import Footer from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 import LiveResults from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
@@ -37,7 +36,6 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
     <>
       <Header />
       <RegionButtons />
-      <GameQuickLinks />
       <main className="container flex-shrink-0">
         <div className="row">
           <div className="col-12">

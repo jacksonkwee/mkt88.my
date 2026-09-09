@@ -1,3 +1,5 @@
+import GameQuickLinks from "./GameQuickLinks";
+
 const BUTTONS = [
   { label1: "4D Result", label2: "马来西亚", href: "/" },
   { label1: "SG", label2: "新加坡", href: "/singapore-4d-results" },
@@ -15,8 +17,7 @@ export default function RegionButtons() {
           </a>
         ))}
       </div>
+      <GameQuickLinks />
     </div>
   );
 }
-
-
