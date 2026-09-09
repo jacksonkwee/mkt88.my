@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ASSET_BASE } from "./site-paths";
 
-const logo = ASSET_BASE + "/logo-mkt88.svg";
+const logo = ASSET_BASE + "/logo-mkt88.svg?v=3";
 
 const REGION_ITEMS = [
   { label: "Sabah Sarawak 4D Results", href: "/sabah-sarawak-4d-results" },

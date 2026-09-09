@@ -18,6 +18,7 @@ const DESKTOP: ColItem[][] = [
   ],
   [{ type: "card", id: "table-5-2026-09-06" }],
   [{ type: "card", id: "table-7-2026-09-06" }],
+  [{ type: "card", id: "table-11-2026-09-06" }],
   [
     { type: "card", id: "table-13-2026-09-06" },
     { type: "br" },
@@ -41,6 +42,7 @@ const MOBILE_ORDER = [
   "table-5-2026-09-06",
   "table-6-2026-09-06",
   "table-7-2026-09-06",
+  "table-11-2026-09-06",
   "table-13-2026-09-06",
   "table-14-2026-09-06-6d",
   "table-17-2026-09-06",

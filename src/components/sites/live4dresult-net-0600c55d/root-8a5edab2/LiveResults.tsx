@@ -583,10 +583,13 @@ async function refreshOnce() {
   }
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
-      await syncLiveTable("https://live4dresult.net/", [
-        "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13", "table-17",
+      await Promise.all([
+        syncLiveTable("https://live4dresult.net/", [
+          "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13", "table-17",
+        ]),
+        updateGdNineCards(),
+        updateSGOfficial(),
       ]);
-      await updateGdNineCards();
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
     } else if (path === "/singapore-4d-results") {
@@ -659,7 +662,7 @@ export default function LiveResults() {
       setStatus(new Date().toLocaleTimeString());
       timer = window.setTimeout(tick, nextInterval());
     };
-    timer = window.setTimeout(tick, 150);
+    timer = window.setTimeout(tick, 0);
     return () => {
       alive = false;
       if (timer) window.clearTimeout(timer);
