@@ -488,7 +488,7 @@ async function updateGdNineCards() {
 async function refreshOnce() {
   const path = window.location.pathname;
   try {
-    if (path === "/") {
+    if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       await syncLiveTable("https://live4dresult.net/", [
         "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13", "table-17",
       ]);

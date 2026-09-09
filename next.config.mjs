@@ -4,10 +4,8 @@ const nextConfig = {
   output: undefined,
   async redirects() {
     return [
-      { source: "/4dresults", destination: "/", permanent: true },
-      { source: "/4dresults/", destination: "/", permanent: true },
-      { source: "/4d-results", destination: "/", permanent: true },
-      { source: "/4d-results/", destination: "/", permanent: true },
+      { source: "/4d-results", destination: "/4dresults", permanent: true },
+      { source: "/4d-results/", destination: "/4dresults", permanent: true },
     ];
   },
 };
