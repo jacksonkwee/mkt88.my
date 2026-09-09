@@ -647,6 +647,10 @@ async function refreshOnce() {
   }
   // East single pages (Sandakan / Sabah 88 / Cash Sweep) sync like the East page.
   if (/^\/east\//.test(path)) path = "/sabah-sarawak-4d-results";
+  // Past-results for TODAY (Malaysia & Singapore) shows live cards, so refresh
+  // them from the same live sources as the home page.
+  const pastM = /^\/past-results\/(\d{4}-\d{2}-\d{2})$/.exec(path);
+  if (pastM && pastM[1] === dateStrNoPad(new Date())) path = "/";
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       await Promise.all([
