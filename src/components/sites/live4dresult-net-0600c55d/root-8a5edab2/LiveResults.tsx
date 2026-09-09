@@ -370,54 +370,9 @@ function dateFromNineText(text: string): string | undefined {
 
 type GdInfo = { six: SixSet; jp4: Record<string, string>; jp7: Record<string, string> };
 
-/** Grand Dragon 6D + Jackpots from the official gdlotto results endpoint. */
-async function gdInfo(): Promise<GdInfo | null> {
-  const doc = await fetchDoc("https://gdlotto.net/results/ajax/_result.aspx?live=1");
-  if (!doc || !doc.body) return null;
-  const text = (doc.body.innerText || "").replace(/\s+/g, " ");
-  const dm = /Date\s*:\s*(\d{2})\/(\d{2})\/(\d{4})/.exec(text);
-  let date: string | undefined;
-  if (dm) date = weekdayOf(dm[3] + "-" + dm[2] + "-" + dm[1]);
-
-  // ---- 6D result ----
-  const m = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(text);
-  const main = m ? m[1].replace(/\s+/g, "") : "----";
-  const six: SixSet = m
-    ? {
-        main,
-        date,
-        subs: {
-          six_2a: main.slice(0, 5), six_2b: main.slice(1),
-          six_3a: main.slice(0, 4), six_3b: main.slice(2),
-          six_4a: main.slice(0, 3), six_4b: main.slice(3),
-          six_5a: main.slice(0, 2), six_5b: main.slice(4),
-        },
-      }
-    : { main: "----", date };
-
-  // ---- 4D jackpot (pool + letter) ----
-  const jp4: Record<string, string> = {};
-  const pool4 = doc.getElementById("4d_jpool");
-  if (pool4) jp4.jp4_pool = (pool4.textContent || "").trim();
-  const letter4 = doc.getElementById("4d_jpalphnum");
-  if (letter4) jp4.jp4_letter = (letter4.textContent || "").trim() || "-";
-  const units4 = doc.getElementById("4d_jptotalunit");
-  if (units4 && (units4.textContent || "").trim() !== "") jp4.jp4_units = (units4.textContent || "").trim();
-
-  // ---- Dragon Jackpot 6+1D ----
-  const jp7: Record<string, string> = {};
-  const pool7 = doc.getElementsByClassName("7d_JPool")[0];
-  if (pool7) jp7.jp7_pool = (pool7.textContent || "").trim();
-  const resBlocks = [...doc.querySelectorAll(".dragonjp .djp-res")];
-  if (resBlocks.length >= 1) {
-    const grand = [...resBlocks[0].querySelectorAll("span")].map((s) => s.textContent.trim()).join("");
-    const gd7 = grand.replace(/[^0-9]/g, "");
-    // 6+1D shown as six digits + a bonus digit
-    if (/^\d{7}$/.test(gd7)) jp7.jp7_grand = gd7.slice(0, 6) + " + " + gd7[6];
-  }
-  return { six, jp4, jp7 };
-}
-
+/** Grand Dragon 6D + Jackpots - only for a date that actually has results
+ *  (today first, then yesterday), so old numbers are never labelled with a
+ *  new date. */
 function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string } | null {
   const text = doc.body ? doc.body.innerText : "";
   const tokens = text.split(/\s+/).map((l) => l.trim()).filter(Boolean);
@@ -442,6 +397,54 @@ function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons
   while (prize.length < 3) prize.push("----");
   return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo: dm ? dm[1] + "/" + dm[2] : undefined };
 }
+
+async function gdInfo(): Promise<GdInfo | null> {
+  for (let off = 0; off <= 1; off++) {
+    const iso = dateStrNoPad(new Date(Date.now() - off * 86400000));
+    const [y, mo, dd] = iso.split("-");
+    const doc = await fetchDoc(
+      "https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + mo + "/" + dd + "/" + y
+    );
+    if (!doc || !doc.body) continue;
+    const text = (doc.body.innerText || "").replace(/\s+/g, " ");
+    const date = weekdayOf(iso);
+    const m = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(text);
+    const jp4: Record<string, string> = {};
+    const pool4 = doc.getElementById("4d_jpool");
+    if (pool4) jp4.jp4_pool = (pool4.textContent || "").trim();
+    const letter4 = doc.getElementById("4d_jpalphnum");
+    if (letter4 && (letter4.textContent || "").trim()) jp4.jp4_letter = (letter4.textContent || "").trim();
+    const units4 = doc.getElementById("4d_jptotalunit");
+    if (units4 && (units4.textContent || "").trim()) jp4.jp4_units = (units4.textContent || "").trim();
+    const jp7: Record<string, string> = {};
+    const pool7 = doc.getElementsByClassName("7d_JPool")[0];
+    if (pool7) jp7.jp7_pool = (pool7.textContent || "").trim();
+    const resBlocks = [...doc.querySelectorAll(".dragonjp .djp-res")];
+    if (resBlocks.length >= 1) {
+      const grand = [...resBlocks[0].querySelectorAll("span")].map((sp) => sp.textContent.trim()).join("");
+      const gd7 = grand.replace(/[^0-9]/g, "");
+      if (/^\d{7}$/.test(gd7)) jp7.jp7_grand = gd7.slice(0, 6) + " + " + gd7[6];
+    }
+    const main = m ? m[1].replace(/\s+/g, "") : "----";
+    const hasDraw = /^\d{6}$/.test(main) || (jp7.jp7_grand || "").includes(" + ");
+    if (!hasDraw) continue;
+    const six: SixSet = /^\d{6}$/.test(main)
+      ? {
+          main,
+          date,
+          subs: {
+            six_2a: main.slice(0, 5), six_2b: main.slice(1),
+            six_3a: main.slice(0, 4), six_3b: main.slice(2),
+            six_4a: main.slice(0, 3), six_4b: main.slice(3),
+            six_5a: main.slice(0, 2), six_5b: main.slice(4),
+          },
+        }
+      : { main: "----", date };
+    return { six, jp4, jp7 };
+  }
+  return null;
+}
+
 async function updateGdNineCards() {
   // Grand Dragon 6D + 4D jackpot + 6+1D jackpot (official gdlotto endpoint)
   try {
@@ -454,32 +457,45 @@ async function updateGdNineCards() {
   } catch {
     // ignore
   }
-  // Nine Lotto (official) + derived 6D + 6+1D jackpot
+  // Nine Lotto (official) - show results ONLY for a date that actually has
+  // data. Today's draw is tried first; if it is not published yet, yesterday's
+  // completed draw is shown with its own correct date label.
   try {
-    const nd = await fetchDoc("https://9lotto.com/result");
-    if (!nd) return;
-    const ns = parseNineDoc(nd);
     const nineCard = document.querySelector(".card.outer-box.table-17");
-    const nineDate = nd.body ? dateFromNineText(nd.body.innerText) : undefined;
-    if (nineCard && ns) {
-      if (nineDate) {
-        const dt = nineCard.querySelector('[data-id="date"]');
-        if (dt && dt.textContent !== nineDate) setText(dt, nineDate);
-      }
-      if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: nineDate });
-      const six = ns.prize ? nineSixFromPrizes(ns.prize) : null;
-      if (six && six.main && !isDash(six.main)) {
-        applySixValues("table-18-2026-09-06-6d", { ...six, date: nineDate });
-      } else if (nineDate) {
-        applySixValues("table-18-2026-09-06-6d", { main: "----", date: nineDate });
-      }
+    for (let off = 0; off <= 1; off++) {
+      const d = dateStrNoPad(new Date(Date.now() - off * 86400000));
+      const [y, m, dd] = d.split("-");
+      const nd = await fetchDoc("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(dd));
+      if (!nd) continue;
+      const ns = parseNineDoc(nd);
       const jp9 = nineJpFromDoc(nd);
+      const six = ns ? nineSixFromPrizes(ns.prize) : null;
+      const hasAny = (arr?: string[]) => !!arr && arr.some((v) => /^\d{4}$/.test(v));
+      const jpRows = (jp9 && jp9.rows) || {};
+      const hasJp = !!jp9 && (!!jp9.pool || Object.values(jpRows).some((v) => /^\d{6} \+ \d( \+ \d{4})?$/.test(v)));
+      const hasData =
+        (ns && (hasAny(ns.prize) || hasAny(ns.special) || hasAny(ns.cons))) ||
+        (six && six.main && !isDash(six.main)) ||
+        hasJp;
+      if (!hasData) continue;
+      const dateLbl = weekdayOf(d);
+      if (nineCard && ns) {
+        const dt = nineCard.querySelector('[data-id="date"]');
+        if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
+        if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
+      }
+      if (six && six.main && !isDash(six.main)) {
+        applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl });
+      } else {
+        applySixValues("table-18-2026-09-06-6d", { main: "----", date: dateLbl });
+      }
       if (jp9) {
         const vals: Record<string, string> = {};
         if (jp9.pool) vals.n9_sj_pool = jp9.pool;
         if (jp9.rows) for (const [k, v] of Object.entries(jp9.rows)) if (v) vals[k] = v;
         applyIdValues("table-18-2026-09-06-6d", vals);
       }
+      break;
     }
   } catch {
     // ignore

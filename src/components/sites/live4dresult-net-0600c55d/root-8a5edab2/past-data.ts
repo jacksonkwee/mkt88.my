@@ -23,9 +23,21 @@ function todayIso(): string {
 // newest results are reachable from the past-results calendar/next button.
 function buildDates(): string[] {
   const dates = parsed.dates.slice();
-  const last = dates[dates.length - 1];
   const today = todayIso();
-  if (today && last && today > last) dates.push(today);
+  if (!today) return dates;
+  const last = dates[dates.length - 1];
+  const start = last && last < today ? new Date(last + "T12:00:00") : new Date(today + "T12:00:00");
+  if (!last || today <= last) return dates;
+  const d = new Date(start);
+  const iso = (dt: Date) => {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return dt.getFullYear() + "-" + pad(dt.getMonth() + 1) + "-" + pad(dt.getDate());
+  };
+  d.setDate(d.getDate() + 1);
+  while (iso(d) <= today) {
+    dates.push(iso(d));
+    d.setDate(d.getDate() + 1);
+  }
   return dates;
 }
 
