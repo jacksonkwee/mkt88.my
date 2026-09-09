@@ -15,9 +15,15 @@ export default function EastFilter() {
     const table = op ? OP_TO_TABLE[op] : null;
     if (!table) return;
     const cards = [...document.querySelectorAll(".card.outer-box")];
+    let shown: HTMLElement | null = null;
     for (const c of cards) {
-      if (c.className.includes(table)) continue;
+      if (c.className.includes(table)) { shown = c as HTMLElement; continue; }
       (c as HTMLElement).style.display = "none";
+    }
+    // Centre the single visible result on the page.
+    if (shown && shown.parentElement) {
+      const p = shown.parentElement;
+      p.className = "col-12 col-sm-12 col-md-8 col-lg-7 mx-auto mt-3 px-1";
     }
   }, []);
   return null;

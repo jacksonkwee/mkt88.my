@@ -638,6 +638,38 @@ async function updateCambodiaFeed() {
   } catch { /* ignore */ }
 }
 
+/** Live updates for the phone pager: East games + Perdana + HariHari. */
+async function syncEastHome() {
+  await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
+}
+async function updatePerdanaHome() {
+  for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
+    for (const off of [0, -1]) {
+      const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
+      const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + d);
+      if (!pd) continue;
+      const st = parsePerdana(pd)[time];
+      const cards = [...document.querySelectorAll('[id="' + id + '"]')];
+      if (st && !st.prize.every(isDash)) { for (const card of cards) applySet(card, st); break; }
+    }
+  }
+}
+async function updateHariHome() {
+  for (const [time, id] of [["15:30", "table-15-2026-09-06-1530"], ["19:30", "table-15-2026-09-06-1930"]]) {
+    for (const off of [0, -1]) {
+      const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
+      const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${d}T${time}:00`);
+      if (!txt) continue;
+      try {
+        const j = JSON.parse(txt);
+        const set = hariSetFromJson(j);
+        const cards = [...document.querySelectorAll('[id="' + id + '"]')];
+        if (set && !set.prize.every(isDash)) { for (const card of cards) applySet(card, set); break; }
+      } catch { /* ignore */ }
+    }
+  }
+}
+
 async function refreshOnce() {
   let path = window.location.pathname;
   // Single-game pages (e.g. /result/magnum) update from the same live sources.
@@ -660,6 +692,9 @@ async function refreshOnce() {
         updateGdNineCards(),
         updateSGOfficial(),
         updateCambodiaFeed(),
+        syncEastHome(),
+        updatePerdanaHome(),
+        updateHariHome(),
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);

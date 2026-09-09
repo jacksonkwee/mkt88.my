@@ -94,7 +94,7 @@ export const gameBySlug: Record<string, GameDef> = Object.fromEntries(
 
 export interface EastLink { slug: string; name: string; zh: string; logo: string; href: string; }
 export const EAST_LINKS: EastLink[] = [
-  { slug: "stc", name: "Sandakan 4D", zh: "STC 4D", logo: L("logo_stc4d.gif?v=1"), href: "/sabah-sarawak-4d-results?op=sandakan" },
-  { slug: "sabah88", name: "Sabah 88 4D", zh: "Sabah 88", logo: L("logo_sabah88.gif?v=1"), href: "/sabah-sarawak-4d-results?op=sabah88" },
-  { slug: "cashsweep", name: "Cash Sweep 4D", zh: "Cash Sweep", logo: L("logo_cashsweep.gif?v=1"), href: "/sabah-sarawak-4d-results?op=cashsweep" },
+  { slug: "stc", name: "Sandakan 4D", zh: "山打根", logo: L("logo_stc4d.gif?v=1"), href: "/sabah-sarawak-4d-results?op=sandakan" },
+  { slug: "sabah88", name: "Sabah 88 4D", zh: "沙巴88", logo: L("logo_sabah88.gif?v=1"), href: "/sabah-sarawak-4d-results?op=sabah88" },
+  { slug: "cashsweep", name: "Cash Sweep 4D", zh: "沙捞越", logo: L("logo_cashsweep.gif?v=1"), href: "/sabah-sarawak-4d-results?op=cashsweep" },
 ];
