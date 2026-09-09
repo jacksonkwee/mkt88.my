@@ -4,6 +4,7 @@ import RegionButtons from "../../../../components/sites/live4dresult-net-0600c55
 import PastResultsView from "../../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/PastResultsView";
 import Footer from "../../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 import { PAST_DATES } from "../../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
+import GoogleAdsense from "../../../../components/GoogleAdsense";
 
 export const metadata: Metadata = {
   title: "Cambodia Past Results - mkt88 4D",
@@ -22,6 +23,8 @@ export default async function CambodiaPastDatePage({ params }: { params: Promise
       <RegionButtons />
       <PastResultsView date={date} view="kh" />
       <Footer />
+      {PAST_DATES.includes(date) ? <GoogleAdsense /> : null}
     </>
   );
 }
+

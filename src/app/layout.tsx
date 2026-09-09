@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import PWARegister from "../components/PWARegister";
 import NoticeBar from "../components/NoticeBar";
 import TopBanner from "../components/TopBanner";
@@ -46,12 +45,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         {children}
         <PWARegister />
         <SiteCustomizer />
-        <Script
-          strategy="afterInteractive"
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3670692731712446"
-          crossOrigin="anonymous"
-        />
       </body>
     </html>
   );

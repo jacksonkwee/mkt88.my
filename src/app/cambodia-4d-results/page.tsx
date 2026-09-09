@@ -3,6 +3,7 @@ import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5eda
 import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
 import MultiDrawResults from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/MultiDrawResults";
 import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
+import GoogleAdsense from "../../components/GoogleAdsense";
 
 export const metadata: Metadata = {
   title: "Cambodia 4D, Lotto 4D, Dragon Lotto, Perdana Lottery, Lucky 4D",
@@ -17,6 +18,7 @@ export default function CambodiaResultsPage() {
       <RegionButtons />
       <MultiDrawResults />
       <Footer />
+      <GoogleAdsense />
     </>
   );
 }

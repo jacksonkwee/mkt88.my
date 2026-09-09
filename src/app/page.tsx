@@ -4,6 +4,7 @@ import LotteryGrid from "../components/sites/live4dresult-net-0600c55d/root-8a5e
 import Footer from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 import LiveResults from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
 import DirectTopAd from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/DirectTopAd";
+import GoogleAdsense from "../components/GoogleAdsense";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
         </div>
       </main>
       <Footer />
+      <GoogleAdsense />
       <LiveResults />
     </>
   );
