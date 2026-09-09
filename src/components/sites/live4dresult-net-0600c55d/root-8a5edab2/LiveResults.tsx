@@ -675,7 +675,8 @@ async function refreshOnce() {
   // Single-game pages (e.g. /result/magnum) update from the same live sources.
   const gm = /^\/result\/([^/?#]+)/.exec(path);
   if (gm && gameBySlug[gm[1]]) {
-    path = gameBySlug[gm[1]].mode === 'home' ? '/' : '/lotto-4d';
+    // Icon pages run the full pager refresh (all games update live).
+    path = '/';
   }
   // East single pages (Sandakan / Sabah 88 / Cash Sweep) sync like the East page.
   if (/^\/east\//.test(path)) path = "/sabah-sarawak-4d-results";
