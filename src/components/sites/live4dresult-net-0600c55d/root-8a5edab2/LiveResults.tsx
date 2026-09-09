@@ -529,8 +529,11 @@ async function updateGdNineCards() {
     for (const nineCard of nineCards) {
       if (ns) {
         const dt = nineCard.querySelector('[data-id="date"]');
-        if (dt && dt.textContent !== dateLbl) setText(dt, dateLbl);
-        clearCardNumbers(nineCard);
+        if (dt && dt.textContent !== dateLbl) {
+          setText(dt, dateLbl);
+          // Only wipe the old numbers when the draw date actually changes.
+          clearCardNumbers(nineCard);
+        }
         if (ns.prize && ns.prize.length) applySet(nineCard, { ...ns, date: dateLbl });
       }
     }
