@@ -66,6 +66,19 @@ function setText(el: Element | null, v: string) {
   if (el && el.textContent !== v) el.textContent = v;
 }
 
+/** If a card is labelled with today's date but has no Draw No yet, the draw has
+ *  not happened - clear the stale numbers so nothing shows before it opens. */
+function clearIfNoDraw(target: Element) {
+  const dateEl = target.querySelector('[data-id="date"]');
+  const dnEl = target.querySelector('[data-id="draw_no"]');
+  if (!dateEl || !dnEl) return;
+  const todayLbl = weekdayOf(dateStrNoPad(new Date()));
+  if ((dateEl.textContent || "").trim() !== todayLbl) return;
+  if ((dnEl.textContent || "").trim() !== "") return; // draw published
+  const numEls = [...target.querySelectorAll('[data-id^="number_"]')];
+  for (const el of numEls) if (el.textContent && el.textContent.trim() !== "") el.textContent = "";
+}
+
 async function syncLiveTable(url: string, tableClasses: string[]) {
   const doc = await fetchDoc(url);
   if (!doc) return;
@@ -98,6 +111,7 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
           setText(el, v);
         }
         flash(target);
+        clearIfNoDraw(target);
         continue;
       }
       const changed: { el: Element; v: string }[] = [];
@@ -110,6 +124,7 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
         window.setTimeout(() => setText(c.el, c.v), 140 * i);
       });
       window.setTimeout(() => flash(target), 140 * changed.length);
+      clearIfNoDraw(target);
     }
   }
 }
