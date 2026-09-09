@@ -602,6 +602,39 @@ async function updateSGOfficial() {
   } catch { /* ignore */ }
 }
 
+function feedDig(v: string | undefined): string {
+  return v && /^\d{4}$/.test(v) ? v : "----";
+}
+
+/** Instant Cambodia fallback from the live4d2u.net live feed. Used only when the
+ *  Grand Dragon card has no published number yet for today (e.g. mid-draw). */
+async function updateCambodiaFeed() {
+  try {
+    const u = "https://www.live4d2u.net/liveosx.json?ts=" + Date.now();
+    const txt = await fetchText(u);
+    if (!txt) return;
+    const j = JSON.parse(txt);
+    if (!j || !j.G) return;
+    const g = j.G;
+    const cards = [...document.querySelectorAll(".card.outer-box.table-13")];
+    if (!cards.length) return;
+    const set = (card: Element, id: string, v: string) => {
+      const el = card.querySelector('[data-id="' + id + '"]');
+      if (el && (el.textContent || "") !== v) el.textContent = v;
+    };
+    for (const card of cards) {
+      const f1 = card.querySelector('[data-id="first_prize"]');
+      if (f1 && /^\d{4}$/.test((f1.textContent || "").trim())) continue; // already has today
+      if (g.DD) set(card, "date", g.DD);
+      (["first_prize", "second_prize", "third_prize"]).forEach((id, i) => set(card, id, feedDig(g["P" + (i + 1)])));
+      for (let i = 1; i <= 13; i++) set(card, "special-" + i, feedDig(g["S" + i]));
+      for (let i = 14; i <= 15; i++) set(card, "special-" + i, "");
+      for (let i = 1; i <= 10; i++) set(card, "consolation-" + i, feedDig(g["C" + i]));
+      flash(card);
+    }
+  } catch { /* ignore */ }
+}
+
 async function refreshOnce() {
   let path = window.location.pathname;
   // Single-game pages (e.g. /result/magnum) update from the same live sources.
@@ -617,6 +650,7 @@ async function refreshOnce() {
         ]),
         updateGdNineCards(),
         updateSGOfficial(),
+        updateCambodiaFeed(),
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
@@ -626,6 +660,7 @@ async function refreshOnce() {
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13"]);
       await updateGdNineCards();
+      await updateCambodiaFeed();
       // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
       for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
         for (const off of [0, -1]) {

@@ -22,6 +22,8 @@ const ALLOWED = [
   "www.cashsweep.my",
   "diriwan88.com",
   "www.diriwan88.com",
+  "live4d2u.net",
+  "www.live4d2u.net",
   "gdlotto.net",
   "www.gdlotto.net",
   "9lotto.com",
