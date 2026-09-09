@@ -15,22 +15,23 @@ const byId = new Map<string, LotteryCardData>(allCards.map((c) => [c.id, c]));
 
 const eastHtml = (eastRaw as { colHtml: string }).colHtml || "";
 function extractEast(cls: string): string {
-  // Anchor on the real class attribute to avoid matching text/comment copies.
-  const key = 'class="card outer-box ' + cls + '"';
-  const ci = eastHtml.indexOf(key);
-  if (ci < 0) return "";
-  // Find the opening <div> tag that contains this class attribute.
-  const open = eastHtml.lastIndexOf("<div", ci);
-  if (open < 0) return "";
-  if (!eastHtml.slice(open, ci).includes("class=")) return "";
-  let i = open, depth = 0;
+  // Anchor directly on the real opening div tag.
+  const key = '<div class="card outer-box ' + cls + '"';
+  let start = eastHtml.indexOf(key);
+  if (start < 0) start = eastHtml.indexOf('class="card outer-box ' + cls + '"');
+  if (start < 0) return "";
+  if (!eastHtml.slice(start, start + 20).startsWith("<div")) {
+    const o = eastHtml.lastIndexOf("<div", start);
+    start = o >= 0 ? o : start;
+  }
+  let i = start, depth = 0;
   while (i < eastHtml.length) {
     const o2 = eastHtml.indexOf("<div", i);
     const close = eastHtml.indexOf("</div>", i);
     if (close === -1 || (o2 !== -1 && o2 < close)) { depth++; i = o2 + 4; }
     else { depth--; i = close + 6; if (depth === 0) break; }
   }
-  return rewriteHtml(eastHtml.slice(open, i));
+  return rewriteHtml(eastHtml.slice(start, i));
 }
 
 type PageDef = { title: string; ids?: string[]; html?: string };
@@ -62,10 +63,23 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
+  const dispatchIdx = (el: HTMLDivElement) => {
+    const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    window.dispatchEvent(new CustomEvent("mktpager", { detail: { index: idx } }));
+  };
   const moved = useRef(false);
   useEffect(() => {
     const el = track.current;
-    if (el) el.scrollLeft = Math.max(0, Math.min(idx, PAGES.length - 1)) * el.clientWidth;
+    if (!el) return;
+    el.scrollLeft = Math.max(0, Math.min(idx, PAGES.length - 1)) * el.clientWidth;
+    dispatchIdx(el);
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => { raf = 0; dispatchIdx(el); });
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => { el.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const onTouchStart = (e: React.TouchEvent) => {
