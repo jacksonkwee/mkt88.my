@@ -524,12 +524,13 @@ async function updateGdNineCards() {
 }
 
 function parseSGDate(txt: string): string | undefined {
-  const m = /^[A-Za-z]{3},\s*([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{4})/.exec((txt || "").trim());
+  // Format: "Wed, 09 Sep 2026"
+  const m = /^[A-Za-z]{3},\s*(\d{1,2})\s+([A-Za-z]{3}),?\s+(\d{4})/.exec((txt || "").trim());
   if (!m) return undefined;
   const months: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
-  const mo = months[m[1]];
+  const mo = months[m[2]];
   if (!mo) return undefined;
-  return weekdayOf(m[3] + "-" + mo + "-" + m[2].padStart(2, "0"));
+  return weekdayOf(m[3] + "-" + mo + "-" + m[1].padStart(2, "0"));
 }
 
 /** Parse the latest Singapore Pools 4D draw from their official data file. */
