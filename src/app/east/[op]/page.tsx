@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
 import RegionButtons from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
+import SnapshotPage from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/SnapshotPage";
 import Footer from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import LiveResults from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
-import GoogleAdsense from "../../../components/GoogleAdsense";
-import { rewriteHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
 import raw from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/snapshots/sabah-sarawak-4d-results.content.json";
 
 const OPS: Record<string, { cls: string; title: string; desc: string }> = {
@@ -45,21 +43,14 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
   const { op } = await params;
   const o = OPS[op];
   if (!o) notFound();
-  const cardHtml = rewriteHtml(extractCard(o.cls));
+  const cardHtml = extractCard(o.cls);
+  const wrapped = '<div id="row"><div class="row"><div class="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">' + cardHtml + "</div></div></div>";
   return (
     <>
       <Header />
       <RegionButtons />
-      <main className="container flex-shrink-0">
-        <div className="row">
-          <div className="col-12 col-sm-12 col-md-6 col-lg-4 mt-2 px-1">
-            <div dangerouslySetInnerHTML={{ __html: cardHtml }} />
-          </div>
-        </div>
-      </main>
+      <SnapshotPage html={wrapped} />
       <Footer />
-      <GoogleAdsense />
-      <LiveResults />
     </>
   );
 }
