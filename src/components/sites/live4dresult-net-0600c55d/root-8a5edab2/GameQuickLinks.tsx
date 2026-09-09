@@ -43,8 +43,25 @@ function Tile({ href, logo, name, zh, active, aRef }: { href: string; logo: stri
 }
 
 export default function GameQuickLinks() {
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [activeIdx, setActiveIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  // Highlight the icon that matches the page you are on (web/desktop too).
+  useEffect(() => {
+    const p = window.location.pathname;
+    const q = window.location.search;
+    let idx = -1;
+    const rm = /^\/result\/([^/?#]+)/.exec(p);
+    if (rm) idx = PAGER_ORDER.indexOf(rm[1]);
+    else if (p === "/singapore-4d-results") idx = PAGER_ORDER.indexOf("sg");
+    else if (p === "/sabah-sarawak-4d-results") {
+      const op = new URLSearchParams(q).get("op");
+      if (op === "sandakan") idx = PAGER_ORDER.indexOf("sandakan");
+      else if (op === "sabah88") idx = PAGER_ORDER.indexOf("sabah88");
+      else if (op === "cashsweep") idx = PAGER_ORDER.indexOf("cashsweep");
+    }
+    if (idx >= 0) setActiveIdx(idx);
+  }, []);
+
   useEffect(() => {
     const onPager = (e: Event) => {
       const d = (e as CustomEvent).detail;
