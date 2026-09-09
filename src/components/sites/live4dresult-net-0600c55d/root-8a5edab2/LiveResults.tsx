@@ -74,7 +74,8 @@ function clearIfNoDraw(target: Element) {
   if (!dateEl || !dnEl) return;
   const todayLbl = weekdayOf(dateStrNoPad(new Date()));
   if ((dateEl.textContent || "").trim() !== todayLbl) return;
-  if ((dnEl.textContent || "").trim() !== "") return; // draw published
+  const dnTxt = (dnEl.textContent || "").trim();
+  if (/\d/.test(dnTxt)) return; // draw number present = draw published
   const numEls = [...target.querySelectorAll('[data-id^="number_"]')];
   for (const el of numEls) if (el.textContent && el.textContent.trim() !== "") el.textContent = "";
 }
