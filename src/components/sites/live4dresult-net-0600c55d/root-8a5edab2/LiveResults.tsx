@@ -523,6 +523,57 @@ async function updateGdNineCards() {
   }
 }
 
+function parseSGDate(txt: string): string | undefined {
+  const m = /^[A-Za-z]{3},\s*([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{4})/.exec((txt || "").trim());
+  if (!m) return undefined;
+  const months: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
+  const mo = months[m[1]];
+  if (!mo) return undefined;
+  return weekdayOf(m[3] + "-" + mo + "-" + m[2].padStart(2, "0"));
+}
+
+/** Parse the latest Singapore Pools 4D draw from their official data file. */
+function parseSGOfficial(doc: Document) {
+  const li = doc.querySelector("li");
+  if (!li) return null;
+  const dateEl = li.querySelector(".drawDate");
+  const noEl = li.querySelector(".drawNumber");
+  const read = (sel: string) => { const e = li.querySelector(sel); return e ? (e.textContent || "").trim() : ""; };
+  const prize = [".tdFirstPrize", ".tdSecondPrize", ".tdThirdPrize"].map(read);
+  const starter = [...li.querySelectorAll(".tbodyStarterPrizes td")].map((e) => (e.textContent || "").trim()).slice(0, 10);
+  const cons = [...li.querySelectorAll(".tbodyConsolationPrizes td")].map((e) => (e.textContent || "").trim()).slice(0, 10);
+  const dm = noEl ? /Draw No\.?\s*([0-9]+)/.exec(noEl.textContent || "") : null;
+  const dateLabel = dateEl ? parseSGDate(dateEl.textContent || "") : undefined;
+  if (!prize.every((x) => /^\d{4}$/.test(x))) return null;
+  return { dateLabel, drawNo: dm ? dm[1] : undefined, prize, starter, cons };
+}
+
+/** Update the Singapore 4D card from the official Singapore Pools data file. */
+async function updateSGOfficial() {
+  try {
+    const u = "https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now();
+    const txt = await fetchText(u);
+    if (!txt) return;
+    const doc = new DOMParser().parseFromString(txt, "text/html");
+    const s = parseSGOfficial(doc);
+    if (!s) return;
+    const cards = [...document.querySelectorAll(".card.outer-box.table-11")];
+    for (const card of cards) {
+      const set = (id: string, v: string) => {
+        const el = card.querySelector('[data-id="' + id + '"]');
+        if (el && (el.textContent || "") !== v) el.textContent = v;
+      };
+      if (s.dateLabel) set("date", s.dateLabel);
+      if (s.drawNo) set("draw_no", s.drawNo);
+      (["first_prize", "second_prize", "third_prize"]).forEach((id, i) => set(id, s.prize[i]));
+      s.starter.forEach((v, i) => set("special-" + (i + 1), v));
+      set("special-11", "");
+      s.cons.forEach((v, i) => set("consolation-" + (i + 1), v));
+      flash(card);
+    }
+  } catch { /* ignore */ }
+}
+
 async function refreshOnce() {
   let path = window.location.pathname;
   // Single-game pages (e.g. /result/magnum) update from the same live sources.
@@ -540,6 +591,7 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
     } else if (path === "/singapore-4d-results") {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
+      await updateSGOfficial();
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13", "table-17"]);
       await updateGdNineCards();
