@@ -250,6 +250,65 @@ function parseGdFourHtml(html: string): Set | null {
   return { prize: prize.slice(0, 3), special: special.slice(0, 13), cons: cons.slice(0, 10) };
 }
 
+function prevDayIso(iso: string): string {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() - 1);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+}
+function sixMainOf(html: string): string | null {
+  const txt = cleanHtml(html);
+  const m = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
+  return m ? m[1].replace(/\s+/g, "") : null;
+}
+/** True only when the requested date itself has a new official draw (its 6D
+ *  number differs from the previous day's, or there is no previous number). */
+async function gdHasNewDraw(date: string): Promise<boolean> {
+  try {
+    const [y, m, d] = date.split("-");
+    const prev = prevDayIso(date);
+    const [py, pm, pd] = prev.split("-");
+    const [cur, before] = await Promise.all([
+      httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y),
+      httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + pm + "/" + pd + "/" + py),
+    ]);
+    const a = sixMainOf(cur);
+    const b = sixMainOf(before);
+    return !!a && (!b || a !== b);
+  } catch {
+    return false;
+  }
+}
+function nineSixOf(html: string): string | null {
+  const nums: string[] = [];
+  const trRe = /<tr class="result-numbersjp">([\s\S]*?)<\/tr>/g;
+  let mm: RegExpExecArray | null;
+  let guard = 0;
+  while ((mm = trRe.exec(html)) && guard++ < 20) {
+    const vals = [...mm[1].matchAll(/class="result-sjp-prize"[^>]*>([^<]+)</g)].map((x) => x[1].trim());
+    if (vals.length >= 3 && /^\d{4}$/.test(vals[vals.length - 1])) nums.push(vals[vals.length - 1]);
+  }
+  if (nums.length < 3) return null;
+  const main = nums[0][0] + nums[1][0] + nums[2][0] + nums[0][3] + nums[1][3] + nums[2][3];
+  return /^\d{6}$/.test(main) ? main : null;
+}
+async function nineHasNewDraw(date: string): Promise<boolean> {
+  try {
+    const [y, m, d] = date.split("-");
+    const prev = prevDayIso(date);
+    const [py, pm, pd] = prev.split("-");
+    const [cur, before] = await Promise.all([
+      httpGet("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(d)),
+      httpGet("https://9lotto.com/result/" + py + "-" + Number(pm) + "-" + Number(pd)),
+    ]);
+    const a = nineSixOf(cur);
+    const b = nineSixOf(before);
+    return !!a && (!b || a !== b);
+  } catch {
+    return false;
+  }
+}
+
 /** Grand Dragon 6D + jackpot info for a past draw date. */
 async function gdPastParts(date: string): Promise<{ four?: Set; gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } | null> {
   try {
@@ -383,7 +442,11 @@ export async function GET(req: NextRequest) {
     if ((!nine || !nine.prize || !nine.prize[0]) && date === "2026-09-07") {
       nine = { ...NINE_0709 };
     }
-    const [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
+    let [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
+    // Do not show Grand Dragon / Nine Lotto for a date whose official draw has
+    // not actually been published yet (blank until the real result comes out).
+    if (!(await gdHasNewDraw(date))) gdParts = null;
+    if (!(await nineHasNewDraw(date))) nineParts = null;
     if ((!gd || !gd.prize || !gd.prize[0]) && gdParts && gdParts.four) {
       gd = gdParts.four;
     }

@@ -55,13 +55,7 @@ export default function GameQuickLinks() {
       {EAST_LINKS.map((g) => (
         <Tile key={g.slug} href={g.href} logo={g.logo} name={g.name} zh={g.zh} />
       ))}
-      <Tile
-        href="https://www.singaporepools.com.sg/en/product/pages/4d_results.aspx"
-        logo={SG_LOGO}
-        name="Singapore 4D"
-        zh="新加坡"
-        external
-      />
+      <Tile href="/singapore-4d-results" logo={SG_LOGO} name="Singapore 4D" zh="新加坡" />
     </div>
   );
 }
