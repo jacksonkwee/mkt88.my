@@ -445,8 +445,10 @@ export async function GET(req: NextRequest) {
     let [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
     // Do not show Grand Dragon / Nine Lotto for a date whose official draw has
     // not actually been published yet (blank until the real result comes out).
-    if (!(await gdHasNewDraw(date))) gdParts = null;
-    if (!(await nineHasNewDraw(date))) nineParts = null;
+    const gdNew = await gdHasNewDraw(date);
+    const nineNew = await nineHasNewDraw(date);
+    if (!gdNew) { gdParts = null; gd = null; }
+    if (!nineNew) { nineParts = null; nine = null; }
     if ((!gd || !gd.prize || !gd.prize[0]) && gdParts && gdParts.four) {
       gd = gdParts.four;
     }
