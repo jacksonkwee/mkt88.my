@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GAME_DEFS, EAST_LINKS } from "./GameDefs";
 
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
@@ -11,9 +11,10 @@ const PAGER_ORDER = [
   "sabah88", "sandakan", "cashsweep", "perdana", "lucky-harihari",
 ];
 
-function Tile({ href, logo, name, zh, active }: { href: string; logo: string; name: string; zh?: string; active?: boolean }) {
+function Tile({ href, logo, name, zh, active, aRef }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void }) {
   return (
     <a
+      ref={aRef}
       href={href}
       title={name}
       style={{
@@ -43,6 +44,7 @@ function Tile({ href, logo, name, zh, active }: { href: string; logo: string; na
 
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(0);
+  const refs = useRef<(HTMLAnchorElement | null)[]>([]);
   useEffect(() => {
     const onPager = (e: Event) => {
       const d = (e as CustomEvent).detail;
@@ -51,6 +53,10 @@ export default function GameQuickLinks() {
     window.addEventListener("mktpager", onPager);
     return () => window.removeEventListener("mktpager", onPager);
   }, []);
+  useEffect(() => {
+    const el = refs.current[activeIdx];
+    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [activeIdx]);
 
   const defsBySlug: Record<string, (typeof GAME_DEFS)[number]> = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
   const eastBySlug: Record<string, (typeof EAST_LINKS)[number]> = Object.fromEntries(EAST_LINKS.map((g) => [g.slug, g]));
@@ -83,7 +89,7 @@ export default function GameQuickLinks() {
       }}
     >
       {items.map((it, i) => (
-        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} />
+        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} />
       ))}
     </div>
   );

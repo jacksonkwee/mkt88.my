@@ -104,9 +104,9 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
   };
   return (
     <div ref={track}
-      style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", touchAction: "pan-y", alignItems: "stretch", height: "calc(100dvh - 150px)" }}>
+      style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", touchAction: "pan-y", alignItems: "stretch" }}>
       {PAGES.map((pg) => (
-        <div key={pg.title} style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehaviorY: "contain", padding: "4px 2px 24px" }}>
+        <div key={pg.title} style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
           <div style={{ textAlign: "center", fontWeight: 800, color: "#cc0000", margin: "6px 0 2px", fontSize: 16 }}>{pg.title}</div>
           {pg.html ? (
             <div dangerouslySetInnerHTML={{ __html: pg.html }} />
