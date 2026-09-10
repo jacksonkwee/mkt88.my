@@ -144,7 +144,9 @@ const BOOT_SCRIPT = `
     watchSix();
     var sixCells = document.querySelectorAll('[data-id^="six_"]');
     for(var si=0;si<sixCells.length;si++) fixSix(sixCells[si]);
-    if(changed){ try { window.dispatchEvent(new Event("mkt-snap")); } catch(e){} }
+    // No event dispatch here: it made React re-render (and re-insert the stale
+    // markup) in a loop. React gets its values from the server snapshot; the
+    // writers above keep the DOM up to date.
   }
   function publish(j){
     if(!j) return;
@@ -208,6 +210,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
 
 
 
