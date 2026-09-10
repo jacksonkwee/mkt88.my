@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ADS_CLIENT, ADS_ENABLED, ADS_SLOTS } from "./ad-config";
+import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 
 interface Props {
   slot: keyof typeof ADS_SLOTS;
@@ -11,6 +12,8 @@ interface Props {
 export default function AdSlot({ slot, className }: Props) {
   const insRef = useRef<HTMLModElement>(null);
   useEffect(() => {
+    // AdSense is for the website. The Android app uses AdMob instead.
+    if (isCapacitorApp()) return;
     if (!ADS_ENABLED) return;
     const client = ADS_CLIENT;
     if (!client) return;
@@ -34,6 +37,7 @@ export default function AdSlot({ slot, className }: Props) {
     return () => clearTimeout(t);
   }, []);
 
+  if (isCapacitorApp()) return null;
   if (!ADS_ENABLED) return null;
   const adSlotId = ADS_SLOTS[slot];
   if (!adSlotId) return null;
