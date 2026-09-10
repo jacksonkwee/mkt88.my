@@ -105,9 +105,8 @@ function applySnapshot(): boolean {
 function maskStaleCards(classes: string[]): void {
   for (const cls of classes) {
     for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls))) {
-      for (const el of Array.from(card.querySelectorAll("[data-id]"))) {
+      for (const el of Array.from(card.querySelectorAll("[data-id], .lottery-prize-number, .lottery-number"))) {
         const k = el.getAttribute("data-id") || "";
-        if (!k) continue;
         const v = (el.textContent || "").trim();
         if (k === "date" || k === "draw_no" || /^\d{3,6}$/.test(v)) {
           if (!el.hasAttribute("data-mkt-orig")) el.setAttribute("data-mkt-orig", v);
@@ -757,6 +756,38 @@ async function updateCambodiaFeed() {
   } catch { /* ignore */ }
 }
 
+type FastFeed = {
+  date: string;
+  perdana: Record<string, PrizeSet | null>;
+  hari: Record<string, { set: PrizeSet | null; six: SixSet | null; jp: Record<string, string> | null } | null>;
+};
+
+const PERDANA_ID: Record<string, string> = { "15:30": "table-16-2026-09-06-1530", "19:30": "table-16-2026-09-06-1930" };
+const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "19:30": "table-15-2026-09-06-1930" };
+
+/** One fast request (server-cached) that fills Perdana + Lucky HariHari first. */
+async function syncCambodiaFast(): Promise<boolean> {
+  try {
+    const res = await fetch("/api/cambodia-live", { cache: "no-store" });
+    if (!res.ok) return false;
+    const j = (await res.json()) as FastFeed;
+    let did = false;
+    for (const t of ["15:30", "19:30"]) {
+      const st = j.perdana ? j.perdana[t] : null;
+      if (st && st.prize && !st.prize.every(isDash)) {
+        for (const card of Array.from(document.querySelectorAll('[id="' + PERDANA_ID[t] + '"]'))) { applySet(card, st); did = true; }
+      }
+      const h = j.hari ? j.hari[t] : null;
+      if (h && h.set && h.set.prize && !h.set.prize.every(isDash)) {
+        for (const card of Array.from(document.querySelectorAll('[id="' + HARI_ID[t] + '"]'))) { applySet(card, h.set); did = true; }
+        if (h.six) applySixValues(HARI_ID[t] + "-6d", h.six);
+        if (h.jp) applyIdValues(HARI_ID[t], h.jp);
+      }
+    }
+    return did;
+  } catch { return false; }
+}
+
 /** Live updates for the phone pager: East games + Perdana + HariHari. */
 async function syncEastHome() {
   await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
@@ -810,6 +841,8 @@ async function refreshOnce() {
   const path = syncPath();
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
+      // Fill the two-draw games straight away, then refresh everything else.
+      await syncCambodiaFast();
       await Promise.all([
         syncLiveTable("https://live4dresult.net/", [
           "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13",
@@ -827,6 +860,7 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
       await updateSGOfficial();
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
+      await syncCambodiaFast();
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13"]);
       await updateGdNineCards();
       await updateCambodiaFeed();
@@ -953,6 +987,9 @@ export default function LiveResults() {
     </div>
   );
 }
+
+
+
 
 
 
