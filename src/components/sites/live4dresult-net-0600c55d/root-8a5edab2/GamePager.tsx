@@ -38,6 +38,16 @@ function extractEast(cls: string): string {
 }
 
 type PageDef = { title: string; ids?: string[]; html?: string };
+
+/** Raw captured HTML is written once (React must not re-insert it on re-render,
+ *  otherwise the freshly applied live values are wiped back to the capture). */
+function RawHtml({ html }: { html: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current && ref.current.innerHTML !== html) ref.current.innerHTML = html;
+  }, [html]);
+  return <div ref={ref} />;
+}
 const PAGES: PageDef[] = [
   { title: "Magnum 4D", ids: ["table-1-2026-09-06", "table-3-2026-09-06", "table-2-2026-09-06"] },
   { title: "Da Ma Cai", ids: ["table-4-2026-09-06", "table-5-2026-09-06"] },
@@ -78,6 +88,25 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
   const night = useDrawOrder();
   const snap = useSnap();
   const pages = pagesFor(night);
+
+  // Raw-HTML slides (Sabah 88 / Sandakan / Cash Sweep) are re-inserted by React
+  // during hydration, so write the snapshot values into them here as well.
+  useEffect(() => {
+    const root = track.current;
+    const cards = snap.cards || {};
+    if (!root || !Object.keys(cards).length) return;
+    for (const [cls, vals] of Object.entries(cards)) {
+      for (const card of Array.from(root.querySelectorAll(".card.outer-box." + cls))) {
+        for (const [id, v] of Object.entries(vals)) {
+          const el = card.querySelector('[data-id="' + id + '"]');
+          if (el && (el.textContent || "").trim() !== v) {
+            el.textContent = v;
+            el.classList.remove("live-pending");
+          }
+        }
+      }
+    }
+  }, [snap, pages]);
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
@@ -124,7 +153,7 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
         <div key={pg.title} style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
           <div style={{ textAlign: "center", fontWeight: 800, color: "#cc0000", margin: "6px 0 2px", fontSize: 16 }}>{pg.title}</div>
           {pg.html ? (
-            <div dangerouslySetInnerHTML={{ __html: pg.html }} />
+            <RawHtml html={pg.html} />
           ) : (
             (pg.ids || []).map((id) => { const card = byId.get(id); return card ? <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} /> : null; })
           )}
@@ -133,6 +162,8 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
     </div>
   );
 }
+
+
 
 
 

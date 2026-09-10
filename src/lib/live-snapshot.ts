@@ -54,6 +54,60 @@ function parseCards(html: string | null): Record<string, Record<string, string>>
   return out;
 }
 
+/** Singapore Pools official top-draw file -> { "table-11": { dataId: value } } */
+function parseSingapore(html: string | null): Record<string, Record<string, string>> {
+  if (!html) return {};
+  const out: Record<string, string> = {};
+  const liIdx = html.indexOf("<li");
+  const li = liIdx >= 0 ? html.slice(liIdx, html.indexOf("</li>", liIdx) > 0 ? html.indexOf("</li>", liIdx) : html.length) : "";
+  if (!li) return {};
+  const monthNum: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
+  const cell = (cls: string): string => {
+    const m = new RegExp("class=['\"]" + cls + "['\"][^>]*>([\\s\\S]*?)<\\/", "i").exec(li);
+    return m ? clean(m[1]) : "";
+  };
+  const drawDate = cell("drawDate");
+  const dm = /([A-Za-z]{3}),\s*(\d{1,2})\s+([A-Za-z]{3}),?\s+(\d{4})/.exec(drawDate);
+  if (dm) {
+    const mo = monthNum[dm[3]];
+    if (mo) out.date = weekdayOf(`${dm[4]}-${mo}-${dm[2].padStart(2, "0")}`);
+  }
+  const dn = /Draw No\.?\s*([0-9]+)/.exec(cell("drawNumber"));
+  if (dn) out.draw_no = dn[1];
+  const first = cell("tdFirstPrize"), second = cell("tdSecondPrize"), third = cell("tdThirdPrize");
+  if (first) out.first_prize = first;
+  if (second) out.second_prize = second;
+  if (third) out.third_prize = third;
+  const grabTable = (cls: string): string[] => {
+    const m = new RegExp("class=['\"]" + cls + "['\"][\\s\\S]*?<\\/tbody>", "i").exec(li);
+    if (!m) return [];
+    return [...m[0].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((x) => clean(x[1])).filter(Boolean);
+  };
+  grabTable("tbodyStarterPrizes").slice(0, 10).forEach((v, i) => { out["special-" + (i + 1)] = v; });
+  grabTable("tbodyConsolationPrizes").slice(0, 10).forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
+  return Object.keys(out).length > 3 ? { "table-11": out } : {};
+}
+/** live4d2u live feed -> the three East Malaysia cards (Sandakan / Cash Sweep / Sabah 88). */
+function parseEastFeed(feed: any): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {};
+  if (!feed) return out;
+  const map: Record<string, string> = { ST: "table-8", SW: "table-9", SB: "table-10" };
+  for (const [key, cls] of Object.entries(map)) {
+    const d = feed[key];
+    if (!d) continue;
+    const vals: Record<string, string> = {};
+    if (d.DD) vals.date = String(d.DD);
+    if (d.DN) vals.draw_no = String(d.DN);
+    if (d.P1) vals.first_prize = String(d.P1);
+    if (d.P2) vals.second_prize = String(d.P2);
+    if (d.P3) vals.third_prize = String(d.P3);
+    for (let i = 1; i <= 15; i++) { const v = d["S" + i]; if (v && v !== "-") vals["special-" + i] = String(v); }
+    for (let i = 1; i <= 10; i++) { const v = d["C" + i]; if (v && v !== "-") vals["consolation-" + i] = String(v); }
+    if (Object.keys(vals).length > 3) out[cls] = vals;
+  }
+  return out;
+}
+
 function myDate(offsetDays = 0): { iso: string; noPad: string } {
   const now = new Date(Date.now() + offsetDays * 86400000);
   const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit" }).format(now).split("-");
@@ -159,9 +213,11 @@ async function hariFor(time: string, iso: string, noPad: string): Promise<HariEn
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, perToday, perYest, h15, h19, h15y, h19y] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
+    get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now()),
+    get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
     get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`),
     get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`),
     hariFor("15:30", today.iso, today.noPad),
@@ -170,7 +226,9 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hariFor("19:30", yest.iso, yest.noPad),
   ]);
 
-  const cards = { ...parseCards(east), ...parseCards(home) };
+  // East Malaysia: prefer the live feed (it publishes the newest draw first),
+  // then the live4dresult page, then the Singapore / home sources.
+  const cards = { ...parseCards(east), ...parseEastFeed(feed), ...parseSingapore(sg), ...parseCards(home) };
 
   const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
@@ -201,3 +259,7 @@ export function startWarmer() {
   warmer = setInterval(() => { void buildSnapshot().catch(() => {}); }, SNAPSHOT_TTL);
   (warmer as unknown as { unref?: () => void }).unref?.();
 }
+
+
+
+
