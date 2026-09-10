@@ -246,27 +246,35 @@ function applySet(card: Element, s: PrizeSet) {
   const hasAny = (arr?: string[]) => !!arr && arr.some((v) => !isDash(v));
   if (!hasAny(s.prize) && !hasAny(s.special) && !hasAny(s.cons)) return; // nothing drawn yet
   const pending: { el: Element; v: string }[] = [];
-  const stage = (el: Element | null, v: string | undefined) => {
+  // A brand-new draw (different date) shows every prize as published, including
+  // the ones the official site has not released yet ("----"), so an in-progress
+  // draw never keeps the previous day's numbers on screen.
+  const dateEl = card.querySelector('[data-id="date"]');
+  const curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+  const newDraw = !!s.date && s.date !== curDate;
+  const stage = (el: Element | null, v: string | undefined, force = false) => {
     if (!el || v === undefined) return;
+    const val = v.trim();
     const cur = (el.textContent || "").trim();
-    if (cur === v.trim() || isDash(v)) return;
-    pending.push({ el, v: v.trim() });
+    if (cur === val) return;
+    if (isDash(val) && !force && !newDraw) return;
+    pending.push({ el, v: val });
   };
   const tables = [...card.querySelectorAll("table")];
   const prizeRows = tables[0] ? [...tables[0].querySelectorAll("tr")] : [];
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
-    stage(row ? row.querySelector("td.lottery-prize-number") : null, v);
+    stage(row ? row.querySelector("td.lottery-prize-number") : null, v, newDraw);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
-  s.special.forEach((v, i) => stage(specialCells[i], v));
+  s.special.forEach((v, i) => stage(specialCells[i], v, newDraw));
   if (s.special.length > 0 && specialCells.length > s.special.length) {
     for (let i = s.special.length; i < specialCells.length; i++) {
       if (specialCells[i]) (specialCells[i] as HTMLElement).innerHTML = "&nbsp;";
     }
   }
   const consCells = tables[2] ? [...tables[2].querySelectorAll("td.lottery-number")] : [];
-  s.cons.forEach((v, i) => stage(consCells[i], v));
+  s.cons.forEach((v, i) => stage(consCells[i], v, newDraw));
   if (s.date) {
     const dt = card.querySelector('[data-id="date"]');
     if (dt && dt.textContent !== s.date) pending.unshift({ el: dt, v: s.date });
@@ -1021,6 +1029,7 @@ export default function LiveResults() {
     </div>
   );
 }
+
 
 
 

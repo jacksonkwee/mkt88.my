@@ -66,11 +66,19 @@ const BOOT_SCRIPT = `
   function dot(v){ return !v || v.indexOf("----") === 0; }
   function applySet(card, set){
     if(!card || !set || !set.prize) return;
+    var dateEl = card.querySelector('[data-id="date"]');
+    var curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+    var newDraw = !!set.date && set.date !== curDate;
+    function put(el, v){
+      if(!el || v === undefined || v === null) return;
+      if(dot(v) && !newDraw) return;          // an older draw never blanks a value
+      txt(el, v === "" ? "----" : v);         // a new draw shows what is still pending as "----"
+    }
     var tables = card.querySelectorAll("table");
     var rows = tables[0] ? tables[0].querySelectorAll("tr") : [];
-    (set.prize || []).forEach(function(v, i){ var row = rows[i]; if(!row || dot(v)) return; txt(row.querySelector("td.lottery-prize-number"), v); });
-    if(tables[1]){ var sp = tables[1].querySelectorAll("td.lottery-number"); (set.special || []).forEach(function(v, i){ if(sp[i] && !dot(v)) txt(sp[i], v); }); }
-    if(tables[2]){ var cn = tables[2].querySelectorAll("td.lottery-number"); (set.cons || []).forEach(function(v, i){ if(cn[i] && !dot(v)) txt(cn[i], v); }); }
+    (set.prize || []).forEach(function(v, i){ var row = rows[i]; if(!row) return; put(row.querySelector("td.lottery-prize-number"), v); });
+    if(tables[1]){ var sp = tables[1].querySelectorAll("td.lottery-number"); (set.special || []).forEach(function(v, i){ if(sp[i]) put(sp[i], v); }); }
+    if(tables[2]){ var cn = tables[2].querySelectorAll("td.lottery-number"); (set.cons || []).forEach(function(v, i){ if(cn[i]) put(cn[i], v); }); }
     if(set.date) txt(card.querySelector('[data-id="date"]'), set.date);
     if(set.drawNo) txt(card.querySelector('[data-id="draw_no"]'), set.drawNo);
   }
@@ -150,6 +158,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
 
 
 
