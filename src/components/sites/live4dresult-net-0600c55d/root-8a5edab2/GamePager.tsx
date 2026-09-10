@@ -6,6 +6,8 @@ import { rewriteHtml } from "./site-paths";
 import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
 import eastRaw from "./snapshots/sabah-sarawak-4d-results.content.json";
+import { hariIds, perdanaIds } from "./draw-order";
+import { useDrawOrder } from "./use-draw-order";
 
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
@@ -45,12 +47,21 @@ const PAGES: PageDef[] = [
   { title: "Sabah 88 沙巴88", html: extractEast("table-10") },
   { title: "Sandakan 山打根", html: extractEast("table-8") },
   { title: "Cash Sweep 沙捞越", html: extractEast("table-9") },
-  { title: "Perdana 4D", ids: ["table-16-2026-09-06-1530", "table-16-2026-09-06-1930"] },
-  { title: "Lucky HariHari 天天好运", ids: [
-    "table-15-2026-09-06-1530", "table-15-2026-09-06-1930",
-    "table-15-2026-09-06-1530-6d", "table-15-2026-09-06-1930-6d",
-  ] },
 ];
+
+/**
+ * The Perdana / HariHari slides are time aware: the draw we are waiting for
+ * (or the one that just came out) sits on top, and every HariHari 6D result
+ * sits directly below its own 4D result.
+ */
+function pagesFor(night: boolean): PageDef[] {
+  const loss = PAGES.filter((p) => p.title !== "Perdana 4D" && !p.title.startsWith("Lucky HariHari"));
+  return [
+    ...loss,
+    { title: "Perdana 4D", ids: perdanaIds(night) },
+    { title: "Lucky HariHari 天天好运", ids: hariIds(night) },
+  ];
+}
 
 /** Game name order used by the icon pages to pick the starting slide. */
 export const GAME_PAGER_ORDER = [
@@ -63,6 +74,8 @@ export function gamePagerIndex(name: string): number {
 }
 
 export default function GamePager({ initialIndex = 0, name }: { initialIndex?: number; name?: string }) {
+  const night = useDrawOrder();
+  const pages = pagesFor(night);
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
@@ -74,7 +87,7 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
   useEffect(() => {
     const el = track.current;
     if (!el || el.getClientRects().length === 0) return; // hidden (e.g. desktop) -> no highlight
-    el.scrollLeft = Math.max(0, Math.min(idx, PAGES.length - 1)) * el.clientWidth;
+    el.scrollLeft = Math.max(0, Math.min(idx, pages.length - 1)) * el.clientWidth;
     dispatchIdx(el);
     let raf = 0;
     const onScroll = () => {
@@ -105,7 +118,7 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
   return (
     <div ref={track}
       style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}>
-      {PAGES.map((pg) => (
+      {pages.map((pg) => (
         <div key={pg.title} style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
           <div style={{ textAlign: "center", fontWeight: 800, color: "#cc0000", margin: "6px 0 2px", fontSize: 16 }}>{pg.title}</div>
           {pg.html ? (
@@ -118,3 +131,4 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
     </div>
   );
 }
+

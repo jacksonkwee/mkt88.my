@@ -1,46 +1,39 @@
+"use client";
+
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import rawLotto from "./lotto-data.json";
 import LiveResults from "./LiveResults";
 import DirectTopAd from "./DirectTopAd";
+import { perdanaIds, hariIds } from "./draw-order";
+import { useDrawOrder } from "./use-draw-order";
 
 const cardList = (rawLotto as unknown as { cards: LotteryCardData[] }).cards;
 const byId = new Map<string, LotteryCardData>(cardList.map((c) => [c.id, c]));
 
-type ColItem = { type: "card"; id: string } | { type: "br" };
-
 /**
- * Cambodia / Lotto 4D results grid. Perdana 4D and Lucky HariHari each run
- * TWO draws a day (official: perdana4d.com and hari4d.com) - both draws are
- * shown, one per column, so each game's two draws sit side by side.
+ * Cambodia / Lotto 4D results grid. Perdana 4D and Lucky HariHari each run TWO
+ * draws a day - the draw we are waiting for is shown first, and every HariHari
+ * 6D result sits directly below its own 4D result.
  * Used by both /lotto-4d and /cambodia-4d-results so the region results and
  * the Lotto 4D results are identical.
  */
-const COLUMNS: ColItem[][] = [
-  [
-    { type: "card", id: "table-13-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-14-2026-09-06-6d" },
-  ],
-  [
-    { type: "card", id: "table-17-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-18-2026-09-06-6d" },
-  ],
-  [{ type: "card", id: "table-16-2026-09-06-1530" }],
-  [{ type: "card", id: "table-16-2026-09-06-1930" }],
-  [
-    { type: "card", id: "table-15-2026-09-06-1530" },
-    { type: "br" },
-    { type: "card", id: "table-15-2026-09-06-1530-6d" },
-  ],
-  [
-    { type: "card", id: "table-15-2026-09-06-1930" },
-    { type: "br" },
-    { type: "card", id: "table-15-2026-09-06-1930-6d" },
-  ],
+const LEADING: string[][] = [
+  ["table-13-2026-09-06", "table-14-2026-09-06-6d"],
+  ["table-17-2026-09-06", "table-18-2026-09-06-6d"],
 ];
 
 export default function MultiDrawResults() {
+  const night = useDrawOrder();
+  const per = perdanaIds(night);
+  const hari = hariIds(night);
+  const columns: string[][] = [
+    ...LEADING,
+    [per[0]],
+    [per[1]],
+    [hari[0], hari[1]],
+    [hari[2], hari[3]],
+  ];
+
   return (
     <main className="container flex-shrink-0">
       <div className="row">
@@ -48,12 +41,15 @@ export default function MultiDrawResults() {
           <DirectTopAd />
           <div id="row">
             <div className="row">
-              {COLUMNS.map((items, ci) => (
+              {columns.map((ids, ci) => (
                 <div key={ci} className="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">
-                  {items.map((item, ii) => {
-                    if (item.type === "br") return <br key={ii} />;
-                    const card = byId.get(item.id);
-                    return card ? <LotteryCard key={card.id} card={card} /> : null;
+                  {ids.map((id, ii) => {
+                    const card = byId.get(id);
+                    return card ? (
+                      <div key={id} className={ii > 0 ? "mt-3" : ""}>
+                        <LotteryCard card={card} />
+                      </div>
+                    ) : null;
                   })}
                 </div>
               ))}
@@ -65,5 +61,3 @@ export default function MultiDrawResults() {
     </main>
   );
 }
-
-
