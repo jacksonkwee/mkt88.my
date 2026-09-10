@@ -130,9 +130,17 @@ async function hariFor(time: "15:30" | "19:30", iso: string, noPad: string) {
 
 const isDash = (v: string) => /^----+$/.test((v || "").trim());
 
-export async function GET() {
-  if (cache && Date.now() - cache.at < TTL) return NextResponse.json(cache.data);
+let warmer: ReturnType<typeof setInterval> | null = null;
 
+/** Keep the cache warm in the background so a visitor never waits for the
+ *  upstream sites (Render keeps this Node process alive). */
+function startWarmer() {
+  if (warmer) return;
+  warmer = setInterval(() => { void build(); }, TTL);
+  (warmer as unknown as { unref?: () => void }).unref?.();
+}
+
+async function build(): Promise<Resp> {
   const today = myDate(0);
   const yest = myDate(-1);
 
@@ -164,5 +172,16 @@ export async function GET() {
     hari: { "15:30": h15 || h15y, "19:30": h19 || h19y },
   };
   cache = { at: Date.now(), data };
+  return data;
+}
+
+export async function GET() {
+  if (cache && Date.now() - cache.at < TTL) {
+    startWarmer();
+    return NextResponse.json(cache.data);
+  }
+  const data = await build();
+  startWarmer();
   return NextResponse.json(data);
 }
+
