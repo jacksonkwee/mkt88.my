@@ -87,8 +87,15 @@ const BOOT_SCRIPT = `
     });
   }
   function pull(url, fn){ try { fetch(url, { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(fn).catch(function(){}); } catch(e){} }
-  pull("/api/home-live", function(j){ if(j){ if(j.cards) applyCards(j.cards); applyCambodia(j); } });
-  pull("/api/cambodia-live", function(j){ if(j) applyCambodia(j); });
+  function publish(j){
+    if(!j) return;
+    window.__MKT_SNAP__ = j;
+    if(j.cards) applyCards(j.cards);
+    applyCambodia(j);
+    try { window.dispatchEvent(new Event("mkt-snap")); } catch(e){}
+  }
+  pull("/api/home-live", publish);
+  pull("/api/cambodia-live", publish);
 })();
 `;
 
@@ -107,3 +114,4 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+

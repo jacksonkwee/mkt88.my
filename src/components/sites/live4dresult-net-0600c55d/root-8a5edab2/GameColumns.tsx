@@ -4,6 +4,7 @@ import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
 import { useDrawOrder } from "./use-draw-order";
+import { overridesFor, useSnap } from "./use-live-snapshot";
 
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
@@ -24,6 +25,7 @@ function slotOf(key: string): number {
  */
 export default function GameColumns({ ids }: { ids: string[] }) {
   const night = useDrawOrder();
+  const snap = useSnap();
 
   const cols: { key: string; items: LotteryCardData[] }[] = [];
   for (const id of ids) {
@@ -51,7 +53,7 @@ export default function GameColumns({ ids }: { ids: string[] }) {
         <div key={col.key} className="col-12 col-sm-12 col-md-6 col-lg-4 mt-2 px-1">
           {col.items.map((c, i) => (
             <div key={c.id} className={i > 0 ? "mt-3" : ""}>
-              <LotteryCard card={c} />
+              <LotteryCard card={c} {...overridesFor(snap, c.id, c.cardCls)} />
             </div>
           ))}
         </div>
@@ -59,3 +61,5 @@ export default function GameColumns({ ids }: { ids: string[] }) {
     </div>
   );
 }
+
+

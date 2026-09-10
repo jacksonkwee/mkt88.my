@@ -8,6 +8,7 @@ import lottoRaw from "./lotto-data.json";
 import eastRaw from "./snapshots/sabah-sarawak-4d-results.content.json";
 import { hariIds, perdanaIds } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
+import { overridesFor, useSnap } from "./use-live-snapshot";
 
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
@@ -75,6 +76,7 @@ export function gamePagerIndex(name: string): number {
 
 export default function GamePager({ initialIndex = 0, name }: { initialIndex?: number; name?: string }) {
   const night = useDrawOrder();
+  const snap = useSnap();
   const pages = pagesFor(night);
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
@@ -124,11 +126,14 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
           {pg.html ? (
             <div dangerouslySetInnerHTML={{ __html: pg.html }} />
           ) : (
-            (pg.ids || []).map((id) => { const card = byId.get(id); return card ? <LotteryCard key={card.id} card={card} /> : null; })
+            (pg.ids || []).map((id) => { const card = byId.get(id); return card ? <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} /> : null; })
           )}
         </div>
       ))}
     </div>
   );
 }
+
+
+
 

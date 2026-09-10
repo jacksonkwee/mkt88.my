@@ -6,6 +6,7 @@ import LiveResults from "./LiveResults";
 import DirectTopAd from "./DirectTopAd";
 import { perdanaIds, hariIds } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
+import { overridesFor, useSnap } from "./use-live-snapshot";
 
 const cardList = (rawLotto as unknown as { cards: LotteryCardData[] }).cards;
 const byId = new Map<string, LotteryCardData>(cardList.map((c) => [c.id, c]));
@@ -24,6 +25,7 @@ const LEADING: string[][] = [
 
 export default function MultiDrawResults() {
   const night = useDrawOrder();
+  const snap = useSnap();
   const per = perdanaIds(night);
   const hari = hariIds(night);
   const columns: string[][] = [
@@ -47,7 +49,7 @@ export default function MultiDrawResults() {
                     const card = byId.get(id);
                     return card ? (
                       <div key={id} className={ii > 0 ? "mt-3" : ""}>
-                        <LotteryCard card={card} />
+                        <LotteryCard card={card} {...overridesFor(snap, card.id, card.cardCls)} />
                       </div>
                     ) : null;
                   })}
@@ -61,3 +63,4 @@ export default function MultiDrawResults() {
     </main>
   );
 }
+
