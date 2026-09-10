@@ -190,8 +190,8 @@ export default function NumberHistoryApp() {
               onKeyDown={(e) => e.key === "Enter" && search()}
               placeholder="e.g. 1782"
               inputMode="numeric"
-              style={{ flex: 1, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
-            <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 8, padding: "0 18px", fontSize: 15, cursor: "pointer" }}>Search</button>
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+            <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 8, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>Search</button>
           </div>
 
           {/* 大伯公 meaning (small) */}
@@ -235,11 +235,11 @@ export default function NumberHistoryApp() {
               </div>
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button onClick={() => onToggleFav(primary || data.nums[0])}
-                  style={{ border: "1px solid " + RED, borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
+                  style={{ border: "1px solid " + RED, borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
                   {isFav(primary || data.nums[0]) ? "★ Favourite" : "☆ Add favourite"}
                 </button>
                 <a href={"/favourites?num=" + (primary || data.nums[0])}
-                  style={{ border: "1px solid #ddd", borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff" }}>
+                  style={{ border: "1px solid #ddd", borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
                   ⭐ Pau / Notify
                 </a>
               </div>

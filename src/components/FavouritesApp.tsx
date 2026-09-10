@@ -139,21 +139,21 @@ export default function FavouritesApp() {
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="4-digit number"
               inputMode="numeric"
-              style={{ flex: 1, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
             <a href={isNum(input) ? "/number-history?num=" + input : "#"}
               onClick={(e) => { if (!isNum(input)) e.preventDefault(); }}
-              style={{ display: "flex", alignItems: "center", background: "#f2f2f2", color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "0 12px", fontSize: 13, textDecoration: "none" }}>
+              style={{ display: "flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", background: "#f2f2f2", color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "0 12px", fontSize: 13, textDecoration: "none" }}>
               History
             </a>
           </div>
 
           {perms.length ? (
             <div style={{ marginTop: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
                 <div style={{ fontWeight: 700, fontSize: 14 }}>
                   Permutation 排列 (Pau) <span style={{ color: "#999", fontWeight: 400, fontSize: 12 }}>tap to pick</span>
                 </div>
-                <div style={{ display: "flex", gap: 6 }}>
+                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   <button onClick={selectAll} style={mini("#333")}>Pau 包</button>
                   <button onClick={() => setPicked(reverseSet)} style={mini("#333")}>Reverse 来回</button>
                   <button onClick={clearAll} style={mini("#888")}>Clear</button>
@@ -290,7 +290,7 @@ export default function FavouritesApp() {
 }
 
 function mini(color: string): React.CSSProperties {
-  return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700 };
+  return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" };
 }
 
 
