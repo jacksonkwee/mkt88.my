@@ -14,6 +14,9 @@ import "./globals.css";
 const ASSET = "/sites/live4dresult-net-0600c55d/root-8a5edab2";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.mkt88.my"),
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
   title: "Live 4d results - Magnum, Damacai, Sportstoto, Perdana 4D",
   description: "Real time 4d result. Live 4d updates Magnum 4D, Sports Toto, and DaMaCai 1+3D. Fast, Accurate, and Easy Access.",
   manifest: "/manifest.webmanifest",
@@ -210,6 +213,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
 
 
 

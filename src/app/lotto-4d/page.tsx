@@ -6,6 +6,7 @@ import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5eda
 import GoogleAdsense from "../../components/GoogleAdsense";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/lotto-4d" },
   title: "Lotto 4D, 豪龙4D - 4D Dragon, gdlotto, 9 Lotto, Dragon 4D",
   description:
     "Grand Dragon Lotto 4D, Perdana Lottery 4D (2 draws), Nine Lotto and Lucky HariHari (2 draws) live results.",
@@ -22,3 +23,4 @@ export default function Lotto4d() {
     </>
   );
 }
+

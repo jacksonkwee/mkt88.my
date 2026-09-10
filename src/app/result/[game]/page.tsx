@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ game: str
   const { game } = await params;
   const def = gameBySlug[game];
   if (!def) return { title: "4D Result" };
-  return { title: def.title, description: def.desc };
+  return { title: def.title, description: def.desc, alternates: { canonical: "/result/" + game } };
 }
 
 export async function generateStaticParams() {
@@ -50,4 +50,5 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
     </>
   );
 }
+
 

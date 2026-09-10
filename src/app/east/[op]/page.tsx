@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ op: strin
   const { op } = await params;
   const o = OPS[op];
   if (!o) return { title: "4D Result" };
-  return { title: o.title, description: o.desc };
+  return { title: o.title, description: o.desc, alternates: { canonical: "/east/" + op } };
 }
 
 export default async function EastPage({ params }: { params: Promise<{ op: string }> }) {
@@ -54,3 +54,4 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
     </>
   );
 }
+
