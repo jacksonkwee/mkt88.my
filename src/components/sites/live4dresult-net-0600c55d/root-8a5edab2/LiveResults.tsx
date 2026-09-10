@@ -765,12 +765,42 @@ type FastFeed = {
 const PERDANA_ID: Record<string, string> = { "15:30": "table-16-2026-09-06-1530", "19:30": "table-16-2026-09-06-1930" };
 const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "19:30": "table-15-2026-09-06-1930" };
 
-/** One fast request (server-cached) that fills Perdana + Lucky HariHari first. */
-async function syncCambodiaFast(): Promise<boolean> {
+/** Apply a table-class -> { dataId: value } map to every matching card. */
+function applyCardMap(cards: Record<string, Record<string, string>>) {
+  for (const [cls, vals] of Object.entries(cards || {})) {
+    for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls))) {
+      for (const [id, v] of Object.entries(vals)) {
+        if (v === undefined || v === null || v === "") continue;
+        const el = card.querySelector('[data-id="' + id + '"]');
+        setText(el, v);
+      }
+    }
+  }
+}
+
+/** One fast request (server-cached, pre-warmed) that fills every live card. */
+async function syncFromServerFast(): Promise<boolean> {
   try {
-    const res = await fetch("/api/cambodia-live", { cache: "no-store" });
-    if (!res.ok) return false;
-    const j = (await res.json()) as FastFeed;
+    const [homeRes, camRes] = await Promise.all([
+      fetch("/api/home-live", { cache: "no-store" }).catch(() => null),
+      fetch("/api/cambodia-live", { cache: "no-store" }).catch(() => null),
+    ]);
+    let did = false;
+    if (homeRes && homeRes.ok) {
+      const h = (await homeRes.json()) as { cards?: Record<string, Record<string, string>> };
+      if (h && h.cards) { applyCardMap(h.cards); did = true; }
+    }
+    if (camRes && camRes.ok) {
+      const j = (await camRes.json()) as FastFeed;
+      did = applyCambodiaFeed(j) || did;
+    }
+    return did;
+  } catch { return false; }
+}
+
+/** Apply the Perdana + HariHari values from the fast feed. */
+function applyCambodiaFeed(j: FastFeed): boolean {
+  {
     let did = false;
     for (const t of ["15:30", "19:30"]) {
       const st = j.perdana ? j.perdana[t] : null;
@@ -785,7 +815,7 @@ async function syncCambodiaFast(): Promise<boolean> {
       }
     }
     return did;
-  } catch { return false; }
+  }
 }
 
 /** Live updates for the phone pager: East games + Perdana + HariHari. */
@@ -841,8 +871,9 @@ async function refreshOnce() {
   const path = syncPath();
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
-      // Fill the two-draw games straight away, then refresh everything else.
-      await syncCambodiaFast();
+      // Fill every card from the pre-warmed snapshot first, then refresh the
+      // rest (Singapore, Grand Dragon / Nine Lotto details) in the background.
+      await syncFromServerFast();
       await Promise.all([
         syncLiveTable("https://live4dresult.net/", [
           "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13",
@@ -860,7 +891,7 @@ async function refreshOnce() {
       await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
       await updateSGOfficial();
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
-      await syncCambodiaFast();
+      await syncFromServerFast();
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13"]);
       await updateGdNineCards();
       await updateCambodiaFeed();
@@ -987,6 +1018,8 @@ export default function LiveResults() {
     </div>
   );
 }
+
+
 
 
 
