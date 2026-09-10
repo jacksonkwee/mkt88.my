@@ -180,12 +180,12 @@ const BOOT_SCRIPT = `
     var pending = 0;
     new MutationObserver(function(){
       if(pending) return;
-      pending = setTimeout(function(){ pending = 0; run(); }, 50);
+      pending = setTimeout(function(){ pending = 0; run(); }, 500);
     }).observe(document.documentElement, { childList: true, subtree: true });
   } catch(e){}
   // Keep re-applying: React occasionally re-renders a card from its built-in
   // values, which would otherwise wipe the freshly filled numbers.
-  setInterval(run, 400);
+  setInterval(run, 2500);
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") run(); });
   pull("/api/home-live", publish);
   pull("/api/cambodia-live", publish);

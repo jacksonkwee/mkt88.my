@@ -982,7 +982,7 @@ export default function LiveResults() {
     collectSnapshot();
     const snapTimer = window.setInterval(() => {
       if (alive && document.visibilityState === "visible") collectSnapshot();
-    }, 3000);
+    }, 5000);
     // If a source is unreachable the built-in values come back after 7s.
     const restoreTimer = window.setTimeout(() => { if (alive) restoreUnfilled(); }, 7000);
     const tick = async () => {

@@ -106,7 +106,7 @@ export default function AppTools() {
       }
     };
     paint();
-    const timer = window.setInterval(paint, 1200);
+    const timer = window.setInterval(paint, 3000);
     return () => window.clearInterval(timer);
   }, [hidden, favs]);
 
