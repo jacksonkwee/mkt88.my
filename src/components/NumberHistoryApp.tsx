@@ -301,6 +301,9 @@ export default function NumberHistoryApp() {
 
         <div style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 16 }}>
           Pau 包 shows every permutation · Reverse 来回 shows the number and its reverse.
+          <div style={{ marginTop: 4 }}>
+            Records: Magnum 4D from 25/08/1985 · Sports Toto 4D from 1992 · other games from 2022.
+          </div>
         </div>
       </div>
     </div>
@@ -323,3 +326,4 @@ function chip(active: boolean): React.CSSProperties {
 function mini(color: string): React.CSSProperties {
   return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700 };
 }
+
