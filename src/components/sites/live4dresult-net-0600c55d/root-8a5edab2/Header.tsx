@@ -96,6 +96,11 @@ export default function Header() {
                       Past Results
                     </a>
                   </li>
+                  <li className={LI_BASE + " menu-item-18"}>
+                    <a href="/favourites" className="nav-link" onClick={closeAll}>
+                      Favourite Number <span style={{ color: "#ffd700" }}>收藏号码</span>
+                    </a>
+                  </li>
                   <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
                     <a
                       href="#"
@@ -185,5 +190,6 @@ export default function Header() {
     </header>
   );
 }
+
 
 
