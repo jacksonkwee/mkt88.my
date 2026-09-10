@@ -4,6 +4,7 @@ import NoticeBar from "../components/NoticeBar";
 import TopBanner from "../components/TopBanner";
 import SiteCustomizer from "../components/SiteCustomizer";
 import AppTools from "../components/AppTools";
+import { getSnapshot } from "../lib/live-snapshot";
 import "./vendor/bootstrap.min.css";
 import "./vendor/font-awesome.min.css";
 import "./vendor/theme-style.css";
@@ -36,6 +37,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = { themeColor: "#1633c7", width: "device-width", initialScale: 1 };
+
+// The snapshot must be current for every request, so pages are rendered on the
+// server (the snapshot itself comes from memory in a few milliseconds).
+export const dynamic = "force-dynamic";
 
 /**
  * Boot script (runs while the HTML is still parsing, before the app's JS):
@@ -99,13 +104,16 @@ const BOOT_SCRIPT = `
 })();
 `;
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  let snapJson = "{}";
+  try { const snap = await getSnapshot(); snapJson = JSON.stringify({ cards: snap.cards, perdana: snap.perdana, hari: snap.hari }).replace(/</g, "\\u003c"); } catch { /* ignore */ }
   return (
     <html lang="zh">
       <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
         <NoticeBar />
         <TopBanner />
         {children}
+        <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <PWARegister />
         <SiteCustomizer />
@@ -114,4 +122,5 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     </html>
   );
 }
+
 
