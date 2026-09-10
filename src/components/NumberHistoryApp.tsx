@@ -109,8 +109,7 @@ export default function NumberHistoryApp() {
   // Load a fresh number: select just that number.
   const pick = (n: string) => { setSelected([n]); setInput(n); };
   const search = () => { if (isNum(input)) { setSelected([input]); fetchFor([input]); } };
-  const toggle = (n: string) =>
-    setSelected((cur) => (cur.includes(n) ? cur.filter((x) => x !== n) : [...cur, n]));
+
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -166,7 +165,10 @@ export default function NumberHistoryApp() {
                 </button>
               </div>
               <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>
-                Selected <b>{selected.length}</b>: {selected.slice(0, 12).join(", ")}{selected.length > 12 ? " …" : ""}
+                Checking <b>{selected.length}</b> number{selected.length === 1 ? "" : "s"}:{" "}
+                <span style={{ color: "#111", fontWeight: 600 }}>
+                  {selected.slice(0, 16).join(", ")}{selected.length > 16 ? ` +${selected.length - 16} more` : ""}
+                </span>
               </div>
             </>
           ) : null}
@@ -190,37 +192,6 @@ export default function NumberHistoryApp() {
             </div>
           ) : null}
         </div>
-
-        {/* Permutation picker */}
-        {perms.length ? (
-          <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>
-                Permutation 排列 (Pau) <span style={{ color: "#999", fontWeight: 400, fontSize: 12 }}>— tap to pick any</span>
-              </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                <button onClick={() => setSelected(perms)} style={mini("#333")}>All</button>
-                <button onClick={() => setSelected([primary])} style={mini("#888")}>Clear</button>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {perms.map((p) => {
-                const on = selected.includes(p);
-                const fav = isFav(p);
-                return (
-                  <button key={p} onClick={() => toggle(p)}
-                    style={{
-                      minWidth: 66, padding: "7px 8px", borderRadius: 8, fontSize: 15, fontWeight: 700, letterSpacing: 1, cursor: "pointer",
-                      border: on ? "2px solid " + RED : "1px solid #ccc",
-                      background: fav ? YELLOW : on ? "#ffe9e9" : "#fff", color: "#111",
-                    }}>
-                    {on ? "✓ " : ""}{p}{fav ? " ★" : ""}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
 
         {/* Filters (multi-select) */}
         {data ? (
@@ -326,4 +297,7 @@ function chip(active: boolean): React.CSSProperties {
 function mini(color: string): React.CSSProperties {
   return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700 };
 }
+
+
+
 
