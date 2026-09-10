@@ -56,6 +56,7 @@ export default function FavouritesApp() {
   }, []);
 
   const perms = useMemo(() => (isNum(input) ? uniquePerms(input) : []), [input]);
+  const reverseSet = useMemo(() => (isNum(input) ? [...new Set([input, [...input].reverse().join("")])] : []), [input]);
 
   // When a new valid number is typed, make sure it is selected.
   useEffect(() => {
@@ -153,7 +154,8 @@ export default function FavouritesApp() {
                   Permutation 排列 (Pau) <span style={{ color: "#999", fontWeight: 400, fontSize: 12 }}>tap to pick</span>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <button onClick={selectAll} style={mini("#333")}>Select all</button>
+                  <button onClick={selectAll} style={mini("#333")}>Pau 包</button>
+                  <button onClick={() => setPicked(reverseSet)} style={mini("#333")}>Reverse 来回</button>
                   <button onClick={clearAll} style={mini("#888")}>Clear</button>
                 </div>
               </div>
@@ -290,4 +292,5 @@ export default function FavouritesApp() {
 function mini(color: string): React.CSSProperties {
   return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700 };
 }
+
 

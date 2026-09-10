@@ -52,6 +52,7 @@ export function regionOf(tableId: string): Region {
 }
 
 export interface RawHit {
+  num: string;         // the 4-digit number
   date: string;        // ISO yyyy-mm-dd
   day: number;         // epoch day for sorting
   game: string;
@@ -122,7 +123,7 @@ export function hitsFromHtml(html: string, num: string, dateIso: string): RawHit
     const useDate = card.dateIso || dateIso;
     const d = epochDay(useDate);
     for (const n of card.numbers) {
-      if (n.num === num) out.push({ date: useDate, day: d, game: card.name, logo: card.logo, table: card.table, prize: n.prize });
+      if (n.num === num) out.push({ num: n.num, date: useDate, day: d, game: card.name, logo: card.logo, table: card.table, prize: n.prize });
     }
   }
   return out;
@@ -137,7 +138,7 @@ export function hitsFromDb(num: string): RawHit[] {
     const game = DB.games[g];
     if (!game) continue;
     const day = DB.dayBase + dd;
-    out.push({ date: isoFromEpoch(day), day, game: game.name, logo: game.logo, table: game.table, prize: PRIZE_NAMES[c] || "Special" });
+    out.push({ num, date: isoFromEpoch(day), day, game: game.name, logo: game.logo, table: game.table, prize: PRIZE_NAMES[c] || "Special" });
   }
   return out;
 }
@@ -150,4 +151,58 @@ export function fmtIso(iso: string): string {
   return `${d}-${m}-${y} (${wk})`;
 }
 
+/** Look several numbers up in the offline database at once. */
+export function hitsFromDbMany(nums: Set<string>): RawHit[] {
+  const out: RawHit[] = [];
+  for (const num of nums) {
+    const arr = DB.hits[num];
+    if (!arr || !arr.length) continue;
+    for (const [dd, g, c] of arr) {
+      const game = DB.games[g];
+      if (!game) continue;
+      const day = DB.dayBase + dd;
+      out.push({ num, date: isoFromEpoch(day), day, game: game.name, logo: game.logo, table: game.table, prize: PRIZE_NAMES[c] || "Special" });
+    }
+  }
+  return out;
+}
+
+/** Walk one page/snapshot for several numbers, parsing each card only once. */
+export function hitsFromHtmlMany(html: string, nums: Set<string>, dateIso: string): RawHit[] {
+  const out: RawHit[] = [];
+  for (const seg of splitCards(html)) {
+    const card = parseCardHtml(seg);
+    if (!card.name || !card.table) continue;
+    const useDate = card.dateIso || dateIso;
+    const day = epochDay(useDate);
+    for (const n of card.numbers) {
+      if (!nums.has(n.num)) continue;
+      out.push({ num: n.num, date: useDate, day, game: card.name, logo: card.logo, table: card.table, prize: n.prize });
+    }
+  }
+  return out;
+}
+
+/** The 4-digit reverse of a number (1782 -> 2871). */
+export function reverseNumber(num: string): string {
+  return [...num].reverse().join("");
+}
+
+/** Every unique permutation of a 4-digit number. */
+export function permutationsOf(num: string): string[] {
+  const set = new Set<string>();
+  const chars = [...num].sort();
+  const used = new Array(chars.length).fill(false);
+  const cur: string[] = [];
+  const walk = () => {
+    if (cur.length === chars.length) { set.add(cur.join("")); return; }
+    for (let i = 0; i < chars.length; i++) {
+      if (used[i]) continue;
+      if (i > 0 && chars[i] === chars[i - 1] && !used[i - 1]) continue;
+      used[i] = true; cur.push(chars[i]); walk(); cur.pop(); used[i] = false;
+    }
+  };
+  walk();
+  return [...set].sort();
+}
 

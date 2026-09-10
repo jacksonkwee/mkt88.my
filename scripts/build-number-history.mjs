@@ -4,7 +4,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const DAYS = Number(process.argv[2] || 365);
+const START_ARG = process.argv[2] || "2022-07-27";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
 const outFile = path.resolve("src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json");
@@ -45,6 +45,8 @@ function parseCard(seg) {
   const logo = logoM ? logoM[1].replace(/^\/wp-content/, "/wp-content") : "";
   const dateM = seg.match(/data-id="date">([^<]*)</);
   const dateLbl = dateM ? dateM[1].trim() : "";
+  const dm = /^(\d{2})-(\d{2})-(\d{4})/.exec(dateLbl);
+  const dateIso = dm ? dm[3] + "-" + dm[2] + "-" + dm[1] : "";
   const tableM = seg.match(/class="card outer-box (table-[0-9][^"]*)"/);
   const tableId = tableM ? tableM[1] : "";
 
@@ -72,7 +74,7 @@ function parseCard(seg) {
     const v = c.txt.replace(/\s+/g, "");
     if (/^\d{4}$/.test(v) && cat) numbers.push({ num: v, cat: CATS[cat] });
   }
-  return { tableId, name, logo, dateLbl, numbers };
+  return { tableId, name, logo, dateLbl, dateIso, numbers };
 }
 
 function parsePage(html) {
@@ -102,10 +104,10 @@ function dateSeq(fromIso, days) {
 
 async function main() {
   // Scan ending the day before today (today's draw may be in progress).
-  const today = new Date();
-  const end = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-  const endIso = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth(), end.getUTCDate() - 1)).toISOString().slice(0, 10);
-  const dates = dateSeq(endIso, DAYS).reverse(); // oldest -> newest
+  const now = new Date();
+  const endIso = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - 1)).toISOString().slice(0, 10);
+  const days = Math.round((Date.parse(endIso + "T00:00:00Z") - Date.parse(START_ARG + "T00:00:00Z")) / 86400000) + 1;
+  const dates = dateSeq(endIso, days).reverse(); // oldest -> newest
 
   const games = [];
   const gameKey = new Map();
@@ -124,6 +126,8 @@ async function main() {
         const cards = parsePage(html);
         const dayOff = epochDay(d) - dayBase;
         for (const card of cards) {
+          // Guard against placeholder pages that render a different draw date.
+          if (card.dateIso && card.dateIso !== d) continue;
           let gIdx = gameKey.get(card.name);
           if (gIdx === undefined) {
             gIdx = games.length;
@@ -180,4 +184,5 @@ async function main() {
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
+
 
