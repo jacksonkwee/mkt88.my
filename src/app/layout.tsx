@@ -51,7 +51,8 @@ export const dynamic = "force-dynamic";
 const BOOT_SCRIPT = `
 (function(){
   window.__MKT_BOOT__ = true;
-  function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; if((el.textContent||"").trim() !== v){ el.textContent = v; } el.classList.remove("live-pending"); }
+  var changed = false;
+  function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; if((el.textContent||"").trim() !== v){ el.textContent = v; changed = true; } if(el.classList.contains("live-pending")){ el.classList.remove("live-pending"); changed = true; } }
   function applyCards(cards){
     Object.keys(cards || {}).forEach(function(cls){
       var vals = cards[cls] || {};
@@ -91,14 +92,37 @@ const BOOT_SCRIPT = `
       }
     });
   }
-  function pull(url, fn){ try { fetch(url, { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(fn).catch(function(){}); } catch(e){} }
+  var snap = {};
+  try { var el = document.getElementById("mkt-snapshot"); snap = el && el.textContent ? JSON.parse(el.textContent) : {}; } catch(e){ snap = {}; }
+  window.__MKT_SNAP__ = snap;
+  function run(){
+    changed = false;
+    if(snap && snap.cards) applyCards(snap.cards);
+    applyCambodia(snap);
+    if(changed){ try { window.dispatchEvent(new Event("mkt-snap")); } catch(e){} }
+  }
   function publish(j){
     if(!j) return;
-    window.__MKT_SNAP__ = j;
-    if(j.cards) applyCards(j.cards);
-    applyCambodia(j);
-    try { window.dispatchEvent(new Event("mkt-snap")); } catch(e){}
+    var next = {};
+    Object.keys(snap || {}).forEach(function(k){ next[k] = snap[k]; });
+    Object.keys(j).forEach(function(k){ next[k] = j[k]; });
+    snap = next;
+    window.__MKT_SNAP__ = next;
+    run();
   }
+  function pull(url, fn){ try { fetch(url, { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(fn).catch(function(){}); } catch(e){} }
+
+  run();
+  if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", run); }
+  try {
+    var pending = 0;
+    new MutationObserver(function(){
+      if(pending) return;
+      pending = setTimeout(function(){ pending = 0; run(); }, 50);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  } catch(e){}
+  var tries = 0;
+  var iv = setInterval(function(){ run(); if(++tries > 60) clearInterval(iv); }, 150);
   pull("/api/home-live", publish);
   pull("/api/cambodia-live", publish);
 })();
@@ -110,11 +134,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="zh">
       <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
+        <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <NoticeBar />
         <TopBanner />
         {children}
-        <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
-        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <PWARegister />
         <SiteCustomizer />
         <AppTools />
@@ -122,5 +146,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
+
 
 
