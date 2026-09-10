@@ -85,5 +85,6 @@ td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="mi
 
 /* Results are masked until the live value arrives, so an old draw date or
    number is never shown while loading. */
-[data-id].live-pending { color: transparent !important; }
-[data-id].live-pending::after { content: "…"; color: #b9b9b9; }
+.live-pending { color: transparent !important; }
+.live-pending::after { content: "…"; color: #b9b9b9; }
+
