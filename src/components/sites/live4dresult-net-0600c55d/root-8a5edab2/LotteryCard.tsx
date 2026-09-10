@@ -78,7 +78,7 @@ function isHiddenSixSubPrize(card: LotteryCardData, row: CardRow): boolean {
   if (ids.includes("d6_number_")) {
     return !/(^|\s)d6_number_1(\s|$)/.test(ids);
   }
-  if (!/table-14|table-18|table-19/.test(card.cardCls)) return false;
+  if (!/table-14|table-18|table-19|table-20/.test(card.cardCls)) return false;
   const text = row.cells.map((c) => c.html.replace(/<[^>]+>/g, " ")).join(" ");
   return /(^|\s)(2nd|3rd|4th|5th)\s*Prize/i.test(text) || /(二獎|三獎|四獎|五獎)/.test(text);
 }
