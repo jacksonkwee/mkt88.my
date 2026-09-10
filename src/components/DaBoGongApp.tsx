@@ -5,10 +5,7 @@ import { useSearchParams } from "next/navigation";
 
 const RED = "#cc0000";
 
-type Entry = { num: string; kind: string; keyword: string; meaning: string; image: string };
-type Resp = Entry & { related?: Entry[] };
-
-const img = (u: string) => (u ? "/api/dabogong/img?u=" + encodeURIComponent(u) : "");
+type Resp = { num: string; kind: string; keyword: string; meaning: string; image: string; found: boolean };
 
 export default function DaBoGongApp() {
   const params = useSearchParams();
@@ -18,6 +15,7 @@ export default function DaBoGongApp() {
   const [data, setData] = useState<Resp | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [failedImg, setFailedImg] = useState(false);
   const mounted = useRef(true);
   const reqId = useRef(0);
 
@@ -31,11 +29,12 @@ export default function DaBoGongApp() {
     const id = ++reqId.current;
     setLoading(true);
     setErr("");
+    setFailedImg(false);
     fetch("/api/dabogong?num=" + n, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
         if (!mounted.current || id !== reqId.current) return;
-        if (!j || j.error) { setData(null); setErr("Number not found."); }
+        if (!j || j.error) { setData(null); setErr("Invalid number."); }
         else setData(j);
         setLoading(false);
       })
@@ -48,11 +47,11 @@ export default function DaBoGongApp() {
 
   useEffect(() => {
     if (!num) { setData(null); return; }
-    const t = window.setTimeout(() => look(num), 350);
+    const t = window.setTimeout(() => look(num), 300);
     return () => window.clearTimeout(t);
   }, [num, look]);
 
-  const pick = (n: string) => setNum(n);
+  const src = data ? (failedImg ? "/api/dabogong/img?u=" + encodeURIComponent(data.image) : data.image) : "";
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 60 }}>
@@ -70,7 +69,7 @@ export default function DaBoGongApp() {
             value={num}
             onChange={(e) => setNum(e.target.value.replace(/\D/g, "").slice(0, 4))}
             onKeyDown={(e) => e.key === "Enter" && look(num)}
-            placeholder="输入 3 或 4 位数 / type 3-4 digits"
+            placeholder="输入 3 或 4 位数"
             inputMode="numeric"
             autoFocus
             style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 10, fontSize: 26, letterSpacing: 8, textAlign: "center", fontWeight: 800 }}
@@ -93,9 +92,12 @@ export default function DaBoGongApp() {
             <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: 6, color: RED }}>{data.num}</div>
             <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>{data.kind}</div>
             <img
-              src={img(data.image)}
+              src={src}
               alt={data.keyword || data.num}
-              style={{ width: "100%", maxWidth: 260, borderRadius: 12, border: "1px solid #eee", background: "#fff" }}
+              referrerPolicy="no-referrer"
+              loading="lazy"
+              onError={() => setFailedImg(true)}
+              style={{ width: "100%", maxWidth: 280, borderRadius: 12, border: "1px solid #eee", background: "#fff" }}
             />
             {data.keyword ? (
               <div style={{ marginTop: 10 }}>
@@ -103,24 +105,8 @@ export default function DaBoGongApp() {
                 {data.meaning ? <div style={{ fontSize: 14, color: "#666", marginTop: 2 }}>{data.meaning}</div> : null}
               </div>
             ) : (
-              <div style={{ marginTop: 10, fontSize: 13, color: "#888" }}>Picture shown for {data.num}.</div>
+              <div style={{ marginTop: 10, fontSize: 13, color: "#888" }}>Picture for {data.num}.</div>
             )}
-
-            {data.related && data.related.length ? (
-              <div style={{ marginTop: 14, borderTop: "1px solid #f0f0f0", paddingTop: 10, textAlign: "left" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#555", marginBottom: 6 }}>相关 Related</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {data.related.map((r) => (
-                    <button key={r.num + r.image} onClick={() => pick(r.num)}
-                      style={{ border: "1px solid #eee", borderRadius: 10, background: "#fff", padding: 4, cursor: "pointer", width: 84 }}>
-                      <img src={img(r.image)} alt={r.keyword} style={{ width: "100%", height: 62, objectFit: "cover", borderRadius: 6 }} />
-                      <div style={{ fontSize: 13, fontWeight: 800, marginTop: 2 }}>{r.num}</div>
-                      <div style={{ fontSize: 10, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.keyword}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
         ) : null}
       </div>
