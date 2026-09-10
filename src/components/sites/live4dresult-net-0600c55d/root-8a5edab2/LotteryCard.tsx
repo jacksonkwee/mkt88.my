@@ -64,6 +64,8 @@ function Cell(props: { cell: CardCell; override?: string }) {
   if (cell.attrs?.["data-id"]) attrs["data-id"] = cell.attrs["data-id"];
   const html = fresh ? override! : rewriteHtml(cell.html || "");
   const Tag = cell.tag === "th" ? "th" : "td";
+
+
   return <Tag {...attrs} style={style} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
@@ -130,6 +132,11 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
     </div>
   );
 }
+
+
+
+
+
 
 
 

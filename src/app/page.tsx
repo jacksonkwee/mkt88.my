@@ -3,10 +3,13 @@ import RegionButtons from "../components/sites/live4dresult-net-0600c55d/root-8a
 import LotteryGrid from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LotteryGrid";
 import Footer from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 import LiveResults from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
+import { getSnapshot } from "../lib/live-snapshot";
 import DirectTopAd from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/DirectTopAd";
 import GoogleAdsense from "../components/GoogleAdsense";
 
-export default function Home() {
+export default async function Home() {
+  const snap = await getSnapshot().catch(() => null);
+  const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari } : undefined;
   return (
     <>
       <Header />
@@ -15,7 +18,7 @@ export default function Home() {
         <div className="row">
           <div className="col-sm-12">
             <DirectTopAd />
-            <LotteryGrid />
+            <LotteryGrid snap={snapProp} />
           </div>
         </div>
       </main>
@@ -25,4 +28,5 @@ export default function Home() {
     </>
   );
 }
+
 

@@ -53,13 +53,13 @@ const BOOT_SCRIPT = `
 (function(){
   window.__MKT_BOOT__ = true;
   var changed = false;
-  function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; if((el.textContent||"").trim() !== v){ el.textContent = v; changed = true; } if(el.classList.contains("live-pending")){ el.classList.remove("live-pending"); changed = true; } }
+  function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; var id = el.getAttribute ? (el.getAttribute("data-id") || "") : ""; if(/^six_/.test(id) && /^----+$/.test(String(v).trim())) return; if((el.textContent||"").trim() !== v){ el.textContent = v; changed = true; } if(el.classList.contains("live-pending")){ el.classList.remove("live-pending"); changed = true; } }
   function applyCards(cards){
     Object.keys(cards || {}).forEach(function(cls){
       var vals = cards[cls] || {};
       var nodes = document.querySelectorAll(".card.outer-box." + cls);
       for (var i = 0; i < nodes.length; i++){
-        Object.keys(vals).forEach(function(id){ txt(nodes[i].querySelector('[data-id="' + id + '"]'), vals[id]); });
+        Object.keys(vals).forEach(function(id){ var v = vals[id]; if(!v || v === "-" || v.indexOf("----") === 0) return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
       }
     });
   }
@@ -115,6 +115,18 @@ const BOOT_SCRIPT = `
     var next = {};
     Object.keys(snap || {}).forEach(function(k){ next[k] = snap[k]; });
     Object.keys(j).forEach(function(k){ next[k] = j[k]; });
+    // Merge the two-draw games per draw time: a feed that carries only the
+    // "set" must not drop the 6D numbers / jackpot we already have.
+    if(j.hari && snap && snap.hari){
+      var merged = {};
+      Object.keys(j.hari).forEach(function(t){
+        var cur = snap.hari[t] || {};
+        var add = j.hari[t] || {};
+        merged[t] = { set: add.set || cur.set, six: add.six || cur.six, jp: add.jp || cur.jp };
+      });
+      Object.keys(snap.hari).forEach(function(t){ if(!merged[t]) merged[t] = snap.hari[t]; });
+      next.hari = merged;
+    }
     snap = next;
     window.__MKT_SNAP__ = next;
     run();
@@ -130,8 +142,10 @@ const BOOT_SCRIPT = `
       pending = setTimeout(function(){ pending = 0; run(); }, 50);
     }).observe(document.documentElement, { childList: true, subtree: true });
   } catch(e){}
-  var tries = 0;
-  var iv = setInterval(function(){ run(); if(++tries > 60) clearInterval(iv); }, 150);
+  // Keep re-applying: React occasionally re-renders a card from its built-in
+  // values, which would otherwise wipe the freshly filled numbers.
+  setInterval(run, 400);
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") run(); });
   pull("/api/home-live", publish);
   pull("/api/cambodia-live", publish);
 })();
@@ -158,6 +172,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
+
+
+
+
 
 
 

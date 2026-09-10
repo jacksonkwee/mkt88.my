@@ -23,9 +23,10 @@ function slotOf(key: string): number {
  * A 6D card always sits directly under its own 4D card, and the two-draw
  * games (Perdana / Lucky HariHari) put the draw we are waiting for on the left.
  */
-export default function GameColumns({ ids }: { ids: string[] }) {
+export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; snap?: unknown }) {
   const night = useDrawOrder();
-  const snap = useSnap();
+  const ctxSnap = useSnap();
+  const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
 
   const cols: { key: string; items: LotteryCardData[] }[] = [];
   for (const id of ids) {
@@ -61,5 +62,6 @@ export default function GameColumns({ ids }: { ids: string[] }) {
     </div>
   );
 }
+
 
 

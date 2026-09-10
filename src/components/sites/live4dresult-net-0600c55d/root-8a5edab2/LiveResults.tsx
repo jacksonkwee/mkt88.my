@@ -168,6 +168,10 @@ function weekdayOf(iso: string): string {
 
 function setText(el: Element | null, v: string) {
   if (!el) return;
+  // A 6D sub-prize (2nd..5th) must never be blanked by a source that does not
+  // carry it - otherwise the good value is wiped right after it appears.
+  const id = el.getAttribute("data-id") || "";
+  if (/^six_/.test(id) && /^----+$/.test(v.trim())) return;
   if (el.textContent !== v) el.textContent = v;
   el.classList.remove("live-pending");
 }
@@ -396,7 +400,8 @@ function applySixValues(cardId: string, s: SixSet | null) {
     };
     stage("six_main", s.main);
     if (s.date) stage("date", s.date);
-    if (s.subs) for (const [k, v] of Object.entries(s.subs)) stage(k, v);
+    // Never blank a 6D sub-prize that we do not have a real value for.
+    if (s.subs) for (const [k, v] of Object.entries(s.subs)) { if (!isDash(v)) stage(k, v); }
     if (pending.size === 0) return;
     if (hasClear) {
       for (const [id, v] of pending) {
@@ -1029,6 +1034,8 @@ export default function LiveResults() {
     </div>
   );
 }
+
+
 
 
 

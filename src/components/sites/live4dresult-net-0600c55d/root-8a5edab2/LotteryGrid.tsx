@@ -46,11 +46,12 @@ function DesktopGrid() {
   );
 }
 
-export default function LotteryGrid() {
+export default function LotteryGrid({ snap }: { snap?: unknown }) {
   return (
     <div id="row">
-      <div className="d-lg-none"><GamePager initialIndex={0} /></div>
+      <div className="d-lg-none"><GamePager initialIndex={0} snap={snap} /></div>
       <DesktopGrid />
     </div>
   );
 }
+

@@ -84,9 +84,10 @@ export function gamePagerIndex(name: string): number {
   return i >= 0 ? i : 0;
 }
 
-export default function GamePager({ initialIndex = 0, name }: { initialIndex?: number; name?: string }) {
+export default function GamePager({ initialIndex = 0, name, snap: serverSnap }: { initialIndex?: number; name?: string; snap?: unknown }) {
   const night = useDrawOrder();
-  const snap = useSnap();
+  const ctxSnap = useSnap();
+  const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
   const pages = pagesFor(night);
 
   // Raw-HTML slides (Sabah 88 / Sandakan / Cash Sweep) are re-inserted by React
@@ -98,6 +99,7 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
     for (const [cls, vals] of Object.entries(cards)) {
       for (const card of Array.from(root.querySelectorAll(".card.outer-box." + cls))) {
         for (const [id, v] of Object.entries(vals)) {
+          if (!v || /^----+$/.test(v) || v === "-") continue; // never blank a value
           const el = card.querySelector('[data-id="' + id + '"]');
           if (el && (el.textContent || "").trim() !== v) {
             el.textContent = v;
@@ -162,6 +164,8 @@ export default function GamePager({ initialIndex = 0, name }: { initialIndex?: n
     </div>
   );
 }
+
+
 
 
 

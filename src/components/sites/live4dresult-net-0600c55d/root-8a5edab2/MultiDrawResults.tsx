@@ -23,9 +23,10 @@ const LEADING: string[][] = [
   ["table-17-2026-09-06", "table-18-2026-09-06-6d"],
 ];
 
-export default function MultiDrawResults() {
+export default function MultiDrawResults({ snap: serverSnap }: { snap?: unknown } = {}) {
   const night = useDrawOrder();
-  const snap = useSnap();
+  const ctxSnap = useSnap();
+  const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
   const per = perdanaIds(night);
   const hari = hariIds(night);
   const columns: string[][] = [
@@ -63,4 +64,5 @@ export default function MultiDrawResults() {
     </main>
   );
 }
+
 
