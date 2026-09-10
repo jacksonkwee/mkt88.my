@@ -37,6 +37,61 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#1633c7", width: "device-width", initialScale: 1 };
 
+/**
+ * Boot script (runs while the HTML is still parsing, before the app's JS):
+ * it asks the pre-warmed snapshot for the current numbers and writes them into
+ * the cards straight away, so a visitor sees the latest draw immediately
+ * instead of waiting for the framework to hydrate and fetch.
+ */
+const BOOT_SCRIPT = `
+(function(){
+  window.__MKT_BOOT__ = true;
+  function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; if((el.textContent||"").trim() !== v){ el.textContent = v; } el.classList.remove("live-pending"); }
+  function applyCards(cards){
+    Object.keys(cards || {}).forEach(function(cls){
+      var vals = cards[cls] || {};
+      var nodes = document.querySelectorAll(".card.outer-box." + cls);
+      for (var i = 0; i < nodes.length; i++){
+        Object.keys(vals).forEach(function(id){ txt(nodes[i].querySelector('[data-id="' + id + '"]'), vals[id]); });
+      }
+    });
+  }
+  function dot(v){ return !v || v.indexOf("----") === 0; }
+  function applySet(card, set){
+    if(!card || !set || !set.prize) return;
+    var tables = card.querySelectorAll("table");
+    var rows = tables[0] ? tables[0].querySelectorAll("tr") : [];
+    (set.prize || []).forEach(function(v, i){ var row = rows[i]; if(!row || dot(v)) return; txt(row.querySelector("td.lottery-prize-number"), v); });
+    if(tables[1]){ var sp = tables[1].querySelectorAll("td.lottery-number"); (set.special || []).forEach(function(v, i){ if(sp[i] && !dot(v)) txt(sp[i], v); }); }
+    if(tables[2]){ var cn = tables[2].querySelectorAll("td.lottery-number"); (set.cons || []).forEach(function(v, i){ if(cn[i] && !dot(v)) txt(cn[i], v); }); }
+    if(set.date) txt(card.querySelector('[data-id="date"]'), set.date);
+    if(set.drawNo) txt(card.querySelector('[data-id="draw_no"]'), set.drawNo);
+  }
+  function applyCambodia(j){
+    if(!j) return;
+    [["15:30","1530"],["19:30","1930"]].forEach(function(pair){
+      var t = pair[0], sfx = pair[1];
+      var pid = "table-16-2026-09-06-" + sfx, hid = "table-15-2026-09-06-" + sfx;
+      var p = j.perdana && j.perdana[t];
+      if(p){ var pcs = document.querySelectorAll('[id="' + pid + '"]'); for(var i=0;i<pcs.length;i++) applySet(pcs[i], p); }
+      var h = j.hari && j.hari[t];
+      if(h && h.set){
+        var hcs = document.querySelectorAll('[id="' + hid + '"]');
+        for(var k=0;k<hcs.length;k++) applySet(hcs[k], h.set);
+        if(h.six){
+          var six = document.getElementById(hid + "-6d");
+          if(six){ txt(six.querySelector('[data-id="six_main"]'), h.six.main); Object.keys(h.six.subs || {}).forEach(function(key){ txt(six.querySelector('[data-id="' + key + '"]'), h.six.subs[key]); }); }
+        }
+        if(h.jp){ for(var m=0;m<hcs.length;m++){ Object.keys(h.jp).forEach(function(key){ txt(hcs[m].querySelector('[data-id="' + key + '"]'), h.jp[key]); }); } }
+      }
+    });
+  }
+  function pull(url, fn){ try { fetch(url, { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(fn).catch(function(){}); } catch(e){} }
+  pull("/api/home-live", function(j){ if(j){ if(j.cards) applyCards(j.cards); applyCambodia(j); } });
+  pull("/api/cambodia-live", function(j){ if(j) applyCambodia(j); });
+})();
+`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh">
@@ -44,6 +99,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <NoticeBar />
         <TopBanner />
         {children}
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <PWARegister />
         <SiteCustomizer />
         <AppTools />

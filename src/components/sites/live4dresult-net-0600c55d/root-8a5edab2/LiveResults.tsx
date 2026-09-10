@@ -960,7 +960,10 @@ export default function LiveResults() {
     const bootPath = syncPath();
     const bootClasses = syncedTableClasses(bootPath);
     const hadCache = applySnapshot();
-    if (!hadCache && bootClasses.length) maskStaleCards(bootClasses);
+    // The inline boot script already wrote the current numbers into the page,
+    // so there is nothing stale to hide.
+    const booted = (window as unknown as { __MKT_BOOT__?: boolean }).__MKT_BOOT__ === true;
+    if (!hadCache && !booted && bootClasses.length) maskStaleCards(bootClasses);
     // Keep the cache warm independently of the sync (a slow source must never
     // delay the "instant results" copy of the values on screen).
     collectSnapshot();
@@ -1018,6 +1021,7 @@ export default function LiveResults() {
     </div>
   );
 }
+
 
 
 
