@@ -54,6 +54,8 @@ export const dynamic = "force-dynamic";
  */
 const BOOT_SCRIPT = `
 (function(){
+  var __mktPath = location.pathname || '';
+  if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;
   var changed = false;
   function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; var id = el.getAttribute ? (el.getAttribute("data-id") || "") : ""; if(/^six_/.test(id) && /^----+$/.test(String(v).trim())) return; if((el.textContent||"").trim() !== v){ el.textContent = v; changed = true; } if(el.classList.contains("live-pending")){ el.classList.remove("live-pending"); changed = true; } }

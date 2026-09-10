@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import https from "https";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
+import recent from "./recent.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
-function httpGet(url: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { "User-Agent": UA, Accept: "*/*" }, timeout: 20000 }, (res) => {
-      const chunks: Buffer[] = [];
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
-    });
-    req.on("error", reject);
-    req.on("timeout", () => req.destroy(new Error("timeout")));
+async function httpGet(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": UA, Accept: "*/*", "Accept-Encoding": "identity" },
+    redirect: "follow",
+    cache: "no-store",
   });
+  if (!res.ok) throw new Error("upstream " + res.status);
+  return await res.text();
 }
 
 type Set = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
@@ -405,6 +403,8 @@ async function ninePastParts(date: string): Promise<{ four?: Set; nine6?: SixPar
 export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date") || "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "bad date" }, { status: 400 });
+  const fallback = (recent as Record<string, unknown>)[date];
+  if (fallback) return NextResponse.json(fallback);
   try {
     const ymd = date.split("-");
     const perdanaHtml = await httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date);

@@ -3,6 +3,7 @@ import { getPastEntry, getViewHtml, splitParts } from "./past-data";
 import PastToolbar from "./PastToolbar";
 import CambodiaKhResults from "./CambodiaKhResults";
 import MalaysiaPastFallback from "./MalaysiaPastFallback";
+import PastSixCleanup from "./PastSixCleanup";
 
 export default function PastResultsView({ date, view }: { date: string; view?: "my" | "kh" }) {
   const entry = getPastEntry(date);
@@ -21,6 +22,7 @@ export default function PastResultsView({ date, view }: { date: string; view?: "
           ) : (
             <MalaysiaPastFallback date={date} />
           )}
+          <PastSixCleanup />
         </div>
       </div>
     </main>

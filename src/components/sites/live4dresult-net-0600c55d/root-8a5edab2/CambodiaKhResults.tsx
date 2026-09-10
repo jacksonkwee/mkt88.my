@@ -59,14 +59,8 @@ function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; na
 }
 
 function sixCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; main?: string; subs?: Record<string, string>; extras?: Array<[string, string]> }): LotteryCardData {
-  const s = o.subs || {};
-  const or = (a?: string, b?: string) => (a && a !== "----" ? a : "----") + " or " + (b && b !== "----" ? b : "----");
   const rows: Array<[string, string]> = [["1st Prize 首獎", o.main || "----"]];
-  rows.push(["2nd Prize 二獎", or(s.six_2a, s.six_2b)]);
-  rows.push(["3rd Prize 三獎", or(s.six_3a, s.six_3b)]);
-  rows.push(["4th Prize 四獎", or(s.six_4a, s.six_4b)]);
-  rows.push(["5th Prize 五獎", or(s.six_5a, s.six_5b)]);
-  if (o.extras) for (const e of o.extras) rows.push(e);
+    if (o.extras) for (const e of o.extras) rows.push(e);
   return {
     id: o.id, cardCls: o.cardCls,
     header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name, date: o.date, drawNo: null },
