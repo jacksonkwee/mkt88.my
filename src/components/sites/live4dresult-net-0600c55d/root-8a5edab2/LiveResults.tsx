@@ -24,7 +24,107 @@ function myHourNow(): number {
 }
 function nextInterval(): number {
   const h = myHourNow();
-  return h >= 18 && h <= 21 ? 5000 : 15000;
+  return h >= 18 && h <= 21 ? 5000 : 10000;
+}
+
+/* ------------------------------------------------------------------ *
+ * Instant results: remember the last values we showed, restore them
+ * immediately on the next visit, and never display the baked-in
+ * (old) numbers while the fresh ones are being fetched.
+ * ------------------------------------------------------------------ */
+const SNAP_KEY = "mkt_live_snapshot_v3";
+type Snap = { saved: number; cards: Record<string, Record<string, string>> };
+
+/** Normalised page key used by refreshOnce / the snapshot cache. */
+function syncPath(): string {
+  let path = window.location.pathname;
+  const gm = /^\/result\/([^/?#]+)/.exec(path);
+  if (gm && gameBySlug[gm[1]]) path = "/";
+  if (/^\/east\//.test(path)) path = "/sabah-sarawak-4d-results";
+  if (path === "/sabah-sarawak-4d-results" && window.location.search.includes("op=")) path = "/";
+  const pastM = /^\/past-results\/(\d{4}-\d{2}-\d{2})$/.exec(path);
+  if (pastM && pastM[1] === dateStrNoPad(new Date())) path = "/";
+  return path;
+}
+
+/** Live cards this page refreshes (so only those are blanked / cached). */
+function syncedTableClasses(path: string): string[] {
+  if (path === "/" || path === "/4dresults") {
+    return ["table-1", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7",
+      "table-8", "table-9", "table-10", "table-11", "table-13", "table-14", "table-15", "table-16", "table-17", "table-18"];
+  }
+  if (path === "/singapore-4d-results") return ["table-11", "table-12"];
+  if (path === "/lotto-4d" || path === "/cambodia-4d-results") return ["table-13", "table-14", "table-15", "table-16", "table-17", "table-18"];
+  if (path === "/sabah-sarawak-4d-results") return ["table-8", "table-9", "table-10"];
+  return [];
+}
+
+/** Store every value we are currently showing, so the next visit is instant. */
+function collectSnapshot(): void {
+  try {
+    let prev: Snap | null = null;
+    try { const raw = window.localStorage.getItem(SNAP_KEY); prev = raw ? (JSON.parse(raw) as Snap) : null; } catch { prev = null; }
+    const cards: Record<string, Record<string, string>> = { ...(prev && prev.cards ? prev.cards : {}) };
+    for (const card of Array.from(document.querySelectorAll(".card.outer-box[id]"))) {
+      const id = card.getAttribute("id") || "";
+      if (!id) continue;
+      const vals: Record<string, string> = { ...(cards[id] || {}) };
+      for (const el of Array.from(card.querySelectorAll("[data-id]"))) {
+        const k = el.getAttribute("data-id") || "";
+        const v = (el.textContent || "").trim();
+        if (k && v && v !== "…") vals[k] = v;
+      }
+      if (Object.keys(vals).length) cards[id] = vals;
+    }
+    window.localStorage.setItem(SNAP_KEY, JSON.stringify({ saved: Date.now(), cards }));
+  } catch { /* ignore */ }
+}
+
+/** Restore the last shown values before the network answers. */
+function applySnapshot(): boolean {
+  try {
+    const raw = window.localStorage.getItem(SNAP_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw) as Snap;
+    if (!snap || !snap.cards) return false;
+    let applied = 0;
+    for (const [id, vals] of Object.entries(snap.cards)) {
+      const card = document.getElementById(id);
+      if (!card) continue;
+      for (const [k, v] of Object.entries(vals)) {
+        const el = card.querySelector('[data-id="' + k + '"]');
+        if (el && (el.textContent || "").trim() !== v) { el.textContent = v; applied++; }
+      }
+    }
+    return applied > 0;
+  } catch { return false; }
+}
+
+/** Blank the baked-in values of the cards that are about to be refreshed, so an
+ *  old draw date/number is never shown while the fresh result is loading. */
+function maskStaleCards(classes: string[]): void {
+  for (const cls of classes) {
+    for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls))) {
+      for (const el of Array.from(card.querySelectorAll("[data-id]"))) {
+        const k = el.getAttribute("data-id") || "";
+        if (!k) continue;
+        const v = (el.textContent || "").trim();
+        if (k === "date" || k === "draw_no" || /^\d{3,6}$/.test(v)) {
+          if (!el.hasAttribute("data-mkt-orig")) el.setAttribute("data-mkt-orig", v);
+          el.textContent = "…";
+        }
+      }
+    }
+  }
+}
+
+/** Safety net: any card a source could not refresh gets its original text back,
+ *  so nothing is ever left blank. */
+function restoreUnfilled(): void {
+  for (const el of Array.from(document.querySelectorAll("[data-mkt-orig]"))) {
+    if ((el.textContent || "").trim() === "…") el.textContent = el.getAttribute("data-mkt-orig") || "";
+    el.removeAttribute("data-mkt-orig");
+  }
 }
 
 type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
@@ -700,21 +800,7 @@ async function updateHariHome() {
 }
 
 async function refreshOnce() {
-  let path = window.location.pathname;
-  // Single-game pages (e.g. /result/magnum) update from the same live sources.
-  const gm = /^\/result\/([^/?#]+)/.exec(path);
-  if (gm && gameBySlug[gm[1]]) {
-    // Icon pages run the full pager refresh (all games update live).
-    path = '/';
-  }
-  // East single pages (Sandakan / Sabah 88 / Cash Sweep) sync like the East page.
-  if (/^\/east\//.test(path)) path = "/sabah-sarawak-4d-results";
-  // Sabah88/Sandakan/Cash Sweep opened with ?op show the full pager -> full live refresh.
-  if (path === "/sabah-sarawak-4d-results" && window.location.search.includes("op=")) path = "/";
-  // Past-results for TODAY (Malaysia & Singapore) shows live cards, so refresh
-  // them from the same live sources as the home page.
-  const pastM = /^\/past-results\/(\d{4}-\d{2}-\d{2})$/.exec(path);
-  if (pastM && pastM[1] === dateStrNoPad(new Date())) path = "/";
+  const path = syncPath();
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       await Promise.all([
@@ -796,11 +882,27 @@ export default function LiveResults() {
     let alive = true;
     let busy = false;
     let timer: number | undefined;
+    // Instant results: restore the values we showed on the last visit, and if
+    // there is no cache yet, blank the baked-in values so an old draw date /
+    // number is never displayed while the fresh result is loading.
+    const bootPath = syncPath();
+    const bootClasses = syncedTableClasses(bootPath);
+    const hadCache = applySnapshot();
+    if (!hadCache && bootClasses.length) maskStaleCards(bootClasses);
+    // Keep the cache warm independently of the sync (a slow source must never
+    // delay the "instant results" copy of the values on screen).
+    collectSnapshot();
+    const snapTimer = window.setInterval(() => {
+      if (alive && document.visibilityState === "visible") collectSnapshot();
+    }, 3000);
+    // If a source is unreachable the built-in values come back after 7s.
+    const restoreTimer = window.setTimeout(() => { if (alive) restoreUnfilled(); }, 7000);
     const tick = async () => {
       if (busy) return;
       busy = true;
       try {
         await refreshOnce();
+        if (alive) collectSnapshot();
       } finally {
         busy = false;
       }
@@ -818,6 +920,8 @@ export default function LiveResults() {
     return () => {
       alive = false;
       if (timer) window.clearTimeout(timer);
+      window.clearInterval(snapTimer);
+      window.clearTimeout(restoreTimer);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
@@ -842,6 +946,12 @@ export default function LiveResults() {
     </div>
   );
 }
+
+
+
+
+
+
 
 
 

@@ -33,6 +33,10 @@ const ALLOWED = [
 const UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
+/** Short server-side cache so the first client fetch is fast. */
+const memCache = new Map<string, { at: number; text: string }>();
+const TTL = 5000;
+
 export async function GET(req: NextRequest) {
   const u = req.nextUrl.searchParams.get("u");
   if (!u) return NextResponse.json({ error: "missing url" }, { status: 400 });
@@ -46,6 +50,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "host not allowed" }, { status: 403 });
   }
   try {
+    const hit = memCache.get(url.toString());
+    if (hit && Date.now() - hit.at < TTL) {
+      return new NextResponse(hit.text, { headers: { "content-type": "text/html; charset=utf-8", "x-cache": "hit" } });
+    }
     const res = await fetch(url.toString(), {
       headers: { "User-Agent": UA, Accept: "*/*" },
       cache: "no-store",
@@ -53,8 +61,12 @@ export async function GET(req: NextRequest) {
     });
     if (!res.ok) return NextResponse.json({ error: "upstream " + res.status }, { status: 502 });
     const text = await res.text();
-    return new NextResponse(text, { headers: { "content-type": "text/html; charset=utf-8" } });
+    memCache.set(url.toString(), { at: Date.now(), text });
+    if (memCache.size > 40) { const k = memCache.keys().next().value; if (k) memCache.delete(k); }
+    return new NextResponse(text, { headers: { "content-type": "text/html; charset=utf-8", "x-cache": "miss" } });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 502 });
   }
 }
+
+
