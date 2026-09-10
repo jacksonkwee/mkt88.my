@@ -5,6 +5,7 @@ import TopBanner from "../components/TopBanner";
 import SiteCustomizer from "../components/SiteCustomizer";
 import AppTools from "../components/AppTools";
 import { getSnapshot } from "../lib/live-snapshot";
+import LiveSnapshotProvider, { type SnapValue } from "../components/LiveSnapshotProvider";
 import "./vendor/bootstrap.min.css";
 import "./vendor/font-awesome.min.css";
 import "./vendor/theme-style.css";
@@ -129,16 +130,19 @@ const BOOT_SCRIPT = `
 `;
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  let snapJson = "{}";
-  try { const snap = await getSnapshot(); snapJson = JSON.stringify({ cards: snap.cards, perdana: snap.perdana, hari: snap.hari }).replace(/</g, "\\u003c"); } catch { /* ignore */ }
+  let snapObj: SnapValue = { cards: {}, perdana: {}, hari: {} };
+  try { const snap = await getSnapshot(); snapObj = { cards: snap.cards, perdana: snap.perdana as unknown as SnapValue["perdana"], hari: snap.hari as unknown as SnapValue["hari"] }; } catch { /* ignore */ }
+  const snapJson = JSON.stringify(snapObj).replace(/</g, "\\u003c");
   return (
     <html lang="zh">
       <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
-        <NoticeBar />
-        <TopBanner />
-        {children}
+        <LiveSnapshotProvider value={snapObj}>
+          <NoticeBar />
+          <TopBanner />
+          {children}
+        </LiveSnapshotProvider>
         <PWARegister />
         <SiteCustomizer />
         <AppTools />
@@ -146,6 +150,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
+
 
 
 

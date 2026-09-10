@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useServerSnapshot } from "../../../LiveSnapshotProvider";
+
 
 export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
 export type HariEntry = { set?: PrizeSet | null; six?: { main: string; subs: Record<string, string> } | null; jp?: Record<string, string> | null } | null;
@@ -20,9 +22,10 @@ export function useSnap(): Snap {
     if (typeof window === "undefined") return {};
     return ((window as unknown as { __MKT_SNAP__?: Snap }).__MKT_SNAP__) || {};
   };
-  const [snap, setSnap] = useState<Snap>(read);
+  const fromServer = useServerSnapshot() as Snap;
+  const [snap, setSnap] = useState<Snap>(() => ({ ...fromServer, ...read() }));
   useEffect(() => {
-    const on = () => setSnap({ ...read() });
+    const on = () => setSnap((prev) => ({ ...prev, ...read() }));
     on();
     window.addEventListener("mkt-snap", on);
     return () => window.removeEventListener("mkt-snap", on);
@@ -59,3 +62,6 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
   }
   return { values };
 }
+
+
+
