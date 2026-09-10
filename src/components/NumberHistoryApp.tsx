@@ -2,10 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
 
-const LS = "mkt_favs_v1";
 const RED = "#cc0000";
-const YELLOW = "#ffe84c";
 
 type ApiMatch = {
   date: string;
@@ -64,7 +63,7 @@ export default function NumberHistoryApp() {
   const [err, setErr] = useState("");
   const [region, setRegion] = useState<string>("All");
   const [prize, setPrize] = useState<string>("All");
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const [favs, setFavs] = useState<Fav[]>([]);
   const mounted = useRef(true);
 
   useEffect(() => {
@@ -75,16 +74,15 @@ export default function NumberHistoryApp() {
   }, []);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(LS);
-      if (raw) setFavorites(JSON.parse(raw));
-    } catch { /* ignore */ }
+    const refresh = () => setFavs(loadFavs());
+    refresh();
+    window.addEventListener(FAV_EVENT, refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      window.removeEventListener(FAV_EVENT, refresh);
+      window.removeEventListener("focus", refresh);
+    };
   }, []);
-
-  const saveFav = (list: string[]) => {
-    setFavorites(list);
-    try { localStorage.setItem(LS, JSON.stringify(list)); } catch { /* ignore */ }
-  };
 
   const go = useCallback((n: string) => {
     if (!/^\d{4}$/.test(n)) return;
@@ -121,10 +119,8 @@ export default function NumberHistoryApp() {
     return list;
   }, [data, region, prize]);
 
-  const isFav = (n: string) => favorites.includes(n);
-  const toggleFav = (n: string) => {
-    saveFav(isFav(n) ? favorites.filter((x) => x !== n) : [...favorites, n]);
-  };
+  const isFav = (n: string) => favs.some((f) => f.num === n);
+  const onToggleFav = (n: string) => { toggleFav(n); setFavs(loadFavs()); };
 
   const search = () => {
     const v = input.trim();
@@ -160,9 +156,24 @@ export default function NumberHistoryApp() {
             <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 8, padding: "0 18px", fontSize: 15, cursor: "pointer" }}>Search</button>
           </div>
           {num ? (
-            <div style={{ marginTop: 8, fontSize: 13, color: "#555" }}>
-              <b style={{ fontSize: 18, color: "#111" }}>{num}</b> — {data ? `${data.total} past draw${data.total === 1 ? "" : "s"}` : "…"} found
-              {data && data.dbFrom ? <span style={{ color: "#999" }}> (records {data.dbFrom} → {data.dbTo})</span> : null}
+            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <div style={{ fontSize: 13, color: "#555" }}>
+                <b style={{ fontSize: 18, color: "#111" }}>{num}</b> — {data ? `${data.total} past draw${data.total === 1 ? "" : "s"}` : "…"} found
+                {data && data.dbFrom ? <span style={{ color: "#999" }}> (records {data.dbFrom} → {data.dbTo})</span> : null}
+              </div>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+                <button onClick={() => onToggleFav(num)}
+                  style={{
+                    border: "1px solid " + RED, borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+                    background: isFav(num) ? YELLOW : "#fff", color: isFav(num) ? "#111" : RED,
+                  }}>
+                  {isFav(num) ? "★ Favourite" : "☆ Add favourite"}
+                </button>
+                <a href={"/favourites?num=" + num}
+                  style={{ border: "1px solid #ddd", borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff" }}>
+                  ⭐ Pau / Notify
+                </a>
+              </div>
             </div>
           ) : null}
         </div>
@@ -243,7 +254,7 @@ export default function NumberHistoryApp() {
                         </span>
                         <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: 2 }}>{m.num}</div>
                       </div>
-                      <button onClick={() => toggleFav(m.num)} title="Favourite"
+                      <button onClick={() => onToggleFav(m.num)} title="Favourite"
                         style={{ background: "transparent", border: 0, fontSize: 18, cursor: "pointer", padding: 4, color: fav ? "#e6a700" : "#bbb" }}>
                         {fav ? "★" : "☆"}
                       </button>
@@ -273,3 +284,5 @@ function chip(active: boolean): React.CSSProperties {
     background: active ? "#ffe9e9" : "#fff", color: active ? RED : "#333", fontWeight: active ? 700 : 500, cursor: "pointer", fontSize: 13,
   };
 }
+
+
