@@ -98,12 +98,12 @@ export default function Header() {
                   </li>
                   <li className={LI_BASE + " menu-item-18"}>
                     <a href="/favourites" className="nav-link" onClick={closeAll}>
-                      Favourite Number <span style={{ color: "#ffd700" }}>收藏号码</span>
+                      Favourite Number <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>收藏号码</span>
                     </a>
                   </li>
                   <li className={LI_BASE + " menu-item-19"}>
                     <a href="/dabogong" className="nav-link" onClick={closeAll}>
-                      大伯公 <span style={{ color: "#ffd700" }}>千字图</span>
+                      大伯公 <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>千字图</span>
                     </a>
                   </li>
                   <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
@@ -195,6 +195,7 @@ export default function Header() {
     </header>
   );
 }
+
 
 
 
