@@ -90,12 +90,16 @@ const BOOT_SCRIPT = `
       var p = j.perdana && j.perdana[t];
       if(p){ var pcs = document.querySelectorAll('[id="' + pid + '"]'); for(var i=0;i<pcs.length;i++) applySet(pcs[i], p); }
       var h = j.hari && j.hari[t];
-      if(h && h.set){
+      if(h){
         var hcs = document.querySelectorAll('[id="' + hid + '"]');
-        for(var k=0;k<hcs.length;k++) applySet(hcs[k], h.set);
+        if(h.set){ for(var k=0;k<hcs.length;k++) applySet(hcs[k], h.set); }
+        // 6D numbers / jackpot are written even when only that part is known.
         if(h.six){
-          var six = document.getElementById(hid + "-6d");
-          if(six){ txt(six.querySelector('[data-id="six_main"]'), h.six.main); Object.keys(h.six.subs || {}).forEach(function(key){ txt(six.querySelector('[data-id="' + key + '"]'), h.six.subs[key]); }); }
+          var sixCards = document.querySelectorAll('[id="' + hid + '-6d"]');
+          for(var s2=0;s2<sixCards.length;s2++){
+            txt(sixCards[s2].querySelector('[data-id="six_main"]'), h.six.main);
+            Object.keys(h.six.subs || {}).forEach(function(key){ txt(sixCards[s2].querySelector('[data-id="' + key + '"]'), h.six.subs[key]); });
+          }
         }
         if(h.jp){ for(var m=0;m<hcs.length;m++){ Object.keys(h.jp).forEach(function(key){ txt(hcs[m].querySelector('[data-id="' + key + '"]'), h.jp[key]); }); } }
       }
@@ -104,10 +108,42 @@ const BOOT_SCRIPT = `
   var snap = {};
   try { var el = document.getElementById("mkt-snapshot"); snap = el && el.textContent ? JSON.parse(el.textContent) : {}; } catch(e){ snap = {}; }
   window.__MKT_SNAP__ = snap;
+  // Watch the 6D sub-prize cells: whatever writes them (React re-render or a
+  // source that has no value), the current number is restored immediately.
+  var sixObs = null;
+  function sixWant(el){
+    if(!el || !el.getAttribute) return null;
+    var id = el.getAttribute("data-id") || "";
+    if(!/^six_/.test(id)) return null;
+    var card = el.closest ? el.closest(".card") : null;
+    var cid = card && card.id ? card.id : "";
+    var t = cid.indexOf("-1930") > 0 ? "19:30" : cid.indexOf("-1530") > 0 ? "15:30" : "";
+    var h = t && snap && snap.hari ? snap.hari[t] : null;
+    if(!h || !h.six) return null;
+    var want = id === "six_main" ? h.six.main : (h.six.subs || {})[id];
+    return want && !/^----+$/.test(String(want).trim()) ? String(want) : null;
+  }
+  function fixSix(el){ var want = sixWant(el); if(want && (el.textContent || "").trim() !== want) el.textContent = want; }
+  function watchSix(){
+    if(!window.MutationObserver) return;
+    if(!sixObs) sixObs = new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){ var n = muts[i].target; if(n && n.nodeType === 3) n = n.parentNode; fixSix(n); }
+    });
+    var cells = document.querySelectorAll('[data-id^="six_"]');
+    for(var i=0;i<cells.length;i++){
+      if(cells[i].getAttribute("data-mkt-watch")) continue;
+      cells[i].setAttribute("data-mkt-watch", "1");
+      sixObs.observe(cells[i], { childList: true, characterData: true, subtree: true });
+    }
+  }
+
   function run(){
     changed = false;
     if(snap && snap.cards) applyCards(snap.cards);
     applyCambodia(snap);
+    watchSix();
+    var sixCells = document.querySelectorAll('[data-id^="six_"]');
+    for(var si=0;si<sixCells.length;si++) fixSix(sixCells[si]);
     if(changed){ try { window.dispatchEvent(new Event("mkt-snap")); } catch(e){} }
   }
   function publish(j){
@@ -172,6 +208,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
+
+
 
 
 
