@@ -10,13 +10,20 @@ const nextConfig = {
   },
   async headers() {
     return [
-      // Android app download: force the browser to download the APK and treat
+      // Android app downloads: force the browser to download the APK and treat
       // it as an Android package instead of rendering it as a text/binary file.
       {
         source: "/mkt88-4d-v1.7.apk",
         headers: [
           { key: "Content-Type", value: "application/vnd.android.package-archive" },
           { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v1.7.apk"' },
+        ],
+      },
+      {
+        source: "/mkt88-4d-v1.8.apk",
+        headers: [
+          { key: "Content-Type", value: "application/vnd.android.package-archive" },
+          { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v1.8.apk"' },
         ],
       },
       // Pages (and the phone app's WebView) must always revalidate, otherwise a
