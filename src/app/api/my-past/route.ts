@@ -33,10 +33,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const fallback = (recent as Record<string, string>)[date];
-    if (fallback && fallback.length > 1000) return NextResponse.json({ date, html: cleanFetchedHtml(fallback) });
     const stored = getViewHtml(date, "my");
     let source = stored;
-    if (!source) source = await httpGet("https://live4dresult.net/past-results/" + date);
+    if (!source) {
+      try {
+        source = await httpGet("https://live4dresult.net/past-results/" + date);
+      } catch {
+        source = fallback;
+      }
+    }
+    if (!source) source = fallback;
 
     // The upstream archive does not always wrap the cards in #row, so start at
     // the first result card when that marker is absent.
