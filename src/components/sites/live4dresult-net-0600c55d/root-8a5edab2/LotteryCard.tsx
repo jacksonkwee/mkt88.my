@@ -66,7 +66,10 @@ function Cell(props: { cell: CardCell; override?: string }) {
   const Tag = cell.tag === "th" ? "th" : "td";
 
 
-  return <Tag {...attrs} style={style} dangerouslySetInnerHTML={{ __html: html }} />;
+  // The live boot script writes these cells before React hydrates; tell React
+  // not to warn about (or undo) the difference.
+  const liveCell = Boolean(dataId) || /lottery-prize-number|lottery-number/.test(cell.cls || "");
+  return <Tag {...attrs} style={style} suppressHydrationWarning={liveCell} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 export default function LotteryCard({ card, values, prizeSet }: { card: LotteryCardData } & CardOverride) {
@@ -91,11 +94,11 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
         </div>
         <div className="row mx-0 justify-content-between">
           <div className="date">
-            Date: <span className={freshDate ? "" : "live-pending"} data-id="date">{dateText}</span>
+            Date: <span suppressHydrationWarning className={freshDate ? "" : "live-pending"} data-id="date">{dateText}</span>
           </div>
           {drawText ? (
             <div className="date">
-              Draw No: <span className={freshDraw ? "" : "live-pending"} data-id="draw_no">{drawText}</span>
+              Draw No: <span suppressHydrationWarning className={freshDraw ? "" : "live-pending"} data-id="draw_no">{drawText}</span>
             </div>
           ) : null}
         </div>
@@ -132,6 +135,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
     </div>
   );
 }
+
 
 
 
