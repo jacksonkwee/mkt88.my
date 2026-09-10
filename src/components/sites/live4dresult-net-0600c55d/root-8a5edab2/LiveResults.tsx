@@ -93,7 +93,7 @@ function applySnapshot(): boolean {
       if (!card) continue;
       for (const [k, v] of Object.entries(vals)) {
         const el = card.querySelector('[data-id="' + k + '"]');
-        if (el && (el.textContent || "").trim() !== v) { el.textContent = v; applied++; }
+        if (el && (el.textContent || "").trim() !== v) { el.textContent = v; el.classList.remove("live-pending"); applied++; }
       }
     }
     return applied > 0;
@@ -123,7 +123,12 @@ function maskStaleCards(classes: string[]): void {
 function restoreUnfilled(): void {
   for (const el of Array.from(document.querySelectorAll("[data-mkt-orig]"))) {
     if ((el.textContent || "").trim() === "…") el.textContent = el.getAttribute("data-mkt-orig") || "";
+    el.classList.remove("live-pending");
     el.removeAttribute("data-mkt-orig");
+  }
+  // Any cell a source never touched simply shows its built-in value again.
+  for (const el of Array.from(document.querySelectorAll("[data-id].live-pending"))) {
+    el.classList.remove("live-pending");
   }
 }
 
@@ -163,7 +168,9 @@ function weekdayOf(iso: string): string {
 }
 
 function setText(el: Element | null, v: string) {
-  if (el && el.textContent !== v) el.textContent = v;
+  if (!el) return;
+  if (el.textContent !== v) el.textContent = v;
+  el.classList.remove("live-pending");
 }
 
 /** If a card is labelled with today's date but has no Draw No yet, the draw has
@@ -577,7 +584,7 @@ async function gdInfo(): Promise<GdInfo | null> {
 
 function clearCardNumbers(card: Element) {
   for (const el of card.querySelectorAll("td.lottery-prize-number, td.lottery-number")) {
-    if ((el.textContent || "") !== "") el.textContent = "----";
+    if ((el.textContent || "") !== "") { el.textContent = "----"; el.classList.remove("live-pending"); }
   }
 }
 
@@ -692,7 +699,7 @@ async function updateSGOfficial() {
     for (const card of cards) {
       const set = (id: string, v: string) => {
         const el = card.querySelector('[data-id="' + id + '"]');
-        if (el && (el.textContent || "") !== v) el.textContent = v;
+        if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
       };
       if (s.dateLabel) set("date", s.dateLabel);
       if (s.drawNo) set("draw_no", s.drawNo);
@@ -735,7 +742,7 @@ async function updateCambodiaFeed() {
     if (!cards.length) return;
     const set = (card: Element, id: string, v: string) => {
       const el = card.querySelector('[data-id="' + id + '"]');
-      if (el && (el.textContent || "") !== v) el.textContent = v;
+      if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
     };
     for (const card of cards) {
       const f1 = card.querySelector('[data-id="first_prize"]');
@@ -946,6 +953,9 @@ export default function LiveResults() {
     </div>
   );
 }
+
+
+
 
 
 

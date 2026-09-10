@@ -43,7 +43,13 @@ function Cell(props: { cell: CardCell }) {
   const { cell } = props;
   const style: CSSProperties | undefined = undefined;
   const attrs: Record<string, unknown> = {};
-  if (cell.cls) attrs.className = cell.cls;
+  const dataId = cell.attrs?.["data-id"] || "";
+  const plain = (cell.html || "").replace(/<[^>]+>/g, "").trim();
+  // Only hide values that could be a stale draw date / number; keep other
+  // built-in text (like "----" or jackpot amounts) as it is.
+  const maskable = dataId === "date" || dataId === "draw_no" || /^\d{3,6}$/.test(plain);
+  const cls = [cell.cls, maskable ? "live-pending" : ""].filter(Boolean).join(" ");
+  if (cls) attrs.className = cls;
   if (cell.attrs?.width) attrs.width = cell.attrs.width;
   if (cell.attrs?.colspan) attrs.colSpan = Number(cell.attrs.colspan);
   if (cell.attrs?.rowspan) attrs.rowSpan = Number(cell.attrs.rowspan);
@@ -94,3 +100,5 @@ export default function LotteryCard({ card }: { card: LotteryCardData }) {
     </div>
   );
 }
+
+
