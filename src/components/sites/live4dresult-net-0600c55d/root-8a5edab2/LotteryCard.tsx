@@ -49,7 +49,8 @@ function Cell(props: { cell: CardCell; override?: string }) {
   const style: CSSProperties | undefined = undefined;
   const attrs: Record<string, unknown> = {};
   const dataId = cell.attrs?.["data-id"] || "";
-  const fresh = override !== undefined && override !== "" && !/^----+$/.test(override.trim());
+  // Any override (including the official "----" placeholder) replaces the built-in value.
+  const fresh = override !== undefined && override !== "";
   const plain = (cell.html || "").replace(/<[^>]+>/g, "").trim();
   // Only hide values that could be a stale draw date / number; keep other
   // built-in text (like "----" or jackpot amounts) as it is.
@@ -96,34 +97,41 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
             </div>
           ) : null}
         </div>
-        {card.tables.map((t, ti) => (
-          <table key={ti} className={t.cls} width={t.widthAttr || undefined}>
-            <tbody>
-              {t.rows.map((r, ri) => (
-                <tr key={ri} className={r.cls || undefined}>
-                  {r.cells.map((c, ci) => {
-                    const id = c.attrs?.["data-id"] || "";
-                    let override = id ? values?.[id] : undefined;
-                    if (override === undefined && prizeSet) {
+        {card.tables.map((t, ti) => {
+          // Running index of number cells in this table so special / consolation
+          // values stay aligned across their rows.
+          let nth = 0;
+          return (
+            <table key={ti} className={t.cls} width={t.widthAttr || undefined}>
+              <tbody>
+                {t.rows.map((r, ri) => (
+                  <tr key={ri} className={r.cls || undefined}>
+                    {r.cells.map((c, ci) => {
+                      const id = c.attrs?.["data-id"] || "";
+                      let override = id ? values?.[id] : undefined;
                       const isNum = /lottery-prize-number|lottery-number/.test(c.cls || "");
                       if (isNum) {
-                        const nth = r.cells.slice(0, ci).filter((x) => /lottery-prize-number|lottery-number/.test(x.cls || "")).length;
-                        if (ti === 0 && ri < 3) override = prizeSet.prize?.[ri];
-                        else if (ti === 1) override = prizeSet.special?.[nth];
-                        else if (ti === 2) override = prizeSet.cons?.[nth];
+                        const n = nth++;
+                        if (override === undefined && prizeSet) {
+                          if (ti === 0) override = prizeSet.prize?.[n];
+                          else if (ti === 1) override = prizeSet.special?.[n];
+                          else if (ti === 2) override = prizeSet.cons?.[n];
+                        }
                       }
-                    }
-                    return <Cell key={ci} cell={c} override={override} />;
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        ))}
+                      return <Cell key={ci} cell={c} override={override} />;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })}
       </div>
     </div>
   );
 }
+
+
 
 
 
