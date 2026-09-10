@@ -1,3 +1,14 @@
+# www.mkt88.my - search engines may crawl everything except the admin area.
+# /_next/ and /api/ must stay open so Google can render the live result numbers.
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
 Sitemap: https://www.mkt88.my/sitemap.xml
