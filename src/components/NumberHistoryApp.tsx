@@ -5,9 +5,11 @@ import { useSearchParams } from "next/navigation";
 import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
 
 const RED = "#cc0000";
+const YELLOW_SOFT = "#fff3d0";
 
 type ApiMatch = { date: string; game: string; logo: string; region: string; prize: string; num: string };
 type ApiResp = { nums: string[]; matches: ApiMatch[]; total: number; dbFrom?: string; dbTo?: string; perNum?: Record<string, number> };
+type Dabo = { num: string; kind: string; keyword: string; meaning: string; image: string; found: boolean };
 
 const REGIONS = ["M'sia", "Sab, Sar", "Spore", "Others"];
 const PRIZES = ["1st", "2nd", "3rd", "Special", "Consolation"];
@@ -15,6 +17,22 @@ const PRIZE_COLORS: Record<string, string> = {
   "1st": "#d40000", "2nd": "#0066cc", "3rd": "#008a3e", Special: "#8a4a00", Consolation: "#555",
 };
 const MAX_ROWS = 400;
+
+/** The 11 game companies used by the app, plus a catch-all bucket. */
+const COMPANIES: { key: string; label: string; re: RegExp }[] = [
+  { key: "magnum", label: "Magnum 萬能", re: /magnum 4d/i },
+  { key: "damacai", label: "Da Ma Cai 大馬彩", re: /da ma cai/i },
+  { key: "toto", label: "Sports Toto 多多", re: /sportstoto|sports ?toto/i },
+  { key: "sg", label: "Singapore 4D 新加坡", re: /singapore/i },
+  { key: "gd", label: "Grand Dragon 豪龙", re: /grand dragon/i },
+  { key: "nine", label: "Nine Lotto", re: /nine lotto/i },
+  { key: "sabah88", label: "Sabah 88 沙巴88", re: /sabah/i },
+  { key: "sandakan", label: "Sandakan 山打根", re: /sandakan/i },
+  { key: "cashsweep", label: "Cash Sweep 沙捞越", re: /cash\s*sweep/i },
+  { key: "perdana", label: "Perdana 4D", re: /perdana/i },
+  { key: "harihari", label: "Lucky HariHari 天天好运", re: /hari\s*hari/i },
+];
+const companyOf = (game: string) => (COMPANIES.find((c) => c.re.test(game)) || { key: "other" }).key;
 
 function permutationsOf(digits: string): string[] {
   const set = new Set<string>();
@@ -44,7 +62,11 @@ export default function NumberHistoryApp() {
   const [mode, setMode] = useState<"single" | "pau" | "reverse" | "custom">("single");
   const [regions, setRegions] = useState<string[]>([]);
   const [prizes, setPrizes] = useState<string[]>([]);
+  const [companies, setCompanies] = useState<string[]>([]);
+  const [showCompanies, setShowCompanies] = useState(false);
   const [data, setData] = useState<ApiResp | null>(null);
+  const [dabo, setDabo] = useState<Dabo | null>(null);
+  const [daboBad, setDaboBad] = useState(false);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [favs, setFavs] = useState<Fav[]>([]);
@@ -96,7 +118,18 @@ export default function NumberHistoryApp() {
     else setData(null);
   }, [selected, fetchFor]);
 
-  // Update the visible "mode" to match the current selection.
+  // 大伯公 meaning for the number in the search bar.
+  useEffect(() => {
+    if (!primary) { setDabo(null); return; }
+    let alive = true;
+    setDaboBad(false);
+    fetch("/api/dabogong?num=" + primary, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { if (alive && j && !j.error) setDabo(j); })
+      .catch(() => { if (alive) setDabo(null); });
+    return () => { alive = false; };
+  }, [primary]);
+
   useEffect(() => {
     if (!primary) return;
     const same = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
@@ -106,18 +139,27 @@ export default function NumberHistoryApp() {
     else setMode("custom");
   }, [selected, primary, perms, reverseSet]);
 
-  // Load a fresh number: select just that number.
   const pick = (n: string) => { setSelected([n]); setInput(n); };
   const search = () => { if (isNum(input)) { setSelected([input]); fetchFor([input]); } };
-
 
   const filtered = useMemo(() => {
     if (!data) return [];
     let list = data.matches;
     if (regions.length) list = list.filter((m) => regions.includes(m.region));
     if (prizes.length) list = list.filter((m) => prizes.includes(m.prize));
+    if (companies.length) list = list.filter((m) => companies.includes(companyOf(m.game)));
     return list;
-  }, [data, regions, prizes]);
+  }, [data, regions, prizes, companies]);
+
+  /** Companies that actually appear in this search, with result counts. */
+  const companyCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (data) for (const m of data.matches) {
+      const k = companyOf(m.game);
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    return counts;
+  }, [data]);
 
   const toggleIn = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -125,9 +167,7 @@ export default function NumberHistoryApp() {
   const isFav = (n: string) => favs.some((f) => f.num === n);
   const onToggleFav = (n: string) => { toggleFav(n); setFavs(loadFavs()); };
 
-  const scopeLine = data
-    ? `${data.total} result${data.total === 1 ? "" : "s"} from ${data.nums.length} number${data.nums.length === 1 ? "" : "s"}`
-    : "";
+  const daboThumb = dabo ? (daboBad ? "/api/dabogong/img?u=" + encodeURIComponent(dabo.image) : dabo.image) : "";
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
@@ -141,7 +181,7 @@ export default function NumberHistoryApp() {
       </div>
 
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
-        {/* Search + selection mode */}
+        {/* Search + 大伯公 */}
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>Search a 4D number</div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -154,15 +194,29 @@ export default function NumberHistoryApp() {
             <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 8, padding: "0 18px", fontSize: 15, cursor: "pointer" }}>Search</button>
           </div>
 
+          {/* 大伯公 meaning (small) */}
+          {dabo && primary ? (
+            <a href={"/dabogong?num=" + primary}
+              style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, padding: 8, borderRadius: 10, background: YELLOW_SOFT, textDecoration: "none", color: "#111" }}>
+              <img src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
+                style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 8, background: "#fff", border: "1px solid #eee" }} />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: "#8a6d00", fontWeight: 700 }}>大伯公 {dabo.kind}</div>
+                <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {dabo.keyword || primary}{dabo.meaning ? <span style={{ fontWeight: 500, color: "#555" }}> · {dabo.meaning}</span> : null}
+                </div>
+              </div>
+              <div style={{ marginLeft: "auto", fontSize: 11, color: "#8a6d00" }}>查看 ›</div>
+            </a>
+          ) : null}
+
           {primary ? (
             <>
               <div style={{ marginTop: 10, fontWeight: 700, fontSize: 13.5 }}>What to check 查询方式</div>
               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                 <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一 {primary}</button>
                 <button onClick={() => setSelected(perms)} style={modeBtn(mode === "pau")}>Pau 包 (all {perms.length})</button>
-                <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>
-                  Reverse 来回 {reverseSet.join(" / ")}
-                </button>
+                <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>Reverse 来回 {reverseSet.join(" / ")}</button>
               </div>
               <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>
                 Checking <b>{selected.length}</b> number{selected.length === 1 ? "" : "s"}:{" "}
@@ -176,7 +230,7 @@ export default function NumberHistoryApp() {
           {data ? (
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div style={{ fontSize: 13, color: "#555" }}>
-                {scopeLine}
+                {data.total} result{data.total === 1 ? "" : "s"} from {data.nums.length} number{data.nums.length === 1 ? "" : "s"}
                 {data.dbFrom ? <span style={{ color: "#999" }}> (records {data.dbFrom} → {data.dbTo})</span> : null}
               </div>
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
@@ -193,28 +247,58 @@ export default function NumberHistoryApp() {
           ) : null}
         </div>
 
-        {/* Filters (multi-select) */}
+        {/* Filters */}
         {data ? (
           <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>Region 地区 {regions.length ? <span style={{ color: RED }}>({regions.length})</span> : null}</div>
-              <button onClick={() => setRegions([])} style={mini(regions.length ? RED : "#bbb")}>All</button>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6, marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Region 地区 {regions.length ? <span style={{ color: RED }}>({regions.length})</span> : null}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
               {REGIONS.map((r) => (
                 <button key={r} onClick={() => toggleIn(regions, setRegions, r)} style={chip(regions.includes(r))}>{r}</button>
               ))}
             </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>Prize 奖项 {prizes.length ? <span style={{ color: RED }}>({prizes.length})</span> : null}</div>
-              <button onClick={() => setPrizes([])} style={mini(prizes.length ? RED : "#bbb")}>All</button>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Prize 奖项 {prizes.length ? <span style={{ color: RED }}>({prizes.length})</span> : null}</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
               {PRIZES.map((p) => (
                 <button key={p} onClick={() => toggleIn(prizes, setPrizes, p)} style={chip(prizes.includes(p))}>{p}</button>
               ))}
             </div>
-            <div style={{ marginTop: 8, fontSize: 11.5, color: "#999" }}>Tip: you can pick more than one region and more than one prize.</div>
+
+            {/* Company filter (optional) */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 14 }}>
+                公司 Company {companies.length ? <span style={{ color: RED }}>({companies.length})</span> : <span style={{ color: "#999", fontWeight: 400, fontSize: 12 }}> all {companyCounts.size}</span>}
+              </div>
+              <button onClick={() => setShowCompanies((v) => !v)}
+                style={{ border: "1px solid " + RED, background: showCompanies ? RED : "#fff", color: showCompanies ? "#fff" : RED, borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                {showCompanies ? "收起 Filter ▲" : "筛选 Filter ▼"}
+              </button>
+            </div>
+            {showCompanies ? (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <button onClick={() => setCompanies([])} style={chip(companies.length === 0)}>All 全部</button>
+                  {COMPANIES.filter((c) => companyCounts.has(c.key)).map((c) => {
+                    const on = companies.includes(c.key);
+                    return (
+                      <button key={c.key} onClick={() => toggleIn(companies, setCompanies, c.key)} style={chip(on)}>
+                        {on ? "✓ " : ""}{c.label} <span style={{ color: "#999" }}>{companyCounts.get(c.key)}</span>
+                      </button>
+                    );
+                  })}
+                  {companyCounts.has("other") ? (
+                    <button onClick={() => toggleIn(companies, setCompanies, "other")} style={chip(companies.includes("other"))}>
+                      {companies.includes("other") ? "✓ " : ""}其他 Other <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
+                    </button>
+                  ) : null}
+                </div>
+                <div style={{ marginTop: 6, fontSize: 11.5, color: "#999" }}>
+                  Tick the companies you want to see, untick to hide. Nothing ticked = show all.
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -227,7 +311,7 @@ export default function NumberHistoryApp() {
               <div style={{ padding: 30, textAlign: "center", color: RED }}>{err}</div>
             ) : filtered.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: "#777" }}>
-                No past draw found for the selected number{selected.length === 1 ? "" : "s"}.
+                No past draw found for the selected filters.
                 <div style={{ fontSize: 12, marginTop: 6, color: "#aaa" }}>Try another number or clear the filters.</div>
               </div>
             ) : (
@@ -236,6 +320,7 @@ export default function NumberHistoryApp() {
                   Showing {Math.min(filtered.length, MAX_ROWS)} of {filtered.length} result{filtered.length === 1 ? "" : "s"}
                   {regions.length ? " · " + regions.join(" + ") : ""}
                   {prizes.length ? " · " + prizes.join(" + ") : ""}
+                  {companies.length ? " · " + companies.length + " company(s)" : ""}
                 </div>
                 {filtered.slice(0, MAX_ROWS).map((m, i) => {
                   const fav = isFav(m.num);
@@ -294,10 +379,3 @@ function chip(active: boolean): React.CSSProperties {
     background: active ? "#ffe9e9" : "#fff", color: active ? RED : "#333", fontWeight: active ? 700 : 500,
   };
 }
-function mini(color: string): React.CSSProperties {
-  return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700 };
-}
-
-
-
-
