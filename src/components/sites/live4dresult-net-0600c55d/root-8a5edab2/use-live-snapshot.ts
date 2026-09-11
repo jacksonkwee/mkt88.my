@@ -60,12 +60,17 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
   const values: Record<string, string> = { ...((snap.cards && snap.cards[cls]) || {}) };
 
   if (cleanCardId.startsWith("table-14")) {
+    // The 4D card carries the authoritative draw date for this game.
+    const gd4 = snap.cards ? snap.cards["table-13"] : null;
+    if (gd4 && clean(gd4.date)) values.date = gd4.date;
     const g = snap.gd6;
     if (g) { if (clean(g.main)) values.six_main = g.main; sixSubs(values, g.subs); }
     if (snap.gdjp7) for (const [k, v] of Object.entries(snap.gdjp7)) { if (clean(v)) values[k] = v; }
     return { values };
   }
   if (cleanCardId.startsWith("table-18")) {
+    const nine4 = snap.cards ? snap.cards["table-17"] : null;
+    if (nine4 && clean(nine4.date)) values.date = nine4.date;
     const n = snap.nine6;
     if (n) { if (clean(n.main)) values.six_main = n.main; sixSubs(values, n.subs); }
     if (snap.nineJp) for (const [k, v] of Object.entries(snap.nineJp)) { if (clean(v)) values[k] = v; }

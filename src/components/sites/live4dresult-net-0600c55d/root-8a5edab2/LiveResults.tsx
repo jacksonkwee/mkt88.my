@@ -627,8 +627,10 @@ async function updateGdNineCards() {
     const gd = await gdInfo();
     if (gd) {
       applySixValues("table-14-2026-09-06-6d", gd.six);
+      // The jackpot card is its own card - keep its date in step too.
+      if (gd.six.date) applyIdValues("table-14-2026-09-06-6d-jp", { date: gd.six.date });
       applyIdValues("table-13-2026-09-06", gd.jp4);
-      applyIdValues("table-14-2026-09-06-6d", gd.jp7);
+      applyIdValues("table-14-2026-09-06-6d-jp", gd.jp7);
     }
   } catch {
     // ignore
@@ -683,14 +685,16 @@ async function updateGdNineCards() {
     }
     if (six && six.main && !isDash(six.main)) {
       applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl });
+      applyIdValues("table-18-2026-09-06-6d-jp", { date: dateLbl });
     } else {
       applySixValues("table-18-2026-09-06-6d", { main: "----", date: dateLbl });
+      applyIdValues("table-18-2026-09-06-6d-jp", { date: dateLbl });
     }
     if (jp9) {
       const vals: Record<string, string> = {};
       if (jp9.pool) vals.n9_sj_pool = jp9.pool;
       if (jp9.rows) for (const [k, v] of Object.entries(jp9.rows)) if (v) vals[k] = v;
-      applyIdValues("table-18-2026-09-06-6d", vals);
+      applyIdValues("table-18-2026-09-06-6d-jp", vals);
     }
   } catch {
     // ignore
