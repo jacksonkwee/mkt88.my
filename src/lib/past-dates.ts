@@ -12,6 +12,7 @@
 import myPastRaw from "./my-past-dates.json";
 import hariPastRaw from "./hari-past.json";
 import { DEEP, DEEP_CARDS, deepDates } from "./deep-past-cards";
+import perdanaPastRaw from "./perdana-past.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -122,10 +123,18 @@ function deepTables(date: string): string[] {
   return [...out];
 }
 
+/** Perdana dates we actually hold a result for. */
+function perdanaDates(): string[] {
+  const store = perdanaPastRaw as unknown as Record<string, unknown>;
+  const stored = Object.keys(store);
+  const last = shiftIso(todayIso(), -1);
+  const live = last < "2025-09-21" ? [] : range("2025-09-21", last);
+  return [...new Set([...deepDates(), ...stored, ...live])].sort();
+}
+
 export function getKhDatesByGame(): KhByGame {
   const last = shiftIso(todayIso(), -1);
-  const deep = deepDates();
-  const perdana = [...new Set([...(last < "2025-09-01" ? [] : range("2025-09-01", last)), ...deep])].sort();
+  const perdana = perdanaDates();
   return {
     "grand-dragon": last < "2021-09-14" ? [] : range("2021-09-14", last),
     "nine-lotto": last < "2023-01-01" ? [] : range("2023-01-01", last),

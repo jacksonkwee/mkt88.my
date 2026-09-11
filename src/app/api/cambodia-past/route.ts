@@ -3,6 +3,7 @@ import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d
 import recent from "./recent.json";
 import hariPastRaw from "../../../lib/hari-past.json";
 import { DEEP } from "../../../lib/deep-past-cards";
+import perdanaPastRaw from "../../../lib/perdana-past.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -487,19 +488,28 @@ export async function GET(req: NextRequest) {
     ]);
 
     const perd = parsePerdanaHtml(perdanaHtml);
-    // The stored deep archive holds the day's Perdana 19:30 draw.
+    // Stored Perdana history: 2021-2022 from the deep archive, 2022-2025 from
+    // the collected Perdana store. Both hold the day's 19:30 draw.
+    const PERDANA_PAST = perdanaPastRaw as unknown as Record<string, { d: string; p: string[]; g: [string, string[]][] }>;
     const deepDay = DEEP[date];
-    if (deepDay && deepDay.perdana) {
-      const g = deepDay.perdana;
-      const nums = g.p.filter(([l]) => /^[123](st|nd|rd)\s*Prize/i.test(l)).map(([, v]) => v);
-      const grid = (i: number) => (g.g[i] ? g.g[i][1].filter((v) => /^----$/.test(v) || /^\d{1,6}$/.test(v)) : []);
-      if (nums.length >= 3) {
-        perd["19:30"] = perd["19:30"] || {
-          prize: [nums[0], nums[1], nums[2]],
-          special: grid(0),
-          cons: grid(1),
-          date: g.d,
-        } as any;
+    const pastPerd = PERDANA_PAST[date] || (deepDay ? deepDay.perdana : null);
+    if (pastPerd) {
+      const g = pastPerd as { d: string; p: any[]; g: [string, string[]][] };
+      // Two record shapes: the deep archive keeps label/value pairs, the
+      // collected store keeps the three prizes as a plain list.
+      const nums: string[] = Array.isArray(g.p[0])
+        ? (g.p as [string, string][]).filter(([l]) => /^[123](st|nd|rd)\s*Prize/i.test(l)).map(([, v]) => v)
+        : (g.p as string[]).slice(0, 3);
+      const gridBy = (name: string) => {
+        const hit = (g.g || []).find(([title]) => new RegExp(name, "i").test(title));
+        return hit ? hit[1].filter((v) => /^----$/.test(v) || /^\d{1,6}$/.test(v)) : [];
+      };
+      if (nums.length >= 3 && nums.some((v) => !/^----+$/.test(v))) {
+        // The stored record is the 19:30 draw, so only fill that slot - never
+        // show the same numbers under both draw times.
+        if (!perd["19:30"]) {
+          perd["19:30"] = { prize: [nums[0], nums[1], nums[2]], special: gridBy("Special"), cons: gridBy("Consolation"), date: g.d } as any;
+        }
       }
     }
     const hari: Record<string, any> = { "15:30": h1530, "19:30": h1930 };
