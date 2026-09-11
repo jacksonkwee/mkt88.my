@@ -62,7 +62,7 @@ const BOOT_SCRIPT = `
   function applyCards(cards){
     Object.keys(cards || {}).forEach(function(cls){
       var vals = cards[cls] || {};
-      var nodes = document.querySelectorAll(".card.outer-box." + cls);
+      var nodes = document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)");
       for (var i = 0; i < nodes.length; i++){
         Object.keys(vals).forEach(function(id){ var v = vals[id]; if(!v || v === "-" || v.indexOf("----") === 0) return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
       }

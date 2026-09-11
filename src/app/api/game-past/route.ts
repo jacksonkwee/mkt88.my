@@ -37,6 +37,9 @@ function extractCard(html: string, cls: string): string {
 /** Keep the past numbers as printed: no live ids, no live placeholder masking. */
 function freeze(html: string): string {
   return rewriteHtml(html)
+    // Mark the card as a past result so the page's live refresher never
+    // writes today's numbers into it.
+    .replace(/class="card outer-box /g, 'class="card outer-box mkt-past ')
     .replace(/\sdata-id=(?:"[^"]*"|'[^']*')/g, "")
     .replace(/\sclass="live-pending"/g, "");
 }

@@ -65,7 +65,7 @@ function collectSnapshot(): void {
     let prev: Snap | null = null;
     try { const raw = window.localStorage.getItem(SNAP_KEY); prev = raw ? (JSON.parse(raw) as Snap) : null; } catch { prev = null; }
     const cards: Record<string, Record<string, string>> = { ...(prev && prev.cards ? prev.cards : {}) };
-    for (const card of Array.from(document.querySelectorAll(".card.outer-box[id]"))) {
+    for (const card of Array.from(document.querySelectorAll(".card.outer-box[id]:not(.mkt-past)"))) {
       const id = card.getAttribute("id") || "";
       if (!id) continue;
       const vals: Record<string, string> = { ...(cards[id] || {}) };
@@ -104,7 +104,7 @@ function applySnapshot(): boolean {
  *  old draw date/number is never shown while the fresh result is loading. */
 function maskStaleCards(classes: string[]): void {
   for (const cls of classes) {
-    for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls))) {
+    for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
       for (const el of Array.from(card.querySelectorAll("[data-id], .lottery-prize-number, .lottery-number"))) {
         const k = el.getAttribute("data-id") || "";
         const v = (el.textContent || "").trim();
@@ -194,8 +194,8 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
   const doc = await fetchDoc(url);
   if (!doc) return;
   for (const cls of tableClasses) {
-    const srcCard = doc.querySelector(".card.outer-box." + cls);
-    const targets = [...document.querySelectorAll(".card.outer-box." + cls)];
+    const srcCard = doc.querySelector(".card.outer-box." + cls + ":not(.mkt-past)");
+    const targets = [...document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)")];
     if (!srcCard || targets.length === 0) continue;
     for (const target of targets) {
       // Mirror the source exactly (both directions). When the official draw is
@@ -617,7 +617,7 @@ async function updateGdNineCards() {
   // so we only label results "today" when today's six-digit draw differs from
   // yesterday's (i.e. a genuinely new draw). Otherwise yesterday's date is shown.
   try {
-    const nineCards = [...document.querySelectorAll(".card.outer-box.table-17")];
+    const nineCards = [...document.querySelectorAll(".card.outer-box.table-17:not(.mkt-past)")];
     const cand: { dateLbl: string; ns: ReturnType<typeof parseNineDoc>; six: SixSet | null; jp9: ReturnType<typeof nineJpFromDoc> }[] = [];
     for (let off = 0; off <= 1; off++) {
       const d = dateStrNoPad(new Date(Date.now() - off * 86400000));
@@ -707,7 +707,7 @@ async function updateSGOfficial() {
     const doc = new DOMParser().parseFromString(txt, "text/html");
     const s = parseSGOfficial(doc);
     if (!s) return;
-    const cards = [...document.querySelectorAll(".card.outer-box.table-11")];
+    const cards = [...document.querySelectorAll(".card.outer-box.table-11:not(.mkt-past)")];
     for (const card of cards) {
       const set = (id: string, v: string) => {
         const el = card.querySelector('[data-id="' + id + '"]');
@@ -741,7 +741,7 @@ async function updateCambodiaFeed() {
       const m = /src=['"]([^'"]+)['"]/.exec(String(j.T.ZODIAC));
       if (m) {
         const src = m[1].startsWith("http") ? m[1] : "https://www.live4d2u.net/" + m[1].replace(/^\/?/, "");
-        for (const img of document.querySelectorAll(".card.outer-box.table-6 img, .card.outer-box.table-7 img")) {
+        for (const img of document.querySelectorAll(".card.outer-box.table-6:not(.mkt-past) img, .card.outer-box.table-7:not(.mkt-past) img")) {
           const im = img as HTMLImageElement;
           const cur = im.getAttribute("src") || "";
           if (cur.includes("zodiac") || (!cur.includes("logo") && cur !== src)) im.src = src;
@@ -750,7 +750,7 @@ async function updateCambodiaFeed() {
     }
     if (!j || !j.G) return;
     const g = j.G;
-    const cards = [...document.querySelectorAll(".card.outer-box.table-13")];
+    const cards = [...document.querySelectorAll(".card.outer-box.table-13:not(.mkt-past)")];
     if (!cards.length) return;
     const set = (card: Element, id: string, v: string) => {
       const el = card.querySelector('[data-id="' + id + '"]');
@@ -781,7 +781,7 @@ const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "
 /** Apply a table-class -> { dataId: value } map to every matching card. */
 function applyCardMap(cards: Record<string, Record<string, string>>) {
   for (const [cls, vals] of Object.entries(cards || {})) {
-    for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls))) {
+    for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
       for (const [id, v] of Object.entries(vals)) {
         if (v === undefined || v === null || v === "") continue;
         const el = card.querySelector('[data-id="' + id + '"]');

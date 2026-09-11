@@ -1,5 +1,6 @@
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import GamePager from "./GamePager";
+import GamePastFilter from "./GamePastFilter";
 import cardsRaw from "./cards-data.json";
 
 const cardList = (cardsRaw as unknown as { cards: LotteryCardData[] }).cards;
@@ -46,10 +47,27 @@ function DesktopGrid() {
   );
 }
 
-export default function LotteryGrid({ snap }: { snap?: unknown }) {
+export default function LotteryGrid({ snap, pastDates, myDates }: {
+  snap?: unknown;
+  pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]> };
+  myDates?: string[];
+}) {
   return (
     <div id="row">
-      <div className="d-lg-none"><GamePager initialIndex={0} snap={snap} /></div>
+      <div className="d-lg-none">
+        <GamePager initialIndex={0} snap={snap} pastDates={pastDates} showPast />
+      </div>
+      {pastDates && myDates ? (
+        <div className="d-none d-lg-block">
+          <GamePastFilter
+            slug="home"
+            name="4D Result 马来西亚"
+            kind="my"
+            dates={myDates}
+            tables={pastDates.myTables}
+          />
+        </div>
+      ) : null}
       <DesktopGrid />
     </div>
   );

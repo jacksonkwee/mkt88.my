@@ -52,7 +52,7 @@ function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; na
   if (o.extra && o.extra.length) tables.push(prizeTable(o.extra));
   tables.push(moreTable(o.more));
   return {
-    id: o.id, cardCls: o.cardCls,
+    id: o.id, cardCls: o.cardCls + " mkt-past",
     header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name, date: o.date, drawNo: o.set.drawNo || null },
     tables,
   };
@@ -66,7 +66,7 @@ function sixCard(o: { id: string; cardCls: string; bg: string; logo: string; nam
   rows.push(["4th Prize 四獎", or(o.subs?.six_4a, o.subs?.six_4b)]);
   rows.push(["5th Prize 五獎", or(o.subs?.six_5a, o.subs?.six_5b)]);
   return {
-    id: o.id, cardCls: o.cardCls,
+    id: o.id, cardCls: o.cardCls + " mkt-past",
     header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name, date: o.date, drawNo: null },
     tables: [prizeTable(rows)],
   };
@@ -75,7 +75,7 @@ function sixCard(o: { id: string; cardCls: string; bg: string; logo: string; nam
 function jpCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; extras: Array<[string, string]> }): LotteryCardData {
   return {
     id: o.id + "-jp",
-    cardCls: o.cardCls + " six-jp",
+    cardCls: o.cardCls + " six-jp mkt-past",
     header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name.replace(/6D/, "6D JP"), date: o.date, drawNo: null },
     tables: [prizeTable(o.extras)],
   };
@@ -100,11 +100,13 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
 
   useEffect(() => {
     let alive = true;
+    setErr("");
     fetch("/api/cambodia-past?date=" + date)
       .then(async (r) => {
         if (!r.ok) throw new Error("load failed");
         const j = (await r.json()) as ApiResult;
         if (!alive) return;
+        setErr("");
         const d = labelDate(date);
         const columns: LotteryCardData[][] = [];
         const want = (g: string) => !only || only === g;

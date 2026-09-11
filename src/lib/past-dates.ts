@@ -103,9 +103,11 @@ async function scanMyDates(): Promise<void> {
   const today = todayIso();
   const candidates = range(shiftIso(today, -MY_SCAN_DAYS), shiftIso(today, -1));
   const found = await Promise.all(candidates.map(async (d) => [d, await cardsOn(d)] as const));
-  const map: Record<string, string[]> = {};
+  // Union with the verified list: a single slow or blocked request must never
+  // drop a date that is known to hold results.
+  const map: Record<string, string[]> = { ...knownTables(today) };
   for (const [d, t] of found) if (t) map[d] = t;
-  myTables = Object.keys(map).length ? map : knownTables(today);
+  myTables = map;
   myAt = Date.now();
 }
 

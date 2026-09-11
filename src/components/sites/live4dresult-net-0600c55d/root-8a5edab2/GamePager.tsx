@@ -105,7 +105,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     if (!root) return;
     const cards = snap.cards || {};
     for (const [cls, vals] of Object.entries(cards)) {
-      for (const card of Array.from(root.querySelectorAll(".card.outer-box." + cls))) {
+      for (const card of Array.from(root.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
         for (const [id, v] of Object.entries(vals)) {
           if (!v || /^----+$/.test(v) || v === "-") continue; // never blank a value
           const el = card.querySelector('[data-id="' + id + '"]');
