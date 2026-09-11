@@ -57,18 +57,20 @@ export default function LotteryGrid({ snap, pastDates, myDates }: {
       <div className="d-lg-none">
         <GamePager initialIndex={0} snap={snap} pastDates={pastDates} showPast />
       </div>
-      {pastDates && myDates ? (
-        <div className="d-none d-lg-block">
-          <GamePastFilter
-            slug="home"
-            name="4D Result 马来西亚"
-            kind="my"
-            dates={myDates}
-            tables={pastDates.myTables}
-          />
-        </div>
-      ) : null}
-      <DesktopGrid />
+      <div className="mkt-past-scope">
+        {pastDates && myDates ? (
+          <div className="d-none d-lg-block">
+            <GamePastFilter
+              slug="home"
+              name="4D Result 马来西亚"
+              kind="my"
+              dates={myDates}
+              tables={pastDates.myTables}
+            />
+          </div>
+        ) : null}
+        <DesktopGrid />
+      </div>
     </div>
   );
 }

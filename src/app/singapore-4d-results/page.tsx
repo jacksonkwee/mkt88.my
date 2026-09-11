@@ -27,7 +27,7 @@ export default async function Page() {
       <div className="d-lg-none">
         <GamePager name="sg" pastDates={pastDates} showPast />
       </div>
-      <div className="d-none d-lg-block">
+      <div className="d-none d-lg-block mkt-past-scope">
         <div className="container flex-shrink-0">
           <div className="row">
             <div className="col-sm-12">

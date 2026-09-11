@@ -41,7 +41,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
           <GamePager name={op || "sabah88"} pastDates={pastDates} showPast />
         </div>
       ) : null}
-      <div className={op ? "d-none d-lg-block" : undefined}>
+      <div className={"mkt-past-scope" + (op ? " d-none d-lg-block" : "")}>
         <div className="container flex-shrink-0">
           <div className="row">
             <div className="col-sm-12">

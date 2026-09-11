@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CambodiaKhResults from "./CambodiaKhResults";
 import { GAME_TABLES } from "./game-tables";
 
@@ -15,32 +15,12 @@ const KH_GAME: Record<string, "gd" | "nine" | "perdana" | "hari"> = {
 };
 
 /**
- * While any filter has a date picked, the page hides the live/today cards so
- * only the chosen past draw is on screen. A shared counter keeps it correct
- * when several filters are on the page at once (the phone swipe slides).
+ * Past results are per game, never shared. Picking a date only switches the
+ * area this filter sits in ("mkt-past-scope") to that date's cards, so swiping
+ * to another game still shows that game's normal latest result.
  */
-const PAST_MODE_CLASS = "mkt-past-mode";
-let activeFilters = 0;
-function setPastMode(on: boolean) {
-  activeFilters = Math.max(0, activeFilters + (on ? 1 : -1));
-  if (typeof document !== "undefined") {
-    document.body.classList.toggle(PAST_MODE_CLASS, activeFilters > 0);
-  }
-}
-
-/**
- * The picked date is shared by every game on the page, so swiping to the next
- * game shows that game's result for the very same date instead of falling back
- * to the live draw.
- */
-const dateListeners = new Set<(d: string) => void>();
-function publishDate(d: string) {
-  dateListeners.forEach((fn) => { try { fn(d); } catch { /* ignore */ } });
-}
-function subscribeDate(fn: (d: string) => void) {
-  dateListeners.add(fn);
-  return () => { dateListeners.delete(fn); };
-}
+const SCOPE_CLASS = "mkt-past-scope";
+const ON_CLASS = "mkt-past-on";
 
 function pretty(iso: string): string {
   const [y, m, d] = iso.split("-");
@@ -49,10 +29,6 @@ function pretty(iso: string): string {
   return d + "-" + m + "-" + y + (wk ? " (" + wk + ")" : "");
 }
 
-/**
- * Past-result date filter shown under a game's title. Picking a date replaces
- * the live results with that game's cards for the chosen date.
- */
 export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   slug: string;
   name: string;
@@ -68,18 +44,15 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  // Past mode: hide the live cards while a date is picked, restore on clear.
+  // Only this game's area switches: its latest cards hide while a date is shown.
   useEffect(() => {
-    if (!date) return;
-    setPastMode(true);
-    return () => setPastMode(false);
+    const scope = rootRef.current ? rootRef.current.closest("." + SCOPE_CLASS) : null;
+    if (!scope) return;
+    scope.classList.toggle(ON_CLASS, Boolean(date));
+    return () => { scope.classList.remove(ON_CLASS); };
   }, [date]);
-
-  // Follow the date another game's filter picked.
-  useEffect(() => subscribeDate((d) => setDate((cur) => (cur === d ? cur : d))), []);
-
-  const choose = (d: string) => { setDate(d); publishDate(d); };
 
   useEffect(() => {
     if (!date) { setHtml(null); setErr(""); return; }
@@ -100,7 +73,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   const hasPast = list.length > 0;
 
   return (
-    <div style={{ margin: "8px 0 2px" }}>
+    <div ref={rootRef} style={{ margin: "8px 0 2px" }}>
       <div
         style={{
           border: "1px solid #e4e4e4", borderRadius: 10, background: "#fff",
@@ -116,7 +89,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             <select
               aria-label={"Past result date for " + name}
               value={date}
-              onChange={(e) => choose(e.target.value)}
+              onChange={(e) => setDate(e.target.value)}
               style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 210, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
@@ -126,7 +99,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             </select>
             <button
               type="button"
-              onClick={() => choose(latest)}
+              onClick={() => setDate(latest)}
               style={{ padding: "6px 12px", borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
             >
               Latest 最新
@@ -141,7 +114,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
         <div className="text-center" style={{ margin: "6px 0 -2px", fontSize: 13, color: "#0a6b2d" }}>
           Showing past result for <strong>{pretty(date)}</strong>
           {" · "}
-          <a href="#" onClick={(e) => { e.preventDefault(); choose(""); }} style={{ color: "#cc0000", fontWeight: 700 }}>
+          <a href="#" onClick={(e) => { e.preventDefault(); setDate(""); }} style={{ color: "#cc0000", fontWeight: 700 }}>
             Back to latest 返回最新
           </a>
         </div>

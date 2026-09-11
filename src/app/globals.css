@@ -91,12 +91,8 @@ td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="mi
 
 
 /* ------------------------------------------------------------------ *
- * Past-result mode                                                    *
- * While a past date is picked, only that date's cards are shown -     *
- * the live/today cards are hidden entirely.                           *
+ * Past-result mode (per game)                                         *
+ * Only the game whose date was picked hides its latest cards; other   *
+ * games keep showing their normal latest result.                      *
  * ------------------------------------------------------------------ */
-body.mkt-past-mode .card.outer-box:not(.mkt-past) { display: none !important; }
-body.mkt-past-mode .mkt-live-only { display: none !important; }
-/* Empty live columns should not leave a gap. */
-body.mkt-past-mode .row > .col-12:empty,
-body.mkt-past-mode .row > [class*="col-"]:empty { display: none !important; }
+.mkt-past-scope.mkt-past-on .card.outer-box:not(.mkt-past) { display: none !important; }

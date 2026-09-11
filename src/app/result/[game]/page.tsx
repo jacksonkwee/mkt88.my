@@ -40,7 +40,7 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
       <div className="d-lg-none">
         <GamePager name={game} snap={snapProp} pastDates={pastDates} showPast />
       </div>
-      <div className="d-none d-lg-block">
+      <div className="d-none d-lg-block mkt-past-scope">
         <main className="container flex-shrink-0">
           <div className="row">
             <div className="col-12">

@@ -192,7 +192,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     <div ref={track}
       style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}>
       {pages.map((pg) => (
-        <div key={pg.title} style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
+        <div key={pg.title} className="mkt-past-scope" style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
           <div style={{ textAlign: "center", fontWeight: 800, color: "#cc0000", margin: "6px 0 2px", fontSize: 16 }}>{pg.title}</div>
           {showPast && pastDates && pg.slug ? (
             <GamePastFilter
