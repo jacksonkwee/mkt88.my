@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import CambodiaKhResults from "./CambodiaKhResults";
 import { GAME_TABLES } from "./game-tables";
 
@@ -14,6 +14,20 @@ const KH_GAME: Record<string, "gd" | "nine" | "perdana" | "hari"> = {
   "lucky-harihari": "hari",
 };
 
+/**
+ * While any filter has a date picked, the page hides the live/today cards so
+ * only the chosen past draw is on screen. A shared counter keeps it correct
+ * when several filters are on the page at once (the phone swipe slides).
+ */
+const PAST_MODE_CLASS = "mkt-past-mode";
+let activeFilters = 0;
+function setPastMode(on: boolean) {
+  activeFilters = Math.max(0, activeFilters + (on ? 1 : -1));
+  if (typeof document !== "undefined") {
+    document.body.classList.toggle(PAST_MODE_CLASS, activeFilters > 0);
+  }
+}
+
 function pretty(iso: string): string {
   const [y, m, d] = iso.split("-");
   const dt = new Date(iso + "T12:00:00");
@@ -22,8 +36,8 @@ function pretty(iso: string): string {
 }
 
 /**
- * Past-result date filter shown under a game's title. Picking a date renders
- * that game's card(s) for the date - and nothing else.
+ * Past-result date filter shown under a game's title. Picking a date replaces
+ * the live results with that game's cards for the chosen date.
  */
 export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   slug: string;
@@ -40,10 +54,16 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const box = useRef<HTMLDivElement>(null);
+
+  // Past mode: hide the live cards while a date is picked, restore on clear.
+  useEffect(() => {
+    if (!date) return;
+    setPastMode(true);
+    return () => setPastMode(false);
+  }, [date]);
 
   useEffect(() => {
-    if (!date) { setHtml(null); return; }
+    if (!date) { setHtml(null); setErr(""); return; }
     if (kind === "kh") return; // Cambodia cards are rendered by the React component
     let alive = true;
     setLoading(true);
@@ -52,17 +72,16 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
     fetch("/api/game-past?slug=" + encodeURIComponent(slug) + "&date=" + date, { cache: "no-store" })
       .then(async (r) => (r.ok ? r.json() : Promise.reject(new Error("load failed"))))
       .then((j) => { if (alive) setHtml((j.html as string) || ""); })
-      .catch((e) => { if (alive) setErr(String(e)); })
+      .catch(() => { if (alive) setErr("Could not load the past result. Please try again."); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [date, kind, slug]);
 
-  const pick = (d: string) => { setDate(d); };
   const latest = list.length ? list[list.length - 1] : "";
   const hasPast = list.length > 0;
 
   return (
-    <div ref={box} style={{ margin: "8px 0 2px" }}>
+    <div style={{ margin: "8px 0 2px" }}>
       <div
         style={{
           border: "1px solid #e4e4e4", borderRadius: 10, background: "#fff",
@@ -78,17 +97,17 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             <select
               aria-label={"Past result date for " + name}
               value={date}
-              onChange={(e) => pick(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 200, fontWeight: 600, background: "#fff" }}
+              onChange={(e) => setDate(e.target.value)}
+              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 210, fontWeight: 600, background: "#fff" }}
             >
-              <option value="">Select date 选择日期…</option>
+              <option value="">Live results (latest) 最新开奖</option>
               {list.slice().reverse().map((d) => (
                 <option key={d} value={d}>{pretty(d)}</option>
               ))}
             </select>
             <button
               type="button"
-              onClick={() => pick(latest)}
+              onClick={() => setDate(latest)}
               style={{ padding: "6px 12px", borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
             >
               Latest 最新
@@ -99,12 +118,22 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
         )}
       </div>
 
+      {date ? (
+        <div className="text-center" style={{ margin: "6px 0 -2px", fontSize: 13, color: "#0a6b2d" }}>
+          Showing past result for <strong>{pretty(date)}</strong>
+          {" · "}
+          <a href="#" onClick={(e) => { e.preventDefault(); setDate(""); }} style={{ color: "#cc0000", fontWeight: 700 }}>
+            Back to latest 返回最新
+          </a>
+        </div>
+      ) : null}
+
       {kind === "kh" ? (
         date ? <CambodiaKhResults date={date} only={KH_GAME[slug]} /> : null
       ) : (
         <>
           {loading ? <div className="alert alert-info mt-3 text-center">Loading past result…</div> : null}
-          {err ? <div className="alert alert-warning mt-3 text-center">Could not load the past result.</div> : null}
+          {err ? <div className="alert alert-warning mt-3 text-center">{err}</div> : null}
           {!loading && html !== null ? (
             html.trim() === ""
               ? <div className="alert alert-warning mt-3 text-center">No result for this date.</div>

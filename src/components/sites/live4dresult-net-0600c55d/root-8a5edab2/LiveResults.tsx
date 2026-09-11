@@ -1015,6 +1015,7 @@ export default function LiveResults() {
   }, []);
   return (
     <div
+      className="mkt-live-only"
       style={{
         position: "fixed",
         right: 12,

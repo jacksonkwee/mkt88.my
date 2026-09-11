@@ -183,14 +183,14 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
         hari("19:30", date + "-hari730", "Lucky HariHari 天天好运 (7:30PM)");
 
         if (columns.length) setCols(columns);
-        else setErr("No results are included for " + date + ".");
+        else setErr("No result is available for " + date + ".");
       })
       .catch((e) => alive && setErr(String(e)));
     return () => { alive = false; };
   }, [date, only]);
 
   if (err) return <div className="alert alert-warning mt-3 text-center">{err}</div>;
-  if (!cols) return <div className="alert alert-info mt-3 text-center">Loading Cambodia results…</div>;
+  if (!cols) return <div className="alert alert-info mt-3 text-center">Loading past result…</div>;
   return (
     <div className="row">
       {cols.map((col, ci) => (

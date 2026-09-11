@@ -89,3 +89,14 @@ td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="mi
 .live-pending::after { content: "…"; color: #b9b9b9; }
 
 
+
+/* ------------------------------------------------------------------ *
+ * Past-result mode                                                    *
+ * While a past date is picked, only that date's cards are shown -     *
+ * the live/today cards are hidden entirely.                           *
+ * ------------------------------------------------------------------ */
+body.mkt-past-mode .card.outer-box:not(.mkt-past) { display: none !important; }
+body.mkt-past-mode .mkt-live-only { display: none !important; }
+/* Empty live columns should not leave a gap. */
+body.mkt-past-mode .row > .col-12:empty,
+body.mkt-past-mode .row > [class*="col-"]:empty { display: none !important; }
