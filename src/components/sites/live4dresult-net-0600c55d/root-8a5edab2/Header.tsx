@@ -91,11 +91,7 @@ export default function Header() {
                       ))}
                     </ul>
                   </li>
-                  <li className={LI_BASE + " menu-item-17"}>
-                    <a href="/past-results" className="nav-link" onClick={closeAll}>
-                      Past Results
-                    </a>
-                  </li>
+
                   <li className={LI_BASE + " menu-item-18"}>
                     <a href="/favourites" className="nav-link" onClick={closeAll}>
                       Favourite Number <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>收藏号码</span>

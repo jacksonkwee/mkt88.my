@@ -7,6 +7,8 @@ import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5eda
 import raw from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/snapshots/singapore-4d-results.content.json";
 import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
+import GamePastFilter from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePastFilter";
+import { getPastDateLists } from "../../lib/past-dates";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/singapore-4d-results" },
@@ -14,16 +16,25 @@ export const metadata: Metadata = {
   description: "Singapore 4D and Singapore Toto results - Live4dResult.",
 };
 
-export default function Page() {
+export default async function Page() {
   const { colHtml } = raw as { colHtml: string };
+  const pastDates = await getPastDateLists();
+  const myDates = pastDates.my;
   return (
     <>
       <Header />
       <RegionButtons />
       <div className="d-lg-none">
-        <GamePager name="sg" />
+        <GamePager name="sg" pastDates={pastDates} showPast />
       </div>
       <div className="d-none d-lg-block">
+        <div className="container flex-shrink-0">
+          <div className="row">
+            <div className="col-sm-12">
+              <GamePastFilter slug="sg" name="Singapore 4D" kind="my" dates={myDates} tables={pastDates.myTables} />
+            </div>
+          </div>
+        </div>
         <SnapshotPage html={colHtml} />
       </div>
       <SeoText

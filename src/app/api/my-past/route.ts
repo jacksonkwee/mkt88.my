@@ -44,6 +44,10 @@ export async function GET(req: NextRequest) {
     }
     if (!source) source = fallback;
 
+    // The archive answers every date with *some* page, so make sure the page we
+    // got really is the Malaysia / Singapore grid before showing anything.
+    if (!/card outer-box table-(?:1|2|3|4|5|6|7|8|9|10|11)"/.test(source)) source = "";
+
     // The upstream archive does not always wrap the cards in #row, so start at
     // the first result card when that marker is absent.
     let content = source;

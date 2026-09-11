@@ -10,6 +10,7 @@ import { hariIds, perdanaIds } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
+import GamePastFilter from "./GamePastFilter";
 
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
@@ -38,7 +39,7 @@ function extractEast(cls: string): string {
   return rewriteHtml(eastHtml.slice(start, i));
 }
 
-type PageDef = { title: string; ids?: string[]; html?: string };
+type PageDef = { title: string; slug?: string; kh?: boolean; ids?: string[]; html?: string };
 
 /** Raw captured HTML is written once (React must not re-insert it on re-render,
  *  otherwise the freshly applied live values are wiped back to the capture). */
@@ -50,15 +51,15 @@ function RawHtml({ html }: { html: string }) {
   return <div ref={ref} />;
 }
 const PAGES: PageDef[] = [
-  { title: "Magnum 4D", ids: ["table-1-2026-09-06", "table-3-2026-09-06", "table-2-2026-09-06"] },
-  { title: "Da Ma Cai", ids: ["table-4-2026-09-06", "table-5-2026-09-06"] },
-  { title: "Sports Toto", ids: ["table-6-2026-09-06", "table-7-2026-09-06"] },
-  { title: "Singapore 4D", ids: ["table-11-2026-09-06"] },
-  { title: "Grand Dragon", ids: ["table-13-2026-09-06", "table-14-2026-09-06-6d"] },
-  { title: "Nine Lotto", ids: ["table-17-2026-09-06", "table-18-2026-09-06-6d"] },
-  { title: "Sabah 88 沙巴88", html: extractEast("table-10") },
-  { title: "Sandakan 山打根", html: extractEast("table-8") },
-  { title: "Cash Sweep 沙捞越", html: extractEast("table-9") },
+  { title: "Magnum 4D", slug: "magnum", ids: ["table-1-2026-09-06", "table-3-2026-09-06", "table-2-2026-09-06"] },
+  { title: "Da Ma Cai", slug: "damacai", ids: ["table-4-2026-09-06", "table-5-2026-09-06"] },
+  { title: "Sports Toto", slug: "sportstoto", ids: ["table-6-2026-09-06", "table-7-2026-09-06"] },
+  { title: "Singapore 4D", slug: "sg", ids: ["table-11-2026-09-06"] },
+  { title: "Grand Dragon", slug: "grand-dragon", kh: true, ids: ["table-13-2026-09-06", "table-14-2026-09-06-6d"] },
+  { title: "Nine Lotto", slug: "nine-lotto", kh: true, ids: ["table-17-2026-09-06", "table-18-2026-09-06-6d"] },
+  { title: "Sabah 88 沙巴88", slug: "sabah88", html: extractEast("table-10") },
+  { title: "Sandakan 山打根", slug: "sandakan", html: extractEast("table-8") },
+  { title: "Cash Sweep 沙捞越", slug: "cashsweep", html: extractEast("table-9") },
 ];
 
 /**
@@ -70,8 +71,8 @@ function pagesFor(night: boolean): PageDef[] {
   const loss = PAGES.filter((p) => p.title !== "Perdana 4D" && !p.title.startsWith("Lucky HariHari"));
   return [
     ...loss,
-    { title: "Perdana 4D", ids: perdanaIds(night) },
-    { title: "Lucky HariHari 天天好运", ids: hariIds(night) },
+    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds(night) },
+    { title: "Lucky HariHari 天天好运", slug: "lucky-harihari", kh: true, ids: hariIds(night) },
   ];
 }
 
@@ -85,7 +86,13 @@ export function gamePagerIndex(name: string): number {
   return i >= 0 ? i : 0;
 }
 
-export default function GamePager({ initialIndex = 0, name, snap: serverSnap }: { initialIndex?: number; name?: string; snap?: unknown }) {
+export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pastDates, showPast }: {
+  initialIndex?: number;
+  name?: string;
+  snap?: unknown;
+  pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]> };
+  showPast?: boolean;
+}) {
   const night = useDrawOrder();
   const ctxSnap = useSnap();
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
@@ -177,6 +184,15 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap }: 
       {pages.map((pg) => (
         <div key={pg.title} style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
           <div style={{ textAlign: "center", fontWeight: 800, color: "#cc0000", margin: "6px 0 2px", fontSize: 16 }}>{pg.title}</div>
+          {showPast && pastDates && pg.slug ? (
+            <GamePastFilter
+              slug={pg.slug}
+              name={pg.title}
+              kind={pg.kh ? "kh" : "my"}
+              dates={pg.kh ? pastDates.kh : pastDates.my}
+              tables={pg.kh ? undefined : pastDates.myTables}
+            />
+          ) : null}
           {pg.html ? (
             <RawHtml html={pg.html} />
           ) : (

@@ -94,7 +94,7 @@ interface ApiResult {
   hari?: Record<string, { set: SetData | null; six?: { main: string; subs: Record<string, string> } | null; jp?: Record<string, string> | null } | null>;
 }
 
-export default function CambodiaKhResults({ date }: { date: string }) {
+export default function CambodiaKhResults({ date, only }: { date: string; only?: "gd" | "nine" | "perdana" | "hari" }) {
   const [cols, setCols] = useState<LotteryCardData[][] | null>(null);
   const [err, setErr] = useState("");
 
@@ -107,6 +107,7 @@ export default function CambodiaKhResults({ date }: { date: string }) {
         if (!alive) return;
         const d = labelDate(date);
         const columns: LotteryCardData[][] = [];
+        const want = (g: string) => !only || only === g;
         // Grand Dragon 4D (+4D jackpot) then 6D (+6+1D jackpot)
         const gdCol: LotteryCardData[] = [];
         if (j.gd && j.gd.prize && j.gd.prize.length) {
@@ -126,8 +127,8 @@ export default function CambodiaKhResults({ date }: { date: string }) {
           }
           gdCol.push(sixCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, main: j.gd6.main, subs: j.gd6.subs }));
         }
-        if (gdCol.length) columns.push(gdCol);
-        if (gdExtras.length) columns.push([jpCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, extras: gdExtras })]);
+        if (want("gd") && gdCol.length) columns.push(gdCol);
+        if (want("gd") && gdExtras.length) columns.push([jpCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, extras: gdExtras })]);
 
         // Nine Lotto 4D then 6D (+ Super Jackpot)
         const nineCol: LotteryCardData[] = [];
@@ -144,14 +145,14 @@ export default function CambodiaKhResults({ date }: { date: string }) {
           }
           nineCol.push(sixCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, main: j.nine6.main, subs: j.nine6.subs }));
         }
-        if (nineCol.length) columns.push(nineCol);
-        if (nineExtras.length) columns.push([jpCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, extras: nineExtras })]);
+        if (want("nine") && nineCol.length) columns.push(nineCol);
+        if (want("nine") && nineExtras.length) columns.push([jpCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, extras: nineExtras })]);
 
         // Perdana 4D (two draws)
         const p = j.perdana || {};
         const perd = (t: string, id: string, nm: string, more: string) => {
           const s = p[t];
-          if (s && s.prize && s.prize.length) columns.push([fourCard({ id, cardCls: "card outer-box table-16", bg: "perdana-bg", logo: LOGO.perdana, name: nm, date: s.date || d, set: s, more })]);
+          if (want("perdana") && s && s.prize && s.prize.length) columns.push([fourCard({ id, cardCls: "card outer-box table-16", bg: "perdana-bg", logo: LOGO.perdana, name: nm, date: s.date || d, set: s, more })]);
         };
         perd("15:30", date + "-perd1530", "Perdana Lottery 4D (15:30)", "More Perdana 4D Result");
         perd("19:30", date + "-perd1930", "Perdana Lottery 4D (19:30)", "More Perdana 4D Result");
@@ -173,8 +174,8 @@ export default function CambodiaKhResults({ date }: { date: string }) {
           if (slot.six) {
             col.push(sixCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, main: slot.six.main, subs: slot.six.subs }));
           }
-          if (col.length) columns.push(col);
-          if (extras.length) columns.push([jpCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, extras })]);
+          if (want("hari") && col.length) columns.push(col);
+          if (want("hari") && extras.length) columns.push([jpCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, extras })]);
         };
         hari("15:30", date + "-hari330", "Lucky HariHari 天天好运 (3:30PM)");
         hari("19:30", date + "-hari730", "Lucky HariHari 天天好运 (7:30PM)");
@@ -184,7 +185,7 @@ export default function CambodiaKhResults({ date }: { date: string }) {
       })
       .catch((e) => alive && setErr(String(e)));
     return () => { alive = false; };
-  }, [date]);
+  }, [date, only]);
 
   if (err) return <div className="alert alert-warning mt-3 text-center">{err}</div>;
   if (!cols) return <div className="alert alert-info mt-3 text-center">Loading Cambodia results…</div>;
