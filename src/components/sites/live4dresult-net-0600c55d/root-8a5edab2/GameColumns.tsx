@@ -5,6 +5,7 @@ import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
+import { splitSixCard } from "./six-split";
 
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
@@ -30,16 +31,18 @@ export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; 
 
   const cols: { key: string; items: LotteryCardData[] }[] = [];
   for (const id of ids) {
-    const card = byId.get(id);
-    if (!card) continue;
+    const stored = byId.get(id);
+    if (!stored) continue;
+    const { result, jp } = splitSixCard(stored);
     const base = id.replace(/-6d$/, "");
     if (/-6d$/.test(id)) {
       const col = cols.find((x) => x.key === base);
-      if (col) col.items.push(card);
-      else cols.push({ key: base, items: [card] });
+      if (col) col.items.push(result);
+      else cols.push({ key: base, items: [result] });
     } else {
-      cols.push({ key: base, items: [card] });
+      cols.push({ key: base, items: [result] });
     }
+    if (jp) cols.push({ key: id + "-jp", items: [jp] });
   }
 
   // When a game has both draw times, the active one goes first.

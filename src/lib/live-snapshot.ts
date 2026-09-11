@@ -5,11 +5,16 @@
  */
 export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
 export type HariEntry = { set: PrizeSet | null; six: { main: string; subs: Record<string, string> } | null; jp: Record<string, string> | null } | null;
+export type SixEntry = { main: string; subs: Record<string, string> } | null;
 export type Snapshot = {
   at: number;
   cards: Record<string, Record<string, string>>;
   perdana: Record<string, PrizeSet | null>;
   hari: Record<string, HariEntry>;
+  gd6: SixEntry;
+  gdjp7: Record<string, string> | null;
+  nine6: SixEntry;
+  nineJp: Record<string, string> | null;
 };
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
@@ -209,11 +214,66 @@ async function hariFor(time: string, iso: string, noPad: string): Promise<HariEn
   return { set, six: hariSix(j), jp };
 }
 
+const sixParts = (main: string): Record<string, string> => ({
+  six_2a: main.slice(0, 5), six_2b: main.slice(1),
+  six_3a: main.slice(0, 4), six_3b: main.slice(2),
+  six_4a: main.slice(0, 3), six_4b: main.slice(3),
+  six_5a: main.slice(0, 2), six_5b: main.slice(4),
+});
+
+/** Grand Dragon 6D (+ 6+1D jackpot) from the official results feed. */
+async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<string, string> | null }> {
+  try {
+    const [y, m, d] = iso.split("-");
+    const html = await get("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);
+    if (!html) return { six: null, jp: null };
+    const txt = clean(html);
+    let six: SixEntry = null;
+    const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
+    if (m6) { const main = m6[1].replace(/\s+/g, ""); six = { main, subs: sixParts(main) }; }
+    const jp: Record<string, string> = {};
+    const pool7 = /class="7d_JPool">([^<]+)</.exec(html);
+    if (pool7) jp.jp7_pool = pool7[1].trim();
+    const digits: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const mm = new RegExp('class="L7_' + i + '">([^<]+)</span>').exec(html);
+      if (mm) digits.push(mm[1].trim());
+    }
+    if (digits.length === 7) { const g7 = digits.join(""); if (/^\d{7}$/.test(g7)) jp.jp7_grand = g7.slice(0, 6) + " + " + g7[6]; }
+    return { six, jp: Object.keys(jp).length ? jp : null };
+  } catch { return { six: null, jp: null }; }
+}
+
+/** Nine Lotto 6D (+ Super Jackpot) from the official results feed. */
+async function nineSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<string, string> | null }> {
+  try {
+    const [y, m, d] = iso.split("-");
+    const html = await get("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(d));
+    if (!html) return { six: null, jp: null };
+    const jp: Record<string, string> = {};
+    const poolM = /result-sjp-lg">\s*([^<]+)</.exec(html);
+    if (poolM) jp.n9_sj_pool = poolM[1].replace(/\s+/g, " ").trim();
+    const nums: string[] = [];
+    const rows = html.match(/<tr class="result-numbersjp">[\s\S]*?<\/tr>/g) || [];
+    for (const block of rows.slice(0, 20)) {
+      const lbl = /class="char1">([^<]+)</.exec(block);
+      const vals = [...block.matchAll(/class="result-sjp-prize"[^>]*>([^<]+)</g)].map((x) => x[1].trim());
+      if (lbl && vals.length >= 3) jp["n9_sj_" + lbl[1].trim().replace(/\s*prize$/i, "").trim().toLowerCase()] = vals.join(" + ");
+      if (vals.length >= 3 && /^\d{4}$/.test(vals[vals.length - 1])) nums.push(vals[vals.length - 1]);
+    }
+    let six: SixEntry = null;
+    if (nums.length >= 3) {
+      const main = nums[0][0] + nums[1][0] + nums[2][0] + nums[0][3] + nums[1][3] + nums[2][3];
+      if (/^\d{6}$/.test(main)) six = { main, subs: sixParts(main) };
+    }
+    return { six, jp: Object.keys(jp).length ? jp : null };
+  } catch { return { six: null, jp: null }; }
+}
 /** Build a fresh snapshot (parallel upstream fetches). */
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineSix] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now()),
@@ -224,6 +284,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
     hariFor("19:30", yest.iso, yest.noPad),
+    gdSixToday(today.iso),
+    nineSixToday(today.iso),
   ]);
 
   // East Malaysia: prefer the live feed (it publishes the newest draw first),
@@ -240,7 +302,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
-  const snap: Snapshot = { at: Date.now(), cards, perdana, hari: { "15:30": h15 || h15y, "19:30": h19 || h19y } };
+  const snap: Snapshot = {
+    at: Date.now(), cards, perdana,
+    hari: { "15:30": h15 || h15y, "19:30": h19 || h19y },
+    gd6: gdSix.six, gdjp7: gdSix.jp, nine6: nineSix.six, nineJp: nineSix.jp,
+  };
   cache = snap;
   return snap;
 }

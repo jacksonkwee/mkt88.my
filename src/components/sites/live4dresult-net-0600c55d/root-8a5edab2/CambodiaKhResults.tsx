@@ -60,11 +60,24 @@ function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; na
 
 function sixCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; main?: string; subs?: Record<string, string>; extras?: Array<[string, string]> }): LotteryCardData {
   const rows: Array<[string, string]> = [["1st Prize 首獎", o.main || "----"]];
-    if (o.extras) for (const e of o.extras) rows.push(e);
+  const or = (a?: string, b?: string) => (a && a !== "----" ? a : "----") + " or " + (b && b !== "----" ? b : "----");
+  rows.push(["2nd Prize 二獎", or(o.subs?.six_2a, o.subs?.six_2b)]);
+  rows.push(["3rd Prize 三獎", or(o.subs?.six_3a, o.subs?.six_3b)]);
+  rows.push(["4th Prize 四獎", or(o.subs?.six_4a, o.subs?.six_4b)]);
+  rows.push(["5th Prize 五獎", or(o.subs?.six_5a, o.subs?.six_5b)]);
   return {
     id: o.id, cardCls: o.cardCls,
     header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name, date: o.date, drawNo: null },
     tables: [prizeTable(rows)],
+  };
+}
+
+function jpCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; extras: Array<[string, string]> }): LotteryCardData {
+  return {
+    id: o.id + "-jp",
+    cardCls: o.cardCls + " six-jp",
+    header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name.replace(/6D/, "6D JP"), date: o.date, drawNo: null },
+    tables: [prizeTable(o.extras)],
   };
 }
 
@@ -105,32 +118,34 @@ export default function CambodiaKhResults({ date }: { date: string }) {
           }
           gdCol.push(fourCard({ id: date + "-gd4", cardCls: "card outer-box table-13", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 4D 豪龙", date: j.gd.date || d, set: j.gd, more: "More GrandDragon 4D Result", extra: extra.length ? extra : undefined }));
         }
+        const gdExtras: Array<[string, string]> = [];
         if (j.gd6) {
-          const extras: Array<[string, string]> = [];
           if (j.gdjp7) {
-            if (j.gdjp7.jp7_pool) extras.push(["6+1D JP Pool 奖金池", j.gdjp7.jp7_pool]);
-            if (j.gdjp7.jp7_grand) extras.push(["6+1D Grand Prize 头奖", j.gdjp7.jp7_grand]);
+            if (j.gdjp7.jp7_pool) gdExtras.push(["6+1D JP Pool 奖金池", j.gdjp7.jp7_pool]);
+            if (j.gdjp7.jp7_grand) gdExtras.push(["6+1D Grand Prize 头奖", j.gdjp7.jp7_grand]);
           }
-          gdCol.push(sixCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, main: j.gd6.main, subs: j.gd6.subs, extras }));
+          gdCol.push(sixCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, main: j.gd6.main, subs: j.gd6.subs }));
         }
         if (gdCol.length) columns.push(gdCol);
+        if (gdExtras.length) columns.push([jpCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, extras: gdExtras })]);
 
         // Nine Lotto 4D then 6D (+ Super Jackpot)
         const nineCol: LotteryCardData[] = [];
         if (j.nine && j.nine.prize && j.nine.prize.length) {
           nineCol.push(fourCard({ id: date + "-nine", cardCls: "card outer-box table-17", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto", date: j.nine.date || d, set: j.nine, more: "More Nine Lotto 4D Result" }));
         }
+        const nineExtras: Array<[string, string]> = [];
         if (j.nine6) {
-          const extras: Array<[string, string]> = [];
           if (j.nineJp) {
-            if (j.nineJp.n9_sj_pool) extras.push(["Super Jackpot Pool 奖池", j.nineJp.n9_sj_pool]);
-            if (j.nineJp.n9_sj_grand) extras.push(["Grand Prize 头奖", j.nineJp.n9_sj_grand]);
-            if (j.nineJp.n9_sj_super) extras.push(["Super Prize 大奖", j.nineJp.n9_sj_super]);
-            if (j.nineJp.n9_sj_minor) extras.push(["Minor Prize 小奖", j.nineJp.n9_sj_minor]);
+            if (j.nineJp.n9_sj_pool) nineExtras.push(["Super Jackpot Pool 奖池", j.nineJp.n9_sj_pool]);
+            if (j.nineJp.n9_sj_grand) nineExtras.push(["Grand Prize 头奖", j.nineJp.n9_sj_grand]);
+            if (j.nineJp.n9_sj_super) nineExtras.push(["Super Prize 大奖", j.nineJp.n9_sj_super]);
+            if (j.nineJp.n9_sj_minor) nineExtras.push(["Minor Prize 小奖", j.nineJp.n9_sj_minor]);
           }
-          nineCol.push(sixCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, main: j.nine6.main, subs: j.nine6.subs, extras }));
+          nineCol.push(sixCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, main: j.nine6.main, subs: j.nine6.subs }));
         }
         if (nineCol.length) columns.push(nineCol);
+        if (nineExtras.length) columns.push([jpCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, extras: nineExtras })]);
 
         // Perdana 4D (two draws)
         const p = j.perdana || {};
@@ -155,10 +170,11 @@ export default function CambodiaKhResults({ date }: { date: string }) {
             if (slot.jp.jp_pool) extras.push(["Jackpot Pool 奖金池", slot.jp.jp_pool]);
             if (slot.jp.jp_no) extras.push(["Jackpot No. 开奖号码", slot.jp.jp_no]);
           }
-          if (slot.six || extras.length) {
-            col.push(sixCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, main: slot.six ? slot.six.main : "----", subs: slot.six ? slot.six.subs : undefined, extras }));
+          if (slot.six) {
+            col.push(sixCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, main: slot.six.main, subs: slot.six.subs }));
           }
           if (col.length) columns.push(col);
+          if (extras.length) columns.push([jpCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, extras })]);
         };
         hari("15:30", date + "-hari330", "Lucky HariHari 天天好运 (3:30PM)");
         hari("19:30", date + "-hari730", "Lucky HariHari 天天好运 (7:30PM)");

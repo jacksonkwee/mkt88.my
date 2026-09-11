@@ -72,16 +72,6 @@ function Cell(props: { cell: CardCell; override?: string }) {
   return <Tag {...attrs} style={style} suppressHydrationWarning={liveCell} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function isHiddenSixSubPrize(card: LotteryCardData, row: CardRow): boolean {
-  const ids = row.cells.map((c) => c.attrs?.["data-id"] || "").join(" ");
-  if (/(^|\s)d6_(first|second)_number_[2-5](\s|$)/.test(ids)) return true;
-  if (ids.includes("d6_number_")) {
-    return !/(^|\s)d6_number_1(\s|$)/.test(ids);
-  }
-  if (!/table-14|table-18|table-19|table-20/.test(card.cardCls)) return false;
-  const text = row.cells.map((c) => c.html.replace(/<[^>]+>/g, " ")).join(" ");
-  return /(^|\s)(2nd|3rd|4th|5th)\s*Prize/i.test(text) || /(二獎|三獎|四獎|五獎)/.test(text);
-}
 export default function LotteryCard({ card, values, prizeSet }: { card: LotteryCardData } & CardOverride) {
   const h = card.header;
   const hasDate = Boolean(values?.date || prizeSet?.date);
@@ -119,7 +109,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
           return (
             <table key={ti} className={t.cls} width={t.widthAttr || undefined}>
               <tbody>
-                {t.rows.filter((r) => !isHiddenSixSubPrize(card, r)).map((r, ri) => (
+                {t.rows.map((r, ri) => (
                   <tr key={ri} className={r.cls || undefined}>
                     {r.cells.map((c, ci) => {
                       const id = c.attrs?.["data-id"] || "";

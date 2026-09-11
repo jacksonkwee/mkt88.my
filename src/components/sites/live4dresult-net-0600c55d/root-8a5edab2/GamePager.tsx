@@ -9,6 +9,7 @@ import eastRaw from "./snapshots/sabah-sarawak-4d-results.content.json";
 import { hariIds, perdanaIds } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
+import { splitSixCard } from "./six-split";
 
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
@@ -94,8 +95,8 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap }: 
   // during hydration, so write the snapshot values into them here as well.
   useEffect(() => {
     const root = track.current;
+    if (!root) return;
     const cards = snap.cards || {};
-    if (!root || !Object.keys(cards).length) return;
     for (const [cls, vals] of Object.entries(cards)) {
       for (const card of Array.from(root.querySelectorAll(".card.outer-box." + cls))) {
         for (const [id, v] of Object.entries(vals)) {
@@ -108,6 +109,28 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap }: 
         }
       }
     }
+    const ok = (v?: string) => !!v && !/^----+$/.test(v);
+    const put = (card: Element, id: string, v?: string) => {
+      if (!ok(v)) return;
+      const el = card.querySelector('[data-id="' + id + '"]');
+      if (el && (el.textContent || "").trim() !== v) { el.textContent = v as string; el.classList.remove("live-pending"); }
+    };
+    const writeSix = (baseId: string, m: { main: string; subs?: Record<string, string> } | null | undefined, jp: Record<string, string> | null | undefined) => {
+      for (const card of Array.from(root.querySelectorAll('[id="' + baseId + '"]'))) {
+        if (!m) continue;
+        put(card, "six_main", m.main);
+        for (const n of [2, 3, 4, 5]) {
+          const a = m.subs?.["six_" + n + "a"], b = m.subs?.["six_" + n + "b"];
+          if (!ok(a) && !ok(b)) continue;
+          put(card, "six_" + n, (ok(a) ? a : "----") + " or " + (ok(b) ? b : "----"));
+        }
+      }
+      for (const card of Array.from(root.querySelectorAll('[id="' + baseId + '-jp"]'))) {
+        if (jp) for (const [id, v] of Object.entries(jp)) put(card, id, v);
+      }
+    };
+    writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7);
+    writeSix("table-18-2026-09-06-6d", snap.nine6, snap.nineJp);
   }, [snap, pages]);
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
@@ -157,7 +180,25 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap }: 
           {pg.html ? (
             <RawHtml html={pg.html} />
           ) : (
-            (pg.ids || []).map((id) => { const card = byId.get(id); return card ? <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} /> : null; })
+            (() => {
+              const items: LotteryCardData[] = [];
+              for (const id of pg.ids || []) {
+                const card = byId.get(id);
+                if (!card) continue;
+                const { result, jp } = splitSixCard(card);
+                items.push(result);
+                if (jp) items.push(jp);
+              }
+              return items.map((card) =>
+                / six-jp$/.test(card.cardCls) ? (
+                  <div key={card.id} className="mt-3">
+                    <LotteryCard card={card} {...overridesFor(snap, card.id, card.cardCls)} />
+                  </div>
+                ) : (
+                  <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} />
+                )
+              );
+            })()
           )}
         </div>
       ))}

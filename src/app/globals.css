@@ -89,5 +89,3 @@ td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="mi
 .live-pending::after { content: "…"; color: #b9b9b9; }
 
 
-/* Hide 6D 2nd-5th prize rows in past-results captures. */
-tr:has([data-id^="d6_first_number_"]), tr:has([data-id^="d6_second_number_"]) { display: none !important; }

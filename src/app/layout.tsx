@@ -69,6 +69,16 @@ const BOOT_SCRIPT = `
     });
   }
   function dot(v){ return !v || v.indexOf("----") === 0; }
+  // 6D 2nd-5th rows read as "<first half> or <second half>".
+  function sixText(card, subs){
+    if(!card || !subs) return;
+    for(var n=2;n<=5;n++){
+      var a = subs["six_" + n + "a"], b = subs["six_" + n + "b"];
+      var ad = !a || /^----+$/.test(String(a).trim()), bd = !b || /^----+$/.test(String(b).trim());
+      if(ad && bd) continue;
+      txt(card.querySelector('[data-id="six_' + n + '"]'), (ad ? "----" : a) + " or " + (bd ? "----" : b));
+    }
+  }
   function applySet(card, set){
     if(!card || !set || !set.prize) return;
     var dateEl = card.querySelector('[data-id="date"]');
@@ -104,11 +114,31 @@ const BOOT_SCRIPT = `
           for(var s2=0;s2<sixCards.length;s2++){
             txt(sixCards[s2].querySelector('[data-id="six_main"]'), h.six.main);
             Object.keys(h.six.subs || {}).forEach(function(key){ txt(sixCards[s2].querySelector('[data-id="' + key + '"]'), h.six.subs[key]); });
+            sixText(sixCards[s2], h.six.subs);
           }
         }
         if(h.jp){ for(var m=0;m<hcs.length;m++){ Object.keys(h.jp).forEach(function(key){ txt(hcs[m].querySelector('[data-id="' + key + '"]'), h.jp[key]); }); } }
       }
     });
+    // Grand Dragon / Nine Lotto 6D: the 2nd-5th rows come from the official feed
+    // and the jackpot pool lives on its own separate card.
+    var sixPairs = [["gd6","gdjp7","table-14-2026-09-06-6d"],["nine6","nineJp","table-18-2026-09-06-6d"]];
+    for(var sp2=0; sp2<sixPairs.length; sp2++){
+      var sixKey = sixPairs[sp2][0], jpKey = sixPairs[sp2][1], baseId = sixPairs[sp2][2];
+      var s6 = j[sixKey];
+      if(s6){
+        var sCards = document.querySelectorAll('[id="' + baseId + '"]');
+        for(var sc=0; sc<sCards.length; sc++){
+          txt(sCards[sc].querySelector('[data-id="six_main"]'), s6.main);
+          sixText(sCards[sc], s6.subs);
+        }
+      }
+      var jpObj = j[jpKey];
+      if(jpObj){
+        var jCards = document.querySelectorAll('[id="' + baseId + '-jp"]');
+        for(var jc=0; jc<jCards.length; jc++){ Object.keys(jpObj).forEach(function(k){ txt(jCards[jc].querySelector('[data-id="' + k + '"]'), jpObj[k]); }); }
+      }
+    }
   }
   var snap = {};
   try { var el = document.getElementById("mkt-snapshot"); snap = el && el.textContent ? JSON.parse(el.textContent) : {}; } catch(e){ snap = {}; }
@@ -124,9 +154,15 @@ const BOOT_SCRIPT = `
     var cid = card && card.id ? card.id : "";
     var t = cid.indexOf("-1930") > 0 ? "19:30" : cid.indexOf("-1530") > 0 ? "15:30" : "";
     var h = t && snap && snap.hari ? snap.hari[t] : null;
-    if(!h || !h.six) return null;
-    var want = id === "six_main" ? h.six.main : (h.six.subs || {})[id];
-    return want && !/^----+$/.test(String(want).trim()) ? String(want) : null;
+    if(h && h.six){
+      var want = id === "six_main" ? h.six.main : (h.six.subs || {})[id];
+      return want && !/^----+$/.test(String(want).trim()) ? String(want) : null;
+    }
+    // Grand Dragon / Nine Lotto 6D cards have no draw time in their id.
+    var six = cid.indexOf("table-14") === 0 ? snap.gd6 : cid.indexOf("table-18") === 0 ? snap.nine6 : null;
+    if(!six) return null;
+    var w2 = id === "six_main" ? six.main : (six.subs || {})[id];
+    return w2 && !/^----+$/.test(String(w2).trim()) ? String(w2) : null;
   }
   function fixSix(el){ var want = sixWant(el); if(want && (el.textContent || "").trim() !== want) el.textContent = want; }
   function watchSix(){
@@ -196,7 +232,18 @@ const BOOT_SCRIPT = `
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   let snapObj: SnapValue = { cards: {}, perdana: {}, hari: {} };
-  try { const snap = await getSnapshot(); snapObj = { cards: snap.cards, perdana: snap.perdana as unknown as SnapValue["perdana"], hari: snap.hari as unknown as SnapValue["hari"] }; } catch { /* ignore */ }
+  try {
+    const snap = await getSnapshot();
+    snapObj = {
+      cards: snap.cards,
+      perdana: snap.perdana as unknown as SnapValue["perdana"],
+      hari: snap.hari as unknown as SnapValue["hari"],
+      gd6: snap.gd6 as unknown as SnapValue["gd6"],
+      gdjp7: snap.gdjp7,
+      nine6: snap.nine6 as unknown as SnapValue["nine6"],
+      nineJp: snap.nineJp,
+    };
+  } catch { /* ignore */ }
   const snapJson = JSON.stringify(snapObj).replace(/</g, "\\u003c");
   return (
     <html lang="zh">

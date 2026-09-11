@@ -26,7 +26,7 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   const def = gameBySlug[game];
   if (!def) notFound();
   const snap = await getSnapshot().catch(() => null);
-  const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari } : undefined;
+  const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp } : undefined;
   return (
     <>
       <Header />

@@ -1,10 +1,15 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+export type SixValue = { main: string; subs: Record<string, string> } | null;
 export type SnapValue = {
   cards?: Record<string, Record<string, string>>;
   perdana?: Record<string, { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null>;
   hari?: Record<string, unknown>;
+  gd6?: SixValue;
+  gdjp7?: Record<string, string> | null;
+  nine6?: SixValue;
+  nineJp?: Record<string, string> | null;
 };
 type Snap = SnapValue;
 
