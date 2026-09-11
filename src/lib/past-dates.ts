@@ -125,13 +125,13 @@ function deepTables(date: string): string[] {
   return [...out];
 }
 
-/** Perdana dates we actually hold a result for. */
+/**
+ * Perdana dates we actually hold a result for. The collected store covers
+ * every day from 2021-09-14 to the latest draw, so the list has no holes.
+ */
 function perdanaDates(): string[] {
   const store = perdanaPastRaw as unknown as Record<string, unknown>;
-  const stored = Object.keys(store);
-  const last = shiftIso(todayIso(), -1);
-  const live = last < "2025-09-21" ? [] : range("2025-09-21", last);
-  return [...new Set([...deepDates(), ...stored, ...live])].sort();
+  return [...new Set([...Object.keys(store), ...deepDates()])].sort();
 }
 
 export function getKhDatesByGame(): KhByGame {
