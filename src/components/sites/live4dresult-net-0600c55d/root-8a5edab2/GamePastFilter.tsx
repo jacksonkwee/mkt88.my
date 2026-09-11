@@ -28,6 +28,20 @@ function setPastMode(on: boolean) {
   }
 }
 
+/**
+ * The picked date is shared by every game on the page, so swiping to the next
+ * game shows that game's result for the very same date instead of falling back
+ * to the live draw.
+ */
+const dateListeners = new Set<(d: string) => void>();
+function publishDate(d: string) {
+  dateListeners.forEach((fn) => { try { fn(d); } catch { /* ignore */ } });
+}
+function subscribeDate(fn: (d: string) => void) {
+  dateListeners.add(fn);
+  return () => { dateListeners.delete(fn); };
+}
+
 function pretty(iso: string): string {
   const [y, m, d] = iso.split("-");
   const dt = new Date(iso + "T12:00:00");
@@ -61,6 +75,11 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
     setPastMode(true);
     return () => setPastMode(false);
   }, [date]);
+
+  // Follow the date another game's filter picked.
+  useEffect(() => subscribeDate((d) => setDate((cur) => (cur === d ? cur : d))), []);
+
+  const choose = (d: string) => { setDate(d); publishDate(d); };
 
   useEffect(() => {
     if (!date) { setHtml(null); setErr(""); return; }
@@ -97,7 +116,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             <select
               aria-label={"Past result date for " + name}
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => choose(e.target.value)}
               style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 210, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
@@ -107,7 +126,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             </select>
             <button
               type="button"
-              onClick={() => setDate(latest)}
+              onClick={() => choose(latest)}
               style={{ padding: "6px 12px", borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
             >
               Latest 最新
@@ -122,7 +141,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
         <div className="text-center" style={{ margin: "6px 0 -2px", fontSize: 13, color: "#0a6b2d" }}>
           Showing past result for <strong>{pretty(date)}</strong>
           {" · "}
-          <a href="#" onClick={(e) => { e.preventDefault(); setDate(""); }} style={{ color: "#cc0000", fontWeight: 700 }}>
+          <a href="#" onClick={(e) => { e.preventDefault(); choose(""); }} style={{ color: "#cc0000", fontWeight: 700 }}>
             Back to latest 返回最新
           </a>
         </div>

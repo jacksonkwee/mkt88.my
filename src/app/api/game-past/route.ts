@@ -44,14 +44,29 @@ function freeze(html: string): string {
     .replace(/\sclass="live-pending"/g, "");
 }
 
+/**
+ * One upstream fetch per date, shared by every game that asks for it, so
+ * opening a date on the phone does not pull the same page seven times.
+ */
+const sourceCache = new Map<string, { at: number; html: string }>();
+const SOURCE_TTL = 10 * 60 * 1000;
+
 async function sourceFor(date: string): Promise<string> {
+  const hit = sourceCache.get(date);
+  if (hit && Date.now() - hit.at < SOURCE_TTL) return hit.html;
   const stored = getViewHtml(date, "my");
-  if (stored && GAME_TABLES.magnum.some((t) => stored.includes('card outer-box ' + t + '"'))) return stored;
-  try {
-    return await httpGet("https://live4dresult.net/past-results/" + date);
-  } catch {
-    return (recent as Record<string, string>)[date] || "";
+  if (stored && GAME_TABLES.magnum.some((t) => stored.includes('card outer-box ' + t + '"'))) {
+    sourceCache.set(date, { at: Date.now(), html: stored });
+    return stored;
   }
+  let html = "";
+  try {
+    html = await httpGet("https://live4dresult.net/past-results/" + date);
+  } catch {
+    html = (recent as Record<string, string>)[date] || "";
+  }
+  if (html) sourceCache.set(date, { at: Date.now(), html });
+  return html;
 }
 
 export async function GET(req: NextRequest) {

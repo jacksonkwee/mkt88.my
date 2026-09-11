@@ -142,8 +142,18 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
+  const lastIdx = useRef(-1);
   const dispatchIdx = (el: HTMLDivElement) => {
     const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    // Swiping to the next game jumps the page back to the top, so the game
+    // title and its past-result filter are visible without scrolling up.
+    if (idx !== lastIdx.current) {
+      const first = lastIdx.current < 0;
+      lastIdx.current = idx;
+      if (!first) {
+        try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch { window.scrollTo(0, 0); }
+      }
+    }
     window.dispatchEvent(new CustomEvent("mktpager", { detail: { index: idx } }));
   };
   const moved = useRef(false);

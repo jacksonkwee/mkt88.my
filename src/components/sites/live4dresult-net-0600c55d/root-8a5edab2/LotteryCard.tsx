@@ -44,8 +44,8 @@ export interface CardOverride {
   prizeSet?: { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null;
 }
 
-function Cell(props: { cell: CardCell; override?: string }) {
-  const { cell, override } = props;
+function Cell(props: { cell: CardCell; override?: string; frozen?: boolean }) {
+  const { cell, override, frozen } = props;
   const style: CSSProperties | undefined = undefined;
   const attrs: Record<string, unknown> = {};
   const dataId = cell.attrs?.["data-id"] || "";
@@ -55,7 +55,8 @@ function Cell(props: { cell: CardCell; override?: string }) {
   // Only hide values that could be a stale draw date / number; keep other
   // built-in text (like "----" or jackpot amounts) as it is.
   const legacyNumber = /lottery-prize-number|lottery-number/.test(cell.cls || "") && /^\d{3,6}$/.test(plain);
-  const maskable = !fresh && (dataId === "date" || dataId === "draw_no" || /^\d{3,6}$/.test(plain) || legacyNumber);
+  // A past-result card (mkt-past) shows printed history - never mask it.
+  const maskable = !frozen && !fresh && (dataId === "date" || dataId === "draw_no" || /^\d{3,6}$/.test(plain) || legacyNumber);
   const cls = [cell.cls, maskable ? "live-pending" : ""].filter(Boolean).join(" ");
   if (cls) attrs.className = cls;
   if (cell.attrs?.width) attrs.width = cell.attrs.width;
@@ -74,6 +75,8 @@ function Cell(props: { cell: CardCell; override?: string }) {
 
 export default function LotteryCard({ card, values, prizeSet }: { card: LotteryCardData } & CardOverride) {
   const h = card.header;
+  // Past-result cards carry already-final numbers and must never be masked.
+  const frozen = /(^|\s)mkt-past(\s|$)/.test(card.cardCls || "");
   const hasDate = Boolean(values?.date || prizeSet?.date);
   const hasDraw = Boolean(values?.draw_no || prizeSet?.drawNo);
   const freshDate = hasDate;
@@ -94,11 +97,11 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
         </div>
         <div className="row mx-0 justify-content-between">
           <div className="date">
-            Date: <span suppressHydrationWarning className={freshDate ? "" : "live-pending"} data-id="date">{dateText}</span>
+            Date: <span suppressHydrationWarning className={frozen || freshDate ? "" : "live-pending"} data-id="date">{dateText}</span>
           </div>
           {drawText ? (
             <div className="date">
-              Draw No: <span suppressHydrationWarning className={freshDraw ? "" : "live-pending"} data-id="draw_no">{drawText}</span>
+              Draw No: <span suppressHydrationWarning className={frozen || freshDraw ? "" : "live-pending"} data-id="draw_no">{drawText}</span>
             </div>
           ) : null}
         </div>
@@ -123,7 +126,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
                           else if (ti === 2) override = prizeSet.cons?.[n];
                         }
                       }
-                      return <Cell key={ci} cell={c} override={override} />;
+                      return <Cell key={ci} cell={c} override={override} frozen={frozen} />;
                     })}
                   </tr>
                 ))}
