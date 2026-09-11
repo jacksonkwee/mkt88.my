@@ -128,6 +128,14 @@ function weekdayOf(iso: string): string {
 
 const isDash = (v: string) => /^----+$/.test((v || "").trim()) || (v || "").trim() === "";
 
+/**
+ * A draw can be published number by number. As long as ANY number is out we
+ * show that draw (with "----" for the rest) instead of falling back to the
+ * previous day - this is what the live-result apps do.
+ */
+const hasAnyNumber = (set: PrizeSet | null | undefined): boolean =>
+  !!set && [...set.prize, ...set.special, ...set.cons].some((v) => !isDash(v));
+
 function textLines(html: string): string[] {
   return html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<[^>]+>/g, "\n").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").split("\n").map((l) => l.trim());
 }
@@ -182,12 +190,14 @@ const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 
 function hariSet(j: any, iso: string): PrizeSet | null {
   if (!j || !j.prize1) return null;
+  // The feed tells us the real draw date - trust it over our assumption.
+  const realIso = typeof j.drawDate === "string" && j.drawDate.length >= 10 ? j.drawDate.slice(0, 10) : iso;
   return {
     prize: [j.prize1, j.prize2, j.prize3].map(String),
     special: LETTERS.map((L) => String(j["prize" + L] ?? "----")),
     cons: CONS.map((L) => String(j["prize" + L] ?? "----")),
-    date: weekdayOf(iso),
-    drawNo: j.id != null ? String(j.id) : undefined,
+    date: weekdayOf(realIso),
+    drawNo: j.id != null && j.id !== 0 ? String(j.id) : undefined,
   };
 }
 
@@ -201,7 +211,8 @@ function hariSix(j: any) {
 async function hariFor(time: string, iso: string, noPad: string): Promise<HariEntry> {
   const j = await get(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${noPad}T${time}:00`, true);
   const set = hariSet(j, iso);
-  if (!set || !set.prize.some((v) => !isDash(v))) return null;
+  // Accept a draw that is still being revealed, not just a finished one.
+  if (!hasAnyNumber(set)) return null;
   const jpRaw = await get(`https://api.hari4d.com/Jackpot/GetJackpot?date=${noPad}T${time}:00`, true);
   let jp: Record<string, string> | null = null;
   if (jpRaw && jpRaw.jackpotAmount != null) {
@@ -298,7 +309,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const sets = parsePerdana(html, d.iso);
     for (const time of ["15:30", "19:30"]) {
       const s = sets[time];
-      if (s && s.prize.some((v) => !isDash(v)) && !perdana[time]) perdana[time] = s;
+      if (hasAnyNumber(s) && !perdana[time]) perdana[time] = s;
     }
   }
 
