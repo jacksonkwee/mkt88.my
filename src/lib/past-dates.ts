@@ -10,6 +10,7 @@
  * the whole period, so each game lists only the range it actually covered.
  */
 import myPastRaw from "./my-past-dates.json";
+import hariPastRaw from "./hari-past.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -97,11 +98,35 @@ async function scanRecent(): Promise<void> {
  * The archive dates plus the cards each one carries. The stored list answers
  * instantly; a rolling scan refreshes newer dates in the background.
  */
-export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; myTables: Record<string, string[]> }> {
+export type KhByGame = Record<string, string[]>;
+
+/** HariHari dates we actually hold results for. */
+function hariDates(): string[] {
+  const store = hariPastRaw as unknown as { days: Record<string, unknown> };
+  return Object.keys(store.days).sort();
+}
+
+/**
+ * Each Cambodia game only lists the dates it really has results for, so a
+ * picked date never lands on an empty card.
+ */
+export function getKhDatesByGame(): KhByGame {
+  const last = shiftIso(todayIso(), -1);
+  return {
+    "grand-dragon": last < "2021-09-14" ? [] : range("2021-09-14", last),
+    "nine-lotto": last < "2023-01-01" ? [] : range("2023-01-01", last),
+    perdana: last < "2025-09-01" ? [] : range("2025-09-01", last),
+    "lucky-harihari": hariDates(),
+  };
+}
+
+export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; myTables: Record<string, string[]>; khByGame: KhByGame }> {
   if (!myScan && Date.now() - myAt >= MY_TTL) {
     myScan = scanRecent().catch(() => { }).finally(() => { myScan = null; });
   }
-  return { my: Object.keys(myTables).sort(), kh: getKhPastDates(), myTables };
+  const khByGame = getKhDatesByGame();
+  const kh = [...new Set(Object.values(khByGame).flat())].sort();
+  return { my: Object.keys(myTables).sort(), kh, myTables, khByGame };
 }
 
 /** Every Cambodia date any game covers. */

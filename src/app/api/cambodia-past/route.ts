@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
 import recent from "./recent.json";
+import hariPastRaw from "../../../lib/hari-past.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -421,6 +422,8 @@ async function ninePastParts(date: string): Promise<{ four?: Set; nine6?: SixPar
   }
 }
 
+const HARI_PAST = hariPastRaw as unknown as { from: string; to: string; days: Record<string, Record<string, any>> };
+
 const pastMemo = new Map<string, { at: number; data: unknown }>();
 const PAST_TTL = 6 * 60 * 60 * 1000;
 
@@ -466,10 +469,15 @@ export async function GET(req: NextRequest) {
 
     // Every source below is independent, so ask for all of them at once: an
     // older date then answers in a couple of seconds instead of ~20.
+    // HariHari history is kept locally: the official feed does not answer
+    // older dates for every caller, so the stored copy is used first.
+    const storedHari = HARI_PAST.days[date];
+    const hariAt = async (t: "15:30" | "19:30") => storedHari?.[t] || hariOne(t);
+
     const [perdanaHtml, h1530, h1930, gdPartsIn, ninePartsIn, gdNew, nineNew, ninePage] = await Promise.all([
       httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date).catch(() => ""),
-      hariOne("15:30"),
-      hariOne("19:30"),
+      hariAt("15:30"),
+      hariAt("19:30"),
       gdPastParts(date),
       ninePastParts(date),
       gdHasNewDraw(date),

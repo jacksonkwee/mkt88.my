@@ -90,7 +90,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   initialIndex?: number;
   name?: string;
   snap?: unknown;
-  pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]> };
+  pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]>; khByGame?: Record<string, string[]> };
   showPast?: boolean;
 }) {
   const night = useDrawOrder();
@@ -199,7 +199,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
               slug={pg.slug}
               name={pg.title}
               kind={pg.kh ? "kh" : "my"}
-              dates={pg.kh ? pastDates.kh : pastDates.my}
+              dates={pg.kh ? (pastDates.khByGame?.[pg.slug] || pastDates.kh) : pastDates.my}
               tables={pg.kh ? undefined : pastDates.myTables}
             />
           ) : null}

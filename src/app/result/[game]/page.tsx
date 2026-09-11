@@ -45,7 +45,7 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
           <div className="row">
             <div className="col-12">
               <h1 style={{ fontSize: 20, margin: "10px 0 4px" }}>{def.name} Result {def.zh}</h1>
-              <GamePastFilter slug={game} name={def.name} kind={isKh ? "kh" : "my"} dates={isKh ? khDates : myDates} tables={isKh ? undefined : pastDates.myTables} />
+              <GamePastFilter slug={game} name={def.name} kind={isKh ? "kh" : "my"} dates={isKh ? (pastDates.khByGame?.[game] || khDates) : myDates} tables={isKh ? undefined : pastDates.myTables} />
             </div>
           </div>
           <GameColumns ids={def.cardIds} snap={snapProp} />
