@@ -4,6 +4,7 @@ import recent from "./recent.json";
 import hariPastRaw from "../../../lib/hari-past.json";
 import { DEEP } from "../../../lib/deep-past-cards";
 import perdanaPastRaw from "../../../lib/perdana-past.json";
+import hari4dPastRaw from "../../../lib/hari-4d-past.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -513,6 +514,19 @@ export async function GET(req: NextRequest) {
       }
     }
     const hari: Record<string, any> = { "15:30": h1530, "19:30": h1930 };
+    // Collected HariHari 4D history (2021-2025). It holds the 19:30 draw only,
+    // so it fills that slot and never duplicates the numbers into 15:30.
+    const HARI_4D = hari4dPastRaw as unknown as Record<string, { d: string; p: string[]; g: [string, string[]][] }>;
+    const deepHari = HARI_4D[date];
+    if (deepHari && !hari["19:30"]) {
+      const gridBy = (name: string) => {
+        const hit = (deepHari.g || []).find(([title]) => new RegExp(name, "i").test(title));
+        return hit ? hit[1].filter((v) => /^----$/.test(v) || /^\d{1,6}$/.test(v)) : [];
+      };
+      if ((deepHari.p || []).length >= 3 && deepHari.p.some((v) => !/^----+$/.test(v))) {
+        hari["19:30"] = { set: { prize: deepHari.p.slice(0, 3), special: gridBy("Special"), cons: gridBy("Consolation"), date: deepHari.d }, six: null, jp: null };
+      }
+    }
 
     const khHtml = getViewHtml(date, "kh");
     let gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;

@@ -13,6 +13,7 @@ import myPastRaw from "./my-past-dates.json";
 import hariPastRaw from "./hari-past.json";
 import { DEEP, DEEP_CARDS, deepDates } from "./deep-past-cards";
 import perdanaPastRaw from "./perdana-past.json";
+import hari4dPastRaw from "./hari-4d-past.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -102,10 +103,11 @@ async function scanRecent(): Promise<void> {
  */
 export type KhByGame = Record<string, string[]>;
 
-/** HariHari dates we actually hold results for. */
+/** HariHari dates we actually hold results for (full 6D + jackpot store plus the 4D history). */
 function hariDates(): string[] {
   const store = hariPastRaw as unknown as { days: Record<string, unknown> };
-  return Object.keys(store.days).sort();
+  const four = hari4dPastRaw as unknown as Record<string, unknown>;
+  return [...new Set([...Object.keys(store.days), ...Object.keys(four)])].sort();
 }
 
 /**
