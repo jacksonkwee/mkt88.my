@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
 import recent from "./recent.json";
 import hariPastRaw from "../../../lib/hari-past.json";
+import { DEEP } from "../../../lib/deep-past-cards";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -486,6 +487,21 @@ export async function GET(req: NextRequest) {
     ]);
 
     const perd = parsePerdanaHtml(perdanaHtml);
+    // The stored deep archive holds the day's Perdana 19:30 draw.
+    const deepDay = DEEP[date];
+    if (deepDay && deepDay.perdana) {
+      const g = deepDay.perdana;
+      const nums = g.p.filter(([l]) => /^[123](st|nd|rd)\s*Prize/i.test(l)).map(([, v]) => v);
+      const grid = (i: number) => (g.g[i] ? g.g[i][1].filter((v) => /^----$/.test(v) || /^\d{1,6}$/.test(v)) : []);
+      if (nums.length >= 3) {
+        perd["19:30"] = perd["19:30"] || {
+          prize: [nums[0], nums[1], nums[2]],
+          special: grid(0),
+          cons: grid(1),
+          date: g.d,
+        } as any;
+      }
+    }
     const hari: Record<string, any> = { "15:30": h1530, "19:30": h1930 };
 
     const khHtml = getViewHtml(date, "kh");

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import CambodiaKhResults from "./CambodiaKhResults";
-import { GAME_TABLES, khDateAllowed } from "./game-tables";
+import { GAME_TABLES } from "./game-tables";
 
 export type PastKind = "my" | "kh";
 
@@ -44,11 +44,13 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   tables?: Record<string, string[]>;
 }) {
   const wanted = GAME_TABLES[slug] || [];
+  // The caller already hands us the exact dates this game has, so only the
+  // Malaysia / Singapore list needs the per-game table check.
   const list = useMemo(() => {
     return dates
-      .filter((d) => (kind === "kh" ? khDateAllowed(slug, d) : (!tables || !tables[d] || wanted.some((t) => (tables[d] || []).includes(t)))))
+      .filter((d) => (kind === "kh" ? true : (!tables || !tables[d] || wanted.some((t) => (tables[d] || []).includes(t)))))
       .sort();
-  }, [dates, kind, slug, tables, wanted]);
+  }, [dates, kind, tables, wanted]);
 
   const [date, setDate] = useState("");
   const [html, setHtml] = useState<string | null>(null);
@@ -121,12 +123,8 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
               style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
-              {groups.map((g) => (
-                <optgroup key={g.label} label={g.label}>
-                  {g.items.map((d) => (
-                    <option key={d} value={d}>{pretty(d)}</option>
-                  ))}
-                </optgroup>
+              {groups.flatMap((g) => g.items).map((d) => (
+                <option key={d} value={d}>{pretty(d)}</option>
               ))}
             </select>
             <button

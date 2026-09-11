@@ -3,6 +3,7 @@ import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d
 import { rewriteHtml, stripAdHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
 import recent from "../my-past/recent.json";
 import { GAME_TABLES } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/game-tables";
+import { DEEP_CARDS, buildDeepCard, deepHas } from "../../../lib/deep-past-cards";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -75,6 +76,21 @@ export async function GET(req: NextRequest) {
   const tables = GAME_TABLES[slug];
   if (!tables) return NextResponse.json({ error: "bad game" }, { status: 400 });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "bad date" }, { status: 400 });
+
+  // Older draws come from the stored deep archive.
+  if (deepHas(date, slug)) {
+    const infos = DEEP_CARDS[slug] || [];
+    let deepHtml = '<div class="row">';
+    let count = 0;
+    for (const info of infos) {
+      const built = buildDeepCard(date, slug, date + "-" + info.key);
+      if (!built) continue;
+      deepHtml += '<div class="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">' + built.html + "</div>";
+      count++;
+    }
+    deepHtml += "</div>";
+    if (count) return NextResponse.json({ slug, date, html: deepHtml, deep: true }, { headers: { "cache-control": "no-store" } });
+  }
 
   try {
     const source = await sourceFor(date);

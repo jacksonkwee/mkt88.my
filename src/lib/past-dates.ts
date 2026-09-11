@@ -11,6 +11,7 @@
  */
 import myPastRaw from "./my-past-dates.json";
 import hariPastRaw from "./hari-past.json";
+import { DEEP, DEEP_CARDS, deepDates } from "./deep-past-cards";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -110,12 +111,25 @@ function hariDates(): string[] {
  * Each Cambodia game only lists the dates it really has results for, so a
  * picked date never lands on an empty card.
  */
+/** Table classes the deep archive holds for one date. */
+function deepTables(date: string): string[] {
+  const day = DEEP[date];
+  if (!day) return [];
+  const out = new Set<string>();
+  for (const slug of ["magnum", "damacai", "sportstoto", "sg", "sandakan", "cashsweep", "sabah88"]) {
+    for (const info of DEEP_CARDS[slug] || []) if (day[info.key]) out.add(info.table);
+  }
+  return [...out];
+}
+
 export function getKhDatesByGame(): KhByGame {
   const last = shiftIso(todayIso(), -1);
+  const deep = deepDates();
+  const perdana = [...new Set([...(last < "2025-09-01" ? [] : range("2025-09-01", last)), ...deep])].sort();
   return {
     "grand-dragon": last < "2021-09-14" ? [] : range("2021-09-14", last),
     "nine-lotto": last < "2023-01-01" ? [] : range("2023-01-01", last),
-    perdana: last < "2025-09-01" ? [] : range("2025-09-01", last),
+    perdana,
     "lucky-harihari": hariDates(),
   };
 }
@@ -126,7 +140,11 @@ export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; 
   }
   const khByGame = getKhDatesByGame();
   const kh = [...new Set(Object.values(khByGame).flat())].sort();
-  return { my: Object.keys(myTables).sort(), kh, myTables, khByGame };
+  // Fold the stored deep archive into the Malaysia / Singapore date list.
+  const tables: Record<string, string[]> = { ...myTables };
+  for (const d of deepDates()) { const t = deepTables(d); if (t.length) tables[d] = t; }
+  myTables = tables;
+  return { my: Object.keys(tables).sort(), kh, myTables: tables, khByGame };
 }
 
 /** Every Cambodia date any game covers. */
