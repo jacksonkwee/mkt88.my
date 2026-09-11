@@ -1,0 +1,34 @@
+MKT88 - LIVE RESULT RULES (read before touching any result code)
+===============================================================
+
+1. A DRAW IS LIVE AS SOON AS ONE NUMBER IS OUT.
+   The official feeds reveal a draw number by number (special numbers first,
+   then 1st / 2nd / 3rd). While that happens the missing fields come through
+   as "----".
+
+   ALWAYS treat a draw as available when ANY number is present:
+       prize[]  OR  special[]  OR  cons[]
+
+   NEVER test only prize[] (e.g. `prize.every(isDash)` or `!prize[0]`) to
+   decide whether a draw exists - that pushes a live draw back to yesterday.
+   Use the shared helper:
+       LiveResults.tsx   ->  setHasAny(set)
+       lib/live-snapshot.ts ->  hasAnyNumber(set)
+
+2. NEVER SILENTLY FALL BACK TO YESTERDAY.
+   Falling back is only allowed when today's draw has NOT STARTED at all
+   (every field is "----"). The moment one number appears, show TODAY with
+   "----" for the parts still pending, and its own date from the feed.
+
+3. THE CARD DATE MUST COME FROM THE FEED, NOT FROM OUR ASSUMPTION.
+   If a feed answers with yesterday's data for today's URL, show yesterday's
+   date - never relabel yesterday's numbers as today.
+
+4. THERE ARE TWO UPDATE PATHS - FIX BOTH.
+   a) server snapshot   ->  src/lib/live-snapshot.ts
+   b) on-page updater   ->  LiveResults.tsx  (+ boot script in src/app/layout.tsx)
+   The on-page updater runs every few seconds and will overwrite the server
+   data, so a rule that is only fixed on the server is NOT fixed.
+
+5. CHANGES HERE MUST BE TESTED DURING A REAL DRAW
+   (15:30 and 19:30 MYT for Perdana / Lucky HariHari), not just after it.

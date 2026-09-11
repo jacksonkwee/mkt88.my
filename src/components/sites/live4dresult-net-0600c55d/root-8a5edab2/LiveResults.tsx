@@ -138,6 +138,20 @@ function isDash(v: string) {
   return /^----+$/.test(t) || t === "";
 }
 
+/**
+ * A draw is usable as soon as ANY number of it is published.
+ *
+ * The official feeds reveal a draw number by number (special numbers first,
+ * then 1st/2nd/3rd). Requiring the 1st prize - as this file used to - pushed a
+ * live draw back to yesterday's result. Never test only `prize` again: use
+ * this helper for every "is there a result?" decision.
+ */
+function setHasAny(s: PrizeSet | null | undefined): s is PrizeSet {
+  if (!s) return false;
+  const all = [...(s.prize || []), ...(s.special || []), ...(s.cons || [])];
+  return all.some((v) => !isDash(v));
+}
+
 async function fetchText(url: string): Promise<string | null> {
   try {
     const res = await fetch("/api/live?u=" + encodeURIComponent(url), { cache: "no-store" });
@@ -817,11 +831,11 @@ function applyCambodiaFeed(j: FastFeed): boolean {
     let did = false;
     for (const t of ["15:30", "19:30"]) {
       const st = j.perdana ? j.perdana[t] : null;
-      if (st && st.prize && !st.prize.every(isDash)) {
+      if (setHasAny(st)) {
         for (const card of Array.from(document.querySelectorAll('[id="' + PERDANA_ID[t] + '"]'))) { applySet(card, st); did = true; }
       }
       const h = j.hari ? j.hari[t] : null;
-      if (h && h.set && h.set.prize && !h.set.prize.every(isDash)) {
+      if (h && setHasAny(h.set)) {
         for (const card of Array.from(document.querySelectorAll('[id="' + HARI_ID[t] + '"]'))) { applySet(card, h.set); did = true; }
         if (h.six) applySixValues(HARI_ID[t] + "-6d", h.six);
         if (h.jp) applyIdValues(HARI_ID[t], h.jp);
@@ -843,7 +857,7 @@ async function updatePerdanaHome() {
       if (!pd) continue;
       const st = parsePerdana(pd)[time];
       const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-      if (st && !st.prize.every(isDash)) { for (const card of cards) applySet(card, st); break; }
+      if (setHasAny(st)) { for (const card of cards) applySet(card, st); break; }
     }
   }
 }
@@ -857,7 +871,7 @@ async function updateHariHome() {
         const j = JSON.parse(txt);
         const set = hariSetFromJson(j);
         const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-        if (!set || set.prize.every(isDash)) continue;
+        if (!setHasAny(set)) continue;
         for (const card of cards) applySet(card, set);
         applySixValues(id + "-6d", sixFromHariJson(j));
         try {
@@ -917,7 +931,7 @@ async function refreshOnce() {
           const mp = parsePerdana(pd);
           const st = mp[time];
           const card = document.getElementById(id);
-          if (card && st && st.prize && !st.prize.every(isDash)) { applySet(card, st); break; }
+          if (card && setHasAny(st)) { applySet(card, st); break; }
         }
       }
       // Lucky HariHari - two draws a day (JSON API, fallback yesterday)
@@ -930,7 +944,7 @@ async function refreshOnce() {
             const j = JSON.parse(txt);
             const set = hariSetFromJson(j);
             const card = document.getElementById(id);
-            if (card && set && set.prize && !set.prize.every(isDash)) {
+            if (card && setHasAny(set)) {
               applySet(card, set);
               applySixValues(id + "-6d", sixFromHariJson(j));
               // Lucky HariHari Bonus Jackpot pool (official API, same draw slot)
