@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import PWARegister from "../components/PWARegister";
 import NoticeBar from "../components/NoticeBar";
 import TopBanner from "../components/TopBanner";
@@ -245,9 +246,16 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     };
   } catch { /* ignore */ }
   const snapJson = JSON.stringify(snapObj).replace(/</g, "\\u003c");
+  // Inside the installed Android app the top menu is kept short (Favourite
+  // Number + 大伯公 only). Detected from the request so there is no flicker.
+  let inApp = false;
+  try {
+    const ua = (await headers()).get("user-agent") || "";
+    inApp = /MKT88Android|Capacitor|Android.*; wv\)/i.test(ua);
+  } catch { /* ignore */ }
   return (
     <html lang="zh">
-      <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
+      <body className={"home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-" + (inApp ? " mkt-in-app" : "")}>
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         <LiveSnapshotProvider value={snapObj}>

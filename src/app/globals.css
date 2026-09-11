@@ -96,3 +96,10 @@ td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="mi
  * games keep showing their normal latest result.                      *
  * ------------------------------------------------------------------ */
 .mkt-past-scope.mkt-past-on .card.outer-box:not(.mkt-past) { display: none !important; }
+
+/* ------------------------------------------------------------------ *
+ * Installed Android app: shorter top menu.                            *
+ * Only Favourite Number 收藏号码 and 大伯公 千字图 stay visible.       *
+ * ------------------------------------------------------------------ */
+body.mkt-in-app .menu-top-menu-container .menu-item-13,
+body.mkt-in-app .menu-top-menu-container .menu-item-12 { display: none !important; }
