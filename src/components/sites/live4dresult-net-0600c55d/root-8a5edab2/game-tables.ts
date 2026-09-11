@@ -18,9 +18,9 @@ export const GAME_TABLES: Record<string, string[]> = {
  */
 export const KH_AVAILABILITY: Record<string, [string, string][]> = {
   "grand-dragon": [["2021-09-14", "2999-12-31"]],
-  "nine-lotto": [["2022-09-01", "2999-12-31"]],
+  "nine-lotto": [["2023-01-01", "2999-12-31"]],
   perdana: [["2025-09-01", "2999-12-31"]],
-  "lucky-harihari": [["2021-09-14", "2025-11-30"], ["2026-08-20", "2999-12-31"]],
+  "lucky-harihari": [["2021-09-14", "2999-12-31"]],
 };
 
 export function khDateAllowed(slug: string, date: string): boolean {

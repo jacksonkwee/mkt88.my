@@ -11,17 +11,28 @@ const HTML_TTL = 10 * 60 * 1000;
 async function httpGet(url: string): Promise<string> {
   const hit = htmlMemo.get(url);
   if (hit && Date.now() - hit.at < HTML_TTL) return hit.html;
-  const res = await fetch(url, {
-    headers: { "User-Agent": UA, Accept: "*/*", "Accept-Encoding": "identity" },
-    redirect: "follow",
-    cache: "no-store",
-    signal: AbortSignal.timeout(12000),
-  });
-  if (!res.ok) throw new Error("upstream " + res.status);
-  const html = await res.text();
-  if (htmlMemo.size > 400) htmlMemo.clear();
-  htmlMemo.set(url, { at: Date.now(), html });
-  return html;
+  let lastErr: unknown = null;
+  // These official sites drop a request now and then under a parallel burst,
+  // so try twice before giving up.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": UA, Accept: "*/*", "Accept-Encoding": "identity" },
+        redirect: "follow",
+        cache: "no-store",
+        signal: AbortSignal.timeout(12000),
+      });
+      if (!res.ok) throw new Error("upstream " + res.status);
+      const html = await res.text();
+      if (htmlMemo.size > 400) htmlMemo.clear();
+      htmlMemo.set(url, { at: Date.now(), html });
+      return html;
+    } catch (e) {
+      lastErr = e;
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+    }
+  }
+  throw lastErr;
 }
 
 type Set = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
@@ -428,8 +439,13 @@ export async function GET(req: NextRequest) {
 
     const hariOne = async (t: "15:30" | "19:30") => {
       try {
-        const u = "https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + nDate + "T" + t + ":00";
-        const j = JSON.parse(await httpGet(u));
+        const base = "https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + nDate + "T" + t + ":00";
+        let j = JSON.parse(await httpGet(base));
+        if (!j || !j.prize1) {
+          // One retry with a cache-buster: the feed occasionally answers empty.
+          await new Promise((r) => setTimeout(r, 700));
+          j = JSON.parse(await httpGet(base + "&r=" + Date.now()));
+        }
         const set = parseHariJson(j);
         const six = j && j.prize6D ? { main: String(j.prize6D), subs: mainSubs(String(j.prize6D)) } : null;
         let jp: Record<string, string> | null = null;
