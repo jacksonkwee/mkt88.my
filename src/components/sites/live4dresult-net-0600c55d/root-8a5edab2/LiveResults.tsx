@@ -601,9 +601,16 @@ async function gdInfo(): Promise<GdInfo | null> {
   if (!cand.length) return null;
   let use = cand[0];
   if (cand.length >= 2) {
-    const a = cand[0].six.main;
-    const b = cand[1].six.main;
-    if (isDash(a) || a === b) use = cand[1];
+    // gdlotto answers today's URL with yesterday's draw until today's is out.
+    // Only fall back when today's page is *identical* to yesterday's - a
+    // difference anywhere (6D, jackpot pool, jackpot number) means a new draw
+    // has started and must be shown even while its 6D is still pending.
+    const a = cand[0];
+    const b = cand[1];
+    const sameDraw = a.six.main === b.six.main
+      && (a.jp7.jp7_grand || "") === (b.jp7.jp7_grand || "")
+      && (a.jp7.jp7_pool || "") === (b.jp7.jp7_pool || "");
+    if (sameDraw) use = cand[1];
   }
   return use;
 }
@@ -655,8 +662,12 @@ async function updateGdNineCards() {
       const a = t.six ? t.six.main : "----";
       const b = y.six ? y.six.main : "----";
       const newDraw = !!(t.ns && t.ns.drawNo && y.ns && y.ns.drawNo && t.ns.drawNo !== y.ns.drawNo);
-      // Show today as soon as today's new draw number appears (even mid-draw).
-      if (!newDraw && (isDash(a) || a === b)) use = y;
+      const today4 = (t.ns && t.ns.prize) || [];
+      const yest4 = (y.ns && y.ns.prize) || [];
+      const fourDiffers = today4.some((v, i) => !isDash(v) && v !== (yest4[i] || "----"));
+      // Show today as soon as it differs at all (new draw number, a new 4D
+      // number, or a new 6D) - even while the rest is still being revealed.
+      if (!newDraw && !fourDiffers && (isDash(a) || a === b)) use = y;
     }
     const { dateLbl, ns, six, jp9 } = use;
     for (const nineCard of nineCards) {
