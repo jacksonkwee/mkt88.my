@@ -190,7 +190,7 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
   }, [date, only]);
 
   if (err) return <div className="alert alert-warning mt-3 text-center">{err}</div>;
-  if (!cols) return <div className="alert alert-info mt-3 text-center">Loading past result…</div>;
+  if (!cols) return <div className="alert alert-info mt-3 text-center">Loading past result for {date} …</div>;
   return (
     <div className="row">
       {cols.map((col, ci) => (

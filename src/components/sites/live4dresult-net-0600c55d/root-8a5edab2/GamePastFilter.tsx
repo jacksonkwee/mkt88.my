@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CambodiaKhResults from "./CambodiaKhResults";
-import { GAME_TABLES } from "./game-tables";
+import { GAME_TABLES, khDateAllowed } from "./game-tables";
 
 export type PastKind = "my" | "kh";
 
@@ -22,11 +22,18 @@ const KH_GAME: Record<string, "gd" | "nine" | "perdana" | "hari"> = {
 const SCOPE_CLASS = "mkt-past-scope";
 const ON_CLASS = "mkt-past-on";
 
+/** Dropdown stays light: the newest few are always ready, the rest on open. */
+const QUICK_COUNT = 40;
+
 function pretty(iso: string): string {
   const [y, m, d] = iso.split("-");
   const dt = new Date(iso + "T12:00:00");
   const wk = Number.isNaN(dt.getTime()) ? "" : dt.toLocaleDateString("en-US", { weekday: "short" });
   return d + "-" + m + "-" + y + (wk ? " (" + wk + ")" : "");
+}
+
+function monthLabel(iso: string): string {
+  return iso.slice(0, 7);
 }
 
 export default function GamePastFilter({ slug, name, kind, dates, tables }: {
@@ -37,13 +44,17 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   tables?: Record<string, string[]>;
 }) {
   const wanted = GAME_TABLES[slug] || [];
-  const list = dates
-    .filter((d) => !tables || !tables[d] || wanted.some((t) => (tables[d] || []).includes(t)))
-    .sort();
+  const list = useMemo(() => {
+    return dates
+      .filter((d) => (kind === "kh" ? khDateAllowed(slug, d) : (!tables || !tables[d] || wanted.some((t) => (tables[d] || []).includes(t)))))
+      .sort();
+  }, [dates, kind, slug, tables, wanted]);
+
   const [date, setDate] = useState("");
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
+  const [full, setFull] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   // Only this game's area switches: its latest cards hide while a date is shown.
@@ -71,6 +82,20 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
 
   const latest = list.length ? list[list.length - 1] : "";
   const hasPast = list.length > 0;
+  const openFull = () => setFull(true);
+
+  // Newest first, grouped by month so a long history is easy to scan.
+  const groups = useMemo(() => {
+    const shown = full ? list : list.slice(-QUICK_COUNT);
+    const out: { label: string; items: string[] }[] = [];
+    for (let i = shown.length - 1; i >= 0; i--) {
+      const d = shown[i];
+      const label = monthLabel(d);
+      if (!out.length || out[out.length - 1].label !== label) out.push({ label, items: [] });
+      out[out.length - 1].items.push(d);
+    }
+    return out;
+  }, [list, full]);
 
   return (
     <div ref={rootRef} style={{ margin: "8px 0 2px" }}>
@@ -89,12 +114,19 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             <select
               aria-label={"Past result date for " + name}
               value={date}
+              onPointerDown={openFull}
+              onTouchStart={openFull}
+              onFocus={openFull}
               onChange={(e) => setDate(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 210, fontWeight: 600, background: "#fff" }}
+              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
-              {list.slice().reverse().map((d) => (
-                <option key={d} value={d}>{pretty(d)}</option>
+              {groups.map((g) => (
+                <optgroup key={g.label} label={g.label}>
+                  {g.items.map((d) => (
+                    <option key={d} value={d}>{pretty(d)}</option>
+                  ))}
+                </optgroup>
               ))}
             </select>
             <button
@@ -104,6 +136,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             >
               Latest 最新
             </button>
+            <span style={{ fontSize: 12, color: "#888" }}>{list.length} 天 dates</span>
           </>
         ) : (
           <span style={{ color: "#777", fontSize: 13 }}>No past results yet.</span>

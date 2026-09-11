@@ -1,40 +1,30 @@
 /**
- * Which calendar dates actually hold past results.
+ * Which calendar dates hold past results.
  *
- * The Malaysia / Singapore / East Malaysia archive only publishes a date once
- * its cards exist, so the available dates are discovered by checking the
- * archive itself (cached, in memory). Cambodia results are kept by our own API
- * for every past day.
+ * Malaysia / Singapore / East Malaysia: the archive only publishes a date once
+ * its cards exist, so the full list of published dates was harvested once and
+ * stored in my-past-dates.json (725 dates back to 2022-04-20). A short rolling
+ * scan keeps newer dates coming.
+ *
+ * Cambodia: the official feeds answer back to 2021, but not every game ran for
+ * the whole period, so each game lists only the range it actually covered.
  */
+import myPastRaw from "./my-past-dates.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
-/**
- * Verified Malaysia / Singapore / East Malaysia archive dates and the cards
- * each date carries. Used until the background scan refreshes the cache.
- */
-const MY_KNOWN_TABLES: Record<string, string[]> = {
-  "2026-08-12": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-15": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-16": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-19": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-22": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-23": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-26": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-29": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-08-30": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-09-01": ["table-1", "table-10", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-09-02": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-09-05": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-09-06": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
-  "2026-09-09": ["table-1", "table-10", "table-11", "table-2", "table-3", "table-4", "table-5", "table-6", "table-7", "table-8", "table-9"],
+const MY_BASE = myPastRaw as unknown as {
+  from: string;
+  to: string;
+  dates: string[];
+  tables: Record<string, string[]>;
 };
 
-/** Oldest day the Cambodia archive answers for. */
-const KH_FIRST_DATE = "2026-08-18";
+/** Oldest Cambodia date offered (matches the reference app). */
+export const KH_FIRST_DATE = "2021-09-14";
 
-/** How far back the archive is scanned for Malaysia / Singapore dates. */
-const MY_SCAN_DAYS = 31;
+/** How many recent days the rolling Malaysia scan re-checks. */
+const MY_SCAN_DAYS = 45;
 
 const CARD_RE = /card outer-box (table-[0-9]+)"/g;
 
@@ -61,7 +51,7 @@ function range(from: string, to: string): string[] {
   const out: string[] = [];
   let d = from;
   let guard = 0;
-  while (d <= to && guard++ < 400) { out.push(d); d = shiftIso(d, 1); }
+  while (d <= to && guard++ < 4000) { out.push(d); d = shiftIso(d, 1); }
   return out;
 }
 
@@ -73,17 +63,17 @@ function tablesIn(html: string): string[] {
   return [...out];
 }
 
-let myTables: Record<string, string[]> | null = null;
+let myTables: Record<string, string[]> = { ...MY_BASE.tables };
 let myScan: Promise<void> | null = null;
-const MY_TTL = 6 * 60 * 60 * 1000;
 let myAt = 0;
+const MY_TTL = 3 * 60 * 60 * 1000;
 
 async function cardsOn(date: string): Promise<string[] | null> {
   try {
     const res = await fetch("https://live4dresult.net/past-results/" + date, {
       headers: { "User-Agent": UA, Accept: "*/*" },
       cache: "no-store",
-      signal: AbortSignal.timeout(6000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return null;
     const tables = tablesIn(await res.text());
@@ -93,43 +83,30 @@ async function cardsOn(date: string): Promise<string[] | null> {
   }
 }
 
-function knownTables(before: string): Record<string, string[]> {
-  const out: Record<string, string[]> = {};
-  for (const [d, t] of Object.entries(MY_KNOWN_TABLES)) if (d < before) out[d] = t;
-  return out;
-}
-
-async function scanMyDates(): Promise<void> {
+async function scanRecent(): Promise<void> {
   const today = todayIso();
   const candidates = range(shiftIso(today, -MY_SCAN_DAYS), shiftIso(today, -1));
   const found = await Promise.all(candidates.map(async (d) => [d, await cardsOn(d)] as const));
-  // Union with the verified list: a single slow or blocked request must never
-  // drop a date that is known to hold results.
-  const map: Record<string, string[]> = { ...knownTables(today) };
+  const map: Record<string, string[]> = { ...myTables };
   for (const [d, t] of found) if (t) map[d] = t;
   myTables = map;
   myAt = Date.now();
 }
 
 /**
- * The archive dates plus the cards each one carries.
- *
- * Never blocks a page render: the verified list answers straight away while a
- * fresh archive scan refreshes the cache in the background for later visits.
+ * The archive dates plus the cards each one carries. The stored list answers
+ * instantly; a rolling scan refreshes newer dates in the background.
  */
 export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; myTables: Record<string, string[]> }> {
-  const today = todayIso();
-  const served = myTables && Date.now() - myAt < MY_TTL ? myTables : knownTables(today);
-  if ((!myTables || Date.now() - myAt >= MY_TTL) && !myScan) {
-    myScan = scanMyDates().catch(() => {}).finally(() => { myScan = null; });
+  if (!myScan && Date.now() - myAt >= MY_TTL) {
+    myScan = scanRecent().catch(() => { }).finally(() => { myScan = null; });
   }
-  return { my: Object.keys(served).sort(), kh: getKhPastDates(), myTables: served };
+  return { my: Object.keys(myTables).sort(), kh: getKhPastDates(), myTables };
 }
 
-/** Dates that carry Cambodia result cards. */
+/** Every Cambodia date any game covers. */
 export function getKhPastDates(): string[] {
-  const today = todayIso();
-  const last = shiftIso(today, -1);
+  const last = shiftIso(todayIso(), -1);
   if (last < KH_FIRST_DATE) return [];
   return range(KH_FIRST_DATE, last);
 }

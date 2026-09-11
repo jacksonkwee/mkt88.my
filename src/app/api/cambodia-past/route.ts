@@ -4,14 +4,24 @@ import recent from "./recent.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
+/** Same upstream page is needed by several parsers - fetch it once. */
+const htmlMemo = new Map<string, { at: number; html: string }>();
+const HTML_TTL = 10 * 60 * 1000;
+
 async function httpGet(url: string): Promise<string> {
+  const hit = htmlMemo.get(url);
+  if (hit && Date.now() - hit.at < HTML_TTL) return hit.html;
   const res = await fetch(url, {
     headers: { "User-Agent": UA, Accept: "*/*", "Accept-Encoding": "identity" },
     redirect: "follow",
     cache: "no-store",
+    signal: AbortSignal.timeout(12000),
   });
   if (!res.ok) throw new Error("upstream " + res.status);
-  return await res.text();
+  const html = await res.text();
+  if (htmlMemo.size > 400) htmlMemo.clear();
+  htmlMemo.set(url, { at: Date.now(), html });
+  return html;
 }
 
 type Set = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
@@ -400,25 +410,31 @@ async function ninePastParts(date: string): Promise<{ four?: Set; nine6?: SixPar
   }
 }
 
+const pastMemo = new Map<string, { at: number; data: unknown }>();
+const PAST_TTL = 6 * 60 * 60 * 1000;
+
 export async function GET(req: NextRequest) {
   const date = req.nextUrl.searchParams.get("date") || "";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return NextResponse.json({ error: "bad date" }, { status: 400 });
   const fallback = (recent as Record<string, unknown>)[date];
   if (fallback) return NextResponse.json(fallback);
+  // Older dates are rebuilt from the official feeds; keep the answer so the
+  // next visit (and the other game on the same date) is instant.
+  const memo = pastMemo.get(date);
+  if (memo && Date.now() - memo.at < PAST_TTL) return NextResponse.json(memo.data);
   try {
     const ymd = date.split("-");
-    const perdanaHtml = await httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date);
-    const perd = parsePerdanaHtml(perdanaHtml);
-    const hari: Record<string, any> = { "15:30": null, "19:30": null };
-    for (const t of ["15:30", "19:30"] as const) {
+    const nDate = ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2]);
+
+    const hariOne = async (t: "15:30" | "19:30") => {
       try {
-        const u = "https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2]) + "T" + t + ":00";
+        const u = "https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + nDate + "T" + t + ":00";
         const j = JSON.parse(await httpGet(u));
         const set = parseHariJson(j);
         const six = j && j.prize6D ? { main: String(j.prize6D), subs: mainSubs(String(j.prize6D)) } : null;
         let jp: Record<string, string> | null = null;
         try {
-          const ju = "https://api.hari4d.com/Jackpot/GetJackpot?date=" + ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2]) + "T" + t + ":00";
+          const ju = "https://api.hari4d.com/Jackpot/GetJackpot?date=" + nDate + "T" + t + ":00";
           const jj = JSON.parse(await httpGet(ju));
           if (jj && jj.jackpotAmount != null) {
             jp = { jp_pool: "USD " + Number(jj.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
@@ -428,25 +444,40 @@ export async function GET(req: NextRequest) {
             if (nums.length) jp.jp_no = nums.join(" or ");
           }
         } catch { jp = null; }
-        hari[t] = { set, six, jp };
-      } catch { hari[t] = null; }
-    }
+        return { set, six, jp };
+      } catch { return null; }
+    };
+
+    // Every source below is independent, so ask for all of them at once: an
+    // older date then answers in a couple of seconds instead of ~20.
+    const [perdanaHtml, h1530, h1930, gdPartsIn, ninePartsIn, gdNew, nineNew, ninePage] = await Promise.all([
+      httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date).catch(() => ""),
+      hariOne("15:30"),
+      hariOne("19:30"),
+      gdPastParts(date),
+      ninePastParts(date),
+      gdHasNewDraw(date),
+      nineHasNewDraw(date),
+      httpGet("https://9lotto.com/result/" + nDate).catch(() => ""),
+    ]);
+
+    const perd = parsePerdanaHtml(perdanaHtml);
+    const hari: Record<string, any> = { "15:30": h1530, "19:30": h1930 };
+
     const khHtml = getViewHtml(date, "kh");
     let gd = khHtml ? parseCardHtml(extractCard(khHtml, "table-13")) : null;
     let nine = khHtml ? parseCardHtml(extractCard(khHtml, "table-17")) : null;
-    if (!nine || !nine.prize || !nine.prize[0]) {
-      try {
-        nine = parseNineSetHtml(await httpGet("https://9lotto.com/result/" + ymd[0] + "-" + Number(ymd[1]) + "-" + Number(ymd[2])));
-      } catch { /* ignore */ }
+    if ((!nine || !nine.prize || !nine.prize[0]) && ninePage) {
+      try { nine = parseNineSetHtml(ninePage) || nine; } catch { /* ignore */ }
     }
     if ((!nine || !nine.prize || !nine.prize[0]) && date === "2026-09-07") {
       nine = { ...NINE_0709 };
     }
-    let [gdParts, nineParts] = await Promise.all([gdPastParts(date), ninePastParts(date)]);
+
+    let gdParts = gdPartsIn;
+    let nineParts = ninePartsIn;
     // Do not show Grand Dragon / Nine Lotto for a date whose official draw has
     // not actually been published yet (blank until the real result comes out).
-    const gdNew = await gdHasNewDraw(date);
-    const nineNew = await nineHasNewDraw(date);
     if (!gdNew) { gdParts = null; gd = null; }
     if (!nineNew) { nineParts = null; nine = null; }
     if ((!gd || !gd.prize || !gd.prize[0]) && gdParts && gdParts.four) {
@@ -455,12 +486,15 @@ export async function GET(req: NextRequest) {
     if ((!nine || !nine.prize || !nine.prize[0]) && nineParts && nineParts.four) {
       nine = nineParts.four;
     }
-    return NextResponse.json({
+    const payload = {
       date, gd, nine,
       gd6: gdParts?.gd6 || null, gdjp4: gdParts?.gdjp4 || null, gdjp7: gdParts?.gdjp7 || null,
       nine6: nineParts?.nine6 || null, nineJp: nineParts?.nineJp || null,
       perdana: perd, hari,
-    });
+    };
+    if (pastMemo.size > 400) pastMemo.clear();
+    pastMemo.set(date, { at: Date.now(), data: payload });
+    return NextResponse.json(payload);
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 502 });
   }
