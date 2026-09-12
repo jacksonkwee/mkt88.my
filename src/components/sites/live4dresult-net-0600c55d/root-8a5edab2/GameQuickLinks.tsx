@@ -16,6 +16,7 @@ function Tile({ href, logo, name, zh, active, aRef }: { href: string; logo: stri
     <a
       ref={aRef}
       href={href}
+      className="mkt-press"
       title={name}
       style={{
         display: "flex",

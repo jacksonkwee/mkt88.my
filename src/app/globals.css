@@ -112,7 +112,7 @@ body.mkt-in-app {
 }
 body.mkt-in-app .mkt-app-topbar {
   top: env(safe-area-inset-top) !important;
-  padding-top: calc(10px + env(safe-area-inset-top)) !important;
+  padding-top: 10px !important;
   touch-action: manipulation;
 }
 body.mkt-in-app .mkt-app-topbar button,
@@ -159,4 +159,22 @@ body.mkt-in-app .mkt-past-filter-bar.mkt-past-filter-open .mkt-past-filter-selec
 body.mkt-in-app .mkt-past-filter-latest,
 body.mkt-in-app .mkt-past-filter-count {
   display: none !important;
+}
+/* App buttons: visible press-down feedback on tap. */
+body.mkt-in-app button,
+body.mkt-in-app .btn,
+body.mkt-in-app [role="button"],
+body.mkt-in-app .mkt-press,
+body.mkt-in-app .mkt-app-topbar a {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 80ms ease, filter 80ms ease;
+  touch-action: manipulation;
+}
+body.mkt-in-app button:active,
+body.mkt-in-app .btn:active,
+body.mkt-in-app [role="button"]:active,
+body.mkt-in-app .mkt-press:active,
+body.mkt-in-app .mkt-app-topbar a:active {
+  transform: scale(0.96) translateY(1px);
+  filter: brightness(0.9);
 }
