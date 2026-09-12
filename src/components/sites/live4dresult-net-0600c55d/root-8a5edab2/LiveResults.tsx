@@ -528,29 +528,26 @@ type GdInfo = { six: SixSet; jp4: Record<string, string>; jp7: Record<string, st
  *  dated feed returns the previous draw again until today's is published, so a
  *  result is only labelled "today" when today's six-digit number differs from
  *  yesterday's. Otherwise yesterday is shown with its own date. */
-function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string } | null {
-  const text = doc.body ? doc.body.innerText : "";
-  const tokens = text.split(/\s+/).map((l) => l.trim()).filter(Boolean);
-  const idx = tokens.findIndex((l) => /^DRAW$/.test(l) || /^NO:$/.test(l));
-  if (idx < 0) return null;
-  const dm = /(\d+)\/(\d{4})/.exec(tokens.slice(idx, idx + 6).join(" "));
-  const prize: string[] = [];
-  const special: string[] = [];
-  const cons: string[] = [];
-  for (let k = idx + 1; k < tokens.length - 1; k++) {
-    const a = tokens[k];
-    if (/^(2D|3D|6D|JACKPOT|SUPER|CONTACT)$/i.test(a)) break;
-    if (/^[A-W]$/.test(a) && tokens[k + 1] === ":") {
-      const nv = /^(----|\d{4})$/.exec(tokens[k + 2] || "");
-      if (nv) { if (a >= "N" && a <= "W") cons.push(nv[1]); else special.push(nv[1]); k += 2; continue; }
-    }
-    if (/^[A-W]$/.test(a) && /^(----|\d{4})$/.test(tokens[k + 1]) && tokens[k + 2] !== ":") {
-      if (prize.length < 3) prize.push(tokens[k + 1]);
-      k++;
-    }
-  }
-  while (prize.length < 3) prize.push("----");
-  return { prize, special: special.slice(0, 13), cons: cons.slice(0, 10), drawNo: dm ? dm[1] + "/" + dm[2] : undefined };
+function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string; dateIso?: string } | null {
+  const value = (id: string): string => {
+    const el = doc.querySelector("#" + id);
+    const v = el ? (el.textContent || "").trim() : "";
+    return /^\d{4}$/.test(v) ? v : "----";
+  };
+  const label = doc.querySelector(".result-date-label");
+  const drawNo = label && label.nextElementSibling ? (label.nextElementSibling.textContent || "").trim() : undefined;
+  const dateEl = doc.querySelector("#inputDate");
+  const dateIso = dateEl ? (dateEl.getAttribute("placeholder") || "").trim() : "";
+  const prize = ["n1", "n2", "n3"].map(value);
+  const special = [..."ABCDEFGHIJKLM"].map((letter) => value("n" + letter));
+  const cons = [..."NOPQRSTUVW"].map((letter) => value("n" + letter));
+  return {
+    prize,
+    special: special.slice(0, 13),
+    cons: cons.slice(0, 10),
+    drawNo: drawNo && /\d+\/\d{4}/.test(drawNo) ? drawNo : undefined,
+    dateIso: /^\d{4}-\d{2}-\d{2}$/.test(dateIso) ? dateIso : undefined,
+  };
 }
 
 async function gdInfo(): Promise<GdInfo | null> {
@@ -648,13 +645,14 @@ async function updateGdNineCards() {
       const nd = await fetchDoc("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(dd));
       if (!nd) continue;
       const ns = parseNineDoc(nd);
+      if (ns?.dateIso && ns.dateIso !== d) continue;
       const jp9 = nineJpFromDoc(nd);
       const six = ns ? nineSixFromPrizes(ns.prize) : null;
       const hasAny = (arr?: string[]) => !!arr && arr.some((v) => /^\d{4}$/.test(v));
       const jpRows = (jp9 && jp9.rows) || {};
       const hasJp = !!jp9 && (!!jp9.pool || Object.values(jpRows).some((v) => /\d/.test(v)));
       const hasData = (ns && (hasAny(ns.prize) || hasAny(ns.special) || hasAny(ns.cons))) || (six && six.main && !isDash(six.main)) || hasJp;
-      if (hasData) cand.push({ dateLbl: weekdayOf(d), ns, six, jp9 });
+      if (hasData) cand.push({ dateLbl: weekdayOf(ns?.dateIso || d), ns, six, jp9 });
     }
     if (!cand.length) return;
     let use = cand[0];
@@ -1064,24 +1062,3 @@ export default function LiveResults() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

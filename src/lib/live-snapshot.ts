@@ -18,7 +18,7 @@ export type Snapshot = {
 };
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
-export const SNAPSHOT_TTL = 8000;
+export const SNAPSHOT_TTL = 5000;
 
 let cache: Snapshot | null = null;
 let warming = false;
@@ -92,27 +92,37 @@ function parseSingapore(html: string | null): Record<string, Record<string, stri
   grabTable("tbodyConsolationPrizes").slice(0, 10).forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
   return Object.keys(out).length > 3 ? { "table-11": out } : {};
 }
-/** live4d2u live feed -> the three East Malaysia cards (Sandakan / Cash Sweep / Sabah 88). */
-function parseEastFeed(feed: any): Record<string, Record<string, string>> {
+/** live4d2u live feed -> the primary 4D cards. Explicit "----" placeholders
+ *  replace stale values when a new draw is being revealed one number at a time. */
+function parseLiveFeed(feed: any): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
   if (!feed) return out;
-  const map: Record<string, string> = { ST: "table-8", SW: "table-9", SB: "table-10" };
+  const map: Record<string, string> = {
+    M: "table-1", D: "table-4", T: "table-6",
+    ST: "table-8", SW: "table-9", SB: "table-10", G: "table-13",
+  };
   for (const [key, cls] of Object.entries(map)) {
     const d = feed[key];
     if (!d) continue;
     const vals: Record<string, string> = {};
-    if (d.DD) vals.date = String(d.DD);
-    if (d.DN) vals.draw_no = String(d.DN);
-    if (d.P1) vals.first_prize = String(d.P1);
-    if (d.P2) vals.second_prize = String(d.P2);
-    if (d.P3) vals.third_prize = String(d.P3);
-    for (let i = 1; i <= 15; i++) { const v = d["S" + i]; if (v && v !== "-") vals["special-" + i] = String(v); }
-    for (let i = 1; i <= 10; i++) { const v = d["C" + i]; if (v && v !== "-") vals["consolation-" + i] = String(v); }
-    if (Object.keys(vals).length > 3) out[cls] = vals;
+    vals.date = d.DD ? String(d.DD) : "----";
+    vals.draw_no = d.DN ? String(d.DN) : "----";
+    for (const [src, dest] of [["P1", "first_prize"], ["P2", "second_prize"], ["P3", "third_prize"]] as const) {
+      const v = d[src];
+      vals[dest] = v && v !== "-" ? String(v) : "----";
+    }
+    for (let i = 1; i <= 15; i++) {
+      const v = d["S" + i];
+      vals["special-" + i] = v && v !== "-" ? String(v) : "----";
+    }
+    for (let i = 1; i <= 10; i++) {
+      const v = d["C" + i];
+      vals["consolation-" + i] = v && v !== "-" ? String(v) : "----";
+    }
+    out[cls] = vals;
   }
   return out;
 }
-
 function myDate(offsetDays = 0): { iso: string; noPad: string } {
   const now = new Date(Date.now() + offsetDays * 86400000);
   const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit" }).format(now).split("-");
@@ -255,36 +265,71 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
   } catch { return { six: null, jp: null }; }
 }
 
-/** Nine Lotto 6D (+ Super Jackpot) from the official results feed. */
-async function nineSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<string, string> | null }> {
-  try {
-    const [y, m, d] = iso.split("-");
-    const html = await get("https://9lotto.com/result/" + y + "-" + Number(m) + "-" + Number(d));
-    if (!html) return { six: null, jp: null };
-    const jp: Record<string, string> = {};
-    const poolM = /result-sjp-lg">\s*([^<]+)</.exec(html);
-    if (poolM) jp.n9_sj_pool = poolM[1].replace(/\s+/g, " ").trim();
-    const nums: string[] = [];
-    const rows = html.match(/<tr class="result-numbersjp">[\s\S]*?<\/tr>/g) || [];
-    for (const block of rows.slice(0, 20)) {
-      const lbl = /class="char1">([^<]+)</.exec(block);
-      const vals = [...block.matchAll(/class="result-sjp-prize"[^>]*>([^<]+)</g)].map((x) => x[1].trim());
-      if (lbl && vals.length >= 3) jp["n9_sj_" + lbl[1].trim().replace(/\s*prize$/i, "").trim().toLowerCase()] = vals.join(" + ");
-      if (vals.length >= 3 && /^\d{4}$/.test(vals[vals.length - 1])) nums.push(vals[vals.length - 1]);
-    }
-    let six: SixEntry = null;
-    if (nums.length >= 3) {
-      const main = nums[0][0] + nums[1][0] + nums[2][0] + nums[0][3] + nums[1][3] + nums[2][3];
-      if (/^\d{6}$/.test(main)) six = { main, subs: sixParts(main) };
-    }
-    return { six, jp: Object.keys(jp).length ? jp : null };
-  } catch { return { six: null, jp: null }; }
+/** Read one official 9lotto value by its DOM id (n1, n2, n3, nA...). */
+function nineCell(html: string, id: string): string {
+  const m = new RegExp('id="' + id + '"[^>]*>\\s*(----|\\d{4})\\s*<', "i").exec(html);
+  return m ? m[1] : "----";
 }
-/** Build a fresh snapshot (parallel upstream fetches). */
+
+/** Parse one dated official 9lotto page. Never relabel another date's draw. */
+function ninePage(html: string, iso: string): { four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null } | null {
+  const pageDate = /id="inputDate"[^>]*placeholder="(\d{4}-\d{2}-\d{2})"/i.exec(html);
+  if (pageDate && pageDate[1] !== iso) return null;
+  const drawNoM = /class="result-date-label"[^>]*>\s*DRAW NO:\s*<\/span>\s*<span>([^<]+)<\/span>/i.exec(html);
+  const prize = [nineCell(html, "n1"), nineCell(html, "n2"), nineCell(html, "n3")];
+  const special = [..."ABCDEFGHIJKLM"].map((letter) => nineCell(html, "n" + letter));
+  const cons = [..."NOPQRSTUVW"].map((letter) => nineCell(html, "n" + letter));
+  const hasAny = [...prize, ...special, ...cons].some((v) => /^\d{4}$/.test(v));
+  if (!hasAny) return null;
+
+  const four: Record<string, string> = {
+    date: weekdayOf(iso),
+    first_prize: prize[0],
+    second_prize: prize[1],
+    third_prize: prize[2],
+  };
+  if (drawNoM && drawNoM[1].trim()) four.draw_no = drawNoM[1].trim();
+  for (let i = 1; i <= 15; i++) four["special-" + i] = special[i - 1] || "----";
+  for (let i = 1; i <= 10; i++) four["consolation-" + i] = cons[i - 1] || "----";
+
+  let six: SixEntry = null;
+  if (prize.every((v) => /^\d{4}$/.test(v))) {
+    const main = prize[0][0] + prize[1][0] + prize[2][0] + prize[0][3] + prize[1][3] + prize[2][3];
+    if (/^\d{6}$/.test(main)) six = { main, subs: sixParts(main) };
+  }
+
+  const jp: Record<string, string> = {};
+  for (const pm of html.matchAll(/class="result-sjp-lg"[^>]*>\s*([^<]*?)\s*<\/span>/gi)) {
+    const pool = pm[1].replace(/\s+/g, " ").trim();
+    if (pool) { jp.n9_sj_pool = pool; break; }
+  }
+  const rows = html.match(/<tr class="result-numbersjp">[\s\S]*?<\/tr>/g) || [];
+  for (const block of rows.slice(0, 20)) {
+    const lbl = /class="char1">([^<]+)</.exec(block);
+    const vals = [...block.matchAll(/class="result-sjp-prize"[^>]*>([^<]+)</g)].map((x) => x[1].trim());
+    if (lbl && vals.length >= 3) jp["n9_sj_" + lbl[1].trim().replace(/\s*prize$/i, "").trim().toLowerCase()] = vals.join(" + ");
+  }
+  return { four, six, jp: Object.keys(jp).length ? jp : null };
+}
+
+/** Nine Lotto 4D + 6D (+ Super Jackpot). If today's dated page is still
+ *  yesterday's draw, use yesterday's dated page so specials and main prizes
+ *  always come from the same official draw. */
+async function nineOfficialToday(iso: string): Promise<{ four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null }> {
+  const [y, m, d] = iso.split("-").map(Number);
+  const prev = new Date(Date.UTC(y, m - 1, d));
+  prev.setUTCDate(prev.getUTCDate() - 1);
+  const yIso = prev.toISOString().slice(0, 10);
+  const [todayHtml, yesterdayHtml] = await Promise.all([
+    get("https://9lotto.com/result/" + y + "-" + m + "-" + d),
+    (() => { const [py, pm, pd] = yIso.split("-").map(Number); return get("https://9lotto.com/result/" + py + "-" + pm + "-" + pd); })(),
+  ]);
+  return (todayHtml && ninePage(todayHtml, iso)) || (yesterdayHtml && ninePage(yesterdayHtml, yIso)) || { four: null, six: null, jp: null };
+}/** Build a fresh snapshot (parallel upstream fetches). */
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineSix] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now()),
@@ -296,12 +341,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hariFor("15:30", yest.iso, yest.noPad),
     hariFor("19:30", yest.iso, yest.noPad),
     gdSixToday(today.iso),
-    nineSixToday(today.iso),
+    nineOfficialToday(today.iso),
   ]);
 
-  // East Malaysia: prefer the live feed (it publishes the newest draw first),
-  // then the live4dresult page, then the Singapore / home sources.
-  const cards = { ...parseCards(east), ...parseEastFeed(feed), ...parseSingapore(sg), ...parseCards(home) };
+  // Prefer direct/current feeds over the cloned home page.
+  // The home page can publish Nine Lotto specials before its main prizes.
+  const cards = { ...parseCards(home), ...parseCards(east), ...parseLiveFeed(feed), ...parseSingapore(sg) };
+  if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
   const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
@@ -316,7 +362,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari: { "15:30": h15 || h15y, "19:30": h19 || h19y },
-    gd6: gdSix.six, gdjp7: gdSix.jp, nine6: nineSix.six, nineJp: nineSix.jp,
+    gd6: gdSix.six, gdjp7: gdSix.jp, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
   };
   cache = snap;
   return snap;
@@ -336,7 +382,3 @@ export function startWarmer() {
   warmer = setInterval(() => { void buildSnapshot().catch(() => {}); }, SNAPSHOT_TTL);
   (warmer as unknown as { unref?: () => void }).unref?.();
 }
-
-
-
-

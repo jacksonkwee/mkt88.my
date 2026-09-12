@@ -65,7 +65,7 @@ const BOOT_SCRIPT = `
       var vals = cards[cls] || {};
       var nodes = document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)");
       for (var i = 0; i < nodes.length; i++){
-        Object.keys(vals).forEach(function(id){ var v = vals[id]; if(!v || v === "-" || v.indexOf("----") === 0) return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
+        Object.keys(vals).forEach(function(id){ var v = vals[id]; if(v === undefined || v === null || v === "" || v === "-") return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
       }
     });
   }
@@ -225,9 +225,10 @@ const BOOT_SCRIPT = `
   // Keep re-applying: React occasionally re-renders a card from its built-in
   // values, which would otherwise wipe the freshly filled numbers.
   setInterval(run, 2500);
-  document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") run(); });
-  pull("/api/home-live", publish);
-  pull("/api/cambodia-live", publish);
+  setInterval(function(){ if(document.visibilityState === "visible") pullAll(); }, 5000);
+  document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") pullAll(); });
+  pullAll();
+  function pullAll(){ pull("/api/home-live", publish); pull("/api/cambodia-live", publish); }
 })();
 `;
 
@@ -270,19 +271,3 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     </html>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
