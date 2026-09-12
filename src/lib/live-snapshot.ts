@@ -98,7 +98,7 @@ function parseLiveFeed(feed: any): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
   if (!feed) return out;
   const map: Record<string, string> = {
-    M: "table-1", D: "table-4", T: "table-6",
+    M: "table-1", D: "table-4", T: "table-6", S: "table-11",
     ST: "table-8", SW: "table-9", SB: "table-10", G: "table-13",
   };
   for (const [key, cls] of Object.entries(map)) {
@@ -346,7 +346,18 @@ export async function buildSnapshot(): Promise<Snapshot> {
 
   // Prefer direct/current feeds over the cloned home page.
   // The home page can publish Nine Lotto specials before its main prizes.
-  const cards = { ...parseCards(home), ...parseCards(east), ...parseLiveFeed(feed), ...parseSingapore(sg) };
+const sgOfficial = parseSingapore(sg);
+  const liveCards = parseLiveFeed(feed);
+  const cards = { ...parseCards(home), ...parseCards(east), ...sgOfficial, ...liveCards };
+  // Official Singapore can occasionally lag the live feed. Use the newer draw,
+  // but never let the older official page overwrite a newer Singapore result.
+  const sgDate = (v?: Record<string, string>): number => {
+    const m = /(\d{2})-(\d{2})-(\d{4})/.exec(v?.date || "");
+    return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+  };
+  if (sgOfficial["table-11"] && liveCards["table-11"] && sgDate(sgOfficial["table-11"]) > sgDate(liveCards["table-11"])) {
+    cards["table-11"] = { ...liveCards["table-11"], ...sgOfficial["table-11"] };
+  }
   if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
   const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };

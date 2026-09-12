@@ -172,6 +172,11 @@ async function fetchDoc(url: string): Promise<Document | null> {
   }
 }
 
+/** Sort date labels such as 12-09-2026 or 12-09-2026 (Sat). */
+function dateScore(label?: string): number {
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
+  return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+}
 function weekdayOf(iso: string): string {
   const d = new Date(iso + "T12:00:00");
   if (Number.isNaN(d.getTime())) return iso;
@@ -736,6 +741,8 @@ async function updateSGOfficial() {
     if (!s) return;
     const cards = [...document.querySelectorAll(".card.outer-box.table-11:not(.mkt-past)")];
     for (const card of cards) {
+      const currentDate = card.querySelector('[data-id="date"]')?.textContent || "";
+      if (s.dateLabel && dateScore(s.dateLabel) < dateScore(currentDate)) continue;
       const set = (id: string, v: string) => {
         const el = card.querySelector('[data-id="' + id + '"]');
         if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
@@ -751,6 +758,35 @@ async function updateSGOfficial() {
   } catch { /* ignore */ }
 }
 
+/** Fast Singapore result feed. The official archive can lag by several hours,
+ *  while this feed publishes the current draw as soon as it is complete. */
+async function updateSGFeed() {
+  try {
+    const u = "https://www.live4d2u.net/liveosx.json?ts=" + Date.now();
+    const txt = await fetchText(u);
+    if (!txt) return;
+    const j = JSON.parse(txt);
+    const s = j && j.S;
+    if (!s) return;
+    const cards = [...document.querySelectorAll(".card.outer-box.table-11:not(.mkt-past)")];
+    for (const card of cards) {
+      const cur = card.querySelector('[data-id="date"]');
+      const curScore = dateScore(cur ? (cur.textContent || "") : "");
+      if (s.DD && dateScore(String(s.DD)) < curScore) continue;
+      const set = (id: string, v: string) => {
+        const el = card.querySelector('[data-id="' + id + '"]');
+        if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
+      };
+      if (s.DD) set("date", String(s.DD));
+      if (s.DN) set("draw_no", String(s.DN));
+      (["first_prize", "second_prize", "third_prize"]).forEach((id, i) => set(id, feedDig(s["P" + (i + 1)])));
+      for (let i = 1; i <= 10; i++) set("special-" + i, feedDig(s["S" + i]));
+      set("special-11", "");
+      for (let i = 1; i <= 10; i++) set("consolation-" + i, feedDig(s["C" + i]));
+      flash(card);
+    }
+  } catch { /* ignore */ }
+}
 function feedDig(v: string | undefined): string {
   return v && /^\d{4}$/.test(v) ? v : "----";
 }
@@ -919,7 +955,7 @@ async function refreshOnce() {
           "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13",
         ]),
         updateGdNineCards(),
-        updateSGOfficial(),
+        (async () => { await updateSGFeed(); await updateSGOfficial(); })(),
         updateCambodiaFeed(),
         syncEastHome(),
         updatePerdanaHome(),
@@ -928,7 +964,8 @@ async function refreshOnce() {
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
     } else if (path === "/singapore-4d-results") {
-      await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-11", "table-12"]);
+      await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-12"]);
+      await updateSGFeed();
       await updateSGOfficial();
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncFromServerFast();
