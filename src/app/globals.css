@@ -103,3 +103,60 @@ td[data-id$="pool"], td[data-id$="grand"], td[data-id$="super"], td[data-id$="mi
  * 大伯公 千字图 and 恭喜发财 all stay.                                 *
  * ------------------------------------------------------------------ */
 body.mkt-in-app .menu-top-menu-container .menu-item-13 { display: none !important; }
+/* ------------------------------------------------------------------ *
+ * Installed Android app: safe areas and app-only past-result controls *
+ * ------------------------------------------------------------------ */
+body.mkt-in-app {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body.mkt-in-app .mkt-app-topbar {
+  top: env(safe-area-inset-top) !important;
+  padding-top: calc(10px + env(safe-area-inset-top)) !important;
+  touch-action: manipulation;
+}
+body.mkt-in-app .mkt-app-topbar button,
+body.mkt-in-app .mkt-app-topbar a {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+  position: relative;
+  z-index: 2;
+}
+body.mkt-in-app .mkt-past-filter-bar {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+}
+body.mkt-in-app .mkt-past-filter-title {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 4px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #cc0000 !important;
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+body.mkt-in-app .mkt-past-filter-bar:not(.mkt-past-filter-open) .mkt-past-filter-select {
+  display: none !important;
+}
+body.mkt-in-app .mkt-past-filter-bar.mkt-past-filter-open .mkt-past-filter-select {
+  display: block !important;
+  width: min(100%, 360px);
+  margin: 4px auto 2px;
+}
+body.mkt-in-app .mkt-past-filter-latest,
+body.mkt-in-app .mkt-past-filter-count {
+  display: none !important;
+}

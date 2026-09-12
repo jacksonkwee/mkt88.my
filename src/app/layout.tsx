@@ -41,7 +41,7 @@ export const metadata: Metadata = {
   },
 };
 
-export const viewport: Viewport = { themeColor: "#1633c7", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#1633c7", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 // The snapshot must be current for every request, so pages are rendered on the
 // server (the snapshot itself comes from memory in a few milliseconds).

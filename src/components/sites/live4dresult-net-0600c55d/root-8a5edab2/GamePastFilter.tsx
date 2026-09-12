@@ -57,7 +57,11 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [full, setFull] = useState(false);
+  const [inApp, setInApp] = useState(false);
+  const [appOpen, setAppOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setInApp(document.body.classList.contains("mkt-in-app")); }, []);
 
   // Only this game's area switches: its latest cards hide while a date is shown.
   useEffect(() => {
@@ -101,40 +105,58 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
 
   return (
     <div ref={rootRef} style={{ margin: "8px 0 2px" }}>
-      <div
+      <div className={"mkt-past-filter-bar" + (inApp && appOpen ? " mkt-past-filter-open" : "")}
         style={{
           border: "1px solid #e4e4e4", borderRadius: 10, background: "#fff",
           padding: "8px 10px", display: "flex", flexWrap: "wrap", gap: 8,
           alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
-        <strong style={{ color: "#cc0000", fontSize: 14, whiteSpace: "nowrap" }}>
-          {name} Past Result 过去开奖
-        </strong>
+        {inApp ? (
+          <button
+            type="button"
+            className="mkt-past-filter-title"
+            onClick={() => setAppOpen((v) => !v)}
+            style={{ color: "#cc0000", fontSize: 15, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer" }}
+            aria-expanded={appOpen}
+          >
+            {name} Past Result 过去开奖
+          </button>
+        ) : (
+          <strong className="mkt-past-filter-title" style={{ color: "#cc0000", fontSize: 14, whiteSpace: "nowrap" }}>
+            {name} Past Result 过去开奖
+          </strong>
+        )}
         {hasPast ? (
           <>
-            <select
+            {(!inApp || appOpen) ? <select
+              className="mkt-past-filter-select"
               aria-label={"Past result date for " + name}
               value={date}
               onPointerDown={openFull}
               onTouchStart={openFull}
               onFocus={openFull}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => { setDate(e.target.value); if (inApp) setAppOpen(false); }}
               style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
               {groups.flatMap((g) => g.items).map((d) => (
                 <option key={d} value={d}>{pretty(d)}</option>
               ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setDate(latest)}
-              style={{ padding: "6px 12px", borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
-            >
-              Latest 最新
-            </button>
-            <span style={{ fontSize: 12, color: "#888" }}>{list.length} 天 dates</span>
+            </select> : null}
+            {!inApp ? (
+              <>
+                <button
+                  type="button"
+                  className="mkt-past-filter-latest"
+                  onClick={() => setDate(latest)}
+                  style={{ padding: "6px 12px", borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Latest 最新
+                </button>
+                <span className="mkt-past-filter-count" style={{ fontSize: 12, color: "#888" }}>{list.length} 天 dates</span>
+              </>
+            ) : null}
           </>
         ) : (
           <span style={{ color: "#777", fontSize: 13 }}>No past results yet.</span>
