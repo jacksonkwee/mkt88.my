@@ -391,7 +391,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const m = /(\d{2})-(\d{2})-(\d{4})/.exec(v?.date || "");
     return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
   };
-  const sgParts = [sgOfficial["table-11"], liveCards["table-11"], sgLive4d].filter(Boolean) as Record<string, string>[];
+  // Same-date priority: official Singapore Pools > live4d2u > Live4D.sg. Live4D.sg can publish early but may still hold temporary numbers.
+  const sgParts = [sgLive4d, liveCards["table-11"], sgOfficial["table-11"]].filter(Boolean) as Record<string, string>[];
   if (sgParts.length) {
     const newest = Math.max(...sgParts.map((p) => sgDate(p)));
     const chosen = sgParts.filter((p) => sgDate(p) === newest).reduce((acc, p) => ({ ...acc, ...p }), {});
