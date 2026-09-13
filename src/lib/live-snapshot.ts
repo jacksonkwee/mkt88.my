@@ -325,11 +325,46 @@ async function nineOfficialToday(iso: string): Promise<{ four: Record<string, st
     (() => { const [py, pm, pd] = yIso.split("-").map(Number); return get("https://9lotto.com/result/" + py + "-" + pm + "-" + pd); })(),
   ]);
   return (todayHtml && ninePage(todayHtml, iso)) || (yesterdayHtml && ninePage(yesterdayHtml, yIso)) || { four: null, six: null, jp: null };
-}/** Build a fresh snapshot (parallel upstream fetches). */
+}/** Fast Live4D.sg Singapore feed. This publishes the current draw before the
+ *  official archive and the general live feed update. */
+function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
+  const result = json && json.result;
+  if (!result || result.comp !== "SG4D" || !Array.isArray(result.n)) return null;
+  const dm = /^(\d{4})(\d{2})(\d{2})$/.exec(String(result.date || ""));
+  const dateIso = dm ? `${dm[1]}-${dm[2]}-${dm[3]}` : iso;
+  const nums: Record<string, string> = {};
+  for (const item of result.n) {
+    const v = String(item && item.i != null ? item.i : "").trim();
+    if (!/^\d{4}$/.test(v)) continue;
+    const p = String(item.p || "");
+    const z = String(item.z || "").toUpperCase();
+    if (/^[123]$/.test(p)) nums[p] = v;
+    else if (/^S\d+$/.test(z)) nums["S" + Number(z.slice(1))] = v;
+    else if (/^C\d+$/.test(z)) nums["C" + Number(z.slice(1))] = v;
+  }
+  if (!Object.values(nums).some((v) => /^\d{4}$/.test(v))) return null;
+  const vals: Record<string, string> = {
+    date: weekdayOf(dateIso),
+    first_prize: nums["1"] || "----",
+    second_prize: nums["2"] || "----",
+    third_prize: nums["3"] || "----",
+  };
+  for (let i = 1; i <= 15; i++) vals["special-" + i] = nums["S" + i] || "----";
+  for (let i = 1; i <= 10; i++) vals["consolation-" + i] = nums["C" + i] || "----";
+  return vals;
+}
+
+async function live4dSgToday(iso: string): Promise<Record<string, string> | null> {
+  try {
+    const j = await get("http://cawidget.live4d.sg/json_4d/api_4d_jlive_hide.asp?ts=" + Date.now(), true);
+    return j ? parseLive4dSg(j, iso) : null;
+  } catch { return null; }
+}
+/** Build a fresh snapshot (parallel upstream fetches). */
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now()),
@@ -342,21 +377,31 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hariFor("19:30", yest.iso, yest.noPad),
     gdSixToday(today.iso),
     nineOfficialToday(today.iso),
+    live4dSgToday(today.iso),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
   // The home page can publish Nine Lotto specials before its main prizes.
-const sgOfficial = parseSingapore(sg);
+  const sgOfficial = parseSingapore(sg);
   const liveCards = parseLiveFeed(feed);
   const cards = { ...parseCards(home), ...parseCards(east), ...sgOfficial, ...liveCards };
-  // Official Singapore can occasionally lag the live feed. Use the newer draw,
-  // but never let the older official page overwrite a newer Singapore result.
+  // Singapore sources can arrive out of order. Use the newest dated result and
+  // merge same-date fields so an older archive never overwrites a live draw.
   const sgDate = (v?: Record<string, string>): number => {
     const m = /(\d{2})-(\d{2})-(\d{4})/.exec(v?.date || "");
     return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
   };
-  if (sgOfficial["table-11"] && liveCards["table-11"] && sgDate(sgOfficial["table-11"]) > sgDate(liveCards["table-11"])) {
-    cards["table-11"] = { ...liveCards["table-11"], ...sgOfficial["table-11"] };
+  const sgParts = [sgOfficial["table-11"], liveCards["table-11"], sgLive4d].filter(Boolean) as Record<string, string>[];
+  if (sgParts.length) {
+    const newest = Math.max(...sgParts.map((p) => sgDate(p)));
+    const chosen = sgParts.filter((p) => sgDate(p) === newest).reduce((acc, p) => ({ ...acc, ...p }), {});
+    const finalSg = { ...(cards["table-11"] || {}), ...chosen };
+    // Live4D.sg publishes the new draw before it knows the official draw
+    // number. Never keep the previous draw's number with the new date.
+    if (!chosen.draw_no && newest > Math.max(0, ...sgParts.filter((p) => sgDate(p) < newest).map((p) => sgDate(p)))) {
+      finalSg.draw_no = "----";
+    }
+    cards["table-11"] = finalSg;
   }
   if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
