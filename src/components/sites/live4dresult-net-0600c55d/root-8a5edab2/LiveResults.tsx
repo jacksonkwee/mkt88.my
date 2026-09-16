@@ -283,26 +283,6 @@ function applySet(card: Element, s: PrizeSet) {
     if (isDash(val) && !force && !newDraw) return;
     pending.push({ el, v: val });
   };
-  /**
-   * Write one positional prize grid (Special / Consolation).
-   *
-   * The live feeds return these as a bare array, while the server snapshot
-   * addresses the same cells by data-id, and the two can sit one cell apart.
-   * Without this guard the feed writes 0097 one cell to the right, the
-   * snapshot puts it back, and the numbers slide back and forth forever.
-   * A drawn grid never repeats a number, so a value already on screen means
-   * the write is misaligned and must be skipped.
-   */
-  const stageGrid = (cells: Element[], vals: string[] | undefined, force: boolean) => {
-    if (!vals) return;
-    vals.forEach((v, i) => {
-      const el = cells[i];
-      if (!el) return;
-      const val = (v || "").trim();
-      if (!isDash(val) && cells.some((c, j) => j !== i && (c.textContent || "").trim() === val)) return;
-      stage(el, v, force);
-    });
-  };
   const tables = [...card.querySelectorAll("table")];
   const prizeRows = tables[0] ? [...tables[0].querySelectorAll("tr")] : [];
   s.prize.forEach((v, i) => {
@@ -310,14 +290,14 @@ function applySet(card: Element, s: PrizeSet) {
     stage(row ? row.querySelector("td.lottery-prize-number") : null, v, newDraw);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
-  stageGrid(specialCells, s.special, newDraw);
+  s.special.forEach((v, i) => stage(specialCells[i], v, newDraw));
   if (s.special.length > 0 && specialCells.length > s.special.length) {
     for (let i = s.special.length; i < specialCells.length; i++) {
       if (specialCells[i]) (specialCells[i] as HTMLElement).innerHTML = "&nbsp;";
     }
   }
   const consCells = tables[2] ? [...tables[2].querySelectorAll("td.lottery-number")] : [];
-  stageGrid(consCells, s.cons, newDraw);
+  s.cons.forEach((v, i) => stage(consCells[i], v, newDraw));
   if (s.date) {
     const dt = card.querySelector('[data-id="date"]');
     if (dt && dt.textContent !== s.date) pending.unshift({ el: dt, v: s.date });
