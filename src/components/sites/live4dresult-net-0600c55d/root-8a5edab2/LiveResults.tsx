@@ -529,10 +529,6 @@ function dateFromNineText(text: string): string | undefined {
 
 type GdInfo = { six: SixSet; jp4: Record<string, string>; jp7: Record<string, string> };
 
-/** Grand Dragon 6D + Jackpots - today and yesterday are compared. The official
- *  dated feed returns the previous draw again until today's is published, so a
- *  result is only labelled "today" when today's six-digit number differs from
- *  yesterday's. Otherwise yesterday is shown with its own date. */
 function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string; dateIso?: string } | null {
   const value = (id: string): string => {
     const el = doc.querySelector("#" + id);
@@ -555,6 +551,12 @@ function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons
   };
 }
 
+/** Grand Dragon 6D + Jackpots - today and yesterday are compared. The official
+ *  dated feed returns the previous draw again until today's is published, so a
+ *  result only counts as today's when the page differs from yesterday's.
+ *  Otherwise nothing is written: the cards keep the live draw date from the 4D
+ *  feed and the numbers stay blank ("----") instead of showing the previous
+ *  draw under today's date. */
 async function gdInfo(): Promise<GdInfo | null> {
   const cand: GdInfo[] = [];
   for (let off = 0; off <= 1; off++) {
@@ -601,20 +603,20 @@ async function gdInfo(): Promise<GdInfo | null> {
     cand.push({ six, jp4, jp7 });
   }
   if (!cand.length) return null;
-  let use = cand[0];
   if (cand.length >= 2) {
     // gdlotto answers today's URL with yesterday's draw until today's is out.
-    // Only fall back when today's page is *identical* to yesterday's - a
-    // difference anywhere (6D, jackpot pool, jackpot number) means a new draw
-    // has started and must be shown even while its 6D is still pending.
+    // A difference anywhere (6D, jackpot pool, jackpot number) means a new draw
+    // has started and must be shown even while its 6D is still pending. While
+    // the two pages are identical there is no new draw, so return nothing and
+    // leave the cards blank rather than showing yesterday's numbers.
     const a = cand[0];
     const b = cand[1];
     const sameDraw = a.six.main === b.six.main
       && (a.jp7.jp7_grand || "") === (b.jp7.jp7_grand || "")
       && (a.jp7.jp7_pool || "") === (b.jp7.jp7_pool || "");
-    if (sameDraw) use = cand[1];
+    if (sameDraw) return null;
   }
-  return use;
+  return cand[0];
 }
 
 function clearCardNumbers(card: Element) {
@@ -856,7 +858,12 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
   for (const [cls, vals] of Object.entries(cards || {})) {
     for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
       for (const [id, v] of Object.entries(vals)) {
-        if (v === undefined || v === null || v === "") continue;
+        // Never blank a value a live source has already filled - the same rule
+        // GamePager uses when it writes the server snapshot. The snapshot still
+        // carries "----" for slots the official feed has not published yet, and
+        // letting those overwrite good numbers made the cards rewrite (and
+        // flash) on every single refresh.
+        if (!v || /^----+$/.test(v) || v === "-") continue;
         const el = card.querySelector('[data-id="' + id + '"]');
         setText(el, v);
       }

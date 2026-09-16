@@ -11,11 +11,12 @@ const PAGER_ORDER = [
   "sabah88", "sandakan", "cashsweep", "perdana", "lucky-harihari",
 ];
 
-function Tile({ href, logo, name, zh, active, aRef }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void }) {
+function Tile({ href, logo, name, zh, active, aRef, onClick }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void }) {
   return (
     <a
       ref={aRef}
       href={href}
+      onClick={onClick}
       className="mkt-press"
       title={name}
       style={{
@@ -46,6 +47,18 @@ function Tile({ href, logo, name, zh, active, aRef }: { href: string; logo: stri
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  /**
+   * On phones every game is already rendered in the swipe track, so tapping a
+   * logo switches to that game instantly. Only fall back to a normal link when
+   * the track is not on screen (desktop, or a page without the pager).
+   */
+  const onTileClick = (e: React.MouseEvent<HTMLAnchorElement>, i: number) => {
+    const track = document.querySelector(".mkt-pager-track");
+    if (!track || track.getClientRects().length === 0) return;
+    e.preventDefault();
+    setActiveIdx(i);
+    window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: i } }));
+  };
   // Highlight the icon that matches the page you are on (web/desktop too).
   useEffect(() => {
     const p = window.location.pathname;
@@ -107,7 +120,7 @@ export default function GameQuickLinks() {
       }}
     >
       {items.map((it, i) => (
-        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} />
+        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} />
       ))}
     </div>
   );

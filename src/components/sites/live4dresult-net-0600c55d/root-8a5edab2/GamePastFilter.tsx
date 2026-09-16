@@ -120,11 +120,11 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             style={{ color: "#cc0000", fontSize: 15, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer" }}
             aria-expanded={appOpen}
           >
-            {name} Past Result 过去开奖
+            {name} Past Result 过去开彩
           </button>
         ) : (
           <strong className="mkt-past-filter-title" style={{ color: "#cc0000", fontSize: 14, whiteSpace: "nowrap" }}>
-            {name} Past Result 过去开奖
+            {name} Past Result 过去开彩
           </strong>
         )}
         {hasPast ? (

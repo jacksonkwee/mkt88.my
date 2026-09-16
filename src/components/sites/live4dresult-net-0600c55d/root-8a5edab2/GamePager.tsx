@@ -157,6 +157,12 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     window.dispatchEvent(new CustomEvent("mktpager", { detail: { index: idx } }));
   };
   const moved = useRef(false);
+  /** Move the swipe track to a slide without a reload (used by the game icons). */
+  const goToIndex = (el: HTMLDivElement, i: number) => {
+    const max = Math.max(0, pages.length - 1);
+    el.scrollLeft = Math.max(0, Math.min(i, max)) * el.clientWidth;
+    dispatchIdx(el);
+  };
   useEffect(() => {
     const el = track.current;
     if (!el || el.getClientRects().length === 0) return; // hidden (e.g. desktop) -> no highlight
@@ -169,6 +175,21 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     };
     el.addEventListener("scroll", onScroll);
     return () => { el.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Tapping a game logo switches the slide directly instead of reloading.
+  // Registered even while the track is off screen (desktop width), so a resize
+  // down to phone width cannot leave the icons doing nothing.
+  useEffect(() => {
+    const onGo = (e: Event) => {
+      const el = track.current;
+      if (!el || el.getClientRects().length === 0) return;
+      const d = (e as CustomEvent).detail;
+      if (d && typeof d.index === "number") goToIndex(el, d.index);
+    };
+    window.addEventListener("mktpager-go", onGo);
+    return () => window.removeEventListener("mktpager-go", onGo);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const onTouchStart = (e: React.TouchEvent) => {
@@ -189,11 +210,10 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     el.scrollBy({ left: dx < 0 ? el.clientWidth : -el.clientWidth, behavior: "smooth" });
   };
   return (
-    <div ref={track}
+    <div ref={track} className="mkt-pager-track"
       style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}>
       {pages.map((pg) => (
         <div key={pg.title} className="mkt-past-scope" style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
-          <div style={{ textAlign: "center", fontWeight: 800, color: "#cc0000", margin: "6px 0 2px", fontSize: 16 }}>{pg.title}</div>
           {showPast && pastDates && pg.slug ? (
             <GamePastFilter
               slug={pg.slug}

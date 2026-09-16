@@ -252,26 +252,47 @@ const sixParts = (main: string): Record<string, string> => ({
   six_5a: main.slice(0, 2), six_5b: main.slice(4),
 });
 
-/** Grand Dragon 6D (+ 6+1D jackpot) from the official results feed. */
+/** One gdlotto dated page -> the 6D / 6+1D values plus a key identifying the draw. */
+function gdPartsOf(html: string): { six: SixEntry; jp: Record<string, string>; key: string } {
+  const txt = clean(html);
+  const jp: Record<string, string> = {};
+  const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
+  const main = m6 ? m6[1].replace(/\s+/g, "") : "";
+  const six: SixEntry = main ? { main, subs: sixParts(main) } : null;
+  const pool7 = /class="7d_JPool">([^<]+)</.exec(html);
+  if (pool7) jp.jp7_pool = pool7[1].trim();
+  const digits: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const mm = new RegExp('class="L7_' + i + '">([^<]+)</span>').exec(html);
+    if (mm) digits.push(mm[1].trim());
+  }
+  if (digits.length === 7) { const g7 = digits.join(""); if (/^\d{7}$/.test(g7)) jp.jp7_grand = g7.slice(0, 6) + " + " + g7[6]; }
+  return { six, jp, key: [main, jp.jp7_pool || "", digits.join("")].join("|") };
+}
+
+function gdUrl(iso: string): string {
+  const [y, m, d] = iso.split("-");
+  return "https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y;
+}
+
+/**
+ * Grand Dragon 6D (+ 6+1D jackpot) from the official results feed.
+ *
+ * gdlotto answers today's dated URL with the previous draw until today's is
+ * published. Those numbers must never be paired with the live draw date the 4D
+ * feed puts on the card, so while today's page still matches yesterday's the
+ * cards are left blank instead of showing the previous draw.
+ */
 async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<string, string> | null }> {
   try {
-    const [y, m, d] = iso.split("-");
-    const html = await get("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);
+    const [y, m, d] = iso.split("-").map(Number);
+    const prev = new Date(Date.UTC(y, m - 1, d));
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    const [html, prevHtml] = await Promise.all([get(gdUrl(iso)), get(gdUrl(prev.toISOString().slice(0, 10)))]);
     if (!html) return { six: null, jp: null };
-    const txt = clean(html);
-    let six: SixEntry = null;
-    const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
-    if (m6) { const main = m6[1].replace(/\s+/g, ""); six = { main, subs: sixParts(main) }; }
-    const jp: Record<string, string> = {};
-    const pool7 = /class="7d_JPool">([^<]+)</.exec(html);
-    if (pool7) jp.jp7_pool = pool7[1].trim();
-    const digits: string[] = [];
-    for (let i = 0; i < 7; i++) {
-      const mm = new RegExp('class="L7_' + i + '">([^<]+)</span>').exec(html);
-      if (mm) digits.push(mm[1].trim());
-    }
-    if (digits.length === 7) { const g7 = digits.join(""); if (/^\d{7}$/.test(g7)) jp.jp7_grand = g7.slice(0, 6) + " + " + g7[6]; }
-    return { six, jp: Object.keys(jp).length ? jp : null };
+    const today = gdPartsOf(html);
+    if (prevHtml && today.key === gdPartsOf(prevHtml).key) return { six: null, jp: null };
+    return { six: today.six, jp: Object.keys(today.jp).length ? today.jp : null };
   } catch { return { six: null, jp: null }; }
 }
 

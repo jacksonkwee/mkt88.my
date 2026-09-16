@@ -18,9 +18,33 @@ function luckyNumber(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
 }
 
+type CapacitorGlobal = {
+  Plugins?: { LocalNotifications?: LocalNotificationsPlugin };
+  registerPlugin?: (name: string, impl?: Record<string, unknown>) => LocalNotificationsPlugin;
+};
+
+/**
+ * Capacitor 6 starts with an empty `Capacitor.Plugins` and only fills it when a
+ * plugin's own JavaScript calls `registerPlugin()`. This website never loads
+ * `@capacitor/local-notifications` as a bundle, so without the fallback below
+ * `Plugins.LocalNotifications` is always undefined and no reminder is ever
+ * scheduled. `registerPlugin` is on `window.Capacitor` and builds the native
+ * bridge proxy from the plugin headers the Android app injects.
+ */
 function localNotifications(): LocalNotificationsPlugin | null {
-  const cap = (window as unknown as { Capacitor?: { Plugins?: { LocalNotifications?: LocalNotificationsPlugin } } }).Capacitor;
-  return cap?.Plugins?.LocalNotifications || null;
+  const cap = (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
+  if (!cap) return null;
+  const ready = cap.Plugins?.LocalNotifications;
+  if (ready) return ready;
+  try {
+    const created = cap.registerPlugin?.("LocalNotifications");
+    if (!created) return null;
+    if (!cap.Plugins) cap.Plugins = {};
+    cap.Plugins.LocalNotifications = created;
+    return created;
+  } catch {
+    return null;
+  }
 }
 
 /**
