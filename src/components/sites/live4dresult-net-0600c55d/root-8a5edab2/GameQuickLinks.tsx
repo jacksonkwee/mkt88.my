@@ -48,6 +48,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const rowRef = useRef<HTMLDivElement>(null);
   // Where the finger went down, so a swipe of the icon row is not mistaken for
   // a tap on whichever icon the swipe happened to end over.
   const downAt = useRef<{ x: number; y: number } | null>(null);
@@ -93,9 +94,22 @@ export default function GameQuickLinks() {
     window.addEventListener("mktpager", onPager);
     return () => window.removeEventListener("mktpager", onPager);
   }, []);
-  // The row is deliberately never scrolled for you. Centring the active icon
-  // used to move the row under the user's finger, and on the phone it left
-  // Magnum / Da Ma Cai / Sports Toto parked off screen with no way back.
+  /**
+   * Centre the active game icon. Swiping the results and tapping an icon both
+   * update activeIdx, so the row follows either way.
+   *
+   * Scroll the row itself - never scrollIntoView(), which also scrolls every
+   * other scrollable ancestor including the page. The target is clamped to 0
+   * and the row starts at flex-start, so the first icons stay reachable.
+   */
+  useEffect(() => {
+    if (activeIdx < 0) return;
+    const el = refs.current[activeIdx];
+    const row = rowRef.current;
+    if (!el || !row) return;
+    const target = el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2;
+    row.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
+  }, [activeIdx]);
 
   const defsBySlug: Record<string, (typeof GAME_DEFS)[number]> = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
   const eastBySlug: Record<string, (typeof EAST_LINKS)[number]> = Object.fromEntries(EAST_LINKS.map((g) => [g.slug, g]));
@@ -115,6 +129,7 @@ export default function GameQuickLinks() {
 
   return (
     <div
+      ref={rowRef}
       style={{
         display: "flex",
         alignItems: "center",
