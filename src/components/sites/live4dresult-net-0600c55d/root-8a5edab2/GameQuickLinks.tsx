@@ -48,7 +48,6 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const rowRef = useRef<HTMLDivElement>(null);
   // Where the finger went down, so a swipe of the icon row is not mistaken for
   // a tap on whichever icon the swipe happened to end over.
   const downAt = useRef<{ x: number; y: number } | null>(null);
@@ -94,16 +93,9 @@ export default function GameQuickLinks() {
     window.addEventListener("mktpager", onPager);
     return () => window.removeEventListener("mktpager", onPager);
   }, []);
-  useEffect(() => {
-    if (activeIdx < 0) return;
-    const el = refs.current[activeIdx];
-    const row = rowRef.current;
-    if (!el || !row) return;
-    // Scroll only the icon row. scrollIntoView() also scrolls every other
-    // scrollable ancestor, including the page, which fought the user's swipe
-    // and left the row parked on Singapore 4D.
-    row.scrollTo({ left: el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
-  }, [activeIdx]);
+  // The row is deliberately never scrolled for you. Centring the active icon
+  // used to move the row under the user's finger, and on the phone it left
+  // Magnum / Da Ma Cai / Sports Toto parked off screen with no way back.
 
   const defsBySlug: Record<string, (typeof GAME_DEFS)[number]> = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
   const eastBySlug: Record<string, (typeof EAST_LINKS)[number]> = Object.fromEntries(EAST_LINKS.map((g) => [g.slug, g]));
@@ -123,14 +115,17 @@ export default function GameQuickLinks() {
 
   return (
     <div
-      ref={rowRef}
       style={{
         display: "flex",
         alignItems: "center",
         gap: 6,
         overflowX: "auto",
         overflowY: "hidden",
-        justifyContent: "safe center",
+        // flex-start, never center: with 11 icons the row overflows, and a
+        // centred flex row hides its left overflow beyond any scrollable
+        // range - which is what made Magnum / Da Ma Cai / Sports Toto
+        // unreachable on the phone.
+        justifyContent: "flex-start",
         padding: "6px 4px 8px",
         background: "#fff",
         WebkitOverflowScrolling: "touch",
