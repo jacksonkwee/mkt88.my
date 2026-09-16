@@ -24,11 +24,13 @@ body {
     top: 70px !important;
   }
 }
-.live-flash {
-  outline: 3px solid #6cf46c !important;
-  outline-offset: -1px;
-  transition: outline-color 0.3s ease;
-}
+/* The green card-update highlight is intentionally not styled.
+   LiveResults.flash() adds this class whenever a card cell is rewritten, and
+   the inline boot script in layout.tsx re-applies every snapshot value on a
+   2.5s timer (plus the on-page updater on a 5s timer). The values themselves
+   are unchanged, so nothing should be visible - but every rewrite re-added the
+   outline, which made all 11 game cards flash green continuously. Numbers still
+   update on screen; only the flashing outline is gone. */
 .header-btn-group .btn {
   background-color: var(--primary, #cc0000) !important;
 }
