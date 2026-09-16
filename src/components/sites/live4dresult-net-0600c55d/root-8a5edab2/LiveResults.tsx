@@ -231,6 +231,16 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
         const v = (srcEl.textContent || "").trim();
         const cur = (tgtEl.textContent || "").trim();
         if (v === cur) continue;
+        // An empty cell on the source page carries no information - the source
+        // leaves gaps that the snapshot fills by data-id. Mirroring those gaps
+        // blanked good numbers and made the snapshot write them back, which is
+        // what slid the Special numbers back and forth roughly once a second.
+        if (v === "") continue;
+        // The source page and the snapshot address this grid in a different
+        // order, so a value already shown elsewhere in the same card is a
+        // misaligned duplicate, not a move. A drawn grid never repeats a
+        // number, so skipping it cannot lose a real result.
+        if (!isDash(v) && els.some((o) => o !== tgtEl && (o.textContent || "").trim() === v)) continue;
         pending.set(id, v);
         if (isDash(v) && !isDash(cur)) hasClear = true;
       }
