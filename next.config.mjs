@@ -75,23 +75,11 @@ const nextConfig = {
           { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.8.apk"' },
         ],
       },
-      // Admin and API responses must never be shared.
-      {
-        source: "/api/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store" }],
-      },
-      {
-        source: "/admin/:path*",
-        headers: [{ key: "Cache-Control", value: "no-store" }],
-      },
-      // Pages are the slow part: every visit re-renders the whole result set
-      // server side (~2s even warm). Let the CDN hold a short shared copy so
-      // most visits skip the origin entirely. s-maxage only affects shared
-      // caches, not the browser, and 30s is well inside the client's own 5s
-      // refresh cycle, so no draw can go stale on screen because of this.
+      // Pages (and the phone app's WebView) must always revalidate, otherwise a
+      // cached page shell can show an older draw for a long time.
       {
         source: "/:path*",
-        headers: [{ key: "Cache-Control", value: "public, s-maxage=30, stale-while-revalidate=60" }],
+        headers: [{ key: "Cache-Control", value: "no-cache, must-revalidate" }],
       },
       // Hashed build assets never change - cache them hard.
       {
