@@ -48,6 +48,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const rowRef = useRef<HTMLDivElement>(null);
   // Where the finger went down, so a swipe of the icon row is not mistaken for
   // a tap on whichever icon the swipe happened to end over.
   const downAt = useRef<{ x: number; y: number } | null>(null);
@@ -94,8 +95,14 @@ export default function GameQuickLinks() {
     return () => window.removeEventListener("mktpager", onPager);
   }, []);
   useEffect(() => {
+    if (activeIdx < 0) return;
     const el = refs.current[activeIdx];
-    if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    const row = rowRef.current;
+    if (!el || !row) return;
+    // Scroll only the icon row. scrollIntoView() also scrolls every other
+    // scrollable ancestor, including the page, which fought the user's swipe
+    // and left the row parked on Singapore 4D.
+    row.scrollTo({ left: el.offsetLeft - (row.clientWidth - el.offsetWidth) / 2, behavior: "smooth" });
   }, [activeIdx]);
 
   const defsBySlug: Record<string, (typeof GAME_DEFS)[number]> = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
@@ -116,6 +123,7 @@ export default function GameQuickLinks() {
 
   return (
     <div
+      ref={rowRef}
       style={{
         display: "flex",
         alignItems: "center",
