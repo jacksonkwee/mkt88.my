@@ -11,11 +11,12 @@ const PAGER_ORDER = [
   "sabah88", "sandakan", "cashsweep", "perdana", "lucky-harihari",
 ];
 
-function Tile({ href, logo, name, zh, active, aRef, onClick }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void }) {
+function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
   return (
     <a
       ref={aRef}
       href={href}
+      onPointerDown={onPointerDown}
       onClick={onClick}
       className="mkt-press"
       title={name}
@@ -47,12 +48,20 @@ function Tile({ href, logo, name, zh, active, aRef, onClick }: { href: string; l
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  // Where the finger went down, so a swipe of the icon row is not mistaken for
+  // a tap on whichever icon the swipe happened to end over.
+  const downAt = useRef<{ x: number; y: number } | null>(null);
   /**
    * On phones every game is already rendered in the swipe track, so tapping a
    * logo switches to that game instantly. Only fall back to a normal link when
    * the track is not on screen (desktop, or a page without the pager).
    */
   const onTileClick = (e: React.MouseEvent<HTMLAnchorElement>, i: number) => {
+    const down = downAt.current;
+    downAt.current = null;
+    // Scrolling the icon row also fires a click on the icon it ends on. Let
+    // that do nothing, otherwise the row snaps back and cannot be scrolled.
+    if (down && (Math.abs(e.clientX - down.x) > 10 || Math.abs(e.clientY - down.y) > 10)) return;
     const track = document.querySelector(".mkt-pager-track");
     if (!track || track.getClientRects().length === 0) return;
     e.preventDefault();
@@ -120,7 +129,7 @@ export default function GameQuickLinks() {
       }}
     >
       {items.map((it, i) => (
-        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} />
+        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }} />
       ))}
     </div>
   );
