@@ -1,6 +1,6 @@
 {
-  "versionCode": 18,
-  "versionName": "2.7",
-  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.7.apk",
-  "notes": "Added 18:00 and 18:30 lucky-number notifications, plus faster Singapore live-result updates."
+  "versionCode": 19,
+  "versionName": "2.8",
+  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.8.apk",
+  "notes": "Faster app start - the launch screen no longer waits for the whole page to load."
 }
