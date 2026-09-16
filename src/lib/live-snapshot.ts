@@ -59,6 +59,16 @@ function parseCards(html: string | null): Record<string, Record<string, string>>
   return out;
 }
 
+/** Singapore Pools uses its own version token; a generic ts query can hit a stale CDN copy. */
+function singaporeArchiveVersion(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    year: "numeric", month: "numeric", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((p) => p.type === type)?.value || "0";
+  return get("year") + "y" + Number(get("month")) + "d" + Number(get("day")) + "h" + Number(get("hour")) + "m" + get("minute");
+}
 /** Singapore Pools official top-draw file -> { "table-11": { dataId: value } } */
 function parseSingapore(html: string | null): Record<string, Record<string, string>> {
   if (!html) return {};
@@ -367,7 +377,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
-    get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now()),
+    get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
     get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`),
     get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`),

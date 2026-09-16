@@ -730,10 +730,20 @@ function parseSGOfficial(doc: Document) {
   return { dateLabel, drawNo: dm ? dm[1] : undefined, prize, starter, cons };
 }
 
+/** Use Singapore Pools’ own version token so its CDN cannot return a stale draw. */
+function singaporeArchiveVersion(): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    year: "numeric", month: "numeric", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((p) => p.type === type)?.value || "0";
+  return get("year") + "y" + Number(get("month")) + "d" + Number(get("day")) + "h" + Number(get("hour")) + "m" + get("minute");
+}
 /** Update the Singapore 4D card from the official Singapore Pools data file. */
 async function updateSGOfficial() {
   try {
-    const u = "https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?ts=" + Date.now();
+    const u = "https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion();
     const txt = await fetchText(u);
     if (!txt) return;
     const doc = new DOMParser().parseFromString(txt, "text/html");
