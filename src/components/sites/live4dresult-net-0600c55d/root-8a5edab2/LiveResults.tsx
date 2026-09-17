@@ -621,14 +621,15 @@ async function gdInfo(): Promise<GdInfo | null> {
     // gdlotto answers today's URL with yesterday's draw until today's is out.
     // A difference anywhere (6D, jackpot pool, jackpot number) means a new draw
     // has started and must be shown even while its 6D is still pending. While
-    // the two pages are identical there is no new draw, so return nothing and
-    // leave the cards blank rather than showing yesterday's numbers.
+    // the two pages match, the most recent completed draw IS yesterday's, so
+    // show that one: it carries yesterday's own date, so the date and the
+    // numbers always agree and the card is never left blank.
     const a = cand[0];
     const b = cand[1];
     const sameDraw = a.six.main === b.six.main
       && (a.jp7.jp7_grand || "") === (b.jp7.jp7_grand || "")
       && (a.jp7.jp7_pool || "") === (b.jp7.jp7_pool || "");
-    if (sameDraw) return null;
+    if (sameDraw) return cand[1];
   }
   return cand[0];
 }

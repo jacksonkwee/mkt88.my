@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-export type SixValue = { main: string; subs: Record<string, string> } | null;
+export type SixValue = { main: string; subs: Record<string, string>; date?: string } | null;
 export type SnapValue = {
   cards?: Record<string, Record<string, string>>;
   perdana?: Record<string, { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null>;

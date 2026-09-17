@@ -33,18 +33,19 @@ MKT88 - LIVE RESULT RULES (read before touching any result code)
 5. CHANGES HERE MUST BE TESTED DURING A REAL DRAW
    (15:30 and 19:30 MYT for Perdana / Lucky HariHari), not just after it.
 
-6. GRAND DRAGON 6D / 6+1D NEVER FALL BACK TO THE PREVIOUS DRAW.
+6. GRAND DRAGON 6D / 6+1D MUST CARRY THE DRAW'S OWN DATE.
    gdlotto.net answers today's dated URL with the previous draw until today's
-   is published. The card date comes from the 4D feed (table-13), so writing
-   those numbers would pair a LIVE date with YESTERDAY's numbers.
+   is published, while the 4D feed (table-13) can already show TODAY. Never let
+   those two pair up - a live date sitting above an older number is the bug
+   this rule exists to prevent.
 
-   Only write the values when today's page differs from yesterday's - a
-   difference in the 6D number, the 6+1D Grand Prize or the JP pool means a new
-   draw has started. While the two pages are identical write NOTHING and leave
-   the card blank ("----") with its live date.
+   Today's page differs from yesterday's  ->  show TODAY, dated today.
+   Today's page matches yesterday's       ->  the latest completed draw IS
+       yesterday's: show it, labelled with YESTERDAY's date. Never leave the
+       card blank - a blank card reads as broken.
 
    Both paths implement this:
-       live-snapshot.ts -> gdSixToday()  (gdPartsOf + gdUrl)
-       LiveResults.tsx  -> gdInfo()
-   Grand Dragon draws every day, so "blank" is always a not-published-yet
-   state, never a no-draw-today state.
+       live-snapshot.ts      -> gdSixToday()   (six.date comes from the page used)
+       LiveResults.tsx       -> gdInfo()       (returns the matching candidate)
+   and use-live-snapshot.ts overridesFor() prefers snap.gd6.date over the 4D
+   card's date for every table-14 card.

@@ -6,7 +6,7 @@ import { useServerSnapshot } from "../../../LiveSnapshotProvider";
 
 export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
 export type HariEntry = { set?: PrizeSet | null; six?: { main: string; subs: Record<string, string> } | null; jp?: Record<string, string> | null } | null;
-export type SixEntry = { main: string; subs: Record<string, string> } | null;
+export type SixEntry = { main: string; subs: Record<string, string>; date?: string } | null;
 export type Snap = {
   cards?: Record<string, Record<string, string>>;
   perdana?: Record<string, PrizeSet | null>;
@@ -60,10 +60,13 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
   const values: Record<string, string> = { ...((snap.cards && snap.cards[cls]) || {}) };
 
   if (cleanCardId.startsWith("table-14")) {
-    // The 4D card carries the authoritative draw date for this game.
-    const gd4 = snap.cards ? snap.cards["table-13"] : null;
-    if (gd4 && clean(gd4.date)) values.date = gd4.date;
     const g = snap.gd6;
+    // Prefer the date that belongs to the draw being shown. The 4D card can
+    // already read today before today's 6D is published, which would pair a
+    // live date with the previous draw's numbers.
+    const gd4 = snap.cards ? snap.cards["table-13"] : null;
+    const drawDate = (g && g.date) || (gd4 ? gd4.date : undefined);
+    if (clean(drawDate)) values.date = drawDate;
     if (g) { if (clean(g.main)) values.six_main = g.main; sixSubs(values, g.subs); }
     if (snap.gdjp7) for (const [k, v] of Object.entries(snap.gdjp7)) { if (clean(v)) values[k] = v; }
     return { values };

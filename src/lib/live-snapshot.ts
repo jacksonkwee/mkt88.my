@@ -5,7 +5,7 @@
  */
 export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
 export type HariEntry = { set: PrizeSet | null; six: { main: string; subs: Record<string, string> } | null; jp: Record<string, string> | null } | null;
-export type SixEntry = { main: string; subs: Record<string, string> } | null;
+export type SixEntry = { main: string; subs: Record<string, string>; date?: string } | null;
 export type Snapshot = {
   at: number;
   cards: Record<string, Record<string, string>>;
@@ -286,13 +286,21 @@ function gdUrl(iso: string): string {
 async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<string, string> | null }> {
   try {
     const [y, m, d] = iso.split("-").map(Number);
-    const prev = new Date(Date.UTC(y, m - 1, d));
-    prev.setUTCDate(prev.getUTCDate() - 1);
-    const [html, prevHtml] = await Promise.all([get(gdUrl(iso)), get(gdUrl(prev.toISOString().slice(0, 10)))]);
+    const prevDay = new Date(Date.UTC(y, m - 1, d));
+    prevDay.setUTCDate(prevDay.getUTCDate() - 1);
+    const prevIso = prevDay.toISOString().slice(0, 10);
+    const [html, prevHtml] = await Promise.all([get(gdUrl(iso)), get(gdUrl(prevIso))]);
     if (!html) return { six: null, jp: null };
     const today = gdPartsOf(html);
-    if (prevHtml && today.key === gdPartsOf(prevHtml).key) return { six: null, jp: null };
-    return { six: today.six, jp: Object.keys(today.jp).length ? today.jp : null };
+    const previous = prevHtml ? gdPartsOf(prevHtml) : null;
+    // gdlotto answers today's URL with the previous draw until today's is
+    // published. When both pages match, the numbers the card shows are
+    // yesterday's, so they must carry yesterday's date - otherwise a live date
+    // sits above an older number, which is the mismatch this used to have.
+    const sameDraw = !!previous && today.key === previous.key;
+    const draw = sameDraw && previous ? previous : today;
+    const six = draw.six ? { ...draw.six, date: weekdayOf(sameDraw ? prevIso : iso) } : null;
+    return { six, jp: Object.keys(draw.jp).length ? draw.jp : null };
   } catch { return { six: null, jp: null }; }
 }
 
