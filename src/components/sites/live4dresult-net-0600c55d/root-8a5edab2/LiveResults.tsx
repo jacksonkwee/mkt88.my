@@ -236,11 +236,15 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
         // blanked good numbers and made the snapshot write them back, which is
         // what slid the Special numbers back and forth roughly once a second.
         if (v === "") continue;
-        // The source page and the snapshot address this grid in a different
-        // order, so a value already shown elsewhere in the same card is a
-        // misaligned duplicate, not a move. A drawn grid never repeats a
-        // number, so skipping it cannot lose a real result.
-        if (!isDash(v) && els.some((o) => o !== tgtEl && (o.textContent || "").trim() === v)) continue;
+        // Special / Consolation are drawn grids where a number never repeats,
+        // so a value already shown in a sibling cell means the source page is
+        // laid out one cell off and this write would slide the whole grid.
+        // Only those two grids may be checked this way. Every other cell must
+        // be written as-is - the jackpot cards hold single DIGITS
+        // (8 7 8 1 1 5 + 1 0), which repeat by nature, and skipping a repeated
+        // digit corrupts the jackpot number.
+        if (/^(special|consolation)-/.test(id) && !isDash(v)
+            && els.some((o) => o !== tgtEl && (o.textContent || "").trim() === v)) continue;
         pending.set(id, v);
         if (isDash(v) && !isDash(cur)) hasClear = true;
       }
