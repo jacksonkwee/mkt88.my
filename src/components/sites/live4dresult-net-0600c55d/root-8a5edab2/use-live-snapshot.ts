@@ -65,8 +65,8 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
     // already read today before today's 6D is published, which would pair a
     // live date with the previous draw's numbers.
     const gd4 = snap.cards ? snap.cards["table-13"] : null;
-    const drawDate = (g && g.date) || (gd4 ? gd4.date : undefined);
-    if (clean(drawDate)) values.date = drawDate;
+    const drawDate: string | undefined = (g && g.date) || (gd4 && gd4.date) || undefined;
+    if (drawDate && clean(drawDate)) values.date = drawDate;
     if (g) { if (clean(g.main)) values.six_main = g.main; sixSubs(values, g.subs); }
     if (snap.gdjp7) for (const [k, v] of Object.entries(snap.gdjp7)) { if (clean(v)) values[k] = v; }
     return { values };
