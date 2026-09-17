@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 8888",
     "start-render": "next start -H 0.0.0.0 -p ${PORT:-8888}",
-    "start-railway": "next start -H 0.0.0.0 -p ${PORT:-8888}"
+    "start-railway": "next start -H 0.0.0.0 -p ${PORT:-8888}",
+    "check:results": "node scripts/check-results.mjs"
   },
   "dependencies": {
     "next": "15.3.3",
