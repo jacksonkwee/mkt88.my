@@ -94,7 +94,14 @@ async function main() {
   // Catching that needs a browser watching the DOM, and is a separate check.
   section("Prize grids are populated");
   const thin = Object.entries(cards)
-    .filter(([, vals]) => gridValues(vals, "special-").length + gridValues(vals, "consolation-").length === 0)
+    .filter(([, vals]) => {
+      // Jackpot cards (Magnum Jackpot Gold, SportsToto 5D/6D) have no Special
+      // or Consolation grid at all - only demand numbers from a card that
+      // actually carries those columns.
+      const hasGridKeys = Object.keys(vals).some((k) => k.startsWith("special-") || k.startsWith("consolation-"));
+      if (!hasGridKeys) return false;
+      return gridValues(vals, "special-").length + gridValues(vals, "consolation-").length === 0;
+    })
     .map(([cls]) => cls);
   check("every prize grid carries numbers", thin.length === 0, thin.join(", "));
 
