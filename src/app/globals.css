@@ -184,6 +184,14 @@ body.mkt-in-app .mkt-app-topbar a:active {
 /* ------------------------------------------------------------------ *
  * Large system fonts * 
  * ------------------------------------------------------------------ */
+/* The opened menu is an absolutely positioned panel that starts above the
+   bottom of the header, so it paints over the hamburger button. Tapping the
+   button again then hit whatever menu item sat underneath, which is why the
+   menu could be opened but never closed. Lift the buttons above the panel. */
+nav .navbar-toggler {
+  position: relative;
+  z-index: 30;
+}
 /* Android/iOS inflate text on wide layouts unless told not to, on top of any
    system font scale the user has set. */
 html {
