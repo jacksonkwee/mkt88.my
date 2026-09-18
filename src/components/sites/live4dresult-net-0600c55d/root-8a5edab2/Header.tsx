@@ -30,7 +30,8 @@ export default function Header() {
 
   return (
     <header className="sticky-top navbar-inverse">
-      <nav className="navbar navbar-expand-lg navbar-light p-lg-0 py-1">
+      {/* Above the tap-to-close backdrop below. */}
+      <nav className="navbar navbar-expand-lg navbar-light p-lg-0 py-1" style={{ position: "relative", zIndex: 2 }}>
         <div className="container">
           <a href="/" style={{ textDecoration: "none" }} onClick={closeAll}>
             <div className="d-flex flex-column align-items-center mr-4">
@@ -51,14 +52,22 @@ export default function Header() {
               type="button"
               aria-controls="navbarSupportedContent"
               aria-expanded={menuOpen}
-              aria-label="Toggle navigation"
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              style={menuOpen ? { position: "absolute", top: 8, right: 12, zIndex: 3 } : undefined}
               onClick={() => {
                 setMenuOpen((v) => !v);
                 setRegionsOpen(false);
               }}
             >
               <small>
-                <span className="navbar-toggler-icon"></span>
+                {menuOpen ? (
+                  /* The hamburger sat where the open panel covered it, so the
+                     menu could not be shut from the button. While it is open
+                     the button becomes a clear X in the top right corner. */
+                  <span aria-hidden="true" style={{ fontSize: 26, lineHeight: 1, fontWeight: 700, color: "#cc0000" }}>×</span>
+                ) : (
+                  <span className="navbar-toggler-icon"></span>
+                )}
               </small>
             </button>
           </div>
@@ -123,6 +132,15 @@ export default function Header() {
           </div>
         </div>
       </nav>
+      {/* Tapping any blank space closes the menu. This sits under the nav
+          (which is lifted above it) so the menu itself stays usable. */}
+      {menuOpen ? (
+        <div
+          onClick={closeAll}
+          aria-hidden="true"
+          style={{ position: "fixed", inset: 0, zIndex: 1, background: "transparent" }}
+        />
+      ) : null}
       {luckyOpen ? (
         <div
           style={{
