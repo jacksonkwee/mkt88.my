@@ -16,7 +16,11 @@ body {
 }
 @media (max-width: 575px) {
   .header-btn-group {
-    top: 140px !important;
+    /* Must match the actual header height. This was 140px from when the header
+       held a 99px logo plus a second row of buttons; the header is 80px now, so
+       the sticky icon row left a 60px gap for the results to scroll through
+       underneath the logo. */
+    top: 80px !important;
   }
 }
 @media only screen and (max-width: 991px) {

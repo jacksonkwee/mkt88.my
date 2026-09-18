@@ -42,7 +42,9 @@ button:focus {
 
 .header-btn-group {
   position: sticky;
-  top: 65px;
+  /* Match the header height, or the results scroll through the gap between
+     them. Was 65px from when the logo was smaller than the header it sat in. */
+  top: 80px;
   z-index: 1019;
 }
 
