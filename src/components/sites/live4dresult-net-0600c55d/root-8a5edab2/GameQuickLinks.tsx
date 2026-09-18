@@ -26,7 +26,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
         alignItems: "center",
         justifyContent: "center",
         flex: "0 0 auto",
-        width: 68,
+        width: 60,
         boxSizing: "border-box",
         padding: "6px 2px",
         border: "1px solid #eee",
@@ -37,8 +37,27 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
       }}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={logo} alt={name} style={{ width: 44, height: 44, objectFit: "contain", marginBottom: 4 }} />
+      {/* Every game sits in the same circular frame, so logos with different
+          artwork shapes all read at one size instead of some looking bigger
+          than others. */}
+      <span
+        style={{
+          width: 38,
+          height: 38,
+          flex: "0 0 auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "50%",
+          border: "1px solid #e0e0e0",
+          background: "#fff",
+          overflow: "hidden",
+          marginBottom: 4,
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain" }} />
+      </span>
       <span style={{ fontSize: 10, fontWeight: active ? 800 : 700, textAlign: "center", lineHeight: 1.15, whiteSpace: "normal" }}>{name}</span>
       {zh ? <span style={{ fontSize: 9, color: "#666", textAlign: "center" }}>{zh}</span> : null}
     </a>
