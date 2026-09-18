@@ -38,7 +38,11 @@ export default function Header() {
               <img src={logo} style={{ height: 70, width: "auto" }} alt="" />
             </div>
           </a>
-          <div className="d-flex align-items-center">
+          {/* The logo fills the first navbar line, so this wraps to the second
+              and sat at the left - which put the open menu's X on top of the
+              "大伯公" item. Pushing it to the right end of its own line keeps
+              it on the menu bar, clear of the menu text. */}
+          <div className="d-flex align-items-center" style={{ marginLeft: "auto" }}>
             <button
               className="border-0 navbar-toggler pr-3"
               type="button"
