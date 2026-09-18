@@ -49,8 +49,8 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
           alignItems: "center",
           justifyContent: "center",
           borderRadius: "50%",
-          border: "1px solid #e0e0e0",
-          background: "#fff",
+          border: "1px solid #d9d9d9",
+          background: "#f7f7f7",
           overflow: "hidden",
           marginBottom: 4,
         }}
