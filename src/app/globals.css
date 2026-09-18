@@ -180,3 +180,29 @@ body.mkt-in-app .mkt-app-topbar a:active {
   transform: scale(0.96) translateY(1px);
   filter: brightness(0.9);
 }
+
+/* ------------------------------------------------------------------ *
+ * Large system fonts * 
+ * ------------------------------------------------------------------ */
+/* Android/iOS inflate text on wide layouts unless told not to, on top of any
+   system font scale the user has set. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+/* The result grids are fixed 5-column tables. If a browser does scale the text
+   anyway, let the cells wrap and shrink rather than push numbers past the card
+   and off the page. */
+.card table {
+  table-layout: fixed;
+}
+.card td,
+.card th,
+.lottery-number,
+.lottery-prize-number,
+.lottery-prize-title,
+.lottery-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

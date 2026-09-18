@@ -1,6 +1,6 @@
 {
-  "versionCode": 19,
-  "versionName": "2.8",
-  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.8.apk",
-  "notes": "Faster app start - the launch screen no longer waits for the whole page to load."
+  "versionCode": 20,
+  "versionName": "2.9",
+  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.9.apk",
+  "notes": "Result cards no longer run off the page when the phone font size is set to Large."
 }
