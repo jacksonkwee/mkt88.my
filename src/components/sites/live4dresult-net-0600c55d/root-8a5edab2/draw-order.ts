@@ -1,11 +1,18 @@
 /** Draw-slot ordering helpers for the two-draws-a-day games (Perdana / HariHari). */
 
-/** True from 7:30pm (Malaysia) onwards - the 7:30 draw is then shown first. */
+/**
+ * True while the 7:30pm draw is the current one.
+ *
+ * That is from 7:30pm through to the next day's 3:30pm draw - not to midnight.
+ * This used to test `mins >= 19:30` alone, so the order flipped back at 00:00,
+ * putting the 3:30 card on top many hours before the next 3:30 result existed,
+ * with the previous morning's numbers sitting above last night's.
+ */
 export function nightDrawFirst(now: Date = new Date()): boolean {
   const ms = now.getTime() + 8 * 60 * 60 * 1000; // Malaysia = UTC+8
   const d = new Date(ms);
   const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
-  return mins >= 19 * 60 + 30;
+  return mins >= 19 * 60 + 30 || mins < 15 * 60 + 30;
 }
 
 export const PERDANA_1530 = "table-16-2026-09-06-1530";
