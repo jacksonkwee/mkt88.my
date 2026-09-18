@@ -12,7 +12,7 @@
     "fontSize": 16,
     "logo": {
       "src": "/api/media/mkt88-logo-new.svg",
-      "size": 99
+      "size": 72
     },
     "banner": {
       "enabled": false,
