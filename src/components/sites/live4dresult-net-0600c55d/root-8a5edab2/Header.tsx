@@ -34,8 +34,11 @@ export default function Header() {
       <nav className="navbar navbar-expand-lg navbar-light p-lg-0 py-1" style={{ position: "relative", zIndex: 2 }}>
         <div className="container">
           <a href="/" style={{ textDecoration: "none" }} onClick={closeAll}>
-            <div className="d-flex flex-column align-items-center mr-4">
-              <img src={logo} style={{ height: 70, width: "auto" }} alt="" />
+            {/* Small enough that the logo and the menu button share one line on
+                a phone - at 70px the logo filled the row and pushed the button
+                onto a second line of its own. */}
+            <div className="d-flex flex-column align-items-center mr-2">
+              <img src={logo} style={{ height: 48, width: "auto" }} alt="" />
             </div>
           </a>
           {/* The logo fills the first navbar line, so this wraps to the second
