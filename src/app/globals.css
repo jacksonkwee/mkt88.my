@@ -198,19 +198,16 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
-/* The result grids are fixed 5-column tables. If a browser does scale the text
-   anyway, let the cells wrap and shrink rather than push numbers past the card
-   and off the page. */
-.card table {
-  table-layout: fixed;
-}
-.card td,
-.card th,
+/* A result number must never break across lines - "6087" reading as "60" over
+   "87" is worse than a tight cell. An earlier attempt also set
+   table-layout: fixed and overflow-wrap: anywhere here; the fixed layout
+   squashed the Sports Toto zodiac into half a picture and the wrapping split
+   every 4-digit Special and Consolation result in two. Do not reintroduce
+   either: the WebView is pinned to 100% text zoom instead (see MainActivity
+   setTextZoom), so the numbers are never over-sized in the first place. */
 .lottery-number,
-.lottery-prize-number,
-.lottery-prize-title,
-.lottery-name {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+.lottery-prize-number {
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
