@@ -104,7 +104,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   }, [list, full]);
 
   return (
-    <div ref={rootRef} style={{ margin: "8px 0 2px" }}>
+    <div ref={rootRef} style={{ margin: "2px 0 2px" }}>
       <div className={"mkt-past-filter-bar" + (inApp && appOpen ? " mkt-past-filter-open" : "")}
         style={{
           border: "1px solid #e4e4e4", borderRadius: 10, background: "#fff",

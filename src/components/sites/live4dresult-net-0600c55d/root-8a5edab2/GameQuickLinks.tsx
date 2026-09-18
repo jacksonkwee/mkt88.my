@@ -12,6 +12,13 @@ const PAGER_ORDER = [
 ];
 
 function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
+  // Every tile reads "<brand>" / "4D" / "<Chinese>". A trailing "4D" is put on
+  // its own line so short names like "Perdana 4D" cannot fit on one line and
+  // leave that tile a different height from the rest.
+  const m = /^(.*?)\s+4D$/.exec(name);
+  const brand = m ? m[1] : name;
+  const suffix = m ? "4D" : null;
+  const labelStyle = { fontSize: 10, fontWeight: active ? 800 : 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "normal" as const };
   return (
     <a
       ref={aRef}
@@ -58,7 +65,8 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain" }} />
       </span>
-      <span style={{ fontSize: 10, fontWeight: active ? 800 : 700, textAlign: "center", lineHeight: 1.15, whiteSpace: "normal" }}>{name}</span>
+      <span style={labelStyle}>{brand}</span>
+      {suffix ? <span style={labelStyle}>{suffix}</span> : null}
       {zh ? <span style={{ fontSize: 9, color: "#666", textAlign: "center" }}>{zh}</span> : null}
     </a>
   );
@@ -151,7 +159,9 @@ export default function GameQuickLinks() {
       ref={rowRef}
       style={{
         display: "flex",
-        alignItems: "center",
+        // stretch so every tile is the height of the tallest one, whatever its
+        // label wraps to
+        alignItems: "stretch",
         gap: 6,
         overflowX: "auto",
         overflowY: "hidden",
@@ -160,7 +170,7 @@ export default function GameQuickLinks() {
         // range - which is what made Magnum / Da Ma Cai / Sports Toto
         // unreachable on the phone.
         justifyContent: "flex-start",
-        padding: "6px 4px 8px",
+        padding: "6px 4px 2px",
         background: "#fff",
         WebkitOverflowScrolling: "touch",
       }}
