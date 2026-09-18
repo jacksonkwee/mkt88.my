@@ -42,18 +42,9 @@ export default function Header() {
             <button
               className="border-0 navbar-toggler pr-3"
               type="button"
-              aria-label="Refresh"
-              onClick={() => window.location.reload()}
-            >
-              <i className="fa fa-refresh text-danger" aria-hidden="true"></i>
-            </button>
-            <button
-              className="border-0 navbar-toggler pr-3"
-              type="button"
               aria-controls="navbarSupportedContent"
               aria-expanded={menuOpen}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
-              style={menuOpen ? { position: "absolute", top: 8, right: 12, zIndex: 3 } : undefined}
               onClick={() => {
                 setMenuOpen((v) => !v);
                 setRegionsOpen(false);
