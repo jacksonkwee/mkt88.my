@@ -46,7 +46,10 @@ function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.Mo
   if (href.startsWith("/")) {
     return <Link href={href} style={TILE} onClick={onClick}>{children}</Link>;
   }
-  return <a href={href} target="_blank" rel="noreferrer" style={TILE}>{children}</a>;
+  // onClick must be attached here too: the Lucky Numbers tile points at "#",
+  // so it takes this branch - and its handler was being dropped, which made the
+  // tile do nothing at all.
+  return <a href={href} target="_blank" rel="noreferrer" style={TILE} onClick={onClick}>{children}</a>;
 }
 
 /** Shown once per app launch, not on every page load. */
