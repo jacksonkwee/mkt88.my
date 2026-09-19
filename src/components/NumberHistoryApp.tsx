@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ArrowLeft, CaretDown, CaretUp, Check, Star } from "@phosphor-icons/react";
 import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
 
 const RED = "#cc0000";
@@ -173,7 +174,7 @@ export default function NumberHistoryApp() {
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
       <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
         <button onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/"))}
-          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back">←</button>
+          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           Number History 开彩记录
         </div>
@@ -231,16 +232,16 @@ export default function NumberHistoryApp() {
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div style={{ fontSize: 13, color: "#555" }}>
                 {data.total} result{data.total === 1 ? "" : "s"} from {data.nums.length} number{data.nums.length === 1 ? "" : "s"}
-                {data.dbFrom ? <span style={{ color: "#999" }}> (records {data.dbFrom} → {data.dbTo})</span> : null}
+                {data.dbFrom ? <span style={{ color: "#999" }}> (records {data.dbFrom} to {data.dbTo})</span> : null}
               </div>
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button onClick={() => onToggleFav(primary || data.nums[0])}
                   style={{ border: "1px solid " + RED, borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
-                  {isFav(primary || data.nums[0]) ? "★ Favourite" : "☆ Add favourite"}
+                  {isFav(primary || data.nums[0]) ? <><Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Favourite</> : <><Star size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />Add favourite</>}
                 </button>
                 <a href={"/favourites?num=" + (primary || data.nums[0])}
                   style={{ border: "1px solid #ddd", borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
-                  ⭐ Pau / Notify
+                  <Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Pau / Notify
                 </a>
               </div>
             </div>
@@ -273,7 +274,7 @@ export default function NumberHistoryApp() {
               </div>
               <button onClick={() => setShowCompanies((v) => !v)}
                 style={{ border: "1px solid " + RED, background: showCompanies ? RED : "#fff", color: showCompanies ? "#fff" : RED, borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
-                {showCompanies ? "收起 Filter ▲" : "筛选 Filter ▼"}
+                {showCompanies ? <>收起 Filter <CaretUp size={12} weight="bold" /></> : <>筛选 Filter <CaretDown size={12} weight="bold" /></>}
               </button>
             </div>
             {showCompanies ? (
@@ -284,13 +285,13 @@ export default function NumberHistoryApp() {
                     const on = companies.includes(c.key);
                     return (
                       <button key={c.key} onClick={() => toggleIn(companies, setCompanies, c.key)} style={chip(on)}>
-                        {on ? "✓ " : ""}{c.label} <span style={{ color: "#999" }}>{companyCounts.get(c.key)}</span>
+                        {on ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{c.label} <span style={{ color: "#999" }}>{companyCounts.get(c.key)}</span>
                       </button>
                     );
                   })}
                   {companyCounts.has("other") ? (
                     <button onClick={() => toggleIn(companies, setCompanies, "other")} style={chip(companies.includes("other"))}>
-                      {companies.includes("other") ? "✓ " : ""}其他 Other <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
+                      {companies.includes("other") ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}其他 Other <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
                     </button>
                   ) : null}
                 </div>
@@ -341,7 +342,7 @@ export default function NumberHistoryApp() {
                       </div>
                       <button onClick={() => onToggleFav(m.num)} title="Favourite"
                         style={{ background: "transparent", border: 0, fontSize: 18, cursor: "pointer", padding: 4, color: fav ? "#e6a700" : "#bbb" }}>
-                        {fav ? "★" : "☆"}
+                        {fav ? <Star size={18} weight="fill" /> : <Star size={18} />}
                       </button>
                     </div>
                   );

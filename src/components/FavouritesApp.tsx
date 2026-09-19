@@ -6,6 +6,7 @@ import {
   ALL_SCOPES, FAV_EVENT, SCOPE_LABEL, YELLOW, addFav, isNum, loadFavs, removeFav, saveFavs,
   type Fav, type Scope,
 } from "../lib/favourites";
+import { ArrowLeft, ArrowRight, BellRinging, BellSlash, Check, Star, X } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
 
@@ -81,8 +82,8 @@ export default function FavouritesApp() {
     for (const n of valid) next = addFav(n, scopes.length ? scopes : [...ALL_SCOPES], notify);
     setFavs(next);
     setFlash(notify
-      ? `Added ${valid.length} number${valid.length === 1 ? "" : "s"} ⭐ — you will be notified when they appear.`
-      : `Added ${valid.length} number${valid.length === 1 ? "" : "s"} ⭐ — they will glow yellow when drawn.`);
+      ? `Added ${valid.length} number${valid.length === 1 ? "" : "s"}: you will be notified when they appear.`
+      : `Added ${valid.length} number${valid.length === 1 ? "" : "s"}: they will glow yellow when drawn.`);
     window.setTimeout(() => setFlash(""), 5000);
   };
 
@@ -93,7 +94,7 @@ export default function FavouritesApp() {
       setPerm(p);
       if (p === "granted") {
         setNotify(true);
-        setFlash("Notifications enabled 🔔 — tap the bell on a favourite to switch it on.");
+        setFlash("Notifications enabled. Tap the bell on a favourite to switch it on.");
         window.setTimeout(() => setFlash(""), 5000);
       }
     } catch { /* ignore */ }
@@ -119,7 +120,7 @@ export default function FavouritesApp() {
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
       <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
         <button onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/"))}
-          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back">←</button>
+          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           Favourite Numbers 收藏号码
         </div>
@@ -171,7 +172,7 @@ export default function FavouritesApp() {
                         background: on ? "#ffe9e9" : already ? "#fffbe0" : "#fff",
                         color: "#111",
                       }}>
-                      {on ? "✓ " : ""}{p}{already ? " ★" : ""}
+                      {on ? <Check size={14} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{p}{already ? <Star size={14} weight="fill" color="#e6a700" style={{ verticalAlign: "-2px", marginLeft: 3 }} /> : null}
                     </button>
                   );
                 })}
@@ -230,7 +231,7 @@ export default function FavouritesApp() {
                 {perm === "unsupported" ? "This device will show in-app alerts." : "Allow notifications to get an alert when your number appears."}
               </div>
               {perm !== "unsupported" ? (
-                <button onClick={askNotify} style={{ ...mini(RED), whiteSpace: "nowrap" }}>Enable 🔔</button>
+                <button onClick={askNotify} style={{ ...mini(RED), whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><BellRinging size={16} weight="bold" />Enable</button>
               ) : null}
             </div>
           ) : null}
@@ -247,14 +248,14 @@ export default function FavouritesApp() {
                       <div style={{ fontSize: 12, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {f.scopes.map((s) => SCOPE_LABEL[s]).join(" · ")}
                       </div>
-                      <a href={"/number-history?num=" + f.num} style={{ fontSize: 12, color: RED, textDecoration: "none" }}>Number History →</a>
+                      <a href={"/number-history?num=" + f.num} style={{ fontSize: 12, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></a>
                     </div>
                     <button onClick={() => toggleBell(f)} title="Special notification"
                       style={{ background: "transparent", border: 0, fontSize: 19, cursor: "pointer", color: f.notify ? "#e6a700" : "#bbb" }}>
-                      {f.notify ? "🔔" : "🔕"}
+                      {f.notify ? <BellRinging size={19} weight="fill" /> : <BellSlash size={19} />}
                     </button>
                     <button onClick={() => del(f.num)} title="Remove"
-                      style={{ background: "transparent", border: 0, fontSize: 15, cursor: "pointer", color: RED }}>✕</button>
+                      style={{ background: "transparent", border: 0, cursor: "pointer", color: RED, display: "inline-flex" }}><X size={17} weight="bold" /></button>
                   </div>
                   <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                     {ALL_SCOPES.map((s) => {

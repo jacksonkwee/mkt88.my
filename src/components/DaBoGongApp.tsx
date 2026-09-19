@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
 
@@ -93,7 +94,7 @@ export default function DaBoGongApp() {
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 60 }}>
       <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
         <button onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/"))}
-          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back">←</button>
+          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18 }}>大伯公 千字图万字图</div>
         <a href="/" style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</a>
       </div>
@@ -137,7 +138,7 @@ export default function DaBoGongApp() {
             ) : null}
             {historyHref(data.num) ? (
               <a href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 10, padding: "10px 18px", fontWeight: 800, textDecoration: "none" }}>
-                开彩记录 Number History →
+                开彩记录 Number History <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} />
               </a>
             ) : null}
           </div>
@@ -159,7 +160,7 @@ export default function DaBoGongApp() {
                   <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                     <div style={{ fontWeight: 800, fontSize: 15 }}>{r.keyword}</div>
                     <div style={{ fontSize: 12.5, color: "#666" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
-                    {href ? <div style={{ fontSize: 11.5, color: RED, fontWeight: 700, marginTop: 2 }}>开彩记录 Number History →</div> : null}
+                    {href ? <div style={{ fontSize: 11.5, color: RED, fontWeight: 700, marginTop: 2 }}>开彩记录 Number History <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
                   </div>
                   <div style={{ fontWeight: 900, fontSize: 18, color: RED, letterSpacing: 2 }}>{r.num}</div>
                 </>

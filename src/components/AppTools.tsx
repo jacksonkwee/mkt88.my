@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FAV_EVENT, YELLOW, cellScope, isNum, loadFavs, type Fav } from "../lib/favourites";
+import { Star } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
 const HIDDEN = ["/admin", "/past-results", "/favourites", "/disclaimer", "/privacy-policy", "/api"];
@@ -116,7 +117,7 @@ export default function AppTools() {
     toastTimer.current = window.setTimeout(() => setToast(null), 9000);
     try {
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification("⭐ " + num + " appeared!", { body: game + " · " + prize, icon: "/sites/live4dresult-net-0600c55d/root-8a5edab2/icon_192x192.png" });
+        new Notification(num + " appeared!", { body: game + " · " + prize, icon: "/sites/live4dresult-net-0600c55d/root-8a5edab2/icon_192x192.png" });
       }
     } catch { /* ignore */ }
   };
@@ -131,7 +132,7 @@ export default function AppTools() {
         borderLeft: "8px solid " + YELLOW, borderRadius: 12, padding: "10px 14px", boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
         cursor: "pointer", maxWidth: 280, fontFamily: "sans-serif",
       }}>
-      <div style={{ fontSize: 12, color: RED, fontWeight: 800 }}>⭐ FAVOURITE NUMBER APPEARED</div>
+      <div style={{ fontSize: 12, color: RED, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}><Star size={13} weight="fill" />FAVOURITE NUMBER APPEARED</div>
       <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 3, margin: "2px 0" }}>{toast.num}</div>
       <div style={{ fontSize: 12, color: "#555" }}>{toast.game}</div>
       <div style={{ fontSize: 12, color: "#777" }}>{toast.prize} · tap to see history</div>

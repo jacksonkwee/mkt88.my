@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
+import { GearSix } from "@phosphor-icons/react";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
@@ -256,7 +257,7 @@ export default function AppHome() {
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 ) : (
-                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: ACCENT }}>⚙</span>
+                  <GearSix size={30} weight="bold" color={ACCENT} aria-hidden="true" />
                 )}
               </span>
               <span style={NAME}>{t.name}</span>
