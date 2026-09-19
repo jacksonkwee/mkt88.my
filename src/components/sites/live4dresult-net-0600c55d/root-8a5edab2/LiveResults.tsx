@@ -334,9 +334,10 @@ function applySet(card: Element, s: PrizeSet) {
     if (dn && dn.textContent !== s.drawNo) pending.push({ el: dn, v: s.drawNo });
   }
   if (pending.length === 0) return;
-  // Reveal one by one in draw order, then flash the card.
-  pending.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 90 * i));
-  window.setTimeout(() => flash(card), 90 * pending.length);
+  // Write the whole draw in one pass. The old reveal (90ms per cell) made a
+  // full HariHari card take over two seconds to fill in, number by number.
+  for (const c of pending) setText(c.el, c.v);
+  flash(card);
 }
 
 /** Parse perdana4d.com innerText into { time -> set }. */
@@ -434,71 +435,37 @@ function applySixValues(cardId: string, s: SixSet | null) {
   if (!s) return;
   applyToCardsById(cardId, (card) => {
     const pending = new Map<string, string>();
-    let hasClear = false;
     const stage = (id: string, v: string | undefined) => {
       if (v === undefined) return;
       const el = card.querySelector('[data-id="' + id + '"]');
       if (!el) return;
-      const cur = (el.textContent || "").trim();
-      if (cur === v.trim()) return;
+      if ((el.textContent || "").trim() === v.trim()) return;
       pending.set(id, v.trim());
-      if (isDash(v) && !isDash(cur)) hasClear = true;
     };
     stage("six_main", s.main);
     if (s.date) stage("date", s.date);
     // Never blank a 6D sub-prize that we do not have a real value for.
     if (s.subs) for (const [k, v] of Object.entries(s.subs)) { if (!isDash(v)) stage(k, v); }
     if (pending.size === 0) return;
-    if (hasClear) {
-      for (const [id, v] of pending) {
-        const el = card.querySelector('[data-id="' + id + '"]');
-        setText(el, v);
-      }
-      flash(card);
-      return;
-    }
-    const els = [...card.querySelectorAll("[data-id]")];
-    const changed: { el: Element; v: string }[] = [];
-    for (const el of els) {
-      const id = el.getAttribute("data-id") || "";
-      if (!pending.has(id)) continue;
-      changed.push({ el, v: pending.get(id)! });
-    }
-    changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
-    window.setTimeout(() => flash(card), 140 * changed.length);
+    // Write the whole card in one pass; the old reveal was 140ms per field.
+    for (const [id, v] of pending) setText(card.querySelector('[data-id="' + id + '"]'), v);
+    flash(card);
   });
 }
 
 function applyIdValues(cardId: string, vals: Record<string, string>) {
   applyToCardsById(cardId, (card) => {
-    const pending = new Map<string, string>();
-    let hasClear = false;
+    const pending: { el: Element; v: string }[] = [];
     for (const [id, v] of Object.entries(vals)) {
       const el = card.querySelector('[data-id="' + id + '"]');
       if (!el) continue;
-      const cur = (el.textContent || "").trim();
-      if (cur === v.trim()) continue;
-      pending.set(id, v.trim());
-      if (isDash(v) && !isDash(cur)) hasClear = true;
+      if ((el.textContent || "").trim() === v.trim()) continue;
+      pending.push({ el, v: v.trim() });
     }
-    if (pending.size === 0) return;
-    if (hasClear) {
-      for (const [id, v] of pending) {
-        const el = card.querySelector('[data-id="' + id + '"]');
-        setText(el, v);
-      }
-      flash(card);
-      return;
-    }
-    const els = [...card.querySelectorAll("[data-id]")];
-    const changed: { el: Element; v: string }[] = [];
-    for (const el of els) {
-      const id = el.getAttribute("data-id") || "";
-      if (!pending.has(id)) continue;
-      changed.push({ el, v: pending.get(id)! });
-    }
-    changed.forEach((c, i) => window.setTimeout(() => setText(c.el, c.v), 140 * i));
-    window.setTimeout(() => flash(card), 140 * changed.length);
+    if (pending.length === 0) return;
+    // Write the whole card in one pass; the old reveal was 140ms per field.
+    for (const c of pending) setText(c.el, c.v);
+    flash(card);
   });
 }
 
@@ -956,7 +923,9 @@ async function updatePerdanaHome() {
   }
 }
 async function updateHariHome() {
-  for (const [time, id] of [["15:30", "table-15-2026-09-06-1530"], ["19:30", "table-15-2026-09-06-1930"]]) {
+  // The two draw times are independent and each is two round trips to the
+  // HariHari API, so run them side by side instead of one after the other.
+  await Promise.all([["15:30", "table-15-2026-09-06-1530"], ["19:30", "table-15-2026-09-06-1930"]].map(async ([time, id]) => {
     for (const off of [0, -1]) {
       const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
       const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${d}T${time}:00`);
@@ -985,7 +954,7 @@ async function updateHariHome() {
         break;
       } catch { /* ignore */ }
     }
-  }
+  }));
 }
 
 async function refreshOnce() {
