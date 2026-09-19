@@ -222,3 +222,21 @@ html {
   overflow-wrap: normal;
   word-break: normal;
 }
+
+/* ------------------------------------------------------------------ *
+ * App typography                                                     *
+ * ------------------------------------------------------------------ */
+/* One system UI stack for the whole app. It renders the Latin labels and the
+   Chinese game names natively on Android and iOS, which a bundled display
+   webfont would not, and it keeps the app free of a font download. */
+body.mkt-in-app {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans",
+    "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Result numbers use tabular figures, so the 4-digit columns line up instead of
+   wobbling as the digits change and a draw number reads at a glance. */
+.card.outer-box .card-body {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

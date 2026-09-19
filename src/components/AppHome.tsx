@@ -19,18 +19,35 @@ const GAME_ORDER = [
 
 type Tile = { href: string; logo: string; name: string; zh?: string; lucky?: boolean; settings?: boolean };
 
+/* Design tokens for the app first page.
+ *
+ * Radius rule: every tile and button uses RADIUS. The Settings on/off switch is
+ * the only full-pill control and the result tables stay square - one documented
+ * rule, applied everywhere, instead of a different radius per component.
+ * Colour rule: one accent (the brand red) over off-white surfaces. No pure black
+ * and no pure-white page background.
+ */
+const RADIUS = 14;
+const PAGE_BG = "#f6f7f9";
+const SURFACE = "#ffffff";
+const BORDER = "#e6e8eb";
+const INK = "#16181d";
+const INK_MUTED = "#5b6470";
+const ACCENT = "#cc0000"; // the brand red
+
 const TILE: React.CSSProperties = {
   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
-  gap: 3, padding: "6px 4px", borderRadius: 12, border: "1px solid #eee", background: "#fff",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.07)", textDecoration: "none", color: "#333", textAlign: "center",
+  gap: 4, padding: "8px 6px", minHeight: 86, borderRadius: RADIUS, border: "1px solid " + BORDER,
+  background: SURFACE, boxShadow: "0 1px 2px rgba(22,24,29,0.06)", textDecoration: "none",
+  color: INK, textAlign: "center", WebkitTapHighlightColor: "transparent",
 };
 
 const ICON_BOX: React.CSSProperties = {
-  width: "100%", height: 42, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto",
+  width: "100%", height: 44, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto",
 };
 
-const NAME: React.CSSProperties = { fontSize: 12, fontWeight: 800, color: "#000", lineHeight: 1.12 };
-const SUB: React.CSSProperties = { fontSize: 10, color: "#666", lineHeight: 1.12 };
+const NAME: React.CSSProperties = { fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.15 };
+const SUB: React.CSSProperties = { fontSize: 10.5, color: INK_MUTED, lineHeight: 1.15 };
 
 function luckyNumber(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
@@ -44,12 +61,12 @@ function luckyNumber(): string {
  */
 function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; children: React.ReactNode }) {
   if (href.startsWith("/")) {
-    return <Link href={href} style={TILE} onClick={onClick}>{children}</Link>;
+    return <Link href={href} className="mkt-press" style={TILE} onClick={onClick}>{children}</Link>;
   }
   // onClick must be attached here too: the Lucky Numbers tile points at "#",
   // so it takes this branch - and its handler was being dropped, which made the
   // tile do nothing at all.
-  return <a href={href} target="_blank" rel="noreferrer" style={TILE} onClick={onClick}>{children}</a>;
+  return <a href={href} target="_blank" rel="noreferrer" className="mkt-press" style={TILE} onClick={onClick}>{children}</a>;
 }
 
 /** Shown once per app launch, not on every page load. */
@@ -185,10 +202,10 @@ export default function AppHome() {
   ];
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: "#fff", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ maxWidth: 520, margin: "0 auto", padding: "8px 10px 14px" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px" }}>
         {/* No close or settings button up here - both live in the tile rows. */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO} alt="MKT 發發" style={{ height: 44, width: "auto" }} />
         </div>
@@ -206,8 +223,9 @@ export default function AppHome() {
 
         <button
           type="button"
+          className="mkt-press"
           onClick={() => setOpen(false)}
-          style={{ width: "100%", margin: "8px 0", padding: "10px 0", border: 0, borderRadius: 10, background: "#cc0000", color: "#fff", fontSize: 14, fontWeight: 800, cursor: "pointer" }}
+          style={{ width: "100%", margin: "10px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, letterSpacing: 0.2, cursor: "pointer" }}
         >
           See live results 查看成绩
         </button>
@@ -238,11 +256,11 @@ export default function AppHome() {
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 ) : (
-                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: "#cc0000" }}>⚙</span>
+                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: ACCENT }}>⚙</span>
                 )}
               </span>
               <span style={NAME}>{t.name}</span>
-              {t.zh ? <span style={{ ...SUB, fontWeight: 700, color: "#cc0000" }}>{t.zh}</span> : null}
+              {t.zh ? <span style={{ ...SUB, fontWeight: 700, color: ACCENT }}>{t.zh}</span> : null}
             </Nav>
           ))}
         </div>
@@ -253,8 +271,8 @@ export default function AppHome() {
           onClick={() => setSettingsOpen(false)}
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: "20px 20px 16px", width: "88%", maxWidth: 340 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "#cc0000", marginBottom: 14 }}>Settings 设置</div>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "20px 20px 16px", width: "88%", maxWidth: 340 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: ACCENT, marginBottom: 14 }}>Settings 设置</div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Keep screen on</div>
@@ -274,7 +292,7 @@ export default function AppHome() {
             <div style={{ fontSize: 12, color: "#999", marginTop: 10 }}>
               While this is on the phone will not sleep during a live draw.
             </div>
-            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: 10, background: "#cc0000", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
+            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
           </div>
         </div>
       ) : null}
@@ -284,12 +302,12 @@ export default function AppHome() {
           onClick={() => setLucky(null)}
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#cc0000" }}>恭喜发财</div>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: ACCENT }}>恭喜发财</div>
             <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>您的幸运号码</div>
-            <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: 8, color: "#cc0000", margin: "14px 0 10px", background: "#fff7e6", borderRadius: 12, padding: "8px 0", fontVariantNumeric: "tabular-nums" }}>{lucky}</div>
-            <button type="button" onClick={() => setLucky(luckyNumber())} style={{ padding: "10px 18px", background: "#cc0000", color: "#fff", border: 0, borderRadius: 8, marginRight: 8, cursor: "pointer" }}>Try Again</button>
-            <button type="button" onClick={() => setLucky(null)} style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: 8, cursor: "pointer" }}>Close</button>
+            <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: 8, color: ACCENT, margin: "14px 0 10px", background: "#fff7e6", borderRadius: RADIUS, padding: "8px 0", fontVariantNumeric: "tabular-nums" }}>{lucky}</div>
+            <button type="button" onClick={() => setLucky(luckyNumber())} style={{ padding: "10px 18px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, marginRight: 8, cursor: "pointer" }}>Try Again</button>
+            <button type="button" onClick={() => setLucky(null)} style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: RADIUS, cursor: "pointer" }}>Close</button>
           </div>
         </div>
       ) : null}
