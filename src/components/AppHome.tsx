@@ -17,7 +17,7 @@ const GAME_ORDER = [
   "sabah88", "sandakan", "cashsweep", "perdana", "lucky-harihari",
 ];
 
-type Tile = { href: string; logo: string; name: string; zh?: string; lucky?: boolean };
+type Tile = { href: string; logo: string; name: string; zh?: string; lucky?: boolean; settings?: boolean };
 
 const TILE: React.CSSProperties = {
   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
@@ -180,32 +180,16 @@ export default function AppHome() {
     // The icon artwork already reads 恭喜发财, so no second Chinese label here.
     { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", lucky: true },
     { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
+    { href: "#", logo: "", name: "Settings", zh: "设置", settings: true },
   ];
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: "#fff", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", padding: "8px 10px 14px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+        {/* No close or settings button up here - both live in the tile rows. */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 6 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="MKT 發發" style={{ height: 38, width: "auto" }} />
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              aria-label="Settings"
-              style={{ border: 0, background: "#f2f2f2", borderRadius: 10, width: 38, height: 38, fontSize: 19, color: "#444", cursor: "pointer" }}
-            >
-              ⚙
-            </button>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Close and see live results"
-              style={{ border: 0, background: "#f2f2f2", borderRadius: 10, width: 38, height: 38, fontSize: 20, fontWeight: 800, color: "#cc0000", cursor: "pointer" }}
-            >
-              ×
-            </button>
-          </div>
+          <img src={LOGO} alt="MKT 發發" style={{ height: 44, width: "auto" }} />
         </div>
 
         <div style={{ margin: "0 0 5px", fontSize: 12, fontWeight: 800, color: "#666", letterSpacing: 1 }}>4D RESULTS 开奖成绩</div>
@@ -235,6 +219,7 @@ export default function AppHome() {
               key={t.name}
               href={t.href}
               onClick={(e) => {
+                if (t.settings) { e.preventDefault(); setSettingsOpen(true); return; }
                 if (t.lucky) {
                   // Same 恭喜发财 popup the three-line menu shows. It lives
                   // here rather than in the header because the header is hidden
@@ -249,8 +234,14 @@ export default function AppHome() {
                 setOpen(false);
               }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
+              <span style={ICON_BOX}>
+                {t.logo ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                ) : (
+                  <span aria-hidden="true" style={{ fontSize: 30, lineHeight: 1, color: "#cc0000" }}>⚙</span>
+                )}
+              </span>
               <span style={NAME}>{t.name}</span>
               {t.zh ? <span style={{ ...SUB, fontWeight: 700, color: "#cc0000" }}>{t.zh}</span> : null}
             </Nav>
