@@ -188,6 +188,13 @@ body.mkt-in-app .mkt-app-topbar a:active {
 /* ------------------------------------------------------------------ *
  * Large system fonts * 
  * ------------------------------------------------------------------ */
+/* The sticky header must stay opaque and above the page while scrolling. The
+   theme sets z-index 1019, which some phone WebViews let result rows paint
+   over - the page appeared to swipe up and down behind the logo. */
+header.sticky-top {
+  background-color: #f7f7f7 !important;
+  z-index: 2000 !important;
+}
 /* The opened menu is an absolutely positioned panel that starts above the
    bottom of the header, so it paints over the hamburger button. Tapping the
    button again then hit whatever menu item sat underneath, which is why the
