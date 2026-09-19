@@ -5,6 +5,7 @@ import NoticeBar from "../components/NoticeBar";
 import TopBanner from "../components/TopBanner";
 import SiteCustomizer from "../components/SiteCustomizer";
 import AppTools from "../components/AppTools";
+import AppHome from "../components/AppHome";
 import AppNotifications from "../components/AppNotifications";
 import { getSnapshot } from "../lib/live-snapshot";
 import LiveSnapshotProvider, { type SnapValue } from "../components/LiveSnapshotProvider";
@@ -268,6 +269,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <PWARegister />
         <SiteCustomizer />
         <AppTools />
+        <AppHome />
         <AppNotifications enabled={inApp} />
       </body>
     </html>
