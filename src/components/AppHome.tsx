@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 
@@ -33,6 +34,22 @@ function luckyNumber(): string {
 }
 
 /**
+ * Internal links go through next/link so tapping a game is a client-side
+ * navigation. A plain <a> reloads the whole page, which re-mounted the root
+ * layout and threw the user straight back onto this screen instead of the game
+ * they picked.
+ */
+function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; children: React.ReactNode }) {
+  if (href.startsWith("/")) {
+    return <Link href={href} style={TILE} onClick={onClick}>{children}</Link>;
+  }
+  return <a href={href} target="_blank" rel="noreferrer" style={TILE}>{children}</a>;
+}
+
+/** Shown once per app launch, not on every page load. */
+const SEEN_KEY = "mkt_app_home_shown";
+
+/**
  * The app's first screen: a tile grid of the 11 games plus the shortcuts people
  * actually use, shown when the app opens. Website visitors never see it - it is
  * gated on the Android user agent, so the site stays exactly as it was.
@@ -42,7 +59,15 @@ export default function AppHome() {
   const [lucky, setLucky] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isCapacitorApp()) setOpen(true);
+    if (!isCapacitorApp()) return;
+    // Remember that this launch already showed the home screen. Without it,
+    // every page load inside the app re-opened it - so tapping a game looked
+    // like the app jumping back to the first page.
+    try {
+      if (sessionStorage.getItem(SEEN_KEY)) return;
+      sessionStorage.setItem(SEEN_KEY, "1");
+    } catch { /* private mode - just show it */ }
+    setOpen(true);
   }, []);
 
   if (!open) return null;
@@ -94,12 +119,12 @@ export default function AppHome() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
           {games.map((t) => (
-            <a key={t.name} href={t.href} style={TILE} onClick={() => setOpen(false)}>
+            <Nav key={t.name} href={t.href} onClick={() => setOpen(false)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
               <span style={{ fontSize: 15, fontWeight: 800, color: "#000", lineHeight: 1.15 }}>{t.name}</span>
               {t.zh ? <span style={{ fontSize: 13, color: "#666", lineHeight: 1.15 }}>{t.zh}</span> : null}
-            </a>
+            </Nav>
           ))}
         </div>
 
@@ -113,21 +138,18 @@ export default function AppHome() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
           {actions.map((t) => (
-            <a
+            <Nav
               key={t.name}
               href={t.href}
-              target={t.href.startsWith("http") ? "_blank" : undefined}
-              rel={t.href.startsWith("http") ? "noreferrer" : undefined}
               onClick={(e) => {
                 if (t.lucky) { e.preventDefault(); setLucky(luckyNumber()); }
               }}
-              style={TILE}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
               <span style={{ fontSize: 15, fontWeight: 800, color: "#000", lineHeight: 1.15 }}>{t.name}</span>
               {t.zh ? <span style={{ fontSize: 13, fontWeight: 700, color: "#cc0000", lineHeight: 1.15 }}>{t.zh}</span> : null}
-            </a>
+            </Nav>
           ))}
         </div>
       </div>
