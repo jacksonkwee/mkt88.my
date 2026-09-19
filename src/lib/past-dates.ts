@@ -67,6 +67,28 @@ function tablesIn(html: string): string[] {
   return [...out];
 }
 
+/**
+ * Malaysia 4D draws on Wednesday, Saturday and Sunday. The occasional Tuesday
+ * special still comes from the rolling scan - but that scan cannot reach
+ * live4dresult.net from our server, so the weekday rule is what actually keeps
+ * the list current.
+ */
+function isMyDrawDay(iso: string): boolean {
+  const wd = new Date(iso + "T12:00:00").getDay(); // 0 Sun, 3 Wed, 6 Sat
+  return wd === 0 || wd === 3 || wd === 6;
+}
+
+/** The eleven Malaysia / Singapore cards a draw day carries. */
+const MY_DRAW_TABLES = [
+  "table-1", "table-2", "table-3", "table-4", "table-5", "table-6",
+  "table-7", "table-8", "table-9", "table-10", "table-11",
+];
+
+/** Every day after `fromDate` up to `toDate`, inclusive. */
+function afterDate(fromDate: string, toDate: string): string[] {
+  return fromDate < toDate ? range(shiftIso(fromDate, 1), toDate) : [];
+}
+
 let myTables: Record<string, string[]> = { ...MY_BASE.tables };
 let myScan: Promise<void> | null = null;
 let myAt = 0;
@@ -136,12 +158,18 @@ function perdanaDates(): string[] {
 
 export function getKhDatesByGame(): KhByGame {
   const last = shiftIso(todayIso(), -1);
-  const perdana = perdanaDates();
+  // Perdana and HariHari draw every day, so top the stored archive up to
+  // yesterday. Without this the list stops at whatever was last saved and a
+  // recent date simply cannot be picked.
+  const topUp = (stored: string[]) => {
+    const newest = stored.length ? stored[stored.length - 1] : "";
+    return [...new Set([...stored, ...afterDate(newest, last)])].sort();
+  };
   return {
     "grand-dragon": last < "2021-09-14" ? [] : range("2021-09-14", last),
     "nine-lotto": last < "2023-01-01" ? [] : range("2023-01-01", last),
-    perdana,
-    "lucky-harihari": hariDates(),
+    perdana: topUp(perdanaDates()),
+    "lucky-harihari": topUp(hariDates()),
   };
 }
 
@@ -154,6 +182,13 @@ export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; 
   // Fold the stored deep archive into the Malaysia / Singapore date list.
   const tables: Record<string, string[]> = { ...myTables };
   for (const d of deepDates()) { const t = deepTables(d); if (t.length) tables[d] = t; }
+  // Fill in every Malaysia draw day between the newest stored date and
+  // yesterday, so the list stays current even when the rolling scan cannot
+  // reach live4dresult.net from the server.
+  const newestMy = Object.keys(tables).sort().pop() || MY_BASE.to;
+  for (const d of afterDate(newestMy, shiftIso(todayIso(), -1))) {
+    if (isMyDrawDay(d) && !tables[d]) tables[d] = MY_DRAW_TABLES;
+  }
   myTables = tables;
   return { my: Object.keys(tables).sort(), kh, myTables: tables, khByGame };
 }
