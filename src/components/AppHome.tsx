@@ -37,7 +37,7 @@ const ACCENT = "#cc0000"; // the brand red
 
 const TILE: React.CSSProperties = {
   display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start",
-  gap: 4, padding: "8px 6px", minHeight: 86, borderRadius: RADIUS, border: "1px solid " + BORDER,
+  gap: 3, padding: "7px 6px", minHeight: 78, borderRadius: RADIUS, border: "1px solid " + BORDER,
   background: SURFACE, boxShadow: "0 1px 2px rgba(22,24,29,0.06)", textDecoration: "none",
   color: INK, textAlign: "center", WebkitTapHighlightColor: "transparent",
 };
@@ -225,7 +225,7 @@ export default function AppHome() {
           type="button"
           className="mkt-press"
           onClick={() => setOpen(false)}
-          style={{ width: "100%", margin: "10px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, letterSpacing: 0.2, cursor: "pointer" }}
+          style={{ width: "100%", margin: "8px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, letterSpacing: 0.2, cursor: "pointer" }}
         >
           See live results 查看成绩
         </button>
