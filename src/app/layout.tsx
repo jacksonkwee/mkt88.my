@@ -222,12 +222,15 @@ const BOOT_SCRIPT = `
     new MutationObserver(function(){
       if(pending) return;
       pending = setTimeout(function(){ pending = 0; run(); }, 500);
-    }).observe(document.documentElement, { childList: true, subtree: true });
+    }).observe(document.documentElement, { childList: true, characterData: true, subtree: true });
   } catch(e){}
-  // Keep re-applying: React occasionally re-renders a card from its built-in
-  // values, which would otherwise wipe the freshly filled numbers.
-  setInterval(run, 2500);
-  setInterval(function(){ if(document.visibilityState === "visible") pullAll(); }, 5000);
+  // Re-apply after a DOM change: React occasionally re-renders a card from its
+  // built-in values, which would otherwise wipe the freshly filled numbers. The
+  // observer above fires on exactly that, so the old 2.5s timer - which re-scanned
+  // every card forever - is gone.
+  // LiveResults already refreshes the cards every 5s; this poll only keeps the
+  // boot snapshot fresh for that re-apply, so it can run far less often.
+  setInterval(function(){ if(document.visibilityState === "visible") pullAll(); }, 15000);
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") pullAll(); });
   pullAll();
   function pullAll(){ pull("/api/home-live", publish); pull("/api/cambodia-live", publish); }

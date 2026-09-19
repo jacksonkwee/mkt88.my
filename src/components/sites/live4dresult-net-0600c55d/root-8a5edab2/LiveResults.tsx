@@ -525,15 +525,6 @@ function nineJpFromDoc(doc: Document): { pool?: string; rows?: Record<string, st
   return { pool, rows };
 }
 
-function dateFromNineText(text: string): string | undefined {
-  const m = /([A-Za-z]{3}),\s*([A-Za-z]{3})\s+(\d{1,2}),\s+(\d{4})/.exec(text || "");
-  if (!m) return undefined;
-  const months: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
-  const mo = months[m[2]];
-  if (!mo) return undefined;
-  return weekdayOf(m[4] + "-" + mo + "-" + m[3].padStart(2, "0"));
-}
-
 type GdInfo = { six: SixSet; jp4: Record<string, string>; jp7: Record<string, string> };
 
 function parseNineDoc(doc: Document): { prize: string[]; special: string[]; cons: string[]; drawNo?: string; dateIso?: string } | null {
