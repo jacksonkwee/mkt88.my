@@ -129,6 +129,15 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
                     {r.cells.map((c, ci) => {
                       const id = c.attrs?.["data-id"] || "";
                       let override = id ? values?.[id] : undefined;
+                      // The live data lists this cell but has no value for it yet.
+                      // On a card whose date has moved, a number still baked in
+                      // belongs to the previous draw, so show "----". Only cells
+                      // that actually hold a number are touched, so labels and
+                      // zodiac names keep their built-in text.
+                      if (override === "" && drawMoved && id !== "date" && id !== "draw_no") {
+                        const builtIn = (c.html || "").replace(/<[^>]+>/g, "").trim();
+                        if (/^\d+$/.test(builtIn) || /lottery-prize-number|lottery-number/.test(c.cls || "")) override = "----";
+                      }
                       const isNum = /lottery-prize-number|lottery-number/.test(c.cls || "");
                       if (isNum) {
                         const n = nth++;
