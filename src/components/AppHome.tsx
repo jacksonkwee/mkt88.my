@@ -153,7 +153,11 @@ export default function AppHome() {
               key={t.name}
               href={t.href}
               onClick={(e) => {
-                if (t.lucky) { e.preventDefault(); setLucky(luckyNumber()); }
+                if (t.lucky) { e.preventDefault(); setLucky(luckyNumber()); return; }
+                // Close the first page as the link opens. Without this the
+                // overlay stayed on top and the page it opened showed behind
+                // it, which read as the bottom tiles not working at all.
+                setOpen(false);
               }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
