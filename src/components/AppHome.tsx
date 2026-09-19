@@ -6,6 +6,7 @@ import { isCapacitorApp } from "../lib/is-capacitor-app";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
+const LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg?v=3";
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.mkt88.app";
 
@@ -24,7 +25,7 @@ const TILE: React.CSSProperties = {
 };
 
 const ICON_BOX: React.CSSProperties = {
-  width: 60, height: 60, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto",
+  width: "100%", height: 64, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto",
 };
 
 function luckyNumber(): string {
@@ -70,14 +71,15 @@ export default function AppHome() {
     { href: "/dabogong", logo: HOME + "/dabogong.png", name: "大伯公", zh: "千字图" },
     // The icon artwork already reads 恭喜发财, so no second Chinese label here.
     { href: "#", logo: HOME + "/gongxi.png", name: "Lucky Numbers", lucky: true },
-    { href: PLAY_URL, logo: HOME + "/rate-us.png", name: "Rate us 5 Stars", zh: "给我们五星" },
+    { href: PLAY_URL, logo: HOME + "/rate-us.png", name: "Rate us", zh: "评分" },
   ];
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: "#fff", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
       <div style={{ maxWidth: 520, margin: "0 auto", padding: "14px 12px 28px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={{ fontSize: 20, fontWeight: 800, color: "#cc0000" }}>MKT 發發</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={LOGO} alt="MKT 發發" style={{ height: 48, width: "auto" }} />
           <button
             type="button"
             onClick={() => setOpen(false)}
@@ -87,6 +89,27 @@ export default function AppHome() {
             ×
           </button>
         </div>
+
+        <div style={{ margin: "0 0 8px", fontSize: 14, fontWeight: 800, color: "#666", letterSpacing: 1 }}>4D RESULTS 开奖成绩</div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
+          {games.map((t) => (
+            <a key={t.name} href={t.href} style={TILE} onClick={() => setOpen(false)}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
+              <span style={{ fontSize: 15, fontWeight: 800, color: "#000", lineHeight: 1.15 }}>{t.name}</span>
+              {t.zh ? <span style={{ fontSize: 13, color: "#666", lineHeight: 1.15 }}>{t.zh}</span> : null}
+            </a>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          style={{ width: "100%", margin: "14px 0", padding: "14px 0", border: 0, borderRadius: 12, background: "#cc0000", color: "#fff", fontSize: 16, fontWeight: 800, cursor: "pointer" }}
+        >
+          See live results 查看成绩
+        </button>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
           {actions.map((t) => (
@@ -107,27 +130,6 @@ export default function AppHome() {
             </a>
           ))}
         </div>
-
-        <div style={{ margin: "16px 0 8px", fontSize: 14, fontWeight: 800, color: "#666", letterSpacing: 1 }}>4D RESULTS 开奖成绩</div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
-          {games.map((t) => (
-            <a key={t.name} href={t.href} style={TILE} onClick={() => setOpen(false)}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
-              <span style={{ fontSize: 15, fontWeight: 800, color: "#000", lineHeight: 1.15 }}>{t.name}</span>
-              {t.zh ? <span style={{ fontSize: 13, color: "#666", lineHeight: 1.15 }}>{t.zh}</span> : null}
-            </a>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          style={{ width: "100%", marginTop: 18, padding: "14px 0", border: 0, borderRadius: 12, background: "#cc0000", color: "#fff", fontSize: 16, fontWeight: 800, cursor: "pointer" }}
-        >
-          See live results 查看成绩
-        </button>
       </div>
 
       {lucky ? (
