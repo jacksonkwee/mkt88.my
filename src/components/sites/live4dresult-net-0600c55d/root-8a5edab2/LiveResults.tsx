@@ -27,6 +27,19 @@ function nextInterval(): number {
   return h >= 18 && h <= 21 ? 5000 : 10000;
 }
 
+/**
+ * True around the times a draw is actually published. Everywhere else every
+ * source already holds its final numbers for the day, so re-reading them every
+ * few seconds only burns data - the page keeps updating from the pre-warmed
+ * server snapshot instead.
+ */
+function inDrawWindow(now = new Date()): boolean {
+  const d = new Date(now.getTime() + 8 * 60 * 60 * 1000); // Malaysia = UTC+8
+  const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+  return (mins >= 15 * 60 && mins <= 16 * 60 + 30)    // Cambodia 3:30pm draw
+      || (mins >= 18 * 60 && mins <= 21 * 60 + 30);   // evening draws
+}
+
 /* ------------------------------------------------------------------ *
  * Instant results: remember the last values we showed, restore them
  * immediately on the next visit, and never display the baked-in
@@ -964,18 +977,16 @@ async function updateHariHome() {
   }));
 }
 
-async function refreshOnce() {
+async function refreshOnce(full = true) {
   const path = syncPath();
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
-      // Fill every card from the pre-warmed snapshot first, then refresh the
-      // rest (Singapore, Grand Dragon / Nine Lotto details) in the background.
-      // HariHari is kicked off up front: it is a browser-only source and the
-      // snapshot never carries it, so queueing it behind that request only made
-      // the card arrive late.
-      const hari = updateHariHome();
+      // The server snapshot is pre-warmed and cheap, so it always runs. It holds
+      // every card except HariHari (its API blocks our server) and Sabah 88
+      // (whose cell ids never match), and the first cycle covers those two.
+      const hari = full ? updateHariHome() : null;
       await syncFromServerFast();
-      await Promise.all([
+      if (full) await Promise.all([
         syncLiveTable("https://live4dresult.net/", [
           "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13",
         ]),
@@ -987,13 +998,18 @@ async function refreshOnce() {
         hari,
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
-      await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
+      await syncFromServerFast();
+      if (full) await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
     } else if (path === "/singapore-4d-results") {
-      await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-12"]);
-      await updateSGFeed();
-      await updateSGOfficial();
+      await syncFromServerFast();
+      if (full) {
+        await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-12"]);
+        await updateSGFeed();
+        await updateSGOfficial();
+      }
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncFromServerFast();
+      if (!full) return;
       await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13"]);
       await updateGdNineCards();
       await updateCambodiaFeed();
@@ -1074,11 +1090,15 @@ export default function LiveResults() {
     }, 5000);
     // If a source is unreachable the built-in values come back after 7s.
     const restoreTimer = window.setTimeout(() => { if (alive) restoreUnfilled(); }, 7000);
+    // The first cycle always reads every source, so a freshly opened page is
+    // fully populated. Every cycle after that only does it during a draw window.
+    let firstCycle = true;
     const tick = async () => {
       if (busy) return;
       busy = true;
       try {
-        await refreshOnce();
+        await refreshOnce(firstCycle || inDrawWindow());
+        firstCycle = false;
         if (alive) collectSnapshot();
       } finally {
         busy = false;
