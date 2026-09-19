@@ -32,6 +32,10 @@ const ICON_BOX: React.CSSProperties = {
 const NAME: React.CSSProperties = { fontSize: 12, fontWeight: 800, color: "#000", lineHeight: 1.12 };
 const SUB: React.CSSProperties = { fontSize: 10, color: "#666", lineHeight: 1.12 };
 
+function luckyNumber(): string {
+  return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+}
+
 /**
  * Internal links go through next/link so tapping a game is a client-side
  * navigation. A plain <a> reloads the whole page, which re-mounted the root
@@ -55,6 +59,7 @@ const SEEN_KEY = "mkt_app_home_shown";
  */
 export default function AppHome() {
   const [open, setOpen] = useState(false);
+  const [lucky, setLucky] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isCapacitorApp()) return;
@@ -75,6 +80,21 @@ export default function AppHome() {
     window.addEventListener("mkt-home", onHome);
     return () => window.removeEventListener("mkt-home", onHome);
   }, []);
+
+  /**
+   * Hide the whole site while the first page is open. It is an overlay, and on
+   * phones where the ad banner pads the WebView the fixed layer does not cover
+   * that strip - so the results page showed through at the bottom.
+   */
+  useEffect(() => {
+    const site = document.getElementById("mkt-site");
+    if (site) site.style.display = open ? "none" : "";
+    document.body.style.background = open ? "#fff" : "";
+    return () => {
+      if (site) site.style.display = "";
+      document.body.style.background = "";
+    };
+  }, [open]);
 
   if (!open) return null;
 
@@ -149,11 +169,11 @@ export default function AppHome() {
               href={t.href}
               onClick={(e) => {
                 if (t.lucky) {
-                  // Same 恭喜发财 popup as the item in the three-line menu, not
-                  // a second copy of it - the header owns that dialog.
+                  // Same 恭喜发财 popup the three-line menu shows. It lives
+                  // here rather than in the header because the header is hidden
+                  // behind the first page.
                   e.preventDefault();
-                  setOpen(false);
-                  window.dispatchEvent(new CustomEvent("mkt-lucky"));
+                  setLucky(luckyNumber());
                   return;
                 }
                 // Close the first page as the link opens. Without this the
@@ -171,6 +191,20 @@ export default function AppHome() {
         </div>
       </div>
 
+      {lucky ? (
+        <div
+          onClick={() => setLucky(null)}
+          style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#cc0000" }}>恭喜发财</div>
+            <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>您的幸运号码</div>
+            <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: 8, color: "#cc0000", margin: "14px 0 10px", background: "#fff7e6", borderRadius: 12, padding: "8px 0", fontVariantNumeric: "tabular-nums" }}>{lucky}</div>
+            <button type="button" onClick={() => setLucky(luckyNumber())} style={{ padding: "10px 18px", background: "#cc0000", color: "#fff", border: 0, borderRadius: 8, marginRight: 8, cursor: "pointer" }}>Try Again</button>
+            <button type="button" onClick={() => setLucky(null)} style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: 8, cursor: "pointer" }}>Close</button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

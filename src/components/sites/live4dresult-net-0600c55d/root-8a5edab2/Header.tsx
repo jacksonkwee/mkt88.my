@@ -29,17 +29,6 @@ export default function Header() {
     setLuckyOpen(true);
   };
 
-  // The app home screen's Lucky Numbers tile opens this same 恭喜发财 dialog,
-  // so there is one implementation rather than two.
-  useEffect(() => {
-    const onLucky = () => {
-      setLuckyNum(String(Math.floor(Math.random() * 10000)).padStart(4, "0"));
-      setLuckyOpen(true);
-    };
-    window.addEventListener("mkt-lucky", onLucky);
-    return () => window.removeEventListener("mkt-lucky", onLucky);
-  }, []);
-
   return (
     <header className="sticky-top navbar-inverse">
       {/* Above the tap-to-close backdrop below. */}

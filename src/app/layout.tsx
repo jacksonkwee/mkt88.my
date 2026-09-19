@@ -261,14 +261,18 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className={"home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-" + (inApp ? " mkt-in-app" : "")}>
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
-        <LiveSnapshotProvider value={snapObj}>
-          <NoticeBar />
-          <TopBanner />
-          {children}
-        </LiveSnapshotProvider>
-        <PWARegister />
-        <SiteCustomizer />
-        <AppTools />
+        {/* Everything the site normally shows. The app's first page hides this
+            while it is open, so no part of the results can show behind it. */}
+        <div id="mkt-site">
+          <LiveSnapshotProvider value={snapObj}>
+            <NoticeBar />
+            <TopBanner />
+            {children}
+          </LiveSnapshotProvider>
+          <PWARegister />
+          <SiteCustomizer />
+          <AppTools />
+        </div>
         <AppHome />
         <AppNotifications enabled={inApp} />
       </body>
