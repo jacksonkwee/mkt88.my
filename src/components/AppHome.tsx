@@ -177,10 +177,11 @@ export default function AppHome() {
   const actions: Tile[] = [
     { href: "/favourites", logo: HOME + "/favourite.png?v=2", name: "Favourite Numbers", zh: "收藏号码" },
     { href: "/dabogong", logo: HOME + "/dabogong.png?v=2", name: "大伯公", zh: "千字图" },
-    // The icon artwork already reads 恭喜发财, so no second Chinese label here.
-    { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", lucky: true },
+    { href: "/number-history", logo: HOME + "/number-history.svg?v=1", name: "Number History", zh: "开彩记录" },
     { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
     { href: "#", logo: "", name: "Settings", zh: "设置", settings: true },
+    // The icon artwork already reads 恭喜发财, so no second Chinese label here.
+    { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", lucky: true },
   ];
 
   return (
