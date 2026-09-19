@@ -152,8 +152,21 @@ function setHasAny(s: PrizeSet | null | undefined): s is PrizeSet {
   return all.some((v) => !isDash(v));
 }
 
+/**
+ * Hosts that refuse our Render server but answer browsers directly. HariHari's
+ * API 403s every request from the server's IP, which stopped its results dead,
+ * so ask the phone first and keep the server proxy as the fallback.
+ */
+const DIRECT_HOSTS = ["api.hari4d.com"];
+
 async function fetchText(url: string): Promise<string | null> {
   try {
+    try {
+      if (DIRECT_HOSTS.includes(new URL(url).hostname)) {
+        const direct = await fetch(url, { cache: "no-store" });
+        if (direct.ok) return await direct.text();
+      }
+    } catch { /* CORS or offline - fall back to the server proxy */ }
     const res = await fetch("/api/live?u=" + encodeURIComponent(url), { cache: "no-store" });
     if (!res.ok) return null;
     return await res.text();

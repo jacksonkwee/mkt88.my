@@ -46,6 +46,57 @@ function labelDate(iso: string): string {
   return dd + "-" + m + "-" + y + " (" + w + ")";
 }
 
+type HariSlotData = { set: SetData | null; six?: { main: string; subs: Record<string, string> } | null; jp?: Record<string, string> | null };
+
+/** Fields the HariHari API uses for its 13 Special and 10 Consolation numbers. */
+const HARI_SPECIAL = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
+const HARI_CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
+const HARI_6D = ["2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"];
+
+/**
+ * Lucky HariHari's own API refuses our server (403) but answers browsers
+ * directly, so the phone asks it itself. The stored archive stops at
+ * 2026-09-10, and every later date depends on this.
+ */
+async function hariDirect(date: string, time: "15:30" | "19:30"): Promise<HariSlotData | null> {
+  const [y, m, d] = date.split("-");
+  const n = y + "-" + Number(m) + "-" + Number(d);
+  try {
+    const res = await fetch("https://api.hari4d.com/DrawResultL/GetDrawResult?date=" + n + "T" + time + ":00", { cache: "no-store" });
+    if (!res.ok) return null;
+    const j = await res.json();
+    if (!j || !j.prize1) return null;
+    const iso = typeof j.drawDate === "string" && j.drawDate.length >= 10 ? j.drawDate.slice(0, 10) : date;
+    const set: SetData = {
+      prize: [j.prize1, j.prize2, j.prize3].map(String),
+      special: HARI_SPECIAL.map((L) => String(j["prize" + L] ?? "----")),
+      cons: HARI_CONS.map((L) => String(j["prize" + L] ?? "----")),
+      date: labelDate(iso),
+      drawNo: j.id != null && j.id !== 0 ? String(j.id) : undefined,
+    };
+    const six = j.prize6D
+      ? { main: String(j.prize6D), subs: Object.fromEntries(HARI_6D.map((k) => ["six_" + k.toLowerCase(), String(j["prize6D_" + k] ?? "----")])) }
+      : null;
+    let jp: Record<string, string> | null = null;
+    try {
+      const jr = await fetch("https://api.hari4d.com/Jackpot/GetJackpot?date=" + n + "T" + time + ":00", { cache: "no-store" });
+      if (jr.ok) {
+        const jj = await jr.json();
+        if (jj && jj.jackpotAmount != null) {
+          jp = { jp_pool: "USD " + Number(jj.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
+          const nums: string[] = [];
+          if (jj.number) nums.push(String(jj.number));
+          if (jj.number2) nums.push(String(jj.number2));
+          if (nums.length) jp.jp_no = nums.join(" or ");
+        }
+      }
+    } catch { /* the jackpot is optional */ }
+    return { set, six, jp };
+  } catch {
+    return null;
+  }
+}
+
 function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; set: SetData; more: string; extra?: Array<[string, string]> }): LotteryCardData {
   const prize: Array<[string, string]> = [["1st Prize 首獎", o.set.prize[0] || "----"], ["2nd Prize 二獎", o.set.prize[1] || "----"], ["3rd Prize 三獎", o.set.prize[2] || "----"]];
   const tables: LotteryCardData["tables"] = [prizeTable(prize), gridTable("Special 特別獎", o.set.special), gridTable("Consolation 安慰獎", o.set.cons)];
@@ -110,6 +161,18 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
         const d = labelDate(date);
         const columns: LotteryCardData[][] = [];
         const want = (g: string) => !only || only === g;
+        // The server cannot reach HariHari's API, so fetch any draw it could not
+        // supply straight from this device before building the cards.
+        if (want("hari")) {
+          const h = (j.hari = j.hari || {});
+          for (const t of ["15:30", "19:30"] as const) {
+            const have = h[t];
+            if (have && have.set) continue;
+            const direct = await hariDirect(date, t);
+            if (!alive) return;
+            if (direct) h[t] = direct;
+          }
+        }
         // Grand Dragon 4D (+4D jackpot) then 6D (+6+1D jackpot)
         const gdCol: LotteryCardData[] = [];
         if (j.gd && j.gd.prize && j.gd.prize.length) {
