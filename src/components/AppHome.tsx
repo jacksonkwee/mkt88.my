@@ -68,7 +68,8 @@ export default function AppHome() {
   const actions: Tile[] = [
     { href: "/favourites", logo: HOME + "/favourite.png", name: "Favourite Numbers", zh: "收藏号码" },
     { href: "/dabogong", logo: HOME + "/dabogong.png", name: "大伯公", zh: "千字图" },
-    { href: "#", logo: HOME + "/gongxi.png", name: "Lucky Numbers", zh: "恭喜发财", lucky: true },
+    // The icon artwork already reads 恭喜发财, so no second Chinese label here.
+    { href: "#", logo: HOME + "/gongxi.png", name: "Lucky Numbers", lucky: true },
     { href: PLAY_URL, logo: HOME + "/rate-us.png", name: "Rate us 5 Stars", zh: "给我们五星" },
   ];
 
