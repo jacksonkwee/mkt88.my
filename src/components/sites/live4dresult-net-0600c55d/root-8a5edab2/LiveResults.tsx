@@ -222,7 +222,14 @@ function clearIfNoDraw(target: Element) {
   for (const el of numEls) if (el.textContent && el.textContent.trim() !== "") el.textContent = "";
 }
 
-async function syncLiveTable(url: string, tableClasses: string[]) {
+/**
+ * `clearGaps` lists the card classes this mirror is the ONLY writer of. Their
+ * source gaps mean "not published yet", so they must be cleared - otherwise a
+ * draw rollover leaves the previous draw's numbers sitting in them. Every other
+ * card is also filled by the snapshot, and blanking its gaps made the two
+ * writers fight, which slid the numbers around.
+ */
+async function syncLiveTable(url: string, tableClasses: string[], clearGaps: string[] = []) {
   const doc = await fetchDoc(url);
   if (!doc) return;
   for (const cls of tableClasses) {
@@ -248,7 +255,13 @@ async function syncLiveTable(url: string, tableClasses: string[]) {
         // leaves gaps that the snapshot fills by data-id. Mirroring those gaps
         // blanked good numbers and made the snapshot write them back, which is
         // what slid the Special numbers back and forth roughly once a second.
-        if (v === "") continue;
+        if (v === "") {
+          if (clearGaps.includes(cls) && !isDash(cur) && /lottery-prize-number|lottery-number/.test(tgtEl.className)) {
+            pending.set(id, "----");
+            hasClear = true;
+          }
+          continue;
+        }
         // Special / Consolation are drawn grids where a number never repeats,
         // so a value already shown in a sibling cell means the source page is
         // laid out one cell off and this write would slide the whole grid.
@@ -908,7 +921,10 @@ function applyCambodiaFeed(j: FastFeed): boolean {
 
 /** Live updates for the phone pager: East games + Perdana + HariHari. */
 async function syncEastHome() {
-  await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
+  // Sabah 88 numbers use special_number_N / consolation_number_N ids, which the
+  // snapshot never publishes (it uses special-N / consolation-N), so this
+  // mirror is its only writer and its gaps must be mirrored too.
+  await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"], ["table-10"]);
 }
 async function updatePerdanaHome() {
   for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
