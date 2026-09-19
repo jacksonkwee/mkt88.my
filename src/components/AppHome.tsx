@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
@@ -55,6 +55,14 @@ function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.Mo
 /** Shown once per app launch, not on every page load. */
 const SEEN_KEY = "mkt_app_home_shown";
 
+/** Keep-screen-on preference. Default is ON. */
+const WAKE_KEY = "mkt_keep_screen_on";
+
+type WakeLockSentinelLike = { release: () => Promise<void>; released?: boolean };
+type NavigatorWithWakeLock = Navigator & {
+  wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinelLike> };
+};
+
 /**
  * The app's first screen: a tile grid of the 11 games plus the shortcuts people
  * actually use, shown when the app opens. Website visitors never see it - it is
@@ -63,6 +71,52 @@ const SEEN_KEY = "mkt_app_home_shown";
 export default function AppHome() {
   const [open, setOpen] = useState(false);
   const [lucky, setLucky] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [keepOn, setKeepOn] = useState(true);
+  const lockRef = useRef<WakeLockSentinelLike | null>(null);
+
+  // Load the saved preference (default ON).
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(WAKE_KEY) === "0") setKeepOn(false);
+    } catch { /* private mode - keep the default */ }
+  }, []);
+
+  /**
+   * Hold a screen wake lock while the preference is on.
+   *
+   * The native app used to force the screen on with no say for the user; this
+   * makes it their choice, and it works on the website too. Browsers drop the
+   * lock whenever the page is hidden, so it is re-requested on the way back.
+   */
+  useEffect(() => {
+    const nav = navigator as NavigatorWithWakeLock;
+    const acquire = async () => {
+      if (!keepOn || !nav.wakeLock) return;
+      try {
+        if (!lockRef.current || lockRef.current.released) {
+          lockRef.current = await nav.wakeLock.request("screen");
+        }
+      } catch { /* unsupported or denied - the app still works */ }
+    };
+    const onVis = () => { if (keepOn && document.visibilityState === "visible") void acquire(); };
+
+    if (keepOn) {
+      void acquire();
+      document.addEventListener("visibilitychange", onVis);
+    } else if (lockRef.current) {
+      const lock = lockRef.current;
+      lockRef.current = null;
+      void lock.release().catch(() => {});
+    }
+
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [keepOn]);
+
+  const setKeepScreenOn = (on: boolean) => {
+    setKeepOn(on);
+    try { localStorage.setItem(WAKE_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     if (!isCapacitorApp()) return;
@@ -134,14 +188,24 @@ export default function AppHome() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO} alt="MKT 發發" style={{ height: 38, width: "auto" }} />
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Close and see live results"
-            style={{ border: 0, background: "#f2f2f2", borderRadius: 10, width: 38, height: 38, fontSize: 20, fontWeight: 800, color: "#cc0000", cursor: "pointer" }}
-          >
-            ×
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Settings"
+              style={{ border: 0, background: "#f2f2f2", borderRadius: 10, width: 38, height: 38, fontSize: 19, color: "#444", cursor: "pointer" }}
+            >
+              ⚙
+            </button>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Close and see live results"
+              style={{ border: 0, background: "#f2f2f2", borderRadius: 10, width: 38, height: 38, fontSize: 20, fontWeight: 800, color: "#cc0000", cursor: "pointer" }}
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         <div style={{ margin: "0 0 5px", fontSize: 12, fontWeight: 800, color: "#666", letterSpacing: 1 }}>4D RESULTS 开奖成绩</div>
@@ -193,6 +257,37 @@ export default function AppHome() {
           ))}
         </div>
       </div>
+
+      {settingsOpen ? (
+        <div
+          onClick={() => setSettingsOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: "20px 20px 16px", width: "88%", maxWidth: 340 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#cc0000", marginBottom: 14 }}>Settings 设置</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Keep screen on</div>
+                <div style={{ fontSize: 12, color: "#777" }}>屏幕常亮</div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={keepOn}
+                aria-label="Keep screen on"
+                onClick={() => setKeepScreenOn(!keepOn)}
+                style={{ border: 0, borderRadius: 999, width: 58, height: 32, background: keepOn ? "#12b76a" : "#c9c9c9", cursor: "pointer", position: "relative", flex: "0 0 auto" }}
+              >
+                <span style={{ position: "absolute", top: 3, left: keepOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+              </button>
+            </div>
+            <div style={{ fontSize: 12, color: "#999", marginTop: 10 }}>
+              While this is on the phone will not sleep during a live draw.
+            </div>
+            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: 10, background: "#cc0000", color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
+          </div>
+        </div>
+      ) : null}
 
       {lucky ? (
         <div
