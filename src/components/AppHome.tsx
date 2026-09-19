@@ -193,8 +193,6 @@ export default function AppHome() {
           <img src={LOGO} alt="MKT 發發" style={{ height: 44, width: "auto" }} />
         </div>
 
-        <div style={{ margin: "0 0 5px", fontSize: 12, fontWeight: 800, color: "#666", letterSpacing: 1 }}>4D RESULTS 开奖成绩</div>
-
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (
             <Nav key={t.name} href={t.href} onClick={() => setOpen(false)}>
