@@ -44,26 +44,34 @@ export interface CardOverride {
   prizeSet?: { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null;
 }
 
-function Cell(props: { cell: CardCell; override?: string; frozen?: boolean }) {
-  const { cell, override, frozen } = props;
+function Cell(props: { cell: CardCell; override?: string; frozen?: boolean; drawMoved?: boolean }) {
+  const { cell, override, frozen, drawMoved } = props;
   const style: CSSProperties | undefined = undefined;
   const attrs: Record<string, unknown> = {};
   const dataId = cell.attrs?.["data-id"] || "";
   // Any override (including the official "----" placeholder) replaces the built-in value.
   const fresh = override !== undefined && override !== "";
   const plain = (cell.html || "").replace(/<[^>]+>/g, "").trim();
+  const isNumber = /lottery-prize-number|lottery-number/.test(cell.cls || "");
+  /**
+   * The live date has moved past the draw this card was built with, so every
+   * number still baked into it belongs to the PREVIOUS draw. Printing those
+   * under the new date is what showed 16-09 numbers on a 19-09 card, so show
+   * "----" for anything the snapshot has not published yet.
+   */
+  const staleDraw = !frozen && !fresh && Boolean(drawMoved) && isNumber;
   // Only hide values that could be a stale draw date / number; keep other
   // built-in text (like "----" or jackpot amounts) as it is.
-  const legacyNumber = /lottery-prize-number|lottery-number/.test(cell.cls || "") && /^\d{3,6}$/.test(plain);
+  const legacyNumber = isNumber && /^\d{3,6}$/.test(plain);
   // A past-result card (mkt-past) shows printed history - never mask it.
-  const maskable = !frozen && !fresh && (dataId === "date" || dataId === "draw_no" || /^\d{3,6}$/.test(plain) || legacyNumber);
+  const maskable = !frozen && !fresh && !staleDraw && (dataId === "date" || dataId === "draw_no" || /^\d{3,6}$/.test(plain) || legacyNumber);
   const cls = [cell.cls, maskable ? "live-pending" : ""].filter(Boolean).join(" ");
   if (cls) attrs.className = cls;
   if (cell.attrs?.width) attrs.width = cell.attrs.width;
   if (cell.attrs?.colspan) attrs.colSpan = Number(cell.attrs.colspan);
   if (cell.attrs?.rowspan) attrs.rowSpan = Number(cell.attrs.rowspan);
   if (cell.attrs?.["data-id"]) attrs["data-id"] = cell.attrs["data-id"];
-  const html = fresh ? override! : rewriteHtml(cell.html || "");
+  const html = fresh ? override! : staleDraw ? "----" : rewriteHtml(cell.html || "");
   const Tag = cell.tag === "th" ? "th" : "td";
 
 
@@ -83,6 +91,10 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
   const freshDraw = hasDraw;
   const dateText = values?.date || prizeSet?.date || h.date;
   const drawText = values?.draw_no || prizeSet?.drawNo || h.drawNo;
+  // A live date that differs from the one this card was built with means the
+  // draw has moved on, and the numbers still baked into the card are last
+  // draw's.
+  const drawMoved = Boolean(dateText) && Boolean(h.date) && dateText !== h.date;
   const headerClass = ["row", "mx-0", "align-items-center", "justify-content-center", h.bgCls, "position-relative"]
     .filter(Boolean)
     .join(" ");
@@ -126,7 +138,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
                           else if (ti === 2) override = prizeSet.cons?.[n];
                         }
                       }
-                      return <Cell key={ci} cell={c} override={override} frozen={frozen} />;
+                      return <Cell key={ci} cell={c} override={override} frozen={frozen} drawMoved={drawMoved} />;
                     })}
                   </tr>
                 ))}
