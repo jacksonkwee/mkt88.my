@@ -41,17 +41,18 @@ export default function Header() {
               <img src={logo} style={{ height: 48, width: "auto" }} alt="" />
             </div>
           </a>
-          {/* The logo fills the first navbar line, so this wraps to the second
-              and sat at the left - which put the open menu's X on top of the
-              "大伯公" item. Pushing it to the right end of its own line keeps
-              it on the menu bar, clear of the menu text. */}
-          <div className="d-flex align-items-center" style={{ marginLeft: "auto" }}>
+          {/* Sits at the right end of the logo's line. alignSelf:stretch makes
+              this row the logo's height and the button fills it, so the two are
+              always the same height whatever the phone font size - the button
+              clips its icon instead of growing the row. */}
+          <div className="d-flex align-items-center" style={{ marginLeft: "auto", alignSelf: "stretch" }}>
             <button
               className="border-0 navbar-toggler pr-3"
               type="button"
               aria-controls="navbarSupportedContent"
               aria-expanded={menuOpen}
               aria-label={menuOpen ? "Close menu" : "Open menu"}
+              style={{ minWidth: 48, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
               onClick={() => {
                 setMenuOpen((v) => !v);
                 setRegionsOpen(false);
