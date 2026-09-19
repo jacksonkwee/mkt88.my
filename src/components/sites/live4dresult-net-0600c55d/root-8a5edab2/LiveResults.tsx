@@ -963,6 +963,10 @@ async function refreshOnce() {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       // Fill every card from the pre-warmed snapshot first, then refresh the
       // rest (Singapore, Grand Dragon / Nine Lotto details) in the background.
+      // HariHari is kicked off up front: it is a browser-only source and the
+      // snapshot never carries it, so queueing it behind that request only made
+      // the card arrive late.
+      const hari = updateHariHome();
       await syncFromServerFast();
       await Promise.all([
         syncLiveTable("https://live4dresult.net/", [
@@ -973,7 +977,7 @@ async function refreshOnce() {
         updateCambodiaFeed(),
         syncEastHome(),
         updatePerdanaHome(),
-        updateHariHome(),
+        hari,
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
