@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ASSET_BASE } from "./site-paths";
+import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 
 const logo = ASSET_BASE + "/logo-mkt88.svg?v=3";
 
@@ -33,7 +34,19 @@ export default function Header() {
       {/* Above the tap-to-close backdrop below. */}
       <nav className="navbar navbar-expand-lg navbar-light p-lg-0 py-1" style={{ position: "relative", zIndex: 2 }}>
         <div className="container">
-          <a href="/" style={{ textDecoration: "none" }} onClick={closeAll}>
+          <a
+            href="/"
+            style={{ textDecoration: "none" }}
+            onClick={(e) => {
+              closeAll();
+              // Inside the app the logo means "first page" - the tile screen -
+              // rather than the website home.
+              if (isCapacitorApp()) {
+                e.preventDefault();
+                window.dispatchEvent(new CustomEvent("mkt-home"));
+              }
+            }}
+          >
             {/* Small enough that the logo and the menu button share one line on
                 a phone - at 70px the logo filled the row and pushed the button
                 onto a second line of its own. */}

@@ -70,6 +70,14 @@ export default function AppHome() {
     setOpen(true);
   }, []);
 
+  // The header logo asks for this screen back, so tapping MKT 發發 on any
+  // results page returns to the first page.
+  useEffect(() => {
+    const onHome = () => setOpen(true);
+    window.addEventListener("mkt-home", onHome);
+    return () => window.removeEventListener("mkt-home", onHome);
+  }, []);
+
   if (!open) return null;
 
   const defs = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
@@ -92,11 +100,11 @@ export default function AppHome() {
   });
 
   const actions: Tile[] = [
-    { href: "/favourites", logo: HOME + "/favourite.png", name: "Favourite Numbers", zh: "收藏号码" },
-    { href: "/dabogong", logo: HOME + "/dabogong.png", name: "大伯公", zh: "千字图" },
+    { href: "/favourites", logo: HOME + "/favourite.png?v=2", name: "Favourite Numbers", zh: "收藏号码" },
+    { href: "/dabogong", logo: HOME + "/dabogong.png?v=2", name: "大伯公", zh: "千字图" },
     // The icon artwork already reads 恭喜发财, so no second Chinese label here.
-    { href: "#", logo: HOME + "/gongxi.png", name: "Lucky Numbers", lucky: true },
-    { href: PLAY_URL, logo: HOME + "/rate-us.png", name: "Rate us", zh: "评分" },
+    { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", lucky: true },
+    { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
   ];
 
   return (
