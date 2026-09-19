@@ -82,6 +82,13 @@ const nextConfig = {
           { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.9.apk"' },
         ],
       },
+      {
+        source: "/mkt88-4d-v2.10.apk",
+        headers: [
+          { key: "Content-Type", value: "application/vnd.android.package-archive" },
+          { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.10.apk"' },
+        ],
+      },
       // Pages (and the phone app's WebView) must always revalidate, otherwise a
       // cached page shell can show an older draw for a long time.
       {
