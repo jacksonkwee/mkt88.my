@@ -52,9 +52,9 @@ public class MainActivity extends BridgeActivity {
     startWebViewReadyCheck();
 
     // Do not hold the launch screen for the full page load.
-    // The root view already paints R.drawable.splash_screen behind the
-    // transparent WebView, so dropping to it keeps the same MKT branding while
-    // the page finishes loading.
+    // The root view is already filled with the brand red behind the transparent
+    // WebView, so dropping to it keeps the MKT branding while the page finishes
+    // loading.
     appHandler.postDelayed(this::markWebViewReady, 1500);
     // Load ads after the app is usable so startup stays fast.
     appHandler.postDelayed(this::initializeAds, 2500);
@@ -89,10 +89,17 @@ public class MainActivity extends BridgeActivity {
     super.onDestroy();
   }
 
+  /**
+   * Fill behind the transparent WebView after the launch screen goes away.
+   *
+   * This used to be R.drawable.splash_screen, which draws the same logo as the
+   * launch screen - so people saw the logo, then saw it again a moment later.
+   * A flat brand-red fill keeps the same look without repeating the artwork.
+   */
   private void showSplashBackground() {
     View root = findViewById(android.R.id.content);
     if (root != null) {
-      root.setBackgroundResource(R.drawable.splash_screen);
+      root.setBackgroundColor(getColor(R.color.splashBackground));
     }
   }
 
