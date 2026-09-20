@@ -149,7 +149,9 @@ public class MainActivity extends BridgeActivity {
     settings.setSupportZoom(false);
     settings.setBuiltInZoomControls(false);
     settings.setDisplayZoomControls(false);
-    settings.setMediaPlaybackRequiresUserGesture(true);
+    // The app plays a short splash video when it opens; without this Android
+    // blocks media playback until the user taps something.
+    settings.setMediaPlaybackRequiresUserGesture(false);
     // Android's system font scale (Settings > Display > Font size) multiplies
     // WebView text on top of our CSS. The result cards are fixed 5-column
     // tables sized for 22-24px numbers, so a Large font setting pushes the
