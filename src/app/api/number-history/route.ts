@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PAST_DATES, getPastEntry } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
 import { toLocal } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
+import deepRaw from "../../../lib/deep-past.json";
+import { DEEP_CARDS } from "../../../lib/deep-past-cards";
 import {
   DB, PRIZE_NAMES, hitsFromDbMany, hitsFromHtmlMany, regionOf,
-  fmtIso, todayIso, epochDay, isoFromEpoch, type RawHit,
+  fmtIso, todayIso, epochDay, isoFromEpoch, type PrizeName, type RawHit,
 } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history/engine";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +50,57 @@ function gapDates(today: string): string[] {
   const out: string[] = [];
   for (let d = from; d <= todayDay; d++) out.push(isoFromEpoch(d));
   return out;
+}
+
+type DeepGame = { n: string; d: string; dn: string; p: [string, string][]; g: [string, string[]][] };
+const DEEP = deepRaw as unknown as Record<string, Record<string, DeepGame>>;
+
+/** Deep archive game key -> the card that names, logos and files it. */
+const DEEP_DEF: Record<string, { table: string; logo: string; name: string }> = {};
+for (const list of Object.values(DEEP_CARDS)) {
+  for (const c of list) if (!DEEP_DEF[c.key]) DEEP_DEF[c.key] = { table: c.table, logo: c.logo, name: c.name };
+}
+
+const DEEP_PRIZE_RE = /^\s*(1st|2nd|3rd)\b/i;
+const DEEP_GROUP_RE = /^\s*(Special|Consolation)\b/i;
+
+/** The date printed on the draw, falling back to the day it is filed under. */
+function deepIso(label: string, key: string): string {
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
+  if (m) return m[3] + "-" + m[2] + "-" + m[1];
+  return /^\d{4}-\d{2}-\d{2}$/.test(key) ? key : "";
+}
+
+/**
+ * The stored deep archive the game pages already show (2021-09-15 ..
+ * 2022-04-20). Number History never looked at it, so every draw in that window
+ * - for example Da Ma Cai 6966 on 22-09-2021 - was missing. Only 4-digit
+ * prizes count here; the 3D / 5D / 6D rows on the same cards are not 4D draws.
+ */
+function hitsFromDeepMany(nums: Set<string>): RawHit[] {
+  const out: RawHit[] = [];
+  for (const [key, games] of Object.entries(DEEP)) {
+    for (const [gameKey, g] of Object.entries(games)) {
+      const date = deepIso(g.d, key);
+      if (!date) continue;
+      const day = epochDay(date);
+      const def = DEEP_DEF[gameKey];
+      const game = def ? def.name : g.n;
+      const logo = def ? def.logo : "";
+      const table = def ? def.table : "";
+      for (const [label, value] of g.p || []) {
+        const m = DEEP_PRIZE_RE.exec(label);
+        if (m && /^\d{4}$/.test(value)) out.push({ num: value, date, day, game, logo, table, prize: PRIZE_NAMES[Number(m[1][0]) - 1] });
+      }
+      for (const [label, list] of g.g || []) {
+        const m = DEEP_GROUP_RE.exec(label);
+        if (!m) continue;
+        const prize: PrizeName = /^special/i.test(m[1]) ? "Special" : "Consolation";
+        for (const value of list || []) if (/^\d{4}$/.test(value)) out.push({ num: value, date, day, game, logo, table, prize });
+      }
+    }
+  }
+  return out.filter((h) => nums.has(h.num));
 }
 
 /** Run fn over items with a bounded number of requests in flight. */
@@ -100,6 +153,9 @@ export async function GET(req: NextRequest) {
     if (!logo && /singapore/i.test(h.game)) logo = SG_LOGO;
     map.set(key, { date, game: h.game, logo: toLocal(logo), region: regionOf(h.table), prize: h.prize, num: h.num });
   };
+
+  // 0) The deep archive the game pages already show.
+  for (const h of hitsFromDeepMany(numSet)) add(h);
 
   // 1) Offline database of archived draws (all years the source keeps).
   for (const h of hitsFromDbMany(numSet)) add(h);
