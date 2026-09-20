@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 /**
  * Server-rendered information block. Google needs real text on the page, so
  * every result / tool page carries a short explanation + internal links.
@@ -22,7 +24,7 @@ export default function SeoText({
           {links.map((l, i) => (
             <span key={l.href}>
               {i > 0 ? " · " : ""}
-              <a href={l.href} style={{ color: "#cc0000", textDecoration: "none", fontWeight: 600 }}>{l.label}</a>
+              <Link href={l.href} style={{ color: "#cc0000", textDecoration: "none", fontWeight: 600 }}>{l.label}</Link>
             </span>
           ))}
         </p>

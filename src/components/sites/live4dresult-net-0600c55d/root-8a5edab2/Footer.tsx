@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Footer() {
   const [copyright, setCopyright] = useState("Copyright © 2016 - 2026 mkt88.my. All Rights Reserved.");
@@ -17,7 +18,7 @@ export default function Footer() {
       <div className="container">
         <div className="row flex-column py-2">
           <div className="footer-menu text-center">
-            <a href="/disclaimer">Disclaimer</a> | <a href="/privacy-policy">Privacy Policy</a>
+            <Link href="/disclaimer">Disclaimer</Link> | <Link href="/privacy-policy">Privacy Policy</Link>
           </div>
           <div className="text-center">{copyright}</div>
         </div>

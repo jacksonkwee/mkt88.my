@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 
@@ -137,9 +138,9 @@ export default function DaBoGongApp() {
               </div>
             ) : null}
             {historyHref(data.num) ? (
-              <a href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 10, padding: "10px 18px", fontWeight: 800, textDecoration: "none" }}>
+              <Link href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 10, padding: "10px 18px", fontWeight: 800, textDecoration: "none" }}>
                 开彩记录 Number History <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} />
-              </a>
+              </Link>
             ) : null}
           </div>
         ) : null}
@@ -166,10 +167,10 @@ export default function DaBoGongApp() {
                 </>
               );
               return href ? (
-                <a key={r.num} href={href}
+                <Link key={r.num} href={href}
                   style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 12px", borderBottom: "1px solid #f0f0f0", background: "#fff", textDecoration: "none", color: "inherit" }}>
                   {inner}
-                </a>
+                </Link>
               ) : (
                 <button key={r.num} onClick={() => setText(r.num)}
                   style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "10px 12px", borderBottom: "1px solid #f0f0f0", background: "#fff", border: 0, cursor: "pointer" }}>

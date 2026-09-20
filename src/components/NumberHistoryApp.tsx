@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CaretDown, CaretUp, Check, Star } from "@phosphor-icons/react";
 import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
@@ -197,7 +198,7 @@ export default function NumberHistoryApp() {
 
           {/* 大伯公 meaning (small) */}
           {dabo && primary ? (
-            <a href={"/dabogong?num=" + primary}
+            <Link href={"/dabogong?num=" + primary}
               style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, padding: 8, borderRadius: 10, background: YELLOW_SOFT, textDecoration: "none", color: "#111" }}>
               <img src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
                 style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 8, background: "#fff", border: "1px solid #eee" }} />
@@ -208,7 +209,7 @@ export default function NumberHistoryApp() {
                 </div>
               </div>
               <div style={{ marginLeft: "auto", fontSize: 11, color: "#8a6d00" }}>查看 ›</div>
-            </a>
+            </Link>
           ) : null}
 
           {primary ? (
@@ -239,10 +240,10 @@ export default function NumberHistoryApp() {
                   style={{ border: "1px solid " + RED, borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
                   {isFav(primary || data.nums[0]) ? <><Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Favourite</> : <><Star size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />Add favourite</>}
                 </button>
-                <a href={"/favourites?num=" + (primary || data.nums[0])}
+                <Link href={"/favourites?num=" + (primary || data.nums[0])}
                   style={{ border: "1px solid #ddd", borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
                   <Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Pau / Notify
-                </a>
+                </Link>
               </div>
             </div>
           ) : null}

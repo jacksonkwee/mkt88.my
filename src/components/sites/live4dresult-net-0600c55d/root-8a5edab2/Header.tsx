@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 import { HandPointing } from "@phosphor-icons/react";
@@ -106,23 +107,23 @@ export default function Header() {
                     <ul className={"sub-menu dropdown-menu" + (regionsOpen ? " show" : "")}>
                       {REGION_ITEMS.map((item, i) => (
                         <li key={item.label} className={LI_BASE + " menu-item-" + (14 + i)}>
-                          <a href={item.href} className="nav-link dropdown-item" onClick={closeAll}>
+                          <Link href={item.href} className="nav-link dropdown-item" onClick={closeAll}>
                             {item.label}
-                          </a>
+                          </Link>
                         </li>
                       ))}
                     </ul>
                   </li>
 
                   <li className={LI_BASE + " menu-item-18"}>
-                    <a href="/favourites" className="nav-link" onClick={closeAll}>
+                    <Link href="/favourites" className="nav-link" onClick={closeAll}>
                       Favourite Number <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>收藏号码</span>
-                    </a>
+                    </Link>
                   </li>
                   <li className={LI_BASE + " menu-item-19"}>
-                    <a href="/dabogong" className="nav-link" onClick={closeAll}>
+                    <Link href="/dabogong" className="nav-link" onClick={closeAll}>
                       大伯公 <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>千字图</span>
-                    </a>
+                    </Link>
                   </li>
                   <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
                     <a

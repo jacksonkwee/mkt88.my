@@ -3,7 +3,7 @@ import { PAST_DATES, getPastEntry } from "../../../components/sites/live4dresult
 import { toLocal } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
 import {
   DB, PRIZE_NAMES, hitsFromDbMany, hitsFromHtmlMany, regionOf,
-  fmtIso, todayIso, type RawHit,
+  fmtIso, todayIso, epochDay, isoFromEpoch, type RawHit,
 } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history/engine";
 
 export const dynamic = "force-dynamic";
@@ -12,18 +12,24 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
 const MAX_NUMS = 60;
 
+/** Ten minutes: one upstream fetch per date, reused by every lookup. */
+const PAGE_TTL = 10 * 60 * 1000;
+/** Big enough to hold the whole un-archived window plus the homepage. */
+const PAGE_CACHE_MAX = 90;
+
 const pageCache = new Map<string, { at: number; html: string }>();
 async function fetchHtml(url: string): Promise<string> {
   const hit = pageCache.get(url);
-  if (hit && Date.now() - hit.at < 90000) return hit.html;
+  if (hit && Date.now() - hit.at < PAGE_TTL) return hit.html;
   try {
     const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(20000) });
     if (!res.ok) return "";
     const html = await res.text();
     pageCache.set(url, { at: Date.now(), html });
-    if (pageCache.size > 15) {
+    while (pageCache.size > PAGE_CACHE_MAX) {
       const first = pageCache.keys().next().value;
-      if (first) pageCache.delete(first);
+      if (!first) break;
+      pageCache.delete(first);
     }
     return html;
   } catch {
@@ -31,9 +37,31 @@ async function fetchHtml(url: string): Promise<string> {
   }
 }
 
-function isoAgo(days: number): string {
-  const t = new Date();
-  return new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate() - days)).toISOString().slice(0, 10);
+/** How far back the on-demand window may reach, so a stale archive cannot
+ *  turn one lookup into hundreds of upstream fetches. */
+const GAP_LIMIT_DAYS = 120;
+
+/** Dates the offline archive cannot answer for: its own last day backwards. */
+function gapDates(today: string): string[] {
+  const todayDay = epochDay(today);
+  const from = Math.max(epochDay(DB.meta.to) + 1, todayDay - GAP_LIMIT_DAYS);
+  const out: string[] = [];
+  for (let d = from; d <= todayDay; d++) out.push(isoFromEpoch(d));
+  return out;
+}
+
+/** Run fn over items with a bounded number of requests in flight. */
+async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.max(1, Math.min(limit, items.length)) }, async () => {
+    while (next < items.length) {
+      const k = next++;
+      out[k] = await fn(items[k]);
+    }
+  });
+  await Promise.all(workers);
+  return out;
 }
 
 /** Pull the requested 4-digit numbers out of ?num= / ?nums= (comma or space separated). */
@@ -91,11 +119,14 @@ export async function GET(req: NextRequest) {
   const home = await fetchHtml("https://live4dresult.net/");
   if (home) for (const h of hitsFromHtmlMany(home, numSet, today)) add(h);
 
-  // 4) Recent archive dates so the newest published draws are always included,
-  //    even after the homepage moves on to a newer draw date.
-  for (let ago = 0; ago <= 2; ago++) {
-    const iso = isoAgo(ago);
-    const html = await fetchHtml("https://live4dresult.net/past-results/" + iso);
+  // 4) Every date the offline archive cannot answer for.
+  //    This used to look at only the last three days, which left a hole: the
+  //    archive stops at DB.meta.to, so everything drawn between that date and
+  //    three days ago was missing from Number History.
+  const pages = await mapLimit(gapDates(today), 6, async (d) =>
+    [d, await fetchHtml("https://live4dresult.net/past-results/" + d)] as const
+  );
+  for (const [iso, html] of pages) {
     if (html) for (const h of hitsFromHtmlMany(html, numSet, iso)) add(h);
   }
 

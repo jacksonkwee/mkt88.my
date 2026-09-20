@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PAST_DATES, formatDateWithDay } from "./past-data";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 
@@ -24,9 +25,9 @@ export default function PastToolbar({ current, view }: Props) {
       <div className="text-center">
         <div className="btn-group btn-group-toggle">
           {prev ? (
-            <a href={"/past-results/" + prev} className="text-white btn btn-secondary d-flex align-items-center">
+            <Link href={"/past-results/" + prev} className="text-white btn btn-secondary d-flex align-items-center">
               <ArrowLeft size={16} weight="bold" className="mr-2" /> Prev
-            </a>
+            </Link>
           ) : (
             <a
               href="#"
@@ -67,9 +68,9 @@ export default function PastToolbar({ current, view }: Props) {
             ) : null}
           </div>
           {next ? (
-            <a href={"/past-results/" + next} className="text-white btn btn-secondary d-flex align-items-center">
+            <Link href={"/past-results/" + next} className="text-white btn btn-secondary d-flex align-items-center">
               Next <ArrowRight size={16} weight="bold" className="ml-2" />
-            </a>
+            </Link>
           ) : (
             <a
               href="#"

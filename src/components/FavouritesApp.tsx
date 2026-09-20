@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
   ALL_SCOPES, FAV_EVENT, SCOPE_LABEL, YELLOW, addFav, isNum, loadFavs, removeFav, saveFavs,
@@ -141,11 +142,11 @@ export default function FavouritesApp() {
               placeholder="4-digit number"
               inputMode="numeric"
               style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
-            <a href={isNum(input) ? "/number-history?num=" + input : "#"}
+            <Link href={isNum(input) ? "/number-history?num=" + input : "#"}
               onClick={(e) => { if (!isNum(input)) e.preventDefault(); }}
               style={{ display: "flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", background: "#f2f2f2", color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "0 12px", fontSize: 13, textDecoration: "none" }}>
               History
-            </a>
+            </Link>
           </div>
 
           {perms.length ? (
@@ -241,14 +242,14 @@ export default function FavouritesApp() {
               {favs.map((f) => (
                 <div key={f.num} style={{ borderTop: "1px solid #f0f0f0", padding: "10px 0" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <a href={"/number-history?num=" + f.num} style={{ textDecoration: "none" }}>
+                    <Link href={"/number-history?num=" + f.num} style={{ textDecoration: "none" }}>
                       <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 800, fontSize: 17, letterSpacing: 2, borderRadius: 8, padding: "4px 10px" }}>{f.num}</span>
-                    </a>
+                    </Link>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {f.scopes.map((s) => SCOPE_LABEL[s]).join(" · ")}
                       </div>
-                      <a href={"/number-history?num=" + f.num} style={{ fontSize: 12, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></a>
+                      <Link href={"/number-history?num=" + f.num} style={{ fontSize: 12, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
                     </div>
                     <button onClick={() => toggleBell(f)} title="Special notification"
                       style={{ background: "transparent", border: 0, fontSize: 19, cursor: "pointer", color: f.notify ? "#e6a700" : "#bbb" }}>
