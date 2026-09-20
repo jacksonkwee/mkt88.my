@@ -51,11 +51,13 @@ public class MainActivity extends BridgeActivity {
     checkForAppUpdate();
     startWebViewReadyCheck();
 
-    // Do not hold the launch screen for the full page load.
-    // The root view is already filled with the brand red behind the transparent
-    // WebView, so dropping to it keeps the MKT branding while the page finishes
-    // loading.
-    appHandler.postDelayed(this::markWebViewReady, 1500);
+    // Keep the launch logo up until the page has actually painted.
+    // WebViewReadyCheck below releases it as soon as the page has real content,
+    // which normally happens well before this delay. The delay is only a safety
+    // net: without it, a page that never loads would leave the app sitting on
+    // the logo forever. It used to be 1500ms, which dropped the logo onto the
+    // bare red backdrop about a second before the page appeared.
+    appHandler.postDelayed(this::markWebViewReady, 6000);
     // Load ads after the app is usable so startup stays fast.
     appHandler.postDelayed(this::initializeAds, 2500);
   }
