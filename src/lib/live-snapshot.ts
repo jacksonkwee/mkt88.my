@@ -464,11 +464,27 @@ export async function buildSnapshot(): Promise<Snapshot> {
   return snap;
 }
 
-/** Cached snapshot (rebuilt at most every SNAPSHOT_TTL). */
+/**
+ * Cached snapshot.
+ *
+ * A stale copy is handed over straight away and refreshed in the background.
+ * Waiting for the rebuild blocked every page render for 2-3 seconds whenever
+ * the 5 second TTL had lapsed - which, on a server that only wakes when
+ * someone opens the app, was most page loads. The numbers are still refreshed
+ * just as often; they are simply never made to hold up the page.
+ */
 export async function getSnapshot(): Promise<Snapshot> {
   startWarmer();
-  if (cache && Date.now() - cache.at < SNAPSHOT_TTL) return cache;
-  if (warming && cache) return cache;
+  const cached = cache;
+  if (cached && Date.now() - cached.at < SNAPSHOT_TTL) return cached;
+  if (cached) {
+    if (!warming) {
+      warming = true;
+      void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
+    }
+    return cached;
+  }
+  // Nothing cached yet (first request after a restart): wait for one build.
   warming = true;
   try { return await buildSnapshot(); } finally { warming = false; }
 }
