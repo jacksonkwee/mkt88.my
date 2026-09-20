@@ -86,8 +86,12 @@ type NavigatorWithWakeLock = Navigator & {
  * actually use, shown when the app opens. Website visitors never see it - it is
  * gated on the Android user agent, so the site stays exactly as it was.
  */
-export default function AppHome() {
-  const [open, setOpen] = useState(false);
+export default function AppHome({ initialOpen = false }: { initialOpen?: boolean }) {
+  // The first page must be in the server-rendered HTML, not added after the
+  // page loads: otherwise the results page paints first and the user sees it
+  // for a moment before this screen appears. The layout knows from the
+  // request whether this is the app, so it tells us to start open.
+  const [open, setOpen] = useState(initialOpen);
   const [lucky, setLucky] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);

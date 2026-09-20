@@ -276,7 +276,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <SiteCustomizer />
           <AppTools />
         </div>
-        <AppHome />
+        <AppHome initialOpen={inApp} />
         <AppNotifications enabled={inApp} />
       </body>
     </html>
