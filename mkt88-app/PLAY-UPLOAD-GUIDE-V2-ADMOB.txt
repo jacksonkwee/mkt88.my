@@ -1,0 +1,125 @@
+MKT88.MY ANDROID APP - GOOGLE PLAY UPLOAD GUIDE
+Updated for Google Play requirements on 10/09/2026
+====================================================
+
+CURRENT BUILD STATUS
+--------------------
+- Production-style APK/AAB code is ready in mkt88-app.
+- Google AdMob is integrated with Google TEST IDs for verification.
+- The app was tested on an Android 16 virtual phone and the AdMob test banner loaded successfully ("Test Ad").
+- Before uploading to Play Console, replace the test AdMob IDs with the real IDs from the AdMob account:
+  File: mkt88-app/android/app/src/main/res/values/admob.xml
+  - admob_app_id
+  - admob_banner_unit_id
+- After replacing the IDs, rebuild the signed .aab and upload that .aab to Play Console.
+- Do NOT publish a build containing Google test IDs.
+
+STEP 1 - CREATE THE ADMOB APP AND AD UNITS
+------------------------------------------
+1. Open https://admob.google.com and sign in.
+2. Apps > Add app > Android.
+3. Choose the option that matches whether the app is already on a store.
+4. Enter app name: ???? 4D.
+5. Open App settings and copy the App ID. Format: ca-app-pub-XXXXXXXXXXXXXXXX~NNNNNNNNNN
+6. Go to Ad units > Add ad unit > Banner.
+7. Enter a name, for example: Home banner.
+8. Copy the Banner ad unit ID. Format: ca-app-pub-XXXXXXXXXXXXXXXX/NNNNNNNNNN
+9. Send us these two IDs. We will put them into admob.xml and rebuild the release AAB.
+
+STEP 2 - COMPLETE PLAY CONSOLE ACCOUNT SETUP
+--------------------------------------------
+1. Open https://play.google.com/console and sign in as the account owner.
+2. If a new personal account, complete:
+   Home > Verify that you have access to an Android mobile device > View details.
+   Install/open the Play Console mobile app, sign in, select the developer account and tap Verify.
+3. Personal accounts created after 13/11/2023 must run a closed test with at least 12 testers
+   opted in continuously for at least 14 days before production access.
+
+STEP 3 - CREATE THE PLAY CONSOLE APP
+------------------------------------
+1. Home > Create app.
+2. Default language: English (United States) or Chinese (Simplified).
+3. App name: ???? 4D.
+4. App or game: App.
+5. Free or paid: Free.
+6. Contact email: a working support email you can show publicly.
+7. Accept the Developer Program Policies and US export declarations.
+8. Accept the Play App Signing terms.
+9. Click Create app.
+
+STEP 4 - DASHBOARD / APP CONTENT
+--------------------------------
+Complete every required task:
+- Privacy policy: https://www.mkt88.my/privacy-policy
+- App access: All functionality is available without special access.
+- Ads: YES, the app contains ads (Google AdMob).
+- Content rating: answer truthfully. The app displays 4D/lottery results and does not accept bets or sell tickets, but the rating may still be Mature/18+ because of gambling/lottery references.
+- Target audience: 18+ only.
+- Data safety: declare Google AdMob collection, which may include advertising ID/device identifiers, app interactions, ad interactions, approximate location and diagnostics depending on your AdMob settings.
+- Government apps: No.
+- Financial features: No.
+- Health: No.
+- News app: No unless you declare it as a news app.
+
+STEP 5 - STORE LISTING
+----------------------
+Use these files:
+- App icon: mkt88-app/icon-512.png
+- Feature graphic: mkt88-app/play-store/feature-graphic-1024x500.png
+- Phone screenshots: mkt88-app/play-store/1-home-live-results.png and the other 5 screenshots in that folder.
+- Category: Tools (or News & Magazines).
+- Website: https://www.mkt88.my
+- Privacy policy: https://www.mkt88.my/privacy-policy
+- Keep the description factual. Do not use "fastest", "100% accurate", "guaranteed win" or gambling invitations.
+
+STEP 6 - TARGET API LEVEL - 10/09/2026 REQUIREMENT
+--------------------------------------------------
+Since 31/08/2026, new apps and app updates must target Android 16 (API level 36) or higher.
+Current app settings:
+- compileSdk 36
+- targetSdk 36
+- package: com.mkt88.app
+Do not change back to API 34/35.
+
+STEP 7 - INTERNAL TESTING
+-------------------------
+1. Test and release > Testing > Internal testing.
+2. Create new release.
+3. Upload the signed .aab built with the real AdMob IDs, not the test-ID build.
+4. Release name: 2.2 (13) or newer.
+5. Save > Review release > Start rollout to Internal testing.
+6. Add testers and install from the opt-in link.
+7. Verify: icon, splash logo, website, AdMob banner, History, Favourites, and no AdSense ads inside the app.
+
+STEP 8 - CLOSED TESTING FOR NEW PERSONAL ACCOUNTS
+-------------------------------------------------
+1. Test and release > Testing > Closed testing.
+2. Create a closed test release.
+3. Add at least 12 testers.
+4. They must remain opted in continuously for at least 14 days.
+5. Collect feedback and fix issues during this period.
+
+STEP 9 - APPLY FOR PRODUCTION ACCESS
+------------------------------------
+1. After the closed-test requirement is met, open Dashboard.
+2. Click Apply for production.
+3. Answer the questions about the closed test, the app and production readiness.
+4. Google reviews the application. Review usually takes seven days or less, but can take longer.
+
+STEP 10 - PRODUCTION RELEASE
+----------------------------
+1. After production access is approved, go to Test and release > Production.
+2. Create a new release.
+3. Upload/promote the signed .aab with the real AdMob IDs.
+4. Add release notes.
+5. Review and start rollout.
+6. Monitor Policy status, crashes, reviews and AdMob revenue.
+
+IMPORTANT POLICY NOTES
+----------------------
+- AdSense is automatically disabled when the website runs inside the Android app.
+- The app uses AdMob for native in-app advertising instead.
+- Do not put AdSense web ads inside the Android app.
+- Do not click your own live AdMob ads. Use test ads for development.
+- Keep the upload keystore private.
+- The app displays results for information only. Do not add betting, ticket sales or payment features.

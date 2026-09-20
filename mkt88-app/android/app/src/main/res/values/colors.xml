@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#CC0000</color>
+    <color name="colorPrimaryDark">#990000</color>
+    <color name="colorAccent">#F7D000</color>
+    <!-- Launch screen background -->
+    <color name="splashBackground">#CC0000</color>
+</resources>

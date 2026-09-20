@@ -1,0 +1,34 @@
+# ---------------------------------------------------------------------------
+# The website repo backs up the Android app source too, so this folder is
+# tracked. Everything below is a secret, a build output, or a tool download.
+# ---------------------------------------------------------------------------
+
+# Signing secrets. Publishing these would let anyone sign an update to your
+# Play listing; losing them means you can never update the app. They live in
+# the backup folder, never in git.
+android/keystore/
+android/keystore.properties
+KEYSTORE-INFO.txt
+
+# Tool downloads and archives (the bundled JDK alone is 485 MB)
+.jdk/
+*.zip
+
+# Dependencies
+node_modules/
+
+# Android build output
+android/build/
+android/app/build/
+android/.gradle/
+android/.cxx/
+android/local.properties
+android/capacitor-cordova-android-plugins/
+
+# Built app bundles - each is 3-7 MB and they belong in the backup folder
+*.apk
+*.aab
+
+# Local testing scratch space: emulator screenshots, videos and logs
+emulator-test/
+*.log

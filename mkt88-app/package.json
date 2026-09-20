@@ -1,0 +1,17 @@
+{
+  "name": "mkt88-4d",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MKT 4D - Live 4D results app (wrapper for https://www.mkt88.my)",
+  "scripts": {
+    "add:android": "cap add android",
+    "open:android": "cap open android",
+    "sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/local-notifications": "6.0.0"
+  }
+}

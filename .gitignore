@@ -9,8 +9,8 @@ out/
 Thumbs.db
 npm-debug.log*
 
-# mkt88 Android app build (local only - contains keystore)
-mkt88-app/
+# The Android app lives in mkt88-app/ and IS tracked. Its own .gitignore keeps
+# the keystore, the 485 MB JDK and the build output out of git.
 .pnpm-store/
 _icon-*.js
 cap-run.js

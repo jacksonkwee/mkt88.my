@@ -1,0 +1,86 @@
+MKT88.MY - GOOGLE PLAY UPLOAD GUIDE
+===================================
+
+APP TO UPLOAD
+-------------
+File: mkt88-4d-v1.9.aab
+Package: com.mkt88.app
+Version: 1.9 (versionCode 10)
+Target: Android 16 / API 36
+
+TEST ON PHONE FIRST
+-------------------
+Install: mkt88-4d-v1.9.apk
+Expected launch: red background + MKT88 logo, then the first web page.
+
+GOOGLE PLAY CONSOLE - FIRST RELEASE
+-----------------------------------
+1. Open https://play.google.com/console and choose your developer account.
+2. Complete "Verify that you have access to an Android mobile device" if shown.
+3. Home > Create app.
+4. Default language: English (United States) or Chinese (Simplified).
+5. App name: ???? 4D
+6. App or game: App
+7. Free or paid: Free
+8. Enter a public contact email.
+9. Accept the Developer Program Policies and US export declarations.
+10. Accept the Play App Signing terms.
+11. Click Create app.
+
+DASHBOARD SETUP
+---------------
+- Privacy policy: https://www.mkt88.my/privacy-policy
+- Website: https://www.mkt88.my
+- Target audience: 18+
+- Ads: declare exactly what is shown inside the app.
+- App access: All functionality is available without special access.
+- Data safety: answer based on what the app and website actually collect.
+- Content rating: answer the questionnaire truthfully.
+
+STORE LISTING FILES
+-------------------
+App icon:
+mkt88-app/icon-512.png
+
+Feature graphic:
+mkt88-app/play-store/feature-graphic-1024x500.png
+
+Phone screenshots:
+mkt88-app/play-store/1-home-live-results.png
+mkt88-app/play-store/2-lotto-4d-cambodia.png
+mkt88-app/play-store/3-singapore-4d.png
+mkt88-app/play-store/4-number-history.png
+mkt88-app/play-store/5-dabogong-number-dictionary.png
+mkt88-app/play-store/6-favourite-numbers.png
+
+UPLOAD TO INTERNAL TESTING
+--------------------------
+1. Test and release > Testing > Internal testing.
+2. Create new release.
+3. Upload mkt88-4d-v1.9.aab.
+4. Release name: 1.9 (10)
+5. Save > Review release > Start rollout to Internal testing.
+6. Add testers and open the opt-in link on an Android phone.
+7. Confirm the logo splash and the first page.
+
+REQUIRED CLOSED TEST (NEW PERSONAL ACCOUNTS)
+--------------------------------------------
+Google requires a closed test with at least 12 testers who remain opted in
+continuously for at least 14 days. After that, open Dashboard and apply for
+production access.
+
+PRODUCTION
+----------
+After production access is approved:
+Test and release > Production > Create new release > upload/promote the AAB
+> submit for review.
+
+IMPORTANT POLICY NOTE
+---------------------
+AdSense is for websites. Do not rely on AdSense web ads inside the Android
+app. Use AdMob or keep ads off in the app for the first release.
+
+KEEP THE KEYSTORE SAFE
+----------------------
+Keep mkt88-app/KEYSTORE-INFO.txt private and never share the keystore or
+password publicly. The same upload key is needed for every future update.
