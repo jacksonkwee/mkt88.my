@@ -61,7 +61,10 @@ export interface RawHit {
   prize: PrizeName;
 }
 
-const CAT_RE = /^\s*(1st|2nd|3rd)\s*Prize|^\s*(Special|Consolation)/i;
+/* Prize rows read "1st Prize 首獎" on most games but plain "1st 首獎" on
+ * SportsToto, so "Prize" has to be optional - without it every SportsToto
+ * 1st / 2nd / 3rd prize was silently dropped from Number History. */
+const CAT_RE = /^\s*(1st|2nd|3rd)(?:\s*Prize)?\b|^\s*(Special|Consolation)/i;
 
 function cleanTxt(s: string): string {
   return (s || "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
