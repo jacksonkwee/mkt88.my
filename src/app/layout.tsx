@@ -10,7 +10,7 @@ import AppNotifications from "../components/AppNotifications";
 import { getSnapshot } from "../lib/live-snapshot";
 import LiveSnapshotProvider, { type SnapValue } from "../components/LiveSnapshotProvider";
 import "./vendor/bootstrap.min.css";
-import "./vendor/font-awesome.min.css";
+import "./vendor/font-awesome-subset.css";
 import "./vendor/theme-style.css";
 import "./globals.css";
 

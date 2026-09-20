@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
+import { HandPointing } from "@phosphor-icons/react";
 
 const logo = ASSET_BASE + "/logo-mkt88.svg?v=3";
 
@@ -134,7 +135,7 @@ export default function Header() {
                         lucky();
                       }}
                     >
-                      <i className="fa fa-hand-pointer" aria-hidden="true" style={{ color: "#ffd700", marginRight: 8, fontSize: "0.8em" }}></i>
+                      <HandPointing size={14} weight="fill" aria-hidden="true" style={{ color: "#ffd700", marginRight: 8 }} />
                       恭喜发财
                     </a>
                   </li>

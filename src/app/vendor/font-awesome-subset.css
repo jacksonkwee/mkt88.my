@@ -1,0 +1,19 @@
+/* ------------------------------------------------------------------ *
+ * Minimal Font Awesome 4.7 subset                                     *
+ * ------------------------------------------------------------------ *
+ * Only the archived past-result pages still use these classes: their   *
+ * markup is captured HTML (past-dates.json, snapshots/past/*.json), so *
+ * it cannot be changed to real icons. The app itself uses Phosphor.    *
+ *
+ * The full stylesheet declares about 800 glyphs and loads on every     *
+ * page; four glyphs are actually used. Only the woff2 font is kept -   *
+ * the eot, ttf, woff and svg copies were 854 KB of dead weight.        *
+ */
+@font-face{font-family:'FontAwesome';src:url('/sites/live4dresult-net-0600c55d/root-8a5edab2/wp-content/themes/oldtheme-lottery-frontend/assets/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0') format('woff2');font-weight:normal;font-style:normal;font-display:swap}
+.fa{display:inline-block;font:normal normal normal 14px/1 FontAwesome;font-size:inherit;text-rendering:auto;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.fa-arrow-left:before{content:"\f060"}
+.fa-arrow-right:before{content:"\f061"}
+.fa-times-circle:before{content:"\f057"}
+.fa-refresh:before{content:"\f021"}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0, 0, 0, 0);border:0}
+.sr-only-focusable:active,.sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}

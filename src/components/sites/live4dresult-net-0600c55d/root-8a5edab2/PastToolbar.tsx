@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { PAST_DATES, formatDateWithDay } from "./past-data";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 
 interface Props {
   current: string;
@@ -24,7 +25,7 @@ export default function PastToolbar({ current, view }: Props) {
         <div className="btn-group btn-group-toggle">
           {prev ? (
             <a href={"/past-results/" + prev} className="text-white btn btn-secondary d-flex align-items-center">
-              <i className="fa fa-arrow-left mr-2"></i> Prev
+              <ArrowLeft size={16} weight="bold" className="mr-2" /> Prev
             </a>
           ) : (
             <a
@@ -35,7 +36,7 @@ export default function PastToolbar({ current, view }: Props) {
                 alert("There is no more result.");
               }}
             >
-              <i className="fa fa-arrow-left mr-2"></i> Prev
+              <ArrowLeft size={16} weight="bold" className="mr-2" /> Prev
             </a>
           )}
           <div style={{ position: "relative" }} className="d-inline-block">
@@ -67,7 +68,7 @@ export default function PastToolbar({ current, view }: Props) {
           </div>
           {next ? (
             <a href={"/past-results/" + next} className="text-white btn btn-secondary d-flex align-items-center">
-              Next <i className="fa fa-arrow-right ml-2"></i>
+              Next <ArrowRight size={16} weight="bold" className="ml-2" />
             </a>
           ) : (
             <a
@@ -78,7 +79,7 @@ export default function PastToolbar({ current, view }: Props) {
                 alert("There is no more result.");
               }}
             >
-              Next <i className="fa fa-arrow-right ml-2"></i>
+              Next <ArrowRight size={16} weight="bold" className="ml-2" />
             </a>
           )}
         </div>
