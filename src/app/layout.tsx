@@ -261,11 +261,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   } catch { /* ignore */ }
   return (
     <html lang="zh">
-      <body className={"home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-" + (inApp ? " mkt-in-app" : "")}>
+      <body className={"home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-" + (inApp ? " mkt-in-app mkt-home-open" : "")}>
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         {/* Everything the site normally shows. The app's first page hides this
             while it is open, so no part of the results can show behind it. */}
+        {/* The first page comes first so the tiles can paint before the heavy
+            results markup behind them is parsed. */}
+        <AppHome initialOpen={inApp} />
         <div id="mkt-site">
           <LiveSnapshotProvider value={snapObj}>
             <NoticeBar />
@@ -276,7 +279,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <SiteCustomizer />
           <AppTools />
         </div>
-        <AppHome initialOpen={inApp} />
         <AppNotifications enabled={inApp} />
       </body>
     </html>

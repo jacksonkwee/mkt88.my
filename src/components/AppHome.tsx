@@ -72,6 +72,8 @@ function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.Mo
 /** Shown once per app launch, not on every page load. */
 const SEEN_KEY = "mkt_app_home_shown";
 
+const HOME_OPEN_CLASS = "mkt-home-open";
+
 /** Keep-screen-on preference. Default is ON. */
 const WAKE_KEY = "mkt_keep_screen_on";
 
@@ -165,11 +167,12 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    * that strip - so the results page showed through at the bottom.
    */
   useEffect(() => {
-    const site = document.getElementById("mkt-site");
-    if (site) site.style.display = open ? "none" : "";
+    // The class is what hides the site (see globals.css). The server already
+    // sets it for the app, so the results markup never paints behind the tiles.
+    document.body.classList.toggle(HOME_OPEN_CLASS, open);
     document.body.style.background = open ? "#fff" : "";
     return () => {
-      if (site) site.style.display = "";
+      document.body.classList.remove(HOME_OPEN_CLASS);
       document.body.style.background = "";
     };
   }, [open]);
