@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ nam
     const file = path.join(UPLOAD_DIR, safe);
     const buf = await fs.readFile(file);
     const ext = path.extname(safe).toLowerCase();
-    return new NextResponse(new Uint8Array(buf), { headers: { "content-type": MIME[ext] || "application/octet-stream", "cache-control": "no-store" } });
+    return new NextResponse(new Uint8Array(buf), { headers: { "content-type": MIME[ext] || "application/octet-stream", "cache-control": "public, max-age=60, stale-while-revalidate=86400" } });
   } catch {
     return new NextResponse("not found", { status: 404 });
   }
