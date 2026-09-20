@@ -3,9 +3,12 @@
 import fs from "node:fs";
 
 const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
-const START_YEAR = 1992;
-const END_YEAR = 2022;
-const END_MONTH = 6; // live4dresult archive takes over from 2022-07-27
+// Range defaults match the original backfill; pass four numbers to widen it,
+// e.g. node scripts/build-deep-history-st.mjs 2022 7 2026 9
+const START_YEAR = Number(process.argv[2] || 1992);
+const START_MONTH = Number(process.argv[3] || 1);
+const END_YEAR = Number(process.argv[4] || 2022);
+const END_MONTH = Number(process.argv[5] || 6);
 
 const DAY0 = Date.UTC(2020, 0, 1);
 const epochDay = (iso) => Math.round((Date.parse(iso + "T00:00:00Z") - DAY0) / 86400000);
@@ -63,17 +66,23 @@ async function main() {
     gIdx = db.games.length - 1;
   }
 
+  // Idempotent: re-running never stores the same draw twice.
+  const have = new Set();
+  for (const num of Object.keys(db.hits)) for (const [dd, g, c] of db.hits[num]) have.add(num + "|" + dd + "|" + g + "|" + c);
   const push = (num, iso, cat) => {
     if (!is4(num)) return 0;
+    const dd = epochDay(iso) - db.dayBase;
+    if (have.has(num + "|" + dd + "|" + gIdx + "|" + cat)) return 0;
+    have.add(num + "|" + dd + "|" + gIdx + "|" + cat);
     const arr = db.hits[num] || (db.hits[num] = []);
-    arr.push([epochDay(iso) - db.dayBase, gIdx, cat]);
+    arr.push([dd, gIdx, cat]);
     return 1;
   };
 
   const months = [];
   for (let y = START_YEAR; y <= END_YEAR; y++) {
     const lastM = y === END_YEAR ? END_MONTH : 12;
-    for (let m = 1; m <= lastM; m++) months.push([m, y]);
+    for (let m = (y === START_YEAR ? START_MONTH : 1); m <= lastM; m++) months.push([m, y]);
   }
 
   let added = 0, draws = 0, pages = 0, oldest = null;
