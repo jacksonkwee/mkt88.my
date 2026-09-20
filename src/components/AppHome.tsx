@@ -8,10 +8,7 @@ import { GearSix } from "@phosphor-icons/react";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
-const LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg?v=3";
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
-/** Short gold logo animation played once when the app opens (2.8s, 433 KB). */
-const STARTUP_VIDEO = HOME + "/startup.mp4";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.mkt88.app";
 
 /** Same order the swipe strip uses. */
@@ -94,18 +91,6 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // for a moment before this screen appears. The layout knows from the
   // request whether this is the app, so it tells us to start open.
   const [open, setOpen] = useState(initialOpen);
-  /**
-   * The splash video plays once when the app opens, before the tile grid.
-   * It stays done on the website, and it can never hold the app: if the
-   * video will not start (autoplay blocked, slow network, bad codec) the
-   * first page shows anyway.
-   */
-  const [introDone, setIntroDone] = useState(!initialOpen);
-  useEffect(() => {
-    if (introDone) return;
-    const t = window.setTimeout(() => setIntroDone(true), 6000);
-    return () => window.clearTimeout(t);
-  }, [introDone]);
   const [lucky, setLucky] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
@@ -221,22 +206,10 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   ];
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: introDone ? PAGE_BG : "#2c1000", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        {!introDone ? (
-          <video
-            src={STARTUP_VIDEO}
-            autoPlay muted playsInline preload="auto" aria-hidden="true"
-            onEnded={() => setIntroDone(true)}
-            onError={() => setIntroDone(true)}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : null}
-        <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px", visibility: introDone ? "visible" : "hidden" }}>
-        {/* No close or settings button up here - both live in the tile rows. */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="MKT 發發" style={{ height: 44, width: "auto" }} />
-        </div>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px" }}>
+        {/* No logo up here. The Android splash already shows it while the app
+            loads, so repeating it on the first page made it appear twice. */}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (
