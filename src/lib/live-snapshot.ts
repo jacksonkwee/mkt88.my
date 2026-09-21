@@ -172,28 +172,63 @@ function textLines(html: string): string[] {
  */
 function parsePerdana(html: string, iso: string): Record<string, PrizeSet> {
   const out: Record<string, PrizeSet> = {};
-  const blocks = html.split(/(?=\d{12}4D|\d{8}4D)/).slice(1);
-  for (const block of blocks) {
-    const time = (block.match(/>(\d{1,2}:\d{2})</) || [])[1];
+  // Shape 1: the raw page. Values sit in 4dFirst / 4dSecond / 4dThird and
+  // fourDPosition="SpecialA".."ConsolationW" attributes.
+  if (/4dFirst/.test(html)) {
+    for (const block of html.split(/(?=\d{12}4D|\d{8}4D)/).slice(1)) {
+      const time = (block.match(/>(\d{1,2}:\d{2})</) || [])[1];
+      if (!time) continue;
+      const val = (re: RegExp): string => { const m = re.exec(block); return m && m[1] ? m[1] : "----"; };
+      const cell = (cls: string) => val(new RegExp('class="[^"]*' + cls + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})'));
+      const byPos = (letters: string) =>
+        [...letters].map((L) => val(new RegExp('fourDPosition="[^"]*' + L + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})')));
+      const set: PrizeSet = {
+        prize: [cell("4dFirst"), cell("4dSecond"), cell("4dThird")],
+        special: byPos("ABCDEFGHIJKLM"),
+        cons: byPos("NOPQRSTUVW"),
+        date: weekdayOf(iso),
+      };
+      if (hasAnyNumber(set) && !out[time]) out[time] = set;
+    }
+    return out;
+  }
+  // Shape 2: the same page as plain text, which is how it arrives when it has
+  // to be read through a text reader because the host cannot open it directly.
+  const lines = html.split(/\r?\n/).map((l) => l.trim());
+  const marks: number[] = [];
+  lines.forEach((l, i) => { if (/^\d{8}4D$/.test(l) || /^\d{12}4D$/.test(l)) marks.push(i); });
+  const VALUE = /^(?:\([A-Z]\)\s*)?(----|\d{4})$/;
+  for (let m = 0; m < marks.length; m++) {
+    const start = marks[m];
+    const end = m + 1 < marks.length ? marks[m + 1] : lines.length;
+    const block = lines.slice(start, end);
+    const dm = /^(\d{4})(\d{2})(\d{2})/.exec(block[0] || "");
+    const drawIso = dm ? dm[1] + "-" + dm[2] + "-" + dm[3] : iso;
+    const time = block.slice(1, 8).find((l) => /^\d{1,2}:\d{2}$/.test(l));
     if (!time) continue;
-    const val = (re: RegExp): string => {
-      const m = re.exec(block);
-      return m && m[1] ? m[1] : "----";
+    const at = (re: RegExp) => block.findIndex((l) => re.test(l));
+    const pIdx = at(/^3rd Prize$/i);
+    const sIdx = at(/^Special$/i);
+    const cIdx = at(/^Consolation$/i);
+    const grab = (from: number, to: number, max: number): string[] => {
+      const vals: string[] = [];
+      for (let i = from; i < to && vals.length < max; i++) {
+        const mm = VALUE.exec(block[i]);
+        if (mm) vals.push(mm[1]);
+      }
+      return vals;
     };
-    const cell = (cls: string) => val(new RegExp('class="[^"]*' + cls + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})'));
-    const byPos = (letters: string) =>
-      [...letters].map((L) => val(new RegExp('fourDPosition="[^"]*' + L + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})')));
-    const set: PrizeSet = {
-      prize: [cell("4dFirst"), cell("4dSecond"), cell("4dThird")],
-      special: byPos("ABCDEFGHIJKLM"),
-      cons: byPos("NOPQRSTUVW"),
-      date: weekdayOf(iso),
-    };
+    const prize = pIdx >= 0 && sIdx > pIdx ? grab(pIdx + 1, sIdx, 3) : [];
+    while (prize.length < 3) prize.push("----");
+    const special = sIdx >= 0 ? grab(sIdx + 1, cIdx > sIdx ? cIdx : block.length, 13) : [];
+    while (special.length < 13) special.push("----");
+    const cons = cIdx >= 0 ? grab(cIdx + 1, block.length, 10) : [];
+    while (cons.length < 10) cons.push("----");
+    const set: PrizeSet = { prize, special, cons, date: weekdayOf(drawIso) };
     if (hasAnyNumber(set) && !out[time]) out[time] = set;
   }
   return out;
-}
-/** Hour of the day in Kuala Lumpur. */
+}/** Hour of the day in Kuala Lumpur. */
 function klHour(): number {
   try {
     return Number(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
@@ -237,6 +272,21 @@ function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
   const slot = iso && iso >= today ? (klHour() >= 19 ? "19:30" : "15:30") : "19:30";
   out[slot] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
   return out;
+}
+/**
+ * The official Perdana page through a text reader.
+ *
+ * perdana4d.com times out from this host and refuses cross-origin reads from
+ * the phone, so the official page is read through a public reader instead.
+ * Throttled: the snapshot rebuilds constantly and this is a shared service.
+ */
+const PERDANA_RELAY = "https://r.jina.ai/";
+let perdanaRelayAt = 0;
+async function perdanaFromRelay(iso: string): Promise<Record<string, PrizeSet>> {
+  if (Date.now() - perdanaRelayAt < 5 * 60 * 1000) return {};
+  perdanaRelayAt = Date.now();
+  const text = await get(PERDANA_RELAY + "https://www.perdana4d.com/Results/4D?processDate=" + iso);
+  return text ? parsePerdana(text, iso) : {};
 }
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
@@ -488,6 +538,12 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  // Official page first, then the reader, then the shared live feed - so a
+  // draw is shown as soon as any of them has it.
+  if (!perdana["15:30"] || !perdana["19:30"]) {
+    const relayed = await perdanaFromRelay(today.iso);
+    for (const time of ["15:30", "19:30"]) if (!perdana[time] && relayed[time]) perdana[time] = relayed[time];
+  }
   // The operator page for Perdana is unreachable (server timeout, no CORS), so
   // fill anything still empty from the shared live feed instead of leaving the
   // page showing an old stored card.
