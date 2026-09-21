@@ -160,51 +160,39 @@ function textLines(html: string): string[] {
   return html.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<[^>]+>/g, "\n").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").split("\n").map((l) => l.trim());
 }
 
+/**
+ * Perdana 4D from the operator's own page.
+ *
+ * The page carries one block per draw, each introduced by a marker such as
+ * 2026092115004D. The values live in classes and attributes -
+ * 4dFirst / 4dSecond / 4dThird and fourDPosition="SpecialA".."ConsolationW" -
+ * not in the printed label order. Reading the labels instead (what this used
+ * to do) found nothing, so the live Perdana numbers never reached the app and
+ * its page showed only an old stored card.
+ */
 function parsePerdana(html: string, iso: string): Record<string, PrizeSet> {
-  const lines = textLines(html);
   const out: Record<string, PrizeSet> = {};
-  const markers: number[] = [];
-  lines.forEach((l, i) => { if (/^\d{8}4D$/.test(l) || /^\d{12}4D$/.test(l)) markers.push(i); });
-  for (let mi = 0; mi < markers.length; mi++) {
-    const start = markers[mi];
-    const end = mi + 1 < markers.length ? markers[mi + 1] : lines.length;
-    const block = lines.slice(start, end);
-    const timeLine = block.slice(1, 10).find((l) => /^(\d{1,2}:\d{2})$/.test(l));
-    if (!timeLine) continue;
-    const pIdx = block.findIndex((l) => /^3rd Prize$/i.test(l));
-    const sIdx = block.findIndex((l) => /^Special$/i.test(l));
-    const cIdx = block.findIndex((l) => /^Consolation$/i.test(l));
-    const eIdx = block.findIndex((l) => /^(2D|3D|6D) Results$/i.test(l));
-    const grab = (from: number, to: number): string[] => {
-      const vals: string[] = [];
-      for (let i = from; i < to; i++) {
-        const l = block[i]; if (!l) continue;
-        const cmb = /^\([A-Z]\)\s*(----|\d{4})$/.exec(l);
-        if (cmb) { vals.push(cmb[1]); continue; }
-        if (/^(----|\d{4})$/.test(l)) { vals.push(l); continue; }
-        if (/^\([A-Z]\)$/.test(l) && i + 1 < to) {
-          const nv = /^(----|\d{4})$/.exec(block[i + 1]);
-          if (nv) { vals.push(nv[1]); i++; }
-        }
-      }
-      return vals;
+  const blocks = html.split(/(?=\d{12}4D|\d{8}4D)/).slice(1);
+  for (const block of blocks) {
+    const time = (block.match(/>(\d{1,2}:\d{2})</) || [])[1];
+    if (!time) continue;
+    const val = (re: RegExp): string => {
+      const m = re.exec(block);
+      return m && m[1] ? m[1] : "----";
     };
-    const prize: string[] = [];
-    if (pIdx >= 0 && sIdx > pIdx) {
-      for (let i = pIdx + 1; i < sIdx && prize.length < 3; i++) {
-        const cmb = /^\([A-Z]\)\s*(----|\d{4})$/.exec(block[i]);
-        if (cmb) { prize.push(cmb[1]); continue; }
-        if (/^(----|\d{4})$/.test(block[i])) { prize.push(block[i]); continue; }
-      }
-    }
-    while (prize.length < 3) prize.unshift("----");
-    const special = sIdx >= 0 ? grab(sIdx + 1, cIdx > sIdx ? cIdx : eIdx > sIdx ? eIdx : block.length) : [];
-    const cons = cIdx >= 0 ? grab(cIdx + 1, eIdx > cIdx ? eIdx : block.length) : [];
-    out[timeLine] = { prize, special, cons, date: weekdayOf(iso) };
+    const cell = (cls: string) => val(new RegExp('class="[^"]*' + cls + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})'));
+    const byPos = (letters: string) =>
+      [...letters].map((L) => val(new RegExp('fourDPosition="[^"]*' + L + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})')));
+    const set: PrizeSet = {
+      prize: [cell("4dFirst"), cell("4dSecond"), cell("4dThird")],
+      special: byPos("ABCDEFGHIJKLM"),
+      cons: byPos("NOPQRSTUVW"),
+      date: weekdayOf(iso),
+    };
+    if (hasAnyNumber(set) && !out[time]) out[time] = set;
   }
   return out;
 }
-
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 
