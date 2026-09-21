@@ -78,9 +78,9 @@ export default function DaBoGongApp() {
     const src = srcFor(e);
     if (!src) {
       return (
-        <div style={{ width: size, height: size, borderRadius: 8, border: "1px solid #eee", background: "#fff7e6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div style={{ width: size, height: size, borderRadius: 12, border: "1px solid #eee", background: "#fff7e6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <div style={{ fontSize: size > 60 ? 18 : 13, fontWeight: 800, color: "#cc0000", letterSpacing: 1 }}>{e.num}</div>
-          <div style={{ fontSize: 9, color: "#888" }}>图片</div>
+          <div style={{ fontSize: 11, color: "#888" }}>图片</div>
         </div>
       );
     }
@@ -88,7 +88,7 @@ export default function DaBoGongApp() {
       <img src={src} alt={e.keyword || e.num} referrerPolicy="no-referrer" loading="lazy"
         onError={() => nextStage(e.num)}
         onLoad={() => setStage((m) => (m[e.num] === 2 ? { ...m, [e.num]: 0 } : m))}
-        style={{ width: size, height: size, objectFit: "cover", borderRadius: 8, border: "1px solid #eee", background: "#fff", flexShrink: 0 }} />
+        style={{ width: size, height: size, objectFit: "cover", borderRadius: 12, border: "1px solid #eee", background: "#fff", flexShrink: 0 }} />
     );
   };
 
@@ -109,14 +109,14 @@ export default function DaBoGongApp() {
             onKeyDown={(e) => e.key === "Enter" && look(text)}
             placeholder="号码或词语 / number or word"
             autoFocus
-            style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 10, fontSize: 22, textAlign: "center", fontWeight: 800 }}
+            style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 800 }}
           />
-          <div style={{ fontSize: 11.5, color: "#888", textAlign: "center", marginTop: 6 }}>
+          <div style={{ fontSize: 11, color: "#888", textAlign: "center", marginTop: 6 }}>
             输入 3-4 位数或词语 · 中文 / English / BM · 例 666 · okra · bendi · 狗 · dog · anjing
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button onClick={() => look(text)} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 10, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>Search 查询</button>
-            <button onClick={() => { setText(""); setData(null); setResults(null); }} style={{ flex: 1, background: "#fff", color: "#333", border: "1px solid #ccc", borderRadius: 10, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Clear 清除</button>
+            <button onClick={() => look(text)} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>Search 查询</button>
+            <button onClick={() => { setText(""); setData(null); setResults(null); }} style={{ flex: 1, background: "#fff", color: "#333", border: "1px solid #ccc", borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>Clear 清除</button>
           </div>
         </div>
 
@@ -126,20 +126,20 @@ export default function DaBoGongApp() {
         {/* Single number result */}
         {data && !loading ? (
           <div style={{ background: "#fff", borderRadius: 12, marginTop: 12, padding: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", textAlign: "center" }}>
-            <div style={{ fontSize: 30, fontWeight: 900, letterSpacing: 6, color: RED }}>{data.num}</div>
-            <div style={{ fontSize: 12, color: "#888", marginBottom: 8 }}>{data.kind}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 6, color: RED }}>{data.num}</div>
+            <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>{data.kind}</div>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <Picture e={data} size={260} />
             </div>
             {data.keyword ? (
               <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 24, fontWeight: 800 }}>{data.keyword}</div>
-                {data.meaning ? <div style={{ fontSize: 14, color: "#666", marginTop: 2 }}>{data.meaning}</div> : null}
+                {data.meaning ? <div style={{ fontSize: 15, color: "#666", marginTop: 2 }}>{data.meaning}</div> : null}
                 {data.malay ? <div style={{ fontSize: 13, color: "#666" }}>{data.malay}</div> : null}
               </div>
             ) : null}
             {historyHref(data.num) ? (
-              <Link href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 10, padding: "10px 18px", fontWeight: 800, textDecoration: "none" }}>
+              <Link href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 12, padding: "10px 18px", fontWeight: 800, textDecoration: "none" }}>
                 开彩记录 Number History <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} />
               </Link>
             ) : null}
@@ -161,8 +161,8 @@ export default function DaBoGongApp() {
                   <Picture e={r} size={54} />
                   <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                     <div style={{ fontWeight: 800, fontSize: 15 }}>{r.keyword}</div>
-                    <div style={{ fontSize: 12.5, color: "#666" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
-                    {href ? <div style={{ fontSize: 11.5, color: RED, fontWeight: 700, marginTop: 2 }}>开彩记录 Number History <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
+                    <div style={{ fontSize: 13, color: "#666" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
+                    {href ? <div style={{ fontSize: 11, color: RED, fontWeight: 700, marginTop: 2 }}>开彩记录 Number History <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
                   </div>
                   <div style={{ fontWeight: 900, fontSize: 18, color: RED, letterSpacing: 2 }}>{r.num}</div>
                 </>

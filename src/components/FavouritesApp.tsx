@@ -123,7 +123,7 @@ export default function FavouritesApp() {
       <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
         <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
           style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
-        <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           Favourite Numbers 收藏号码
         </div>
         <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
@@ -131,8 +131,8 @@ export default function FavouritesApp() {
 
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
-          <div style={{ fontWeight: 800, fontSize: 16, color: "#111" }}>Add favourite numbers 添加收藏号码</div>
-          <div style={{ fontSize: 12.5, color: "#666", marginTop: 4 }}>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "#111" }}>Add favourite numbers 添加收藏号码</div>
+          <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
             Your numbers glow <span style={{ background: YELLOW, padding: "0 4px" }}>yellow</span> on the results and can send a
             special notification the moment they appear.
           </div>
@@ -142,10 +142,10 @@ export default function FavouritesApp() {
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="4-digit number"
               inputMode="numeric"
-              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
             <Link href={isNum(input) ? "/number-history?num=" + input : "#"}
               onClick={(e) => { if (!isNum(input)) e.preventDefault(); }}
-              style={{ display: "flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", background: "#f2f2f2", color: "#333", border: "1px solid #ddd", borderRadius: 8, padding: "0 12px", fontSize: 13, textDecoration: "none" }}>
+              style={{ display: "flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", background: "#f2f2f2", color: "#333", border: "1px solid #ddd", borderRadius: 12, padding: "0 12px", fontSize: 13, textDecoration: "none" }}>
               History
             </Link>
           </div>
@@ -153,8 +153,8 @@ export default function FavouritesApp() {
           {perms.length ? (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 14 }}>
-                  Permutation 排列 (Pau) <span style={{ color: "#999", fontWeight: 400, fontSize: 12 }}>tap to pick</span>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  Permutation 排列 (Pau) <span style={{ color: "#999", fontWeight: 400, fontSize: 13 }}>tap to pick</span>
                 </div>
                 <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
                   <button onClick={selectAll} style={mini("#333")}>Pau 包</button>
@@ -169,7 +169,7 @@ export default function FavouritesApp() {
                   return (
                     <button key={p} onClick={() => togglePick(p)}
                       style={{
-                        minWidth: 66, padding: "7px 8px", borderRadius: 8, fontSize: 15, fontWeight: 700, letterSpacing: 1, cursor: "pointer",
+                        minWidth: 66, padding: "7px 8px", borderRadius: 12, fontSize: 15, fontWeight: 700, letterSpacing: 1, cursor: "pointer",
                         border: on ? "2px solid " + RED : "1px solid #ccc",
                         background: on ? "#ffe9e9" : already ? "#fffbe0" : "#fff",
                         color: "#111",
@@ -184,14 +184,14 @@ export default function FavouritesApp() {
             <div style={{ marginTop: 12, fontSize: 13, color: "#888" }}>Type a 4-digit number to see all 24 permutations (pau).</div>
           )}
 
-          <div style={{ marginTop: 14, fontWeight: 700, fontSize: 14 }}>Alert for 提醒奖项</div>
+          <div style={{ marginTop: 14, fontWeight: 700, fontSize: 15 }}>Alert for 提醒奖项</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
             {ALL_SCOPES.map((s) => {
               const on = scopes.includes(s);
               return (
                 <button key={s} onClick={() => toggleScope(s)}
                   style={{
-                    padding: "6px 12px", borderRadius: 16, cursor: "pointer", fontSize: 13,
+                    padding: "6px 12px", borderRadius: 12, cursor: "pointer", fontSize: 13,
                     border: on ? "2px solid " + RED : "1px solid #ccc",
                     background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#333", fontWeight: on ? 700 : 500,
                   }}>
@@ -201,35 +201,35 @@ export default function FavouritesApp() {
             })}
           </div>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13.5, color: "#333" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13, color: "#333" }}>
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} style={{ width: 18, height: 18 }} />
             Special notification 特别通知 when my number appears
           </label>
 
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <button onClick={add} style={{ flex: 2, background: RED, color: "#fff", border: 0, borderRadius: 10, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+            <button onClick={add} style={{ flex: 2, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
               Add to favourites
             </button>
             <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
-              style={{ flex: 1, background: "#fff", color: "#333", border: "1px solid #ccc", borderRadius: 10, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+              style={{ flex: 1, background: "#fff", color: "#333", border: "1px solid #ccc", borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
               Back
             </button>
           </div>
 
-          {flash ? <div style={{ marginTop: 10, background: "#e8f5e9", color: "#1b5e20", borderRadius: 8, padding: "8px 10px", fontSize: 13 }}>{flash}</div> : null}
+          {flash ? <div style={{ marginTop: 10, background: "#e8f5e9", color: "#1b5e20", borderRadius: 12, padding: "8px 10px", fontSize: 13 }}>{flash}</div> : null}
         </div>
 
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>My favourite numbers 我的收藏 ({favs.length})</div>
+            <div style={{ fontWeight: 800, fontSize: 15 }}>My favourite numbers 我的收藏 ({favs.length})</div>
             {favs.length ? (
               <button onClick={() => { saveFavs([]); setFavs([]); }} style={mini(RED)}>Clear all</button>
             ) : null}
           </div>
 
           {perm !== "granted" ? (
-            <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#fff8e1", borderRadius: 8, padding: "8px 10px" }}>
-              <div style={{ fontSize: 12.5, color: "#7a5b00" }}>
+            <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#fff8e1", borderRadius: 12, padding: "8px 10px" }}>
+              <div style={{ fontSize: 13, color: "#7a5b00" }}>
                 {perm === "unsupported" ? "This device will show in-app alerts." : "Allow notifications to get an alert when your number appears."}
               </div>
               {perm !== "unsupported" ? (
@@ -244,16 +244,16 @@ export default function FavouritesApp() {
                 <div key={f.num} style={{ borderTop: "1px solid #f0f0f0", padding: "10px 0" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Link href={"/number-history?num=" + f.num} style={{ textDecoration: "none" }}>
-                      <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 800, fontSize: 17, letterSpacing: 2, borderRadius: 8, padding: "4px 10px" }}>{f.num}</span>
+                      <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 2, borderRadius: 12, padding: "4px 10px" }}>{f.num}</span>
                     </Link>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 12, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div style={{ fontSize: 13, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {f.scopes.map((s) => SCOPE_LABEL[s]).join(" · ")}
                       </div>
-                      <Link href={"/number-history?num=" + f.num} style={{ fontSize: 12, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
+                      <Link href={"/number-history?num=" + f.num} style={{ fontSize: 13, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
                     </div>
                     <button onClick={() => toggleBell(f)} title="Special notification"
-                      style={{ background: "transparent", border: 0, fontSize: 19, cursor: "pointer", color: f.notify ? "#e6a700" : "#bbb" }}>
+                      style={{ background: "transparent", border: 0, fontSize: 18, cursor: "pointer", color: f.notify ? "#e6a700" : "#bbb" }}>
                       {f.notify ? <BellRinging size={19} weight="fill" /> : <BellSlash size={19} />}
                     </button>
                     <button onClick={() => del(f.num)} title="Remove"
@@ -265,7 +265,7 @@ export default function FavouritesApp() {
                       return (
                         <button key={s} onClick={() => setScopesFor(f, s)}
                           style={{
-                            padding: "4px 10px", borderRadius: 14, fontSize: 12, cursor: "pointer",
+                            padding: "4px 10px", borderRadius: 12, fontSize: 13, cursor: "pointer",
                             border: on ? "1.5px solid " + RED : "1px solid #ddd",
                             background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#888",
                           }}>
@@ -293,5 +293,5 @@ export default function FavouritesApp() {
 }
 
 function mini(color: string): React.CSSProperties {
-  return { background: color, color: "#fff", border: 0, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" };
+  return { background: color, color: "#fff", border: 0, borderRadius: 12, padding: "5px 10px", fontSize: 13, cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" };
 }

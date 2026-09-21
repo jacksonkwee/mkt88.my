@@ -177,7 +177,7 @@ export default function NumberHistoryApp() {
       <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
         <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
           style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
-        <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           Number History 开彩记录
         </div>
         <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
@@ -186,23 +186,23 @@ export default function NumberHistoryApp() {
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         {/* Search + 大伯公 */}
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>Search a 4D number</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Search a 4D number</div>
           <div style={{ display: "flex", gap: 8 }}>
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               onKeyDown={(e) => e.key === "Enter" && search()}
               placeholder="e.g. 1782"
               inputMode="numeric"
-              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 8, fontSize: 20, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
-            <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 8, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>Search</button>
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+            <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>Search</button>
           </div>
 
           {/* 大伯公 meaning (small) */}
           {dabo && primary ? (
             <Link href={"/dabogong?num=" + primary}
-              style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, padding: 8, borderRadius: 10, background: YELLOW_SOFT, textDecoration: "none", color: "#111" }}>
+              style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, padding: 8, borderRadius: 12, background: YELLOW_SOFT, textDecoration: "none", color: "#111" }}>
               <img src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
-                style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 8, background: "#fff", border: "1px solid #eee" }} />
+                style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 12, background: "#fff", border: "1px solid #eee" }} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 11, color: "#8a6d00", fontWeight: 700 }}>大伯公 {dabo.kind}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -215,13 +215,13 @@ export default function NumberHistoryApp() {
 
           {primary ? (
             <>
-              <div style={{ marginTop: 10, fontWeight: 700, fontSize: 13.5 }}>What to check 查询方式</div>
+              <div style={{ marginTop: 10, fontWeight: 700, fontSize: 13 }}>What to check 查询方式</div>
               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
                 <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一 {primary}</button>
                 <button onClick={() => setSelected(perms)} style={modeBtn(mode === "pau")}>Pau 包 (all {perms.length})</button>
                 <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>Reverse 来回 {reverseSet.join(" / ")}</button>
               </div>
-              <div style={{ marginTop: 10, fontSize: 12.5, color: "#555" }}>
+              <div style={{ marginTop: 10, fontSize: 13, color: "#555" }}>
                 Checking <b>{selected.length}</b> number{selected.length === 1 ? "" : "s"}:{" "}
                 <span style={{ color: "#111", fontWeight: 600 }}>
                   {selected.slice(0, 16).join(", ")}{selected.length > 16 ? ` +${selected.length - 16} more` : ""}
@@ -238,11 +238,11 @@ export default function NumberHistoryApp() {
               </div>
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button onClick={() => onToggleFav(primary || data.nums[0])}
-                  style={{ border: "1px solid " + RED, borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
+                  style={{ border: "1px solid " + RED, borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
                   {isFav(primary || data.nums[0]) ? <><Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Favourite</> : <><Star size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />Add favourite</>}
                 </button>
                 <Link href={"/favourites?num=" + (primary || data.nums[0])}
-                  style={{ border: "1px solid #ddd", borderRadius: 8, padding: "6px 10px", fontSize: 12.5, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
+                  style={{ border: "1px solid #ddd", borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
                   <Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Pau / Notify
                 </Link>
               </div>
@@ -253,7 +253,7 @@ export default function NumberHistoryApp() {
         {/* Filters */}
         {data ? (
           <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Region 地区 {regions.length ? <span style={{ color: RED }}>({regions.length})</span> : null}</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Region 地区 {regions.length ? <span style={{ color: RED }}>({regions.length})</span> : null}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
               {REGIONS.map((r) => (
@@ -261,7 +261,7 @@ export default function NumberHistoryApp() {
               ))}
             </div>
 
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Prize 奖项 {prizes.length ? <span style={{ color: RED }}>({prizes.length})</span> : null}</div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Prize 奖项 {prizes.length ? <span style={{ color: RED }}>({prizes.length})</span> : null}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
               <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
               {PRIZES.map((p) => (
@@ -271,11 +271,11 @@ export default function NumberHistoryApp() {
 
             {/* Company filter (optional) */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>
-                公司 Company {companies.length ? <span style={{ color: RED }}>({companies.length})</span> : <span style={{ color: "#999", fontWeight: 400, fontSize: 12 }}> all {companyCounts.size}</span>}
+              <div style={{ fontWeight: 700, fontSize: 15 }}>
+                公司 Company {companies.length ? <span style={{ color: RED }}>({companies.length})</span> : <span style={{ color: "#999", fontWeight: 400, fontSize: 13 }}> all {companyCounts.size}</span>}
               </div>
               <button onClick={() => setShowCompanies((v) => !v)}
-                style={{ border: "1px solid " + RED, background: showCompanies ? RED : "#fff", color: showCompanies ? "#fff" : RED, borderRadius: 8, padding: "5px 10px", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>
+                style={{ border: "1px solid " + RED, background: showCompanies ? RED : "#fff", color: showCompanies ? "#fff" : RED, borderRadius: 12, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 {showCompanies ? <>收起 Filter <CaretUp size={12} weight="bold" /></> : <>筛选 Filter <CaretDown size={12} weight="bold" /></>}
               </button>
             </div>
@@ -297,7 +297,7 @@ export default function NumberHistoryApp() {
                     </button>
                   ) : null}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 11.5, color: "#999" }}>
+                <div style={{ marginTop: 6, fontSize: 11, color: "#999" }}>
                   Tick the companies you want to see, untick to hide. Nothing ticked = show all.
                 </div>
               </div>
@@ -315,7 +315,7 @@ export default function NumberHistoryApp() {
             ) : filtered.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: "#777" }}>
                 No past draw found for the selected filters.
-                <div style={{ fontSize: 12, marginTop: 6, color: "#aaa" }}>Try another number or clear the filters.</div>
+                <div style={{ fontSize: 13, marginTop: 6, color: "#aaa" }}>Try another number or clear the filters.</div>
               </div>
             ) : (
               <div>
@@ -329,18 +329,18 @@ export default function NumberHistoryApp() {
                   const fav = isFav(m.num);
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff" }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
-                        {m.logo ? <img src={m.logo} alt="" style={{ maxWidth: 30, maxHeight: 30 }} /> : <span style={{ fontSize: 10, color: "#999" }}>4D</span>}
+                      <div style={{ width: 34, height: 34, borderRadius: 12, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
+                        {m.logo ? <img src={m.logo} alt="" style={{ maxWidth: 30, maxHeight: 30 }} /> : <span style={{ fontSize: 11, color: "#999" }}>4D</span>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.game}</div>
-                        <div style={{ fontSize: 12, color: "#888" }}>{m.date} · {m.region}</div>
+                        <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.game}</div>
+                        <div style={{ fontSize: 13, color: "#888" }}>{m.date} · {m.region}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
-                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 6, padding: "2px 7px", marginBottom: 3 }}>
+                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 12, padding: "2px 7px", marginBottom: 3 }}>
                           {m.prize}
                         </span>
-                        <div style={{ fontWeight: 800, fontSize: 17, letterSpacing: 2 }}>{m.num}</div>
+                        <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: 2 }}>{m.num}</div>
                       </div>
                       <button onClick={() => onToggleFav(m.num)} title="Favourite"
                         style={{ background: "transparent", border: 0, fontSize: 18, cursor: "pointer", padding: 4, color: fav ? "#e6a700" : "#bbb" }}>
@@ -371,13 +371,13 @@ export default function NumberHistoryApp() {
 
 function modeBtn(active: boolean): React.CSSProperties {
   return {
-    padding: "6px 12px", borderRadius: 16, fontSize: 13, fontWeight: active ? 700 : 500, cursor: "pointer",
+    padding: "6px 12px", borderRadius: 12, fontSize: 13, fontWeight: active ? 700 : 500, cursor: "pointer",
     border: active ? "2px solid " + RED : "1px solid #ccc", background: active ? "#ffe9e9" : "#fff", color: active ? RED : "#333",
   };
 }
 function chip(active: boolean): React.CSSProperties {
   return {
-    padding: "5px 12px", borderRadius: 16, fontSize: 13, cursor: "pointer",
+    padding: "5px 12px", borderRadius: 12, fontSize: 13, cursor: "pointer",
     border: active ? "2px solid " + RED : "1px solid #ccc",
     background: active ? "#ffe9e9" : "#fff", color: active ? RED : "#333", fontWeight: active ? 700 : 500,
   };

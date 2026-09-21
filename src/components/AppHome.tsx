@@ -28,7 +28,7 @@ type Tile = { href: string; logo: string; name: string; zh?: string; lucky?: boo
  * Colour rule: one accent (the brand red) over off-white surfaces. No pure black
  * and no pure-white page background.
  */
-const RADIUS = 14;
+const RADIUS = 12;
 const PAGE_BG = "#f6f7f9";
 const SURFACE = "#ffffff";
 const BORDER = "#e6e8eb";
@@ -47,8 +47,8 @@ const ICON_BOX: React.CSSProperties = {
   width: "100%", height: 44, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto",
 };
 
-const NAME: React.CSSProperties = { fontSize: 12.5, fontWeight: 700, color: INK, lineHeight: 1.15 };
-const SUB: React.CSSProperties = { fontSize: 10.5, color: INK_MUTED, lineHeight: 1.15 };
+const NAME: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: INK, lineHeight: 1.15 };
+const SUB: React.CSSProperties = { fontSize: 11, color: INK_MUTED, lineHeight: 1.15 };
 
 function luckyNumber(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
@@ -308,7 +308,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 700 }}>Keep screen on</div>
-                <div style={{ fontSize: 12, color: "#777" }}>屏幕常亮</div>
+                <div style={{ fontSize: 13, color: "#777" }}>屏幕常亮</div>
               </div>
               <button
                 type="button"
@@ -321,7 +321,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: keepOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 12, color: "#999", marginTop: 10 }}>
+            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>
               While this is on the phone will not sleep during a live draw.
             </div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
@@ -335,9 +335,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
-            <div style={{ fontSize: 26, fontWeight: 800, color: ACCENT }}>恭喜发财</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: ACCENT }}>恭喜发财</div>
             <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>您的幸运号码</div>
-            <div style={{ fontSize: 56, fontWeight: 900, letterSpacing: 8, color: ACCENT, margin: "14px 0 10px", background: "#fff7e6", borderRadius: RADIUS, padding: "8px 0", fontVariantNumeric: "tabular-nums" }}>{lucky}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 8, color: ACCENT, margin: "14px 0 10px", background: "#fff7e6", borderRadius: RADIUS, padding: "8px 0", fontVariantNumeric: "tabular-nums" }}>{lucky}</div>
             <button type="button" onClick={() => setLucky(luckyNumber())} style={{ padding: "10px 18px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, marginRight: 8, cursor: "pointer" }}>Try Again</button>
             <button type="button" onClick={() => setLucky(null)} style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: RADIUS, cursor: "pointer" }}>Close</button>
           </div>

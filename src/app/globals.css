@@ -296,8 +296,10 @@ body.mkt-in-app .mkt-app-topbar > a {
   justify-content: center;
   padding: 0 14px !important;
   border-radius: 12px !important;
-  background: rgba(255, 255, 255, 0.14) !important;
-  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  /* Darken, do not lighten: white text on a white-tinted red came out at
+     4.4:1. On the darkened red it is 7.7:1, comfortably past AA. */
+  background: rgba(0, 0, 0, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
 }
 body.mkt-in-app .mkt-app-topbar > button {
@@ -306,14 +308,14 @@ body.mkt-in-app .mkt-app-topbar > button {
   min-width: 44px !important;
 }
 body.mkt-in-app .mkt-app-topbar > a {
-  font-size: 14px !important;
+  font-size: 15px !important;
   font-weight: 800;
   text-decoration: none;
   line-height: 1 !important;
 }
 body.mkt-in-app .mkt-app-topbar > button:active,
 body.mkt-in-app .mkt-app-topbar > a:active {
-  background: rgba(255, 255, 255, 0.3) !important;
+  background: rgba(0, 0, 0, 0.3) !important;
 }
 body.mkt-in-app .mkt-app-topbar > button:focus-visible,
 body.mkt-in-app .mkt-app-topbar > a:focus-visible {
