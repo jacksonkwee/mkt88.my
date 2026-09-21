@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { GearSix } from "@phosphor-icons/react";
@@ -97,6 +98,33 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
   const lockRef = useRef<WakeLockSentinelLike | null>(null);
+
+  const pathname = usePathname();
+  /** The route the first page is waiting for, so the site stays hidden until it arrives. */
+  const pendingNav = useRef<string | null>(null);
+
+  /**
+   * Tapping a tile must not show the results page on the way there. The site
+   * stays hidden until the route has actually changed, and only then is the
+   * first page dismissed - so the page you picked appears directly.
+   */
+  useEffect(() => {
+    if (!open || !pendingNav.current) return;
+    if (pathname !== pendingNav.current) {
+      pendingNav.current = null;
+      setOpen(false);
+    }
+  }, [pathname, open]);
+
+  /** Close the first page now, or hold it until a different page is ready. */
+  const openPage = (href: string) => {
+    const path = href.split("?")[0];
+    if (path.startsWith("/") && path !== pathname) {
+      pendingNav.current = pathname || "/";
+      return;
+    }
+    setOpen(false);
+  };
 
   // Load the saved preference (default ON).
   useEffect(() => {
@@ -216,7 +244,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (
-            <Nav key={t.name} href={t.href} onClick={() => setOpen(false)}>
+            <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
               <span style={NAME}>{t.name}</span>
@@ -252,7 +280,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 // Close the first page as the link opens. Without this the
                 // overlay stayed on top and the page it opened showed behind
                 // it, which read as the bottom tiles not working at all.
-                setOpen(false);
+                openPage(t.href);
               }}
             >
               <span style={ICON_BOX}>
