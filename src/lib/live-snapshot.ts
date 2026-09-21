@@ -193,6 +193,51 @@ function parsePerdana(html: string, iso: string): Record<string, PrizeSet> {
   }
   return out;
 }
+/** Hour of the day in Kuala Lumpur. */
+function klHour(): number {
+  try {
+    return Number(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
+  } catch { return new Date().getHours(); }
+}
+
+/** "20-09-2026 (Sun)" -> "2026-09-20". */
+function isoFromDateLabel(s: string): string | null {
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(s || "");
+  return m ? m[3] + "-" + m[2] + "-" + m[1] : null;
+}
+
+/**
+ * Perdana 4D from the shared live feed.
+ *
+ * The operator's own page cannot be reached from the server (it times out) and
+ * refuses cross-origin reads from the phone, so that source is unusable. This
+ * feed is the one every other game already uses and it carries Perdana under
+ * its P entry.
+ *
+ * It holds ONE draw per day with no time, so the draw is filed under the slot
+ * it belongs to - the evening draw once that has passed, otherwise the
+ * afternoon one - and the card always carries the feed's own date, never a
+ * date borrowed from somewhere else.
+ */
+function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
+  const out: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
+  const p = (feed as { P?: Record<string, unknown> } | null)?.P;
+  if (!p) return out;
+  const val = (v: unknown): string => {
+    const s = v == null ? "" : String(v);
+    return !s || s === "-" ? "----" : s;
+  };
+  const prize = [val(p.P1), val(p.P2), val(p.P3)];
+  if (!prize.some((v) => !isDash(v))) return out;
+  const special = Array.from({ length: 13 }, (_, i) => val(p["S" + (i + 1)]));
+  const cons = Array.from({ length: 10 }, (_, i) => val(p["C" + (i + 1)]));
+  const dd = typeof p.DD === "string" ? p.DD : "";
+  const iso = isoFromDateLabel(dd);
+  const today = myDate(0).iso;
+  const slot = iso && iso >= today ? (klHour() >= 19 ? "19:30" : "15:30") : "19:30";
+  out[slot] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
+  return out;
+}
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 
@@ -442,6 +487,12 @@ export async function buildSnapshot(): Promise<Snapshot> {
       if (hasAnyNumber(s) && !perdana[time]) perdana[time] = s;
     }
   }
+
+  // The operator page for Perdana is unreachable (server timeout, no CORS), so
+  // fill anything still empty from the shared live feed instead of leaving the
+  // page showing an old stored card.
+  const feedPerdana = perdanaFromFeed(feed);
+  for (const t of ["15:30", "19:30"]) if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
 
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
