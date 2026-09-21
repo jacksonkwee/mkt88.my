@@ -165,16 +165,45 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   };
   useEffect(() => {
     const el = track.current;
-    if (!el || el.getClientRects().length === 0) return; // hidden (e.g. desktop) -> no highlight
-    el.scrollLeft = Math.max(0, Math.min(idx, pages.length - 1)) * el.clientWidth;
-    dispatchIdx(el);
+    if (!el) return;
+    let placedWidth = -1;
+    /**
+     * Put the track on the slide this page is for.
+     *
+     * Inside the app the whole site is hidden while the first page is open, so
+     * the track has no layout when this runs. Bailing out there (what it used
+     * to do) meant it never tried again, so every game page stayed on the first
+     * slide - Magnum - whichever icon was tapped. Wait for the track instead,
+     * and re-place it when the width really changes (rotation, resize).
+     */
+    const place = () => {
+      if (el.getClientRects().length === 0 || el.clientWidth === 0) return false;
+      if (el.clientWidth !== placedWidth) {
+        placedWidth = el.clientWidth;
+        el.scrollLeft = Math.max(0, Math.min(idx, pages.length - 1)) * el.clientWidth;
+      }
+      dispatchIdx(el);
+      return true;
+    };
+    place();
+    const timers = [50, 150, 350, 700, 1400].map((ms) => window.setTimeout(place, ms));
+    const mo = typeof MutationObserver !== "undefined" ? new MutationObserver(place) : null;
+    mo?.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(place) : null;
+    ro?.observe(el);
     let raf = 0;
     const onScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => { raf = 0; dispatchIdx(el); });
     };
     el.addEventListener("scroll", onScroll);
-    return () => { el.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf); };
+    return () => {
+      timers.forEach((id) => window.clearTimeout(id));
+      mo?.disconnect();
+      ro?.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
