@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FAV_EVENT, YELLOW, cellScope, isNum, loadFavs, type Fav } from "../lib/favourites";
 import { Star } from "@phosphor-icons/react";
 
@@ -34,6 +34,9 @@ function gameName(el: Element | null): string {
  */
 export default function AppTools() {
   const path = usePathname() || "";
+  // In the app a full page load re-shows the first page, so tapping a result
+  // number has to move between pages inside the app instead.
+  const router = useRouter();
   const hidden = HIDDEN.some((h) => path === h || path.startsWith(h + "/"));
   const [favs, setFavs] = useState<Fav[]>([]);
   const [toast, setToast] = useState<{ num: string; game: string; prize: string } | null>(null);
@@ -63,11 +66,11 @@ export default function AppTools() {
       const cell = t.closest(".lottery-number, .lottery-prize-number") as HTMLElement | null;
       if (!cell || cell.closest("a")) return;
       const num = (cell.textContent || "").replace(/\s+/g, "");
-      if (isNum(num)) window.location.href = "/number-history?num=" + num;
+      if (isNum(num)) router.push("/number-history?num=" + num);
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, [hidden]);
+  }, [hidden, router]);
 
   // Highlight favourite numbers (yellow) and raise a special notification.
   useEffect(() => {
@@ -126,7 +129,7 @@ export default function AppTools() {
 
   return (
     <div id="mkt-toast"
-      onClick={() => { const n = toast.num; setToast(null); window.location.href = "/number-history?num=" + n; }}
+      onClick={() => { const n = toast.num; setToast(null); router.push("/number-history?num=" + n); }}
       style={{
         position: "fixed", left: 12, bottom: 12, zIndex: 9991, background: "#fff", border: "2px solid " + RED,
         borderLeft: "8px solid " + YELLOW, borderRadius: 12, padding: "10px 14px", boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
