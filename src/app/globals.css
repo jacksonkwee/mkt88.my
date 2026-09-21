@@ -246,3 +246,89 @@ body.mkt-in-app {
    covering it stops it being laid out and painted behind the tiles - including on
    the first frame, which the server already marks for the app. */
 body.mkt-in-app.mkt-home-open #mkt-site { display: none; }
+
+/* ------------------------------------------------------------------ *
+ * mkt-btn-system - app buttons
+ *
+ * One documented shape rule: every button in the app is 12px radius with a
+ * 44x44 minimum tap target and a single line of text. The keep-screen-on
+ * switch stays a pill because it is a track, not a button; result cards and
+ * the result tables keep their own radius and are not touched here.
+ * Colours stay as each screen defined them, so the brand red stays the
+ * primary action and white stays secondary.
+ * Every state is covered: rest, pressed (see the press rule above),
+ * focus-visible, and disabled.
+ * ------------------------------------------------------------------ */
+body.mkt-in-app button {
+  /* Shape and touch size are enforced here so every screen matches, even the
+     ones that set their size inline. Colours stay with each screen. */
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  font: inherit;
+  line-height: 1.1;
+  white-space: nowrap;
+  touch-action: manipulation;
+  cursor: pointer;
+  transition: transform 90ms ease, filter 90ms ease, background-color 120ms ease,
+    border-color 120ms ease, box-shadow 120ms ease;
+}
+
+/* Dashed placeholder buttons that must not look tappable. */
+body.mkt-in-app button:disabled,
+body.mkt-in-app button[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Keyboard focus is always visible on light screens. */
+body.mkt-in-app button:focus-visible {
+  outline: 3px solid #cc0000;
+  outline-offset: 2px;
+}
+
+/* The Home / Back / icon buttons on the red top bar: a real button surface
+   instead of a bare glyph, with a white focus ring so it shows on red. */
+body.mkt-in-app .mkt-app-topbar > button,
+body.mkt-in-app .mkt-app-topbar > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
+}
+body.mkt-in-app .mkt-app-topbar > button {
+  padding: 0 !important;
+  width: 44px;
+  min-width: 44px !important;
+}
+body.mkt-in-app .mkt-app-topbar > a {
+  font-size: 14px !important;
+  font-weight: 800;
+  text-decoration: none;
+  line-height: 1 !important;
+}
+body.mkt-in-app .mkt-app-topbar > button:active,
+body.mkt-in-app .mkt-app-topbar > a:active {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+body.mkt-in-app .mkt-app-topbar > button:focus-visible,
+body.mkt-in-app .mkt-app-topbar > a:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Reusable button colours for the screens that want them. */
+body.mkt-in-app .mkt-btn-primary {
+  background: #cc0000 !important;
+  border-color: #cc0000 !important;
+  color: #ffffff !important;
+}
+body.mkt-in-app .mkt-btn-secondary {
+  background: #ffffff !important;
+  border-color: #e6e8eb !important;
+  color: #16181d !important;
+}
