@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
@@ -18,6 +18,7 @@ const historyHref = (num: string) => (num.length === 4 ? "/number-history?num=" 
 
 export default function DaBoGongApp() {
   const params = useSearchParams();
+  const router = useRouter();
   const initial = (params.get("num") || "").trim();
 
   const [text, setText] = useState(initial);
@@ -94,10 +95,10 @@ export default function DaBoGongApp() {
   return (
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 60 }}>
       <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
-        <button onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/"))}
+        <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
           style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18 }}>大伯公 千字图万字图</div>
-        <a href="/" style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</a>
+        <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
       </div>
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: 12 }}>
