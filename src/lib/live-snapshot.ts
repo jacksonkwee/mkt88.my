@@ -285,8 +285,18 @@ let perdanaRelayAt = 0;
 async function perdanaFromRelay(iso: string): Promise<Record<string, PrizeSet>> {
   if (Date.now() - perdanaRelayAt < 5 * 60 * 1000) return {};
   perdanaRelayAt = Date.now();
-  const text = await get(PERDANA_RELAY + "https://www.perdana4d.com/Results/4D?processDate=" + iso);
-  return text ? parsePerdana(text, iso) : {};
+  // Its own request: a reader round trip is slower than the 12s the shared
+  // helper allows, and that limit is why this came back empty.
+  try {
+    const res = await fetch(PERDANA_RELAY + "https://www.perdana4d.com/Results/4D?processDate=" + iso, {
+      headers: { "User-Agent": UA, Accept: "text/plain,*/*" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(35000),
+    });
+    if (!res.ok) return {};
+    const text = await res.text();
+    return text ? parsePerdana(text, iso) : {};
+  } catch { return {}; }
 }
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
