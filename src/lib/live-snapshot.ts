@@ -394,7 +394,10 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
     const sameDraw = !!previous && today.key === previous.key;
     const draw = sameDraw && previous ? previous : today;
     const six = draw.six ? { ...draw.six, date: weekdayOf(sameDraw ? prevIso : iso) } : null;
-    return { six, jp: Object.keys(draw.jp).length ? draw.jp : null };
+    // The jackpot figures carry no date of their own, so an older draw's figures
+    // would read as today's. Until today's draw is published there is no jackpot.
+    const jp = sameDraw ? null : (Object.keys(draw.jp).length ? draw.jp : null);
+    return { six, jp };
   } catch { return { six: null, jp: null }; }
 }
 
