@@ -136,7 +136,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
               onPointerDown={openFull}
               onTouchStart={openFull}
               onFocus={openFull}
-              onChange={(e) => { setDate(e.target.value); if (inApp) setAppOpen(false); }}
+              onChange={(e) => setDate(e.target.value)}
               style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
