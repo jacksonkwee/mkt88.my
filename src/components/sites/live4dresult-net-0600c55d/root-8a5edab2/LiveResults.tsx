@@ -655,12 +655,9 @@ async function updateGdNineCards() {
       // The jackpot card is its own card - keep its date in step too.
       if (gd.six.date) applyIdValues("table-14-2026-09-06-6d-jp", { date: gd.six.date });
       applyIdValues("table-13-2026-09-06", gd.jp4);
-      // The 6+1D jackpot figures carry no date, so an older draw's pool and grand
-      // prize would read as today's. Only write them when the draw is today's.
-      const dParts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()).split("-");
-      const todayDmy = dParts[2] + "-" + dParts[1] + "-" + dParts[0];
-      const gdIsToday = !!gd.six.date && gd.six.date.slice(0, 10) === todayDmy;
-      applyIdValues("table-14-2026-09-06-6d-jp", gdIsToday ? gd.jp7 : { jp7_pool: "----", jp7_grand: "----" });
+      // The 6+1D jackpot is written only from the server snapshot, which knows
+      // whether today's jackpot has actually been settled. Writing it here too
+      // showed the previous draw's pool under today's date.
     }
   } catch {
     // ignore

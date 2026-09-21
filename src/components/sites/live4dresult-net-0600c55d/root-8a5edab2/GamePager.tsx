@@ -133,7 +133,16 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
         }
       }
       for (const card of Array.from(root.querySelectorAll('[id="' + baseId + '-jp"]'))) {
-        if (jp) for (const [id, v] of Object.entries(jp)) put(card, id, v);
+        if (jp) {
+          for (const [id, v] of Object.entries(jp)) put(card, id, v);
+        } else {
+          // No settled jackpot for this draw: clear the card instead of leaving
+          // the previous draw's pool and grand prize under today's date.
+          for (const id of ["jp7_pool", "jp7_grand"]) {
+            const el = card.querySelector('[data-id="' + id + '"]');
+            if (el) el.textContent = "----";
+          }
+        }
       }
     };
     writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7);
