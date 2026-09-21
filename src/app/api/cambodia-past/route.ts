@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import perdanaOfficial from "../../../lib/perdana-official.json";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
 import recent from "./recent.json";
 import hariPastRaw from "../../../lib/hari-past.json";
@@ -489,6 +490,14 @@ export async function GET(req: NextRequest) {
     ]);
 
     const perd = parsePerdanaHtml(perdanaHtml);
+  // Official draws collected by the free GitHub job: this host cannot reach
+  // perdana4d.com itself, so use what the job stored for this date.
+  {
+    const days = (perdanaOfficial as unknown as { days?: Record<string, Record<string, Set>> }).days || {};
+    for (const [t, set] of Object.entries(days[date] || {})) {
+      if (!perd[t] && set && set.prize && set.prize.length) perd[t] = set;
+    }
+  }
     // Stored Perdana history: 2021-2022 from the deep archive, 2022-2025 from
     // the collected Perdana store. Both hold the day's 19:30 draw.
     const PERDANA_PAST = perdanaPastRaw as unknown as Record<string, { d: string; p: string[]; g: [string, string[]][] }>;

@@ -1,0 +1,41 @@
+# Collects the official Perdana 4D draws and stores them in the repo.
+#
+# The site's host cannot reach perdana4d.com (Cloudflare refuses its address) and
+# a browser cannot read it either (the page sends no CORS headers). A GitHub
+# runner can, so this runs on a schedule and commits what it finds - Render then
+# deploys it, and the website shows Perdana like every other game. Free.
+name: Perdana 4D results
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: perdana-results
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Read the official Perdana page
+        run: node scripts/fetch-perdana-official.mjs
+      - name: Commit when the results changed
+        run: |
+          if [ -n "$(git status --porcelain src/lib/perdana-official.json)" ]; then
+            git config user.name "mkt88-results-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add src/lib/perdana-official.json
+            git commit -m "Perdana 4D results update"
+            git push
+          else
+            echo "No change to commit."
+          fi

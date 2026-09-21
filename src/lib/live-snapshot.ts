@@ -1,3 +1,4 @@
+import perdanaOfficial from "./perdana-official.json";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -557,6 +558,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // The operator page for Perdana is unreachable (server timeout, no CORS), so
   // fill anything still empty from the shared live feed instead of leaving the
   // page showing an old stored card.
+  // Official draws collected by the GitHub job, for hosts that cannot reach
+  // perdana4d.com themselves.
+  const fileDays = (perdanaOfficial as unknown as { days?: Record<string, Record<string, PrizeSet>> }).days || {};
+  for (const [time, set] of Object.entries(fileDays[today.iso] || {})) {
+    if (!perdana[time] && set && set.prize.length && set.prize.some((v) => !isDash(v))) {
+      perdana[time] = { ...set, date: weekdayOf(today.iso) };
+    }
+  }
   const feedPerdana = perdanaFromFeed(feed);
   for (const t of ["15:30", "19:30"]) if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
 
