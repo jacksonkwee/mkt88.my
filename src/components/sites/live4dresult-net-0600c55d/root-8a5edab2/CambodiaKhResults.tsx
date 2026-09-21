@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { hasNativeHttp, nativeHttpGet } from "../../../../lib/native-http";
+import { perdanaFromHtml } from "../../../../lib/perdana-parse";
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 
 interface SetData { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string; }
@@ -213,6 +215,28 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
         if (want("nine") && nineCol.length) columns.push(nineCol);
         if (want("nine") && nineExtras.length) columns.push([jpCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, extras: nineExtras })]);
 
+        // Perdana 4D is published on one page that refuses our server and a
+        // plain browser request, so ask the app itself for any draw the server
+        // could not supply - the same trick already used for HariHari above.
+        if (want("perdana") && hasNativeHttp()) {
+          const have = j.perdana || {};
+          const missing = (["15:30", "19:30"] as const).some((t) => {
+            const s = have[t];
+            return !s || !s.prize || !s.prize.length;
+          });
+          if (missing) {
+            const html = await nativeHttpGet("https://www.perdana4d.com/Results/4D?processDate=" + date);
+            if (!alive) return;
+            const parsed = html ? perdanaFromHtml(html) : {};
+            const merged: Record<string, SetData | null> = { ...have };
+            for (const [t, set] of Object.entries(parsed)) {
+              const cur = merged[t];
+              if (cur && cur.prize && cur.prize.length) continue;
+              if (set.prize.some((v) => !/^----+$/.test(v))) merged[t] = { ...set, date: set.date || d } as SetData;
+            }
+            j.perdana = merged;
+          }
+        }
         // Perdana 4D (two draws)
         const p = j.perdana || {};
         const perd = (t: string, id: string, nm: string, more: string) => {

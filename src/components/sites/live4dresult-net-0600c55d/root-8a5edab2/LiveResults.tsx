@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { nativeHttpGet } from "../../../../lib/native-http";
 import { gameBySlug } from "./GameDefs";
 
 /**
@@ -171,8 +172,16 @@ function setHasAny(s: PrizeSet | null | undefined): s is PrizeSet {
  * so ask the phone first and keep the server proxy as the fallback.
  */
 const DIRECT_HOSTS = ["api.hari4d.com"];
+/** Read through the app itself: these refuse every browser and our server. */
+const NATIVE_HOSTS = ["www.perdana4d.com", "perdana4d.com"];
 
 async function fetchText(url: string): Promise<string | null> {
+  try {
+    if (NATIVE_HOSTS.includes(new URL(url).hostname)) {
+      const viaApp = await nativeHttpGet(url);
+      if (viaApp) return viaApp;
+    }
+  } catch { /* fall through to the usual routes */ }
   try {
     try {
       if (DIRECT_HOSTS.includes(new URL(url).hostname)) {

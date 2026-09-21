@@ -50,6 +50,7 @@ public class MainActivity extends BridgeActivity {
     configureWebView();
     checkForAppUpdate();
     startWebViewReadyCheck();
+    installResultBridge();
 
     // Keep the launch logo up until the page has actually painted.
     // WebViewReadyCheck below releases it as soon as the page has real content,
@@ -292,5 +293,61 @@ public class MainActivity extends BridgeActivity {
         appHandler.postDelayed(this, 250);
       }
     }
+  }
+
+  /**
+   * Lets the page read result sites that refuse a browser request.
+   *
+   * Perdana 4D publishes its results on one page that sends no CORS headers and
+   * refuses our server's address, so neither the website nor the server can read
+   * it. The phone is not refused, so this runs the request natively and hands
+   * the page body back to the web code. Only the Perdana host is allowed.
+   */
+  private void installResultBridge() {
+    WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) return;
+    webView.addJavascriptInterface(new Object() {
+      @android.webkit.JavascriptInterface
+      public void get(final String url, final String id) {
+        new Thread(() -> {
+          String body = "";
+          java.net.HttpURLConnection conn = null;
+          try {
+            java.net.URL u = new java.net.URL(url);
+            String host = u.getHost() == null ? "" : u.getHost().toLowerCase();
+            if (!"www.perdana4d.com".equals(host) && !"perdana4d.com".equals(host)) {
+              postResult(webView, id, "");
+              return;
+            }
+            conn = (java.net.HttpURLConnection) u.openConnection();
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36");
+            conn.setRequestProperty("Accept", "text/html,*/*");
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
+            conn.setInstanceFollowRedirects(true);
+            if (conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
+              java.io.InputStream in = conn.getInputStream();
+              java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+              byte[] buf = new byte[8192];
+              int n;
+              while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+              in.close();
+              body = out.toString("UTF-8");
+            }
+          } catch (Exception ignored) {
+            // the page simply keeps whatever it already shows
+          } finally {
+            if (conn != null) conn.disconnect();
+          }
+          postResult(webView, id, body);
+        }).start();
+      }
+    }, "mktNative");
+  }
+
+  private void postResult(final WebView webView, final String id, final String body) {
+    final String js = "window.__mktNative && window.__mktNative.result("
+        + org.json.JSONObject.quote(id) + "," + org.json.JSONObject.quote(body) + ")";
+    webView.post(() -> webView.evaluateJavascript(js, null));
   }
 }
