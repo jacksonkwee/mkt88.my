@@ -10,6 +10,8 @@ import { GearSix } from "@phosphor-icons/react";
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
+/** The brand logo, at the top of the first page. */
+const MKT_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg?v=3";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.mkt88.app";
 
 /** Same order the swipe strip uses. */
@@ -239,8 +241,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px" }}>
-        {/* No logo up here. The Android splash already shows it while the app
-            loads, so repeating it on the first page made it appear twice. */}
+        {/* Brand logo, top of the first page. */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={MKT_LOGO} alt="MKT 發發" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
+        </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (

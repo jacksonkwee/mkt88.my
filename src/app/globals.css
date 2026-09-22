@@ -334,3 +334,12 @@ body.mkt-in-app .mkt-btn-secondary {
   border-color: #e6e8eb !important;
   color: #16181d !important;
 }
+/* ------------------------------------------------------------------ *
+ * The "More <game> Result" bar under every result card is a dead link
+ * (href="#") and pure clutter on a phone, so the app hides it.
+ * ------------------------------------------------------------------ */
+body.mkt-in-app .card .anchor,
+body.mkt-in-app .card td:has(> a > .anchor),
+body.mkt-in-app .card td > a:has(> .anchor) {
+  display: none !important;
+}
