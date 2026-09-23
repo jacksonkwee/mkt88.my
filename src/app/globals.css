@@ -343,3 +343,45 @@ body.mkt-in-app .card td:has(> a > .anchor),
 body.mkt-in-app .card td > a:has(> .anchor) {
   display: none !important;
 }
+/* ------------------------------------------------------------------ *
+ * Narrow phones (320-380px)
+ *
+ * The result card header could not shrink: the game name plus the
+ * date / draw-number row made the card ~353px wide on a 320px screen, so the
+ * right-hand side - including the last Special and Consolation numbers - was
+ * cut off. Everything is allowed to shrink and wrap here, and the 4-digit
+ * numbers keep to a single line (they may not split across two lines).
+ * ------------------------------------------------------------------ */
+@media (max-width: 380px) {
+  .card.outer-box {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  .card.outer-box .card-body,
+  .card.outer-box .row,
+  .card.outer-box table {
+    max-width: 100% !important;
+  }
+  .card.outer-box .row { flex-wrap: wrap !important; }
+  .card.outer-box .lottery-name {
+    font-size: 15px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    line-height: 1.2 !important;
+  }
+  .card.outer-box .date {
+    font-size: 12px !important;
+    white-space: normal !important;
+  }
+  .card.outer-box .lottery-logo img { max-width: 100% !important; height: auto !important; }
+  .card.outer-box td.lottery-number,
+  .card.outer-box .lottery-number {
+    font-size: 17px !important;
+    letter-spacing: 0 !important;
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+    white-space: nowrap !important;   /* a 4-digit number never splits */
+  }
+  .card.outer-box .lottery-prize-title { font-size: 12px !important; }
+  .card.outer-box .lottery-prize-number { font-size: 17px !important; white-space: nowrap !important; }
+}
