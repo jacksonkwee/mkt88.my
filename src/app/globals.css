@@ -385,3 +385,12 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   .card.outer-box .lottery-prize-title { font-size: 12px !important; }
   .card.outer-box .lottery-prize-number { font-size: 17px !important; white-space: nowrap !important; }
 }
+/* Narrow phones: a flex item refuses to shrink below its content unless its
+ * min-width is 0. The swipe slides used flex: 0 0 100%, so a wide result card
+ * (353px on a 320px phone) pushed the whole track wider and the right-hand
+ * column was cut off. */
+@media (max-width: 380px) {
+  /* min-width: 0 on the slides */
+  .mkt-pager-track > * { min-width: 0 !important; }
+  .mkt-past-scope { min-width: 0 !important; max-width: 100vw !important; }
+}
