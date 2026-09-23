@@ -6,6 +6,7 @@ import TopBanner from "../components/TopBanner";
 import SiteCustomizer from "../components/SiteCustomizer";
 import AppTools from "../components/AppTools";
 import AppHome from "../components/AppHome";
+import LiveSound from "../lib/LiveSound";
 import AppNotifications from "../components/AppNotifications";
 import { getSnapshot } from "../lib/live-snapshot";
 import LiveSnapshotProvider, { type SnapValue } from "../components/LiveSnapshotProvider";
@@ -280,6 +281,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <AppTools />
         </div>
         <AppNotifications enabled={inApp} />
+        <LiveSound enabled={inApp} />
       </body>
     </html>
   );

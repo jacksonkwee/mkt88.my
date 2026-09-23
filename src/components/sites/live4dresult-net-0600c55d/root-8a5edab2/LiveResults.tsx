@@ -25,7 +25,7 @@ function myHourNow(): number {
 }
 function nextInterval(): number {
   const h = myHourNow();
-  return h >= 18 && h <= 21 ? 5000 : 10000;
+  return h >= 18 && h <= 21 ? 8000 : 20000;
 }
 
 /**
@@ -1098,7 +1098,7 @@ export default function LiveResults() {
     collectSnapshot();
     const snapTimer = window.setInterval(() => {
       if (alive && document.visibilityState === "visible") collectSnapshot();
-    }, 5000);
+    }, 15000);
     // If a source is unreachable the built-in values come back after 7s.
     const restoreTimer = window.setTimeout(() => { if (alive) restoreUnfilled(); }, 7000);
     // The first cycle always reads every source, so a freshly opened page is
