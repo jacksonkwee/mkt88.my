@@ -42,8 +42,19 @@ export default function LiveSound({ enabled = false }: { enabled?: boolean }) {
     if (!enabled) return;
 
     const beep = () => {
-      const ctx = ctxRef.current;
-      if (!ctx || ctx.state !== "running") return;
+      let ctx = ctxRef.current;
+      if (!ctx) {
+        // The first tap usually creates it; make one here too in case it did not.
+        try {
+          const Ctor = window.AudioContext
+            || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (Ctor) ctxRef.current = new Ctor();
+          ctx = ctxRef.current;
+        } catch { /* no sound available */ }
+      }
+      if (!ctx) return;
+      if (ctx.state === "suspended") { try { void ctx.resume(); } catch { /* ignore */ } }
+      if (ctx.state !== "running") return;
       const now = ctx.currentTime;
       [880, 1175].forEach((freq, i) => {
         const osc = ctx.createOscillator();
@@ -76,8 +87,6 @@ export default function LiveSound({ enabled = false }: { enabled?: boolean }) {
     const cards = () => Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)"));
 
     const check = () => {
-      // No chime while the app's first page is covering the results.
-      if (document.body.classList.contains("mkt-home-open")) return;
       for (const card of cards()) {
         const key = keyOf(card);
         if (!key || seen.current.has(key)) continue;
@@ -88,10 +97,15 @@ export default function LiveSound({ enabled = false }: { enabled?: boolean }) {
 
     // First pass only records what is already on screen - opening the app must
     // not set off a burst of chimes for results that were already published.
-    const seed = window.setTimeout(() => { seeded.current = true; check(); }, 2500);
+    const seed = window.setTimeout(() => { check(); seeded.current = true; }, 2500);
     const mo = new MutationObserver(check);
     mo.observe(document.body, { subtree: true, childList: true, characterData: true });
-    return () => { window.clearTimeout(seed); mo.disconnect(); };
+    // A slow sweep as a safety net: if a source writes in a way the observer
+    // does not see, the chime still arrives.
+    const sweep = window.setInterval(check, 5000);
+    // Marker so the chime can be checked from outside.
+    document.documentElement.setAttribute("data-mkt-sound", "on");
+    return () => { window.clearTimeout(seed); window.clearInterval(sweep); mo.disconnect(); };
   }, [enabled]);
 
   return null;
