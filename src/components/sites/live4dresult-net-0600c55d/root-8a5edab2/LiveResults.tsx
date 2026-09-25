@@ -880,13 +880,21 @@ const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "
 function applyCardMap(cards: Record<string, Record<string, string>>) {
   for (const [cls, vals] of Object.entries(cards || {})) {
     for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
+      // A different draw date means the numbers on this card belong to the old
+      // draw, so the new draw's published values are written even when they are
+      // "----". Without this the date moved on while yesterday's numbers stayed
+      // underneath it, which is exactly what confuses people.
+      const dateEl = card.querySelector('[data-id="date"]');
+      const curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+      const newDraw = !!vals.date && vals.date.trim() !== curDate;
       for (const [id, v] of Object.entries(vals)) {
         // Never blank a value a live source has already filled - the same rule
         // GamePager uses when it writes the server snapshot. The snapshot still
         // carries "----" for slots the official feed has not published yet, and
         // letting those overwrite good numbers made the cards rewrite (and
         // flash) on every single refresh.
-        if (!v || /^----+$/.test(v) || v === "-") continue;
+        if (!v || v === "-") continue;
+        if (/^----+$/.test(v) && !newDraw) continue;   // keep good numbers unless the draw changed
         const el = card.querySelector('[data-id="' + id + '"]');
         setText(el, v);
       }
