@@ -1,0 +1,57 @@
+name: All 11 game results
+
+# Runs on GitHub's servers, so results keep updating while the PC is off.
+# Malaysia is UTC+8: draws land 15:00-22:45 local time = 07:00-14:45 UTC.
+on:
+  schedule:
+    - cron: "*/15 7-14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: all-11-results
+  cancel-in-progress: false
+
+jobs:
+  results:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Scrapling
+        run: pip install --quiet "scrapling[fetchers]>=0.4.15"
+
+      - name: Collect live results for all 11 games
+        run: |
+          python scripts/scrape-all-11.py --days 2 | tee /tmp/live.log
+          tail -n 18 /tmp/live.log >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Refresh the bundled past results
+        run: |
+          node scripts/build-gd-nine-past.mjs --days 3
+          node scripts/build-hari-past.mjs --days 3
+
+      - name: Publish whatever changed
+        run: |
+          git config user.name  "mkt88-results-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- data/all-11-results.json src/lib/gd-nine-past.json src/lib/hari-past.json
+          if git diff --cached --quiet; then
+            echo "nothing new"
+            exit 0
+          fi
+          git diff --cached --name-only
+          if git diff --cached --name-only | grep -q "^src/lib/"; then
+            git commit -m "Scheduled results update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          else
+            git commit -m "Live results $(date -u '+%Y-%m-%d %H:%M UTC') [skip ci]"
+          fi
+          git push
