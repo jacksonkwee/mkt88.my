@@ -25,12 +25,19 @@ let cache: Snapshot | null = null;
 let warming = false;
 let warmer: ReturnType<typeof setInterval> | null = null;
 
-async function get(url: string, json = false): Promise<any> {
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(12000) });
-    if (!res.ok) return null;
-    return json ? await res.json() : await res.text();
-  } catch { return null; }
+async function get(url: string, json = false, timeoutMs = 12000): Promise<any> {
+  // One retry: these result sites drop a request now and then, and a single
+  // miss used to empty whole cards out of the snapshot below.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) throw new Error("upstream " + res.status);
+      return json ? await res.json() : await res.text();
+    } catch {
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+    }
+  }
+  return null;
 }
 
 function clean(s: string): string {
@@ -508,8 +515,10 @@ export async function buildSnapshot(): Promise<Snapshot> {
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`),
+    // 4s: this host answers our server in ~14s, so a full wait stalled every
+    // build. The file copy and the live feed below already carry Perdana.
+    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 4000),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 4000),
     hariFor("15:30", today.iso, today.noPad),
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
@@ -575,6 +584,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const feedPerdana = perdanaFromFeed(feed);
   for (const t of ["15:30", "19:30"]) if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
 
+  // A source that drops out for one round must not wipe the cards we already
+  // had: blank cards were being served until the next successful rebuild.
+  if (cache) {
+    for (const [cls, vals] of Object.entries(cache.cards || {})) {
+      if (!cards[cls]) cards[cls] = vals;
+    }
+  }
+
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari: { "15:30": h15 || h15y, "19:30": h19 || h19y },
@@ -597,14 +614,23 @@ export async function getSnapshot(): Promise<Snapshot> {
   startWarmer();
   const cached = cache;
   if (cached && Date.now() - cached.at < SNAPSHOT_TTL) return cached;
-  if (cached) {
+  if (cached && Object.keys(cached.cards || {}).length > 0) {
+    // Good data is already on screen - hand it over now and refresh behind it.
     if (!warming) {
       warming = true;
       void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
     }
     return cached;
   }
-  // Nothing cached yet (first request after a restart): wait for one build.
+  // Nothing usable to serve (first request on this instance, or the last build
+  // came back blank): build now instead of handing back empty cards.
+  if (cache) {
+    if (!warming) {
+      warming = true;
+      void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
+    }
+    return cache;
+  }
   warming = true;
   try { return await buildSnapshot(); } finally { warming = false; }
 }
