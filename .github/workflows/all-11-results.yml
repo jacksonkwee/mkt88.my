@@ -53,4 +53,5 @@ jobs:
           else
             git commit -m "Live results $(date -u '+%Y-%m-%d %H:%M UTC') [skip ci]"
           fi
+          git pull --rebase --autostash
           git push
