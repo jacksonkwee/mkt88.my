@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import perdanaOfficial from "../../../lib/perdana-official.json";
+import gdNinePastRaw from "../../../lib/gd-nine-past.json";
 import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
 import recent from "./recent.json";
 import hariPastRaw from "../../../lib/hari-past.json";
@@ -497,15 +498,29 @@ export async function GET(req: NextRequest) {
     }).format(new Date());
     const settled = date < klToday;
 
+    // Dates already bundled by scripts/build-gd-nine-past.mjs need no official
+    // fetch at all, which is what makes a first-time date open instantly.
+    const bundled = (gdNinePastRaw as unknown as Record<string, {
+      gd?: Set | null; nine?: Set | null; gd6?: SixParts | null; gdjp4?: Record<string, string>;
+      gdjp7?: Record<string, string>; nine6?: SixParts | null; nineJp?: Record<string, string>;
+    }>)[date];
+
     const [perdanaHtml, h1530, h1930, gdPartsIn, ninePartsIn, gdNew, nineNew, ninePage] = await Promise.all([
       perdanaHtmlP,
       hariAt("15:30"),
       hariAt("19:30"),
-      gdPastParts(date),
-      ninePastParts(date),
-      settled ? Promise.resolve(true) : gdHasNewDraw(date),
-      settled ? Promise.resolve(true) : nineHasNewDraw(date),
-      httpGet("https://9lotto.com/result/" + nDate).catch(() => ""),
+      bundled
+        ? Promise.resolve({
+            four: bundled.gd || undefined, gd6: bundled.gd6 || undefined,
+            gdjp4: bundled.gdjp4, gdjp7: bundled.gdjp7,
+          })
+        : gdPastParts(date),
+      bundled
+        ? Promise.resolve({ four: bundled.nine || undefined, nine6: bundled.nine6 || undefined, nineJp: bundled.nineJp })
+        : ninePastParts(date),
+      settled || bundled ? Promise.resolve(true) : gdHasNewDraw(date),
+      settled || bundled ? Promise.resolve(true) : nineHasNewDraw(date),
+      bundled ? Promise.resolve("") : httpGet("https://9lotto.com/result/" + nDate).catch(() => ""),
     ]);
 
     const perd = parsePerdanaHtml(perdanaHtml);
