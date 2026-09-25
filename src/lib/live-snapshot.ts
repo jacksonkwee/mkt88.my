@@ -25,16 +25,18 @@ let cache: Snapshot | null = null;
 let warming = false;
 let warmer: ReturnType<typeof setInterval> | null = null;
 
-async function get(url: string, json = false, timeoutMs = 12000): Promise<any> {
+async function get(url: string, json = false, timeoutMs = 12000, retries = 1): Promise<any> {
   // One retry: these result sites drop a request now and then, and a single
-  // miss used to empty whole cards out of the snapshot below.
-  for (let attempt = 0; attempt < 2; attempt++) {
+  // miss used to empty whole cards out of the snapshot below. Sources that are
+  // known to be unreachable from this host pass retries = 0 - retrying them
+  // only doubled the wait.
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
       if (!res.ok) throw new Error("upstream " + res.status);
       return json ? await res.json() : await res.text();
     } catch {
-      if (attempt === 0) await new Promise((r) => setTimeout(r, 400));
+      if (attempt < retries) await new Promise((r) => setTimeout(r, 400));
     }
   }
   return null;
@@ -517,8 +519,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
     // 4s: this host answers our server in ~14s, so a full wait stalled every
     // build. The file copy and the live feed below already carry Perdana.
-    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 4000),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 4000),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 2500, 0),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 2500, 0),
     hariFor("15:30", today.iso, today.noPad),
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
