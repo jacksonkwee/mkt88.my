@@ -6,8 +6,8 @@ $repo = "C:\dev\GONGXIFACAI"
 $node = "C:\Users\dabom\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe"
 Set-Location $repo
 & $node "scripts\fetch-perdana-official.mjs" | Out-Null
-if (git status --porcelain -- src/lib/perdana-official.json) {
-  git add -- src/lib/perdana-official.json
+if (git status --porcelain -- src/lib/perdana-official.json src/lib/perdana-past.json) {
+  git add -- src/lib/perdana-official.json src/lib/perdana-past.json
   git commit -q -m "Perdana 4D results update"
   git push -q origin main
 }

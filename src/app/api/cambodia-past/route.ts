@@ -504,23 +504,28 @@ export async function GET(req: NextRequest) {
     const deepDay = DEEP[date];
     const pastPerd = PERDANA_PAST[date] || (deepDay ? deepDay.perdana : null);
     if (pastPerd) {
-      const g = pastPerd as { d: string; p: any[]; g: [string, string[]][] };
+      const g = pastPerd as { d: string; p: any[]; g: [string, string[]][]; p2?: any[]; g2?: [string, string[]][] };
       // Two record shapes: the deep archive keeps label/value pairs, the
       // collected store keeps the three prizes as a plain list.
-      const nums: string[] = Array.isArray(g.p[0])
-        ? (g.p as [string, string][]).filter(([l]) => /^[123](st|nd|rd)\s*Prize/i.test(l)).map(([, v]) => v)
-        : (g.p as string[]).slice(0, 3);
-      const gridBy = (name: string) => {
-        const hit = (g.g || []).find(([title]) => new RegExp(name, "i").test(title));
+      const numsOf = (p: any[]): string[] => Array.isArray(p[0])
+        ? (p as [string, string][]).filter(([l]) => /^[123](st|nd|rd)\s*Prize/i.test(l)).map(([, v]) => v)
+        : (p as string[]).slice(0, 3);
+      const gridBy = (rows: [string, string[]][] | undefined, name: string) => {
+        const hit = (rows || []).find(([title]) => new RegExp(name, "i").test(title));
         return hit ? hit[1].filter((v) => /^----$/.test(v) || /^\d{1,6}$/.test(v)) : [];
       };
-      if (nums.length >= 3 && nums.some((v) => !/^----+$/.test(v))) {
-        // The stored record is the 19:30 draw, so only fill that slot - never
-        // show the same numbers under both draw times.
-        if (!perd["19:30"]) {
-          perd["19:30"] = { prize: [nums[0], nums[1], nums[2]], special: gridBy("Special"), cons: gridBy("Consolation"), date: g.d } as any;
+      // The stored record is the 19:30 draw, so only fill that slot - never
+      // show the same numbers under both draw times. A second stored draw
+      // (p2/g2) fills 15:30, so a slow official page cannot blank a past date.
+      const put = (slot: "15:30" | "19:30", p: any[] | undefined, rows: [string, string[]][] | undefined) => {
+        if (!Array.isArray(p) || perd[slot]) return;
+        const nums = numsOf(p);
+        if (nums.length >= 3 && nums.some((v) => !/^----+$/.test(v))) {
+          perd[slot] = { prize: [nums[0], nums[1], nums[2]], special: gridBy(rows, "Special"), cons: gridBy(rows, "Consolation"), date: g.d } as any;
         }
-      }
+      };
+      put("19:30", g.p, g.g);
+      put("15:30", g.p2, g.g2);
     }
     const hari: Record<string, any> = { "15:30": h1530, "19:30": h1930 };
     // Collected HariHari 4D history (2021-2025). It holds the 19:30 draw only,
