@@ -13,19 +13,19 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 const htmlMemo = new Map<string, { at: number; html: string }>();
 const HTML_TTL = 10 * 60 * 1000;
 
-async function httpGet(url: string): Promise<string> {
+async function httpGet(url: string, timeoutMs = 12000, attempts = 2): Promise<string> {
   const hit = htmlMemo.get(url);
   if (hit && Date.now() - hit.at < HTML_TTL) return hit.html;
   let lastErr: unknown = null;
   // These official sites drop a request now and then under a parallel burst,
   // so try twice before giving up.
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < attempts; attempt++) {
     try {
       const res = await fetch(url, {
         headers: { "User-Agent": UA, Accept: "*/*", "Accept-Encoding": "identity" },
         redirect: "follow",
         cache: "no-store",
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(timeoutMs),
       });
       if (!res.ok) throw new Error("upstream " + res.status);
       const html = await res.text();
@@ -34,7 +34,7 @@ async function httpGet(url: string): Promise<string> {
       return html;
     } catch (e) {
       lastErr = e;
-      if (attempt === 0) await new Promise((r) => setTimeout(r, 500));
+      if (attempt + 1 < attempts) await new Promise((r) => setTimeout(r, 500));
     }
   }
   throw lastErr;
@@ -478,14 +478,33 @@ export async function GET(req: NextRequest) {
     const storedHari = HARI_PAST.days[date];
     const hariAt = async (t: "15:30" | "19:30") => storedHari?.[t] || hariOne(t);
 
+    // The operator page for Perdana answers this host in ~20s and then times
+    // out, which held every past date open for ~25s before falling back to the
+    // collected copies anyway. Only reach for it when this date is missing from
+    // both of them, and never let it retry.
+    const storedPerdanaDays = (perdanaOfficial as unknown as { days?: Record<string, unknown> }).days || {};
+    const havePerdanaLocally = !!storedPerdanaDays[date]
+      || !!(perdanaPastRaw as unknown as Record<string, unknown>)[date]
+      || !!(DEEP[date] && DEEP[date].perdana);
+    const perdanaHtmlP = havePerdanaLocally
+      ? Promise.resolve("")
+      : httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date, 6000, 1).catch(() => "");
+
+    // "Is this date's draw published yet?" only needs asking for today. An
+    // older date is settled, so those two extra page reads are wasted work.
+    const klToday = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+    const settled = date < klToday;
+
     const [perdanaHtml, h1530, h1930, gdPartsIn, ninePartsIn, gdNew, nineNew, ninePage] = await Promise.all([
-      httpGet("https://www.perdana4d.com/Results/4D?processDate=" + date).catch(() => ""),
+      perdanaHtmlP,
       hariAt("15:30"),
       hariAt("19:30"),
       gdPastParts(date),
       ninePastParts(date),
-      gdHasNewDraw(date),
-      nineHasNewDraw(date),
+      settled ? Promise.resolve(true) : gdHasNewDraw(date),
+      settled ? Promise.resolve(true) : nineHasNewDraw(date),
       httpGet("https://9lotto.com/result/" + nDate).catch(() => ""),
     ]);
 
