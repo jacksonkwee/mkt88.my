@@ -564,22 +564,21 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
-  // Official page first, then the reader, then the shared live feed - so a
-  // draw is shown as soon as any of them has it.
-  if (!perdana["15:30"] || !perdana["19:30"]) {
-    const relayed = await perdanaFromRelay(today.iso);
-    for (const time of ["15:30", "19:30"]) if (!perdana[time] && relayed[time]) perdana[time] = relayed[time];
-  }
-  // The operator page for Perdana is unreachable (server timeout, no CORS), so
-  // fill anything still empty from the shared live feed instead of leaving the
-  // page showing an old stored card.
   // Official draws collected by the GitHub job, for hosts that cannot reach
-  // perdana4d.com themselves.
+  // perdana4d.com themselves. This is read BEFORE the reader below: the
+  // operator page answers our server in ~14s, so calling the reader first put
+  // that wait on every build that still had an empty slot.
   const fileDays = (perdanaOfficial as unknown as { days?: Record<string, Record<string, PrizeSet>> }).days || {};
   for (const [time, set] of Object.entries(fileDays[today.iso] || {})) {
     if (!perdana[time] && set && set.prize.length && set.prize.some((v) => !isDash(v))) {
       perdana[time] = { ...set, date: weekdayOf(today.iso) };
     }
+  }
+  // Official page first, then the collected copy, then the reader, then the
+  // shared live feed - so a draw is shown as soon as any of them has it.
+  if (!perdana["15:30"] || !perdana["19:30"]) {
+    const relayed = await perdanaFromRelay(today.iso);
+    for (const time of ["15:30", "19:30"]) if (!perdana[time] && relayed[time]) perdana[time] = relayed[time];
   }
   const feedPerdana = perdanaFromFeed(feed);
   for (const t of ["15:30", "19:30"]) if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
