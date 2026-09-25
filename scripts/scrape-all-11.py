@@ -318,7 +318,12 @@ def main() -> int:
     print("past pages collected : %d days in %.1fs (%.2fs/day)"
           % (len(dates), past_s, past_s / max(1, len(dates))))
     print("saved                : %s" % args.out)
-    return 0 if live_ok == 11 else 1
+    if live_ok == 0:
+        print("\nNO live results collected - every source failed this run.")
+        return 1
+    if live_ok < 11:
+        print("\nnote: %d/11 games returned a live result this run (recheck next run)." % live_ok)
+    return 0
 
 
 if __name__ == "__main__":
