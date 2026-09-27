@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import { rewriteHtml } from "./site-paths";
 import cardsRaw from "./cards-data.json";
@@ -98,6 +98,17 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
   const pages = pagesFor(night);
 
+  // Only the game the visitor opened is sent with the page; the other ten
+  // slides are filled in a moment later, right after the first screen paints.
+  // One page carrying all eleven games was why every game page opened slowly.
+  // The empty slides keep their exact size and order, so the swipe track is
+  // sitting on the right game - and can still be swiped - from the first frame.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = window.setTimeout(() => setReady(true), 250);
+    return () => window.clearTimeout(id);
+  }, []);
+
   // Raw-HTML slides (Sabah 88 / Sandakan / Cash Sweep) are re-inserted by React
   // during hydration, so write the snapshot values into them here as well.
   useEffect(() => {
@@ -147,7 +158,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     };
     writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7);
     writeSix("table-18-2026-09-06-6d", snap.nine6, snap.nineJp);
-  }, [snap, pages]);
+  }, [snap, pages, ready]);
   const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
@@ -250,8 +261,10 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   return (
     <div ref={track} className="mkt-pager-track"
       style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}>
-      {pages.map((pg) => (
+      {pages.map((pg, i) => (
         <div key={pg.title} className="mkt-past-scope" style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
+          {!ready && i !== idx ? null : (
+          <>
           {showPast && pastDates && pg.slug ? (
             <GamePastFilter
               slug={pg.slug}
@@ -283,6 +296,8 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
                 )
               );
             })()
+          )}
+          </>
           )}
         </div>
       ))}
