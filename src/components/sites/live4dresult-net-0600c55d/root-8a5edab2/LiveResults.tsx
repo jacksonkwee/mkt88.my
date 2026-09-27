@@ -1116,13 +1116,21 @@ export default function LiveResults() {
     // If a source is unreachable the built-in values come back after 7s.
     const restoreTimer = window.setTimeout(() => { if (alive) restoreUnfilled(); }, 7000);
     // The first cycle always reads every source, so a freshly opened page is
-    // fully populated. Every cycle after that only does it during a draw window.
+    // fully populated. After that the cheap server snapshot carries the page
+    // every few seconds, and the expensive sweep across every outside site
+    // runs at most once every 45 seconds. Running that sweep on every 8 second
+    // tick meant a phone fired ~8 third-party requests again and again during a
+    // draw, which is what made opening and switching games crawl.
     let firstCycle = true;
+    let lastFull = 0;
+    const FULL_SWEEP_MS = 45000;
     const tick = async () => {
       if (busy) return;
       busy = true;
       try {
-        await refreshOnce(firstCycle || inDrawWindow());
+        const wantFull = firstCycle || (inDrawWindow() && Date.now() - lastFull >= FULL_SWEEP_MS);
+        await refreshOnce(wantFull);
+        if (wantFull) lastFull = Date.now();
         firstCycle = false;
         if (alive) collectSnapshot();
       } finally {
