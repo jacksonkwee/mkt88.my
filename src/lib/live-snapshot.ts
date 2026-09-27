@@ -562,7 +562,9 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // The home page can publish Nine Lotto specials before its main prizes.
   const sgOfficial = parseSingapore(sg);
   const liveCards = parseLiveFeed(feed);
-  const cards = { ...parseCards(home), ...parseCards(east), ...sgOfficial, ...liveCards };
+  const homeCards = parseCards(home);
+  const eastCards = parseCards(east);
+  const cards = { ...homeCards, ...eastCards, ...sgOfficial, ...liveCards };
   // Singapore sources can arrive out of order. Use the newest dated result and
   // merge same-date fields so an older archive never overwrites a live draw.
   const sgDate = (v?: Record<string, string>): number => {
@@ -592,7 +594,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (!anyDrawNo && newest > Math.max(0, ...sgParts.filter((p) => sgDate(p) < newest).map((p) => sgDate(p)))) {
       finalSg.draw_no = "----";
     }
-    cards["table-11"] = finalSg;
+    // The other 4D apps publish a new draw a few minutes before any source we
+    // have. Today's date with an empty board looks like a broken app, so until
+    // the new draw has its main prizes keep the last complete result on screen
+    // - it is never wrong, only a little older.
+    const hasMain = (v?: Record<string, string>) => !!v && [v.first_prize, v.second_prize, v.third_prize].some((x) => !!x && !isDashVal(x));
+    if (hasMain(finalSg)) {
+      cards["table-11"] = finalSg;
+    } else {
+      const fallback = [homeCards["table-11"], eastCards["table-11"], ...sgParts]
+        .filter((p) => hasMain(p))
+        .sort((a, b) => sgDate(b) - sgDate(a))[0];
+      if (fallback) cards["table-11"] = { ...fallback };
+    }
   }
   if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 

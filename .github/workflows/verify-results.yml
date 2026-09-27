@@ -1,0 +1,98 @@
+name: Verify live results
+
+# The watchman. Nobody should have to open the app, open another 4D app and
+# compare the numbers by hand. This job does that every 10 minutes through the
+# draw window and raises an issue - which lands in your inbox - the moment the
+# app disagrees with an official source.
+#
+# Free: this repository is public, so GitHub does not charge for these runs.
+on:
+  schedule:
+    - cron: "*/10 6-15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: verify-results
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Cross-check every game against an independent source
+        id: verify
+        continue-on-error: true
+        run: node scripts/verify-results.mjs
+
+      - name: Raise an issue when a result is wrong
+        if: steps.verify.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('data/verification.json', 'utf8'));
+            const problems = report.problems || [];
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = 'live-result-error';
+
+            const lines = problems.map((p) => p.state === 'mismatch'
+              ? '- **' + p.game + '**: the app shows `' + p.appNums + '` for ' + p.appDate + ' but ' + p.source + ' says `' + p.refNums + '`'
+              : '- **' + p.game + '**: the app has no complete result for ' + p.refDate + ' but ' + p.source + ' does');
+            const table = [
+              '| game | app date | app | source date | source | source | verdict |',
+              '| --- | --- | --- | --- | --- | --- | --- |',
+              ...report.rows.map((r) => '| ' + r.game + ' | ' + (r.appDate || '-') + ' | ' + (r.appNums || '-') + ' | ' + (r.refDate || '-') + ' | ' + (r.refNums || '-') + ' | ' + r.source + ' | ' + r.state + ' |'),
+            ];
+            const body = [
+              'Checked at ' + report.checkedAt + ' (UTC).',
+              '',
+              ...lines,
+              '',
+              ...table,
+              '',
+              'Run: ' + context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId,
+            ].join('\n');
+            const title = 'Wrong 4D result detected: ' + problems.map((p) => p.game).join(', ');
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label });
+            } catch {
+              await github.rest.issues.createLabel({ owner, repo, name: label, color: 'b60205', description: 'The app disagreed with an official result source' });
+            }
+
+            const { data: open } = await github.rest.issues.listForRepo({ owner, repo, state: 'open', labels: label, per_page: 5 });
+            if (open.length) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: open[0].number, body });
+            } else {
+              await github.rest.issues.create({ owner, repo, title, body, labels: [label] });
+            }
+
+      - name: Close the issue once everything agrees again
+        if: steps.verify.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = 'live-result-error';
+            const { data: open } = await github.rest.issues.listForRepo({ owner, repo, state: 'open', labels: label, per_page: 5 });
+            for (const issue of open) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: issue.number, body: 'Every game agrees with its source again, so this is closed.' });
+              await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
+            }
+
+      - name: Mark the run as failed when a result is wrong
+        if: steps.verify.outcome == 'failure'
+        run: exit 1
