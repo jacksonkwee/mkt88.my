@@ -1,9 +1,9 @@
-# www.mkt88.my - search engines may crawl everything except the admin area.
-# /_next/ and /api/ must stay open so Google can render the live result numbers.
+# www.mkt88.my - search engines may crawl everything.
+# The admin pages stay out of the index with a noindex tag rather than a
+# robots block: a blocked URL can still be indexed, which is what Search
+# Console was reporting.
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /admin/
 
 User-agent: Googlebot
 Allow: /

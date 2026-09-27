@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: "4D Results - Magnum, Sports Toto, DaMaCai, Grand Dragon, Nine Lotto | 恭喜发财 4D",
   description:
     "Live 4D results for Magnum, Sports Toto 4D, DaMaCai, Singapore Pools, Sandakan, Sabah 88, Cash Sweep, Grand Dragon, Perdana, Nine Lotto and Lucky HariHari. Fast and accurate 4D draw results.",
-  alternates: { canonical: "https://www.mkt88.my/" },
+  alternates: { canonical: "/4dresults" },
 };
 
 export default function FourDResultsPage() {
