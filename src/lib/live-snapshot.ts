@@ -1,4 +1,5 @@
 import perdanaOfficial from "./perdana-official.json";
+import sgLiveCapture from "../../data/sg-live.json";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -517,6 +518,25 @@ async function live4dSgToday(iso: string): Promise<Record<string, string> | null
   return null;
 }
 /** Build a fresh snapshot (parallel upstream fetches). */
+/** Whatever the operator's live stream has published for Singapore so far.
+ *  The stream clears itself after the draw, so the capture is what keeps the
+ *  live result on screen until Singapore Pools publishes the official one. */
+function capturedSg(): Record<string, string> | null {
+  const c = (sgLiveCapture as unknown as {
+    games?: { singapore?: { date?: string; prize?: Record<string, string>; starter?: Record<string, string>; cons?: Record<string, string> } };
+  }).games?.singapore;
+  if (!c || !c.date) return null;
+  const vals: Record<string, string> = {
+    date: c.date,
+    first_prize: c.prize?.["1"] || "----",
+    second_prize: c.prize?.["2"] || "----",
+    third_prize: c.prize?.["3"] || "----",
+  };
+  for (let i = 1; i <= 15; i++) vals["special-" + i] = c.starter?.[String(i)] || "----";
+  for (let i = 1; i <= 10; i++) vals["consolation-" + i] = c.cons?.[String(i)] || "----";
+  return vals;
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
@@ -549,15 +569,27 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const m = /(\d{2})-(\d{2})-(\d{4})/.exec(v?.date || "");
     return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
   };
-  // Same-date priority: official Singapore Pools > live4d2u > Live4D.sg. Live4D.sg can publish early but may still hold temporary numbers.
-  const sgParts = [sgLive4d, liveCards["table-11"], sgOfficial["table-11"]].filter(Boolean) as Record<string, string>[];
+  // Same-date priority: official Singapore Pools > live4d2u > the live stream >
+  // the capture. A blank never replaces a number that is already known, so the
+  // stream clearing itself cannot wipe a draw that is on screen.
+  const sgParts = [capturedSg(), sgLive4d, liveCards["table-11"], sgOfficial["table-11"]].filter(Boolean) as Record<string, string>[];
   if (sgParts.length) {
     const newest = Math.max(...sgParts.map((p) => sgDate(p)));
-    const chosen = sgParts.filter((p) => sgDate(p) === newest).reduce((acc, p) => ({ ...acc, ...p }), {});
-    const finalSg = { ...(cards["table-11"] || {}), ...chosen };
+    const isDashVal = (v: string) => /^----+$/.test(String(v || "").trim());
+    const finalSg: Record<string, string> = { ...(cards["table-11"] || {}) };
+    for (const p of sgParts) {
+      if (sgDate(p) !== newest) continue;
+      for (const [k, v] of Object.entries(p)) {
+        if (v === undefined || v === null || v === "") continue;
+        const cur = finalSg[k];
+        if (isDashVal(v) && cur && !isDashVal(cur)) continue;
+        finalSg[k] = String(v);
+      }
+    }
     // Live4D.sg publishes the new draw before it knows the official draw
     // number. Never keep the previous draw's number with the new date.
-    if (!chosen.draw_no && newest > Math.max(0, ...sgParts.filter((p) => sgDate(p) < newest).map((p) => sgDate(p)))) {
+    const anyDrawNo = sgParts.some((p) => sgDate(p) === newest && p.draw_no && !isDashVal(p.draw_no));
+    if (!anyDrawNo && newest > Math.max(0, ...sgParts.filter((p) => sgDate(p) < newest).map((p) => sgDate(p)))) {
       finalSg.draw_no = "----";
     }
     cards["table-11"] = finalSg;
