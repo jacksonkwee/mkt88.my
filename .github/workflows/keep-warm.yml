@@ -1,0 +1,33 @@
+name: Keep the site warm
+
+# A serverless app falls asleep when nobody visits, and the first visitor then
+# waits 1-3 seconds while it wakes up. This nudges the busiest pages every few
+# minutes so users (and the phone app) almost never meet a cold server.
+#
+# Free: this repository is public, so GitHub does not charge for these runs.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Nudge the pages the app opens first
+        run: |
+          for url in \
+            "https://www.mkt88.my/api/home-live" \
+            "https://www.mkt88.my/api/cambodia-live" \
+            "https://www.mkt88.my/" ; do
+            out=$(curl -s -o /dev/null -w "%{http_code}  %{time_total}s" --max-time 60 "$url" || echo "request failed")
+            echo "$url  ->  $out"
+          done
