@@ -361,7 +361,7 @@ export default function NumberHistoryApp() {
         <div style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 16 }}>
           Pau 包 shows every permutation · Reverse 来回 shows the number and its reverse.
           <div style={{ marginTop: 4 }}>
-            Records: Magnum 4D from 25/08/1985 · Sports Toto 4D from 1992 · other games from 2022.
+            Records: Magnum 4D from 25/08/1985 · Da Ma Cai 1+3D and Sports Toto 4D from 1992 · Sandakan from 1995 · Cash Sweep from 1996 · Sabah 88 from 2001 · Singapore 4D from 2007 · Perdana and Lucky HariHari from 2021 · Grand Dragon from 2022 · Nine Lotto from 2023.
           </div>
         </div>
       </div>
