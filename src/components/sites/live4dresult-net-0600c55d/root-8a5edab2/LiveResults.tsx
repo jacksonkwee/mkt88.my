@@ -336,6 +336,10 @@ function applySet(card: Element, s: PrizeSet) {
   // draw never keeps the previous day's numbers on screen.
   const dateEl = card.querySelector('[data-id="date"]');
   const curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+  // A source that is one draw behind must never drag the card back to it - that
+  // is what made a finished card flicker between today's and yesterday's result.
+  const inDay = dateScore(s.date), curDay = dateScore(curDate);
+  if (inDay && curDay && inDay < curDay) return;
   const newDraw = !!s.date && s.date !== curDate;
   const stage = (el: Element | null, v: string | undefined, force = false) => {
     if (!el || v === undefined) return;
@@ -886,6 +890,8 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
       // underneath it, which is exactly what confuses people.
       const dateEl = card.querySelector('[data-id="date"]');
       const curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+      const inDay = dateScore(vals.date), curDay = dateScore(curDate);
+      if (inDay && curDay && inDay < curDay) continue;   // stale snapshot, skip this card
       const newDraw = !!vals.date && vals.date.trim() !== curDate;
       for (const [id, v] of Object.entries(vals)) {
         // Never blank a value a live source has already filled - the same rule

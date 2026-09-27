@@ -62,11 +62,21 @@ const BOOT_SCRIPT = `
   window.__MKT_BOOT__ = true;
   var changed = false;
   function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; var id = el.getAttribute ? (el.getAttribute("data-id") || "") : ""; if(/^six_/.test(id) && /^----+$/.test(String(v).trim())) return; if((el.textContent||"").trim() !== v){ el.textContent = v; changed = true; } if(el.classList.contains("live-pending")){ el.classList.remove("live-pending"); changed = true; } }
-  function applyCards(cards){
+  // Draw dates arrive as dd-mm-yyyy (or yyyy-mm-dd). A source that is one draw
+  // behind must never drag a card back: that is what made the numbers flicker
+  // between today's result and yesterday's.
+  function dayOf(v){ var s = String(v || ""); var m = /(\d{2})-(\d{2})-(\d{4})/.exec(s); if(m) return Date.UTC(+m[3], +m[2]-1, +m[1]); var m2 = /(\d{4})-(\d{2})-(\d{2})/.exec(s); return m2 ? Date.UTC(+m2[1], +m2[2]-1, +m2[3]) : 0; }
+  function isOlderSet(card, vals){
+    var dEl = card.querySelector('[data-id="date"]');
+    var cur = dEl ? (dEl.textContent || "").trim() : "";
+    var inD = dayOf(vals && vals.date), cuD = dayOf(cur);
+    return !!(inD && cuD && inD < cuD);
+  }  function applyCards(cards){
     Object.keys(cards || {}).forEach(function(cls){
       var vals = cards[cls] || {};
       var nodes = document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)");
       for (var i = 0; i < nodes.length; i++){
+        if(isOlderSet(nodes[i], vals)) continue;
         Object.keys(vals).forEach(function(id){ var v = vals[id]; if(v === undefined || v === null || v === "" || v === "-") return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
       }
     });
@@ -86,6 +96,7 @@ const BOOT_SCRIPT = `
     if(!card || !set || !set.prize) return;
     var dateEl = card.querySelector('[data-id="date"]');
     var curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+    if(isOlderSet(card, set)) return;   // stale source: keep the newer draw on screen
     var newDraw = !!set.date && set.date !== curDate;
     function put(el, v){
       if(!el || v === undefined || v === null) return;
