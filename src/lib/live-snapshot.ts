@@ -503,10 +503,18 @@ function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
 }
 
 async function live4dSgToday(iso: string): Promise<Record<string, string> | null> {
-  try {
-    const j = await get("http://cawidget.live4d.sg/json_4d/api_4d_jlive_hide.asp?ts=" + Date.now(), true);
-    return j ? parseLive4dSg(j, iso) : null;
-  } catch { return null; }
+  // Use the operator's real jLive feed. The cawidget "jlive_hide" widget is a
+  // secondary stream - its own payload says "special": "not primary" - and the
+  // numbers it carries are not the draw - they disagreed with the official
+  // Singapore Pools result and with the operator's own feeds.
+  for (const url of ["http://cloud.live4d.sg/api/sg4d/jlive", "http://alpha2.live4d.sg/api/sg4d/jlive"]) {
+    try {
+      const j = await get(url + "?ts=" + Date.now(), true);
+      const vals = j ? parseLive4dSg(j, iso) : null;
+      if (vals) return vals;
+    } catch { /* try the next feed */ }
+  }
+  return null;
 }
 /** Build a fresh snapshot (parallel upstream fetches). */
 export async function buildSnapshot(): Promise<Snapshot> {
