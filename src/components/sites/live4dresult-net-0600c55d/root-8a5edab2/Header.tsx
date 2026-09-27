@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
-import { HandPointing } from "@phosphor-icons/react";
 
 const logo = ASSET_BASE + "/logo-mkt88.svg?v=3";
 
@@ -20,15 +19,9 @@ const LI_BASE =
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [regionsOpen, setRegionsOpen] = useState(false);
-  const [luckyOpen, setLuckyOpen] = useState(false);
-  const [luckyNum, setLuckyNum] = useState("0000");
   const closeAll = () => {
     setMenuOpen(false);
     setRegionsOpen(false);
-  };
-  const lucky = () => {
-    setLuckyNum(String(Math.floor(Math.random() * 10000)).padStart(4, "0"));
-    setLuckyOpen(true);
   };
 
   return (
@@ -125,21 +118,6 @@ export default function Header() {
                       大伯公 <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>千字图</span>
                     </Link>
                   </li>
-                  <li className="menu-item menu-item-type-custom menu-item-object-custom current-menu-item current_page_item menu-item-home menu-item-12 nav-item dropdown">
-                    <a
-                      href="#"
-                      className="nav-link fx-gongxi"
-                      style={{ cursor: "pointer" }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        closeAll();
-                        lucky();
-                      }}
-                    >
-                      <HandPointing size={14} weight="fill" aria-hidden="true" style={{ color: "#ffd700", marginRight: 8 }} />
-                      恭喜发财
-                    </a>
-                  </li>
                 </ul>
               </div>
             </div>
@@ -154,71 +132,6 @@ export default function Header() {
           aria-hidden="true"
           style={{ position: "fixed", inset: 0, zIndex: 1, background: "transparent" }}
         />
-      ) : null}
-      {luckyOpen ? (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 100000,
-            background: "rgba(0,0,0,0.72)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onClick={() => setLuckyOpen(false)}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#fff",
-              borderRadius: 16,
-              padding: "34px 40px",
-              textAlign: "center",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.4)",
-              maxWidth: 320,
-              width: "90%",
-            }}
-          >
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#cc0000" }}>恭喜发财</div>
-            <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>您的幸运号码</div>
-            <div
-              style={{
-                fontSize: 64,
-                fontWeight: 900,
-                letterSpacing: 8,
-                color: "#cc0000",
-                margin: "16px 0 10px",
-                background: "#fff7e6",
-                borderRadius: 12,
-                padding: "10px 0",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {luckyNum}
-            </div>
-            <button
-              onClick={() => lucky()}
-              style={{
-                padding: "10px 18px",
-                background: "#cc0000",
-                color: "#fff",
-                border: 0,
-                borderRadius: 8,
-                marginRight: 8,
-                cursor: "pointer",
-              }}
-            >
-              Try Again
-            </button>
-            <button
-              onClick={() => setLuckyOpen(false)}
-              style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: 8, cursor: "pointer" }}
-            >
-              Close
-            </button>
-          </div>
-        </div>
       ) : null}
     </header>
   );
