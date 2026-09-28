@@ -707,6 +707,15 @@ async function updateGdNineCards() {
     for (const nineCard of nineCards) {
       if (ns) {
         const dt = nineCard.querySelector('[data-id="date"]');
+        // Never move the card back to an older draw.
+        //
+        // The date used to be written first, which defeated applySet's own
+        // guard below: by the time applySet compared dates, the card already
+        // carried the older one and matched. That is what flicked a live card
+        // to yesterday's finished result and then back again.
+        const curDay = dateScore(dt ? (dt.textContent || "") : "");
+        const wantDay = dateScore(dateLbl);
+        if (curDay && wantDay && wantDay < curDay) continue;
         if (dt && dt.textContent !== dateLbl) {
           setText(dt, dateLbl);
           // Only wipe the old numbers when the draw date actually changes.
