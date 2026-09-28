@@ -1,0 +1,52 @@
+name: Number history daily
+
+# Keeps the stored draw history current, so nobody has to remember to do it.
+#
+# The number history search reads this database and then fetches only the days
+# after its last date stamp. Left alone, that stamp falls further behind every
+# day and each search has to read more pages - which is what makes searching
+# feel slow. This runs after the last draw of the day has finished
+# (00:30 Malaysia = 16:30 UTC).
+#
+# Free: this repository is public, so GitHub does not charge for these runs.
+on:
+  schedule:
+    - cron: "30 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: number-history
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Bring the draw history up to date
+        run: node scripts/refresh-number-history.mjs
+
+      - name: Publish the new draws
+        run: |
+          git config user.name  "mkt88-results-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json
+          if git diff --cached --quiet; then
+            echo "nothing new"
+            exit 0
+          fi
+          git diff --cached --stat
+          # No [skip ci]: the app reads this file at build time, so the site has
+          # to be rebuilt for a new day of draws to reach the phone.
+          git commit -m "Number history updated $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash
+          git push
