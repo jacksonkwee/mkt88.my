@@ -92,11 +92,16 @@ try {
 // feed carries whichever finished last, so compare it with the newest slot the
 // app holds - otherwise a not-yet-drawn 7:30pm looks like a wrong result.
 const newestSlot = (slots) => {
+  // Perdana and HariHari each draw twice a day. Comparing "15:30 today"
+  // against "19:30 today" produced a false alarm, so the tie has to be
+  // broken by the draw time, not just the date.
   let best = null;
-  for (const v of Object.values(slots || {})) {
+  let bestKey = "";
+  for (const [time, v] of Object.entries(slots || {})) {
     const s = v && v.set ? v.set : v;
     if (!s || !s.date) continue;
-    if (!best || dayOf(s.date) > dayOf(best.date)) best = s;
+    const key = dayOf(s.date) + String(time).replace(":", "");
+    if (!best || key > bestKey) { best = s; bestKey = key; }
   }
   return best || {};
 };
