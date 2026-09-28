@@ -32,9 +32,17 @@ const pageCache = new Map<string, { at: number; html: string }>();
 const ANSWER_TTL = 5 * 60 * 1000;
 const ANSWER_CACHE_MAX = 400;
 const answerCache = new Map<string, { at: number; body: Record<string, unknown> }>();
-async function fetchHtml(url: string): Promise<string> {
+
+/**
+ * A day that has already been drawn never changes, so its page is worth
+ * keeping far longer than the homepage. The stored archive falls further
+ * behind every day it is not rebuilt, and each missing day is one more page
+ * a search has to read - this stops that from being paid over and over.
+ */
+const DAY_TTL = 24 * 60 * 60 * 1000;
+async function fetchHtml(url: string, ttl: number = PAGE_TTL): Promise<string> {
   const hit = pageCache.get(url);
-  if (hit && Date.now() - hit.at < PAGE_TTL) return hit.html;
+  if (hit && Date.now() - hit.at < ttl) return hit.html;
   try {
     const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(20000) });
     if (!res.ok) return "";
@@ -214,7 +222,7 @@ export async function GET(req: NextRequest) {
   const [home, pages] = await Promise.all([
     fetchHtml("https://live4dresult.net/"),
     mapLimit(gapDates(today), 6, async (d) =>
-      [d, await fetchHtml("https://live4dresult.net/past-results/" + d)] as const
+      [d, await fetchHtml("https://live4dresult.net/past-results/" + d, DAY_TTL)] as const
     ),
   ]);
   if (home) for (const h of hitsFromHtmlMany(home, numSet, today)) add(h);
