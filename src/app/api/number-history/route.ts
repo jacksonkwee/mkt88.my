@@ -20,6 +20,18 @@ const PAGE_TTL = 10 * 60 * 1000;
 const PAGE_CACHE_MAX = 90;
 
 const pageCache = new Map<string, { at: number; html: string }>();
+
+/**
+ * Finished answers, keyed by the numbers asked for.
+ *
+ * A search is the same question over and over: Single, then Pau, then
+ * Reverse all overlap, people retype the same number, and the newest draws
+ * only change every few days. Answering a repeat from here takes no work at
+ * all instead of walking the whole archive again.
+ */
+const ANSWER_TTL = 5 * 60 * 1000;
+const ANSWER_CACHE_MAX = 400;
+const answerCache = new Map<string, { at: number; body: Record<string, unknown> }>();
 async function fetchHtml(url: string): Promise<string> {
   const hit = pageCache.get(url);
   if (hit && Date.now() - hit.at < PAGE_TTL) return hit.html;
@@ -144,14 +156,34 @@ export async function GET(req: NextRequest) {
   if (!nums.length) return NextResponse.json({ nums: [], num: "", matches: [], total: 0 });
   const numSet = new Set(nums);
 
+  const answerKey = nums.slice().sort().join(",");
+  const remembered = answerCache.get(answerKey);
+  if (remembered && Date.now() - remembered.at < ANSWER_TTL) {
+    return NextResponse.json(remembered.body);
+  }
+
   const map = new Map<string, ApiMatch>();
+  // The full logo path is ~90 characters and there are only a handful of
+  // games, so repeating it on every row was over half of a big answer. Send
+  // each path once in `logos` and put a short key on the row instead.
+  const logoKeys = new Map<string, string>();
+  const logos: Record<string, string> = {};
+  const logoKey = (path: string): string => {
+    if (!path) return "";
+    const known = logoKeys.get(path);
+    if (known) return known;
+    const k = String(logoKeys.size + 1);
+    logoKeys.set(path, k);
+    logos[k] = toLocal(path);
+    return k;
+  };
   const add = (h: RawHit) => {
     const date = fmtIso(h.date);
     const key = date + "|" + h.game + "|" + h.prize + "|" + h.num;
     if (map.has(key)) return;
     let logo = h.logo;
     if (!logo && /singapore/i.test(h.game)) logo = SG_LOGO;
-    map.set(key, { date, game: h.game, logo: toLocal(logo), region: regionOf(h.table), prize: h.prize, num: h.num });
+    map.set(key, { date, game: h.game, logo: logoKey(logo), region: regionOf(h.table), prize: h.prize, num: h.num });
   };
 
   // 0) The deep archive the game pages already show.
@@ -172,16 +204,20 @@ export async function GET(req: NextRequest) {
   }
 
   // 3) The current live homepage (freshly drawn numbers appear instantly).
-  const home = await fetchHtml("https://live4dresult.net/");
-  if (home) for (const h of hitsFromHtmlMany(home, numSet, today)) add(h);
-
   // 4) Every date the offline archive cannot answer for.
   //    This used to look at only the last three days, which left a hole: the
   //    archive stops at DB.meta.to, so everything drawn between that date and
   //    three days ago was missing from Number History.
-  const pages = await mapLimit(gapDates(today), 6, async (d) =>
-    [d, await fetchHtml("https://live4dresult.net/past-results/" + d)] as const
-  );
+  //    These two used to run one after the other, so a slow upstream page
+  //    held the whole search up twice. They do not depend on each other, so
+  //    ask for both at once.
+  const [home, pages] = await Promise.all([
+    fetchHtml("https://live4dresult.net/"),
+    mapLimit(gapDates(today), 6, async (d) =>
+      [d, await fetchHtml("https://live4dresult.net/past-results/" + d)] as const
+    ),
+  ]);
+  if (home) for (const h of hitsFromHtmlMany(home, numSet, today)) add(h);
   for (const [iso, html] of pages) {
     if (html) for (const h of hitsFromHtmlMany(html, numSet, iso)) add(h);
   }
@@ -193,7 +229,7 @@ export async function GET(req: NextRequest) {
   });
   const perNum: Record<string, number> = {};
   for (const m of matches) perNum[m.num] = (perNum[m.num] || 0) + 1;
-  return NextResponse.json({
+  const body: Record<string, unknown> = {
     nums,
     num: nums[0],
     matches,
@@ -204,5 +240,13 @@ export async function GET(req: NextRequest) {
     dbTo: DB.meta.to,
     dbBuilt: DB.meta.built,
     prizes: PRIZE_NAMES,
-  });
+    logos,
+  };
+  answerCache.set(answerKey, { at: Date.now(), body });
+  while (answerCache.size > ANSWER_CACHE_MAX) {
+    const first = answerCache.keys().next().value;
+    if (!first) break;
+    answerCache.delete(first);
+  }
+  return NextResponse.json(body);
 }

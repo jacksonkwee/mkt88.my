@@ -10,7 +10,15 @@ const RED = "#cc0000";
 const YELLOW_SOFT = "#fff3d0";
 
 type ApiMatch = { date: string; game: string; logo: string; region: string; prize: string; num: string };
-type ApiResp = { nums: string[]; matches: ApiMatch[]; total: number; dbFrom?: string; dbTo?: string; perNum?: Record<string, number> };
+type ApiResp = { nums: string[]; matches: ApiMatch[]; total: number; dbFrom?: string; dbTo?: string; perNum?: Record<string, number>; logos?: Record<string, string> };
+
+/*
+ * The answer carries one copy of each game logo in `logos`, and each row
+ * carries a short key. Repeating the ~90 character path on every row made a
+ * permutation search over half a megabyte for no reason.
+ */
+const logoSrc = (data: ApiResp | null, key: string): string =>
+  (data && data.logos ? (data.logos[key] || "") : key);
 type Dabo = { num: string; kind: string; keyword: string; meaning: string; image: string; found: boolean };
 
 const REGIONS = ["M'sia", "Sab, Sar", "Spore", "Others"];
@@ -330,7 +338,7 @@ export default function NumberHistoryApp() {
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff" }}>
                       <div style={{ width: 34, height: 34, borderRadius: 12, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
-                        {m.logo ? <img src={m.logo} alt="" style={{ maxWidth: 30, maxHeight: 30 }} /> : <span style={{ fontSize: 11, color: "#999" }}>4D</span>}
+                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 30, maxHeight: 30 }} /> : <span style={{ fontSize: 11, color: "#999" }}>4D</span>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.game}</div>
