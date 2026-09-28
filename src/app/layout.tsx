@@ -71,9 +71,22 @@ const BOOT_SCRIPT = `
     var cur = dEl ? (dEl.textContent || "").trim() : "";
     var inD = dayOf(vals && vals.date), cuD = dayOf(cur);
     return !!(inD && cuD && inD < cuD);
-  }  function applyCards(cards){
+  }
+  // The newest draw ever shown for each card.
+  //
+  // Comparing only against the text in the card was not enough: while the date
+  // cell is momentarily empty the comparison is skipped, and that is exactly the
+  // gap an older board slipped through - which is how a live card flipped to
+  // yesterday and back. This remembers the newest draw per card for the life of
+  // the page, so an older board is refused no matter what the card currently
+  // shows.
+  var newestDay = {};
+  function applyCards(cards){
     Object.keys(cards || {}).forEach(function(cls){
       var vals = cards[cls] || {};
+      var inD = dayOf(vals && vals.date);
+      if (inD && newestDay[cls] && inD < newestDay[cls]) return;
+      if (inD && (!newestDay[cls] || inD > newestDay[cls])) newestDay[cls] = inD;
       var nodes = document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)");
       for (var i = 0; i < nodes.length; i++){
         if(isOlderSet(nodes[i], vals)) continue;
