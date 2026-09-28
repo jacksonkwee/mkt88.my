@@ -18,6 +18,12 @@ const allCards = [
 ];
 const byId = new Map<string, LotteryCardData>(allCards.map((c) => [c.id, c]));
 
+/** Sortable value for a card date like "28-09-2026 (Mon)". */
+function dateScore(label?: string): number {
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
+  return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+}
+
 const eastHtml = (eastRaw as { colHtml: string }).colHtml || "";
 function extractEast(cls: string): string {
   // Anchor directly on the real opening div tag.
@@ -117,6 +123,13 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     const cards = snap.cards || {};
     for (const [cls, vals] of Object.entries(cards)) {
       for (const card of Array.from(root.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
+        // A snapshot that is one draw behind must never drag the card - and its
+        // date - back to the older result. This write had no such rule, which is
+        // how a live card flipped to yesterday and back during a draw.
+        const dateEl = card.querySelector('[data-id="date"]');
+        const curDay = dateScore(dateEl ? (dateEl.textContent || "") : "");
+        const inDay = dateScore(vals.date);
+        if (inDay && curDay && inDay < curDay) continue;
         for (const [id, v] of Object.entries(vals)) {
           if (!v || /^----+$/.test(v) || v === "-") continue; // never blank a value
           const el = card.querySelector('[data-id="' + id + '"]');

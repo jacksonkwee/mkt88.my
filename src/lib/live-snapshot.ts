@@ -608,28 +608,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
       if (fallback) cards["table-11"] = { ...fallback };
     }
   }
-  /**
-   * Nine Lotto without a half-drawn board.
-   *
-   * The card otherwise comes from live4dresult.net, which briefly publishes
-   * the three main prizes *inside the special list* while the draw is being
-   * revealed - the board then reads "1st ----" with the winning numbers
-   * listed as specials, which is exactly what the phone showed on 28/09.
-   * 9lotto.com is the authority. If neither source has a main prize yet,
-   * keep the last complete board instead of half of the new one.
-   */
-  {
-    const officialNine = nineOfficial.four as Record<string, string> | null;
-    const liveNine = cards["table-17"] as Record<string, string> | undefined;
-    const hasMain = (v?: Record<string, string> | null) =>
-      !!v && [v.first_prize, v.second_prize, v.third_prize].some((x) => !!x && !isDash(x));
-    const board = officialNine || liveNine;
-    if (hasMain(board)) {
-      cards["table-17"] = { ...(liveNine || {}), ...board };
-    } else if (cache?.cards?.["table-17"]) {
-      cards["table-17"] = { ...cache.cards["table-17"] };
-    }
-  }
+  // 9lotto.com is the authority for this card and is used whenever it has
+  // anything at all; otherwise the live archive's own board is kept. Never
+  // fall back to the previous snapshot: that put yesterday's finished draw
+  // back on screen in the middle of today's live reveal.
+  if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
   const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
