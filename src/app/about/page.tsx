@@ -43,8 +43,8 @@ export default function Page() {
             <h2 className="h6 mt-4">What you can do here</h2>
             <p>
               See the latest draw for every game, look up any past draw by date, and search a
-              four-digit number to see every draw in which it has ever appeared. You can save
-              numbers as favourites and download any game&rsquo;s latest result as a PDF.
+              four-digit number to see every draw in which it has ever appeared. You can also
+              save numbers as favourites to find them again quickly.
             </p>
 
             <h2 className="h6 mt-4">The eleven games we cover</h2>
@@ -91,15 +91,17 @@ export default function Page() {
             <h2 className="h6 mt-4">The app</h2>
             <p>
               The Android app adds a keep-screen-on setting and the same draw history, and it is
-              free. You can find it on the{" "}
-              <a
-                href="https://play.google.com/store/apps/details?id=com.mkt88.app"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Google Play store listing
+              free. Questions or corrections are welcome on our <a href="/contact">contact page</a>.
+            </p>
+            <p>
+              <a href="https://play.google.com/store/apps/details?id=com.mkt88.app" target="_blank" rel="noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/sites/live4dresult-net-0600c55d/root-8a5edab2/google-play-badge.png"
+                  alt="Get it on Google Play"
+                  style={{ width: 200, marginLeft: -10 }}
+                />
               </a>
-              . Questions or corrections are welcome on our <a href="/contact">contact page</a>.
             </p>
           </div>
         </div>
