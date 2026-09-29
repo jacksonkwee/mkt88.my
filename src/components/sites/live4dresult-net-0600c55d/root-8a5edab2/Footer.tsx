@@ -18,7 +18,10 @@ export default function Footer() {
       <div className="container">
         <div className="row flex-column py-2">
           <div className="footer-menu text-center">
-            <Link href="/disclaimer">Disclaimer</Link> | <Link href="/privacy-policy">Privacy Policy</Link>
+            <Link href="/about">About</Link> | <Link href="/contact">Contact</Link> | 
+            <Link href="/terms">Terms of Use</Link> | 
+            <Link href="/disclaimer">Disclaimer</Link> | 
+            <Link href="/privacy-policy">Privacy Policy</Link>
           </div>
           <div className="text-center">{copyright}</div>
         </div>
