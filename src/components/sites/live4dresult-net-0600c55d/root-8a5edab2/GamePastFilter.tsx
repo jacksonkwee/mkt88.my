@@ -144,6 +144,22 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
                 <option key={d} value={d}>{pretty(d)}</option>
               ))}
             </select> : null}
+            {/* A real PDF of this game's latest result, with the app link
+                inside it. The server writes the file, so it also works in the
+                installed app where the browser's own print is unavailable. */}
+            <a
+              className="mkt-past-filter-pdf"
+              href={"/api/result-pdf?game=" + encodeURIComponent(slug)}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                padding: "6px 12px", borderRadius: 8, border: "1px solid #cc0000",
+                color: "#cc0000", background: "#fff", fontWeight: 700, fontSize: 13,
+                textDecoration: "none", whiteSpace: "nowrap",
+              }}
+            >
+              Download PDF
+            </a>
             {!inApp ? (
               <>
                 <button
