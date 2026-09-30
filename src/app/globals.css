@@ -428,3 +428,11 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   border-radius: 4px;
   padding: 0 3px;
 }
+/* The red must sit on the number itself. Applied straight to the cell element
+   it painted the full column width on the grids, which read as the column
+   being highlighted rather than the number. */
+.mkt-new-number {
+  display: inline-block;
+  min-width: 2.4em;
+  text-align: center;
+}
