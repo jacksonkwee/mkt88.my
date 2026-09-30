@@ -22,6 +22,17 @@ export type Snapshot = {
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 export const SNAPSHOT_TTL = 4000;
 
+/**
+ * How old a copy may be before we refuse to show it on a live draw.
+ *
+ * The snapshot is kept per serverless instance and Vercel runs several, so a
+ * request that lands on a cold one used to be handed its old copy - measured
+ * at 29 to 33 seconds old - which is what made a live number arrive half a
+ * minute after the other app had it. Past this age we wait for a fresh build
+ * instead: a slightly slower page is better than a wrong-looking result.
+ */
+const MAX_STALE_MS = 9000;
+
 let cache: Snapshot | null = null;
 let warming = false;
 let warmer: ReturnType<typeof setInterval> | null = null;
@@ -741,23 +752,18 @@ export async function getSnapshot(): Promise<Snapshot> {
   startWarmer();
   const cached = cache;
   if (cached && Date.now() - cached.at < SNAPSHOT_TTL) return cached;
-  if (cached && Object.keys(cached.cards || {}).length > 0) {
-    // Good data is already on screen - hand it over now and refresh behind it.
+  const usable = cached && Object.keys(cached.cards || {}).length > 0;
+  const age = cached ? Date.now() - cached.at : Number.POSITIVE_INFINITY;
+  if (cached && usable && age < MAX_STALE_MS) {
+    // A second or two behind is fine - hand it over and refresh behind it.
     if (!warming) {
       warming = true;
       void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
     }
     return cached;
   }
-  // Nothing usable to serve (first request on this instance, or the last build
-  // came back blank): build now instead of handing back empty cards.
-  if (cache) {
-    if (!warming) {
-      warming = true;
-      void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
-    }
-    return cache;
-  }
+  // Too old to be trusted during a draw, or nothing usable at all: build and
+  // wait rather than hand back a result that looks half a minute late.
   warming = true;
   try { return await buildSnapshot(); } finally { warming = false; }
 }
