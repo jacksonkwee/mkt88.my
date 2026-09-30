@@ -12,6 +12,7 @@
 //
 //   node scripts/capture-sg-live.mjs
 import fs from "node:fs";
+import { execSync } from "node:child_process";
 
 const OUT = "data/sg-live.json";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
@@ -26,8 +27,8 @@ const FEEDS = ["http://cloud.live4d.sg/api/sg4d/jlive", "http://alpha2.live4d.sg
  * start is delayed or skipped, which is the usual reason GitHub cron jobs
  * miss a short-lived value.
  */
-const WATCH_MS = Number(process.env.SG_WATCH_MS || 12 * 60 * 1000);
-const POLL_MS = Number(process.env.SG_POLL_MS || 10000);
+const WATCH_MS = Number(process.env.SG_WATCH_MS || 25 * 60 * 1000);
+const POLL_MS = Number(process.env.SG_POLL_MS || 30 * 1000);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const isoOf = (yyyymmdd) => yyyymmdd.slice(0, 4) + "-" + yyyymmdd.slice(4, 6) + "-" + yyyymmdd.slice(6, 8);
@@ -81,6 +82,31 @@ function merge(prev, next) {
 }
 
 const countOf = (m) => Object.keys(m.prize).length + Object.keys(m.starter).length + Object.keys(m.cons).length;
+
+const sh = (cmd) => execSync(cmd, { stdio: "pipe" });
+
+/**
+ * Publish straight away when something new is caught.
+ *
+ * A single run now watches for 25 minutes, so committing only at the end
+ * would hold a captured result back for up to 25 minutes. Every new number
+ * is committed and pushed the moment it is seen.
+ */
+function publish(iso, count) {
+  if (!process.env.CI) return;
+  try {
+    sh("git add -- data/sg-live.json");
+    let dirty = true;
+    try { sh("git diff --cached --quiet"); dirty = false; } catch { dirty = true; }
+    if (!dirty) return;
+    sh('git -c user.name="mkt88-results-bot" -c user.email="actions@users.noreply.github.com" commit -m "Singapore live capture " + iso + " (" + count + " numbers)"');
+    sh("git pull --rebase --autostash");
+    sh("git push");
+    console.log("  published " + iso + " (" + count + " numbers)");
+  } catch (e) {
+    console.log("  publish failed, will retry at the end of the run: " + String(e.message).slice(0, 120));
+  }
+}
 const complete = (m) => ["1", "2", "3"].every((k) => is4(m.prize[k])) && Object.keys(m.starter).length >= 10 && Object.keys(m.cons).length >= 10;
 
 const store = fs.existsSync(OUT) ? JSON.parse(fs.readFileSync(OUT, "utf8")) : { games: {} };
@@ -97,7 +123,13 @@ while (true) {
     const before = merged.iso + ":" + countOf(merged);
     merged = merge(merged, now);
     const after = merged.iso + ":" + countOf(merged);
-    if (before !== after) console.log("  look " + looks + ": " + merged.iso + " - " + countOf(merged) + " numbers");
+    if (before !== after) {
+      console.log("  look " + looks + ": " + merged.iso + " - " + countOf(merged) + " numbers");
+      store.games.singapore = { ...merged, date: pretty(merged.iso) };
+      store.capturedAt = new Date().toISOString();
+      fs.writeFileSync(OUT, JSON.stringify(store, null, 1));
+      publish(merged.iso, countOf(merged));
+    }
     if (complete(merged)) break;
   }
   if (Date.now() >= deadline) break;
