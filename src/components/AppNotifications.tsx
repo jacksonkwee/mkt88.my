@@ -33,22 +33,30 @@ const WED_SAT_SUN = [4, 7, 1];
 const MON_WED_SAT = [2, 4, 7];
 const EVERY_DAY = [0];
 
+/*
+ * One reminder per game per draw, timed for when that draw is normally
+ * published rather than when it is drawn - the earlier times rang while the
+ * board was still empty, and Perdana and HariHari only had their afternoon
+ * draw listed at all, so their 7:30pm results never rang.
+ */
 const LIVE_GAMES: { name: string; zh: string; days: number[]; hour: number; minute: number }[] = [
-  { name: "Magnum 4D", zh: "萬能", days: WED_SAT_SUN, hour: 19, minute: 5 },
-  { name: "Magnum Life", zh: "万能天天彩", days: WED_SAT_SUN, hour: 19, minute: 7 },
-  { name: "Magnum Jackpot Gold", zh: "萬能黃金万字积宝", days: WED_SAT_SUN, hour: 19, minute: 9 },
-  { name: "Da Ma Cai 1+3D", zh: "大馬彩", days: WED_SAT_SUN, hour: 19, minute: 11 },
-  { name: "Da Ma Cai 3+3D", zh: "大馬彩", days: WED_SAT_SUN, hour: 19, minute: 13 },
-  { name: "Singapore 4D", zh: "新加坡", days: WED_SAT_SUN, hour: 19, minute: 15 },
-  { name: "Sabah 88 4D", zh: "沙巴88", days: WED_SAT_SUN, hour: 19, minute: 17 },
-  { name: "Sandakan 4D", zh: "山打根", days: WED_SAT_SUN, hour: 19, minute: 19 },
-  { name: "Special Cash Sweep", zh: "沙捞越", days: WED_SAT_SUN, hour: 19, minute: 21 },
-  { name: "Sports Toto 4D", zh: "多多", days: MON_WED_SAT, hour: 19, minute: 23 },
-  { name: "Sports Toto 5D / 6D", zh: "多多六合彩", days: MON_WED_SAT, hour: 19, minute: 25 },
-  { name: "Grand Dragon 4D", zh: "豪龙", days: EVERY_DAY, hour: 19, minute: 40 },
-  { name: "Nine Lotto", zh: "开彩", days: EVERY_DAY, hour: 19, minute: 42 },
+  { name: "Magnum 4D", zh: "萬能", days: WED_SAT_SUN, hour: 19, minute: 25 },
+  { name: "Magnum Life", zh: "万能天天彩", days: WED_SAT_SUN, hour: 19, minute: 27 },
+  { name: "Magnum Jackpot Gold", zh: "萬能黃金万字积宝", days: WED_SAT_SUN, hour: 19, minute: 29 },
+  { name: "Da Ma Cai 1+3D", zh: "大馬彩", days: WED_SAT_SUN, hour: 19, minute: 31 },
+  { name: "Da Ma Cai 3+3D", zh: "大馬彩", days: WED_SAT_SUN, hour: 19, minute: 33 },
+  { name: "Singapore 4D", zh: "新加坡", days: WED_SAT_SUN, hour: 19, minute: 35 },
+  { name: "Sabah 88 4D", zh: "沙巴88", days: WED_SAT_SUN, hour: 19, minute: 37 },
+  { name: "Sandakan 4D", zh: "山打根", days: WED_SAT_SUN, hour: 19, minute: 39 },
+  { name: "Special Cash Sweep", zh: "沙捞越", days: WED_SAT_SUN, hour: 19, minute: 41 },
+  { name: "Sports Toto 4D", zh: "多多", days: MON_WED_SAT, hour: 19, minute: 43 },
+  { name: "Sports Toto 5D / 6D", zh: "多多六合彩", days: MON_WED_SAT, hour: 19, minute: 45 },
+  { name: "Grand Dragon 4D", zh: "豪龙", days: EVERY_DAY, hour: 20, minute: 0 },
+  { name: "Nine Lotto", zh: "开彩", days: EVERY_DAY, hour: 20, minute: 2 },
   { name: "Perdana 4D", zh: "Perdana", days: EVERY_DAY, hour: 15, minute: 45 },
+  { name: "Perdana 4D", zh: "Perdana", days: EVERY_DAY, hour: 19, minute: 50 },
   { name: "Lucky HariHari 4D", zh: "天天好运", days: EVERY_DAY, hour: 15, minute: 47 },
+  { name: "Lucky HariHari 4D", zh: "天天好运", days: EVERY_DAY, hour: 19, minute: 52 },
 ];
 
 /** Stable ids so a later launch can cancel exactly what it scheduled. */
@@ -139,7 +147,7 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
             await ln.createChannel?.({
               id: CHANNEL_ID,
               name: "MKT88 4D Live Draw",
-              description: "18:00 and 18:30 lucky number reminders",
+              description: "Live 4D draw results, all 11 games",
               importance: 5,
               visibility: 1,
               vibration: true,
