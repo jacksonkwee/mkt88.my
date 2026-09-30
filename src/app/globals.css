@@ -436,3 +436,10 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   min-width: 2.4em;
   text-align: center;
 }
+/* These cells are <td> elements. The rule above set display:inline-block, which
+   collapses the table row - that is what made the Magnum Special and
+   Consolation columns fall out of the grid ("all column wrong way and red").
+   Put the display back and leave only the colour. */
+.mkt-new-number {
+  display: table-cell;
+}
