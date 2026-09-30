@@ -31,7 +31,7 @@ export const SNAPSHOT_TTL = 4000;
  * minute after the other app had it. Past this age we wait for a fresh build
  * instead: a slightly slower page is better than a wrong-looking result.
  */
-const MAX_STALE_MS = 9000;
+const MAX_STALE_MS = 5000;
 
 let cache: Snapshot | null = null;
 let warming = false;
