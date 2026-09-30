@@ -20,7 +20,7 @@ export type Snapshot = {
 };
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
-export const SNAPSHOT_TTL = 5000;
+export const SNAPSHOT_TTL = 4000;
 
 let cache: Snapshot | null = null;
 let warming = false;

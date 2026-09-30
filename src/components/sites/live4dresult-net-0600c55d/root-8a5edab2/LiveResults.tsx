@@ -24,8 +24,11 @@ function myHourNow(): number {
   }
 }
 function nextInterval(): number {
-  const h = myHourNow();
-  return h >= 18 && h <= 21 ? 8000 : 20000;
+  // Three seconds while a draw is being published, twenty otherwise. This
+  // used to be eight seconds and only covered the evening, so a number that
+  // was already on the server could still wait up to eight seconds to appear,
+  // and the 3:30pm Perdana / HariHari draws waited up to twenty.
+  return inDrawWindow() ? 3000 : 20000;
 }
 
 /**
