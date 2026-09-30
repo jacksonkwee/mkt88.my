@@ -414,3 +414,17 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 .card.outer-box.table-13 [data-id="special-11"]::before { content: "K "; }
 .card.outer-box.table-13 [data-id="special-12"]::before { content: "L "; }
 .card.outer-box.table-13 [data-id="special-13"]::before { content: "M "; }
+/* ------------------------------------------------------------------ *
+ * The newest numbers on the 11 game cards: a red background that fades
+ * out, so it is obvious at a glance which numbers have just come out.
+ * ------------------------------------------------------------------ */
+@keyframes mktNewNumberFade {
+  0%   { background-color: #cc0000; color: #ffffff; box-shadow: 0 0 0 2px rgba(204,0,0,0.35); }
+  70%  { background-color: #cc0000; color: #ffffff; }
+  100% { background-color: transparent; color: inherit; box-shadow: none; }
+}
+.mkt-new-number {
+  animation: mktNewNumberFade 6.6s ease-out forwards;
+  border-radius: 4px;
+  padding: 0 3px;
+}

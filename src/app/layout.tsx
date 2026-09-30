@@ -9,6 +9,7 @@ import AppHome from "../components/AppHome";
 import LiveSound from "../lib/LiveSound";
 import AppNotifications from "../components/AppNotifications";
 import LiveKnock from "../components/LiveKnock";
+import LiveHighlight from "../components/LiveHighlight";
 import { getSnapshot } from "../lib/live-snapshot";
 import LiveSnapshotProvider, { type SnapValue } from "../components/LiveSnapshotProvider";
 import "./vendor/bootstrap.min.css";
@@ -306,6 +307,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </div>
         <AppNotifications enabled={inApp} />
       <LiveKnock enabled={inApp} />
+      <LiveHighlight enabled />
         <LiveSound enabled={inApp} />
       </body>
     </html>
