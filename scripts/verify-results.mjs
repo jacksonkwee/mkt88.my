@@ -150,7 +150,14 @@ const judge = (game, appDate, appNums, refDate, refNums, source) => {
   const appDay = dayOf(appDate);
   const refDay = dayOf(refDate);
   let state;
-  if (!hasMain(appNums)) state = hasMain(refNums) && closed(refDay) ? "no-result" : "waiting-app";
+  if (!hasMain(appNums)) {
+    // The app can legitimately be showing a newer draw that is still being
+    // revealed while the reference feed is still on the previous one. That is
+    // being ahead, not missing - reported as a false alarm on Perdana when its
+    // 3:30pm draw was mid-reveal and the feed still showed yesterday.
+    if (hasMain(refNums) && appDay && refDay && appDay > refDay) state = "ahead";
+    else state = hasMain(refNums) && closed(refDay) ? "no-result" : "waiting-app";
+  }
   else if (!hasMain(refNums) || !refDay) state = "waiting-source";
   else if (appDay !== refDay) state = appDay > refDay ? "ahead" : "behind";
   else state = appNums === refNums ? "match" : "mismatch";
