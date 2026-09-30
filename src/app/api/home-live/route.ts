@@ -5,7 +5,7 @@ import { getSnapshot } from "../../../lib/live-snapshot";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const s = await getSnapshot();
+  const s = await getSnapshot({ wait: true });
   return NextResponse.json(
     { at: s.at, cards: s.cards, perdana: s.perdana, hari: s.hari },
     { headers: {

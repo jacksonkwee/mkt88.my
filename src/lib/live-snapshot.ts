@@ -748,7 +748,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
  * someone opens the app, was most page loads. The numbers are still refreshed
  * just as often; they are simply never made to hold up the page.
  */
-export async function getSnapshot(): Promise<Snapshot> {
+/**
+ * @param opts.wait  Wait for a fresh build when the cached copy is older than
+ *   the freshness limit. The data endpoints the phone polls every few seconds
+ *   pass true so they always answer with current numbers. Page renders pass
+ *   false (the default) and take whatever is cached: waiting there was making
+ *   the app take 5.6 seconds just to receive its HTML, and the page corrects
+ *   itself a second later anyway from the polling endpoint.
+ */
+export async function getSnapshot(opts: { wait?: boolean } = {}): Promise<Snapshot> {
   startWarmer();
   const cached = cache;
   if (cached && Date.now() - cached.at < SNAPSHOT_TTL) return cached;
@@ -762,8 +770,10 @@ export async function getSnapshot(): Promise<Snapshot> {
     }
     return cached;
   }
-  // Too old to be trusted during a draw, or nothing usable at all: build and
-  // wait rather than hand back a result that looks half a minute late.
+  // Too old to be trusted during a draw, or nothing usable at all.
+  // The polling endpoints wait for a fresh build; a page render hands over the
+  // cached copy so the app opens fast and lets the client catch up.
+  if (!opts.wait && cached && usable) return cached;
   warming = true;
   try { return await buildSnapshot(); } finally { warming = false; }
 }
