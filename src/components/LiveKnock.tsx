@@ -29,8 +29,14 @@ export default function LiveKnock({ enabled }: { enabled: boolean }) {
     let ctx: AudioContext | null = null;
     let last = 0;
 
+    /** The switch lives in the app Settings page. */
+    const soundAllowed = () => {
+      try { return window.localStorage.getItem("mkt_live_sound") !== "0"; } catch { return true; }
+    };
+
     /** A knock: a very short, quiet two-tone click. */
     const knock = () => {
+      if (!soundAllowed()) return;
       const now = Date.now();
       if (now - last < MIN_GAP_MS) return;
       last = now;

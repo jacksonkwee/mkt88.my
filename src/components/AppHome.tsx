@@ -80,6 +80,9 @@ const HOME_OPEN_CLASS = "mkt-home-open";
 /** Keep-screen-on preference. Default is ON. */
 const WAKE_KEY = "mkt_keep_screen_on";
 
+/** Live-draw knock sound. Default ON, switchable in Settings. */
+export const LIVE_SOUND_KEY = "mkt_live_sound";
+
 type WakeLockSentinelLike = { release: () => Promise<void>; released?: boolean };
 type NavigatorWithWakeLock = Navigator & {
   wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinelLike> };
@@ -99,6 +102,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [lucky, setLucky] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
+  const [soundOn, setSoundOn] = useState(true);
   const lockRef = useRef<WakeLockSentinelLike | null>(null);
 
   const pathname = usePathname();
@@ -128,10 +132,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     setOpen(false);
   };
 
-  // Load the saved preference (default ON).
+  // Load the saved preferences (both default ON).
   useEffect(() => {
     try {
       if (localStorage.getItem(WAKE_KEY) === "0") setKeepOn(false);
+      if (localStorage.getItem(LIVE_SOUND_KEY) === "0") setSoundOn(false);
     } catch { /* private mode - keep the default */ }
   }, []);
 
@@ -169,6 +174,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const setKeepScreenOn = (on: boolean) => {
     setKeepOn(on);
     try { localStorage.setItem(WAKE_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+  };
+
+  const setLiveSound = (on: boolean) => {
+    setSoundOn(on);
+    try { localStorage.setItem(LIVE_SOUND_KEY, on ? "1" : "0"); } catch { /* ignore */ }
   };
 
   useEffect(() => {
@@ -328,6 +338,26 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
             </div>
             <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>
               While this is on the phone will not sleep during a live draw.
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>Live draw sound</div>
+                <div style={{ fontSize: 13, color: "#777" }}>开奖提示音</div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={soundOn}
+                aria-label="Live draw sound"
+                onClick={() => setLiveSound(!soundOn)}
+                style={{ border: 0, borderRadius: 999, width: 58, height: 32, background: soundOn ? "#12b76a" : "#c9c9c9", cursor: "pointer", position: "relative", flex: "0 0 auto" }}
+              >
+                <span style={{ position: "absolute", top: 3, left: soundOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+              </button>
+            </div>
+            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>
+              A short knock sounds as each number comes out during a live draw.
             </div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
           </div>
