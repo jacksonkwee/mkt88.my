@@ -17,9 +17,17 @@ const OUT = "data/sg-live.json";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const FEEDS = ["http://cloud.live4d.sg/api/sg4d/jlive", "http://alpha2.live4d.sg/api/sg4d/jlive", "http://alpha1.live4d.sg/api/sg4d/jlive"];
 
-/** How long this run keeps watching, and how often it looks. */
-const WATCH_MS = Number(process.env.SG_WATCH_MS || 4 * 60 * 1000);
-const POLL_MS = Number(process.env.SG_POLL_MS || 12000);
+/**
+ * How long this run keeps watching, and how often it looks.
+ *
+ * The scheduled run is every five minutes and the feed clears within
+ * minutes, so each run deliberately watches LONGER than the gap between
+ * runs. That way the feed is covered continuously even when a scheduled
+ * start is delayed or skipped, which is the usual reason GitHub cron jobs
+ * miss a short-lived value.
+ */
+const WATCH_MS = Number(process.env.SG_WATCH_MS || 12 * 60 * 1000);
+const POLL_MS = Number(process.env.SG_POLL_MS || 10000);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const isoOf = (yyyymmdd) => yyyymmdd.slice(0, 4) + "-" + yyyymmdd.slice(4, 6) + "-" + yyyymmdd.slice(6, 8);
