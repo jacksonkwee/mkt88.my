@@ -58,7 +58,7 @@ public class MainActivity extends BridgeActivity {
     // net: without it, a page that never loads would leave the app sitting on
     // the logo forever. It used to be 1500ms, which dropped the logo onto the
     // bare red backdrop about a second before the page appeared.
-    appHandler.postDelayed(this::markWebViewReady, 6000);
+    appHandler.postDelayed(this::markWebViewReady, 2500);
     // Load ads after the app is usable so startup stays fast.
     appHandler.postDelayed(this::initializeAds, 2500);
   }
@@ -259,7 +259,7 @@ public class MainActivity extends BridgeActivity {
       int scrollHeight = Integer.parseInt(parts[2].trim());
       // Release as soon as anything real has painted. Waiting for "complete"
       // plus a tall page kept the splash up for 5-7s on a slow connection.
-      return textLength >= 20 && scrollHeight >= 100;
+      return textLength >= 10 && scrollHeight >= 50;
     } catch (NumberFormatException ignored) {
       return false;
     }
@@ -274,7 +274,7 @@ public class MainActivity extends BridgeActivity {
       String url = webView != null ? webView.getUrl() : null;
 
       if (webView == null || url == null || !url.startsWith("https://www.mkt88.my")
-          || webView.getProgress() < 50) {
+          || webView.getProgress() < 20) {
         appHandler.postDelayed(this, 250);
         return;
       }
