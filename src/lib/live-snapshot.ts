@@ -598,15 +598,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
     // have. Today's date with an empty board looks like a broken app, so until
     // the new draw has its main prizes keep the last complete result on screen
     // - it is never wrong, only a little older.
-    const hasMain = (v?: Record<string, string>) => !!v && [v.first_prize, v.second_prize, v.third_prize].some((x) => !!x && !isDashVal(x));
-    if (hasMain(finalSg)) {
-      cards["table-11"] = finalSg;
-    } else {
-      const fallback = [homeCards["table-11"], eastCards["table-11"], ...sgParts]
-        .filter((p) => hasMain(p))
-        .sort((a, b) => sgDate(b) - sgDate(a))[0];
-      if (fallback) cards["table-11"] = { ...fallback };
-    }
+    // Whatever the sources have for the newest date is what is shown, even when
+    // the draw is still being revealed and some prizes are still "----". Falling
+    // back to the last complete board looked tidier but meant showing yesterday
+    // under today and then flicking forward again, which is worse.
+    cards["table-11"] = finalSg;
   }
   // 9lotto.com is the authority for this card and is used whenever it has
   // anything at all; otherwise the live archive's own board is kept. Never
@@ -651,9 +647,50 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  const hari: Record<string, HariEntry> = { "15:30": h15 || h15y, "19:30": h19 || h19y };
+
+  /**
+   * A card never moves backwards to an older draw.
+   *
+   * While a draw is being revealed the sources keep handing the previous one
+   * back for a few seconds. That is what made cards flip to yesterday mid-draw
+   * - reported first on Nine Lotto and then on Perdana, and it could happen to
+   * any of the eleven. Every writer on the phone has its own guard, but the
+   * surest place to stop it is here, once, for every game: if a source is
+   * behind what we already published, the older value is dropped.
+   */
+  const dayScore = (label?: string): number => {
+    const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
+    return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+  };
+  const isOlder = (nextDate?: string, prevDate?: string): boolean => {
+    const a = dayScore(nextDate), b = dayScore(prevDate);
+    return !!(a && b && a < b);
+  };
+  const prev = cache;
+  if (prev) {
+    for (const [cls, vals] of Object.entries(cards)) {
+      const before = prev.cards ? prev.cards[cls] : undefined;
+      if (before && isOlder(vals.date, before.date)) cards[cls] = before;
+    }
+    for (const t of ["15:30", "19:30"]) {
+      const pBefore = prev.perdana ? prev.perdana[t] : null;
+      const pNow = perdana[t];
+      if (pBefore && pNow && isOlder(pNow.date, pBefore.date)) perdana[t] = pBefore;
+      else if (pBefore && !pNow) perdana[t] = pBefore;
+
+      const hBefore = prev.hari ? prev.hari[t] : null;
+      const hNow = hari[t];
+      const hWas = hBefore && hBefore.set ? hBefore.set.date : undefined;
+      const hIs = hNow && hNow.set ? hNow.set.date : undefined;
+      if (hBefore && hWas && hIs && isOlder(hIs, hWas)) hari[t] = hBefore;
+      else if (hBefore && !hNow) hari[t] = hBefore;
+    }
+  }
+
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
-    hari: { "15:30": h15 || h15y, "19:30": h19 || h19y },
+    hari,
     gd6: gdSix.six, gdjp7: gdSix.jp, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
   };
   cache = snap;
