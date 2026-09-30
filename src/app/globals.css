@@ -394,3 +394,23 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   .mkt-pager-track > * { min-width: 0 !important; }
   .mkt-past-scope { min-width: 0 !important; max-width: 100vw !important; }
 }
+/* ------------------------------------------------------------------ *
+ * Grand Dragon: the official page labels its special column A to M
+ * ("A 3486  B 8130  C 8491 ..."), and our numbers line up with the same
+ * letters - special-1 is A, special-13 is M. Showing the letter here means
+ * it rides along with whatever number the live updates write into the cell,
+ * and can never fight with them.
+ * ------------------------------------------------------------------ */
+.card.outer-box.table-13 [data-id="special-1"]::before  { content: "A "; }
+.card.outer-box.table-13 [data-id="special-2"]::before  { content: "B "; }
+.card.outer-box.table-13 [data-id="special-3"]::before  { content: "C "; }
+.card.outer-box.table-13 [data-id="special-4"]::before  { content: "D "; }
+.card.outer-box.table-13 [data-id="special-5"]::before  { content: "E "; }
+.card.outer-box.table-13 [data-id="special-6"]::before  { content: "F "; }
+.card.outer-box.table-13 [data-id="special-7"]::before  { content: "G "; }
+.card.outer-box.table-13 [data-id="special-8"]::before  { content: "H "; }
+.card.outer-box.table-13 [data-id="special-9"]::before  { content: "I "; }
+.card.outer-box.table-13 [data-id="special-10"]::before { content: "J "; }
+.card.outer-box.table-13 [data-id="special-11"]::before { content: "K "; }
+.card.outer-box.table-13 [data-id="special-12"]::before { content: "L "; }
+.card.outer-box.table-13 [data-id="special-13"]::before { content: "M "; }
