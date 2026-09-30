@@ -129,8 +129,6 @@ export default function FavouritesApp() {
         <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
       </div>
 
-      </div>
-
       {/* Brand logo at the top of the page. */}
       <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
