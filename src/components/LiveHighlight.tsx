@@ -14,7 +14,8 @@ import { useEffect } from "react";
  * settled, so a page you open mid-draw does not light up everything at once.
  */
 
-const PRIZE_CELL = /^(first_prize|second_prize|third_prize|special-\d+|consolation-\d+)$/;
+// Specials and Consolations only - the 1st/2nd/3rd prize cells are left alone.
+const PRIZE_CELL = /^(special-\d+|consolation-\d+)$/;
 const CLASS = "mkt-new-number";
 const HOLD_MS = 7000;
 
