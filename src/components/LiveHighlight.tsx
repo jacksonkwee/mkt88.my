@@ -19,15 +19,27 @@ const PRIZE_CELL = /^(special-\d+|consolation-\d+)$/;
 const CLASS = "mkt-new-number";
 const HOLD_MS = 7000;
 
+/**
+ * Draw windows, Malaysia time. Outside these the page is only tidying itself
+ * up, so nothing should knock or flash.
+ */
+function inDrawWindow(): boolean {
+  const my = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const mins = my.getUTCHours() * 60 + my.getUTCMinutes();
+  return (mins >= 15 * 60 && mins <= 16 * 60 + 30) || (mins >= 18 * 60 && mins <= 21 * 60 + 30);
+}
+
+
 export default function LiveHighlight({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
-    const seen = new Map<Element, string>();
+    const seen = new Map<Element, Set<string>>();
     const timers = new Map<Element, number>();
     let primed = false;
 
     const mark = (el: Element) => {
+      if (!inDrawWindow()) return;
       el.classList.remove(CLASS);
       // Force the browser to notice, so the fade restarts for a number that
       // changes twice in a row.
@@ -46,10 +58,12 @@ export default function LiveHighlight({ enabled }: { enabled: boolean }) {
         const id = el.getAttribute("data-id") || "";
         if (!PRIZE_CELL.test(id)) continue;
         const v = (el.textContent || "").trim();
-        const before = seen.get(el);
-        seen.set(el, v);
-        if (!primed) continue;
-        if (/^\d{4}$/.test(v) && before !== v && !/^\d{4}$/.test(before || "")) mark(el);
+        if (!/^\d{4}$/.test(v)) continue;
+        let set = seen.get(el);
+        if (!set) { set = new Set<string>(); seen.set(el, set); }
+        if (set.has(v)) continue;
+        set.add(v);
+        if (primed) mark(el);
       }
       primed = true;
     };

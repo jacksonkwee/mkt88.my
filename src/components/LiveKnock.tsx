@@ -18,6 +18,17 @@ import { useEffect } from "react";
 const PRIZE_CELL = /^(first_prize|second_prize|third_prize|special-\d+|consolation-\d+)$/;
 const MIN_GAP_MS = 140;
 
+/**
+ * Draw windows, Malaysia time. Outside these the page is only tidying itself
+ * up, so nothing should knock or flash.
+ */
+function inDrawWindow(): boolean {
+  const my = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const mins = my.getUTCHours() * 60 + my.getUTCMinutes();
+  return (mins >= 15 * 60 && mins <= 16 * 60 + 30) || (mins >= 18 * 60 && mins <= 21 * 60 + 30);
+}
+
+
 export default function LiveKnock({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     if (!enabled) return;
@@ -37,6 +48,9 @@ export default function LiveKnock({ enabled }: { enabled: boolean }) {
     /** A knock: a very short, quiet two-tone click. */
     const knock = () => {
       if (!soundAllowed()) return;
+      if (!inDrawWindow()) return;
+      // The page rewrites cells every few seconds; only a number we have never
+      // seen on this cell counts as new.
       const now = Date.now();
       if (now - last < MIN_GAP_MS) return;
       last = now;
@@ -70,8 +84,8 @@ export default function LiveKnock({ enabled }: { enabled: boolean }) {
     window.addEventListener("touchstart", arm, { once: false, passive: true });
     window.addEventListener("click", arm, { once: false, passive: true });
 
-    /** What each cell showed last time we looked. */
-    const seen = new Map<Element, string>();
+    /** Every four-digit value already seen on each cell. */
+    const seen = new Map<Element, Set<string>>();
     let primed = false;
 
     const scan = () => {
@@ -80,11 +94,13 @@ export default function LiveKnock({ enabled }: { enabled: boolean }) {
         const id = el.getAttribute("data-id") || "";
         if (!PRIZE_CELL.test(id)) continue;
         const v = (el.textContent || "").trim();
-        const before = seen.get(el);
-        seen.set(el, v);
+        if (!/^\d{4}$/.test(v)) continue;
+        let set = seen.get(el);
+        if (!set) { set = new Set<string>(); seen.set(el, set); }
+        if (set.has(v)) continue;
+        set.add(v);
         // The first pass only records what is already there.
-        if (!primed) continue;
-        if (/^\d{4}$/.test(v) && before !== v && !/^\d{4}$/.test(before || "")) knock();
+        if (primed) knock();
       }
       primed = true;
     };
