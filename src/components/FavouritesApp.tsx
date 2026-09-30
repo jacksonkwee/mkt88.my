@@ -129,6 +129,13 @@ export default function FavouritesApp() {
         <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
       </div>
 
+      </div>
+
+      {/* Brand logo at the top of the page. */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg?v=3" alt="MKT 發發" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
+      </div>
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
           <div style={{ fontWeight: 800, fontSize: 15, color: "#111" }}>Add favourite numbers 添加收藏号码</div>
