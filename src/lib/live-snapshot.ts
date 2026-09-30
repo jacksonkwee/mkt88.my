@@ -578,7 +578,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
   if (sgParts.length) {
     const newest = Math.max(...sgParts.map((p) => sgDate(p)));
     const isDashVal = (v: string) => /^----+$/.test(String(v || "").trim());
-    const finalSg: Record<string, string> = { ...(cards["table-11"] || {}) };
+    // Seed from the card we already have ONLY when it is the same draw.
+    //
+    // Seeding from an older one carried its numbers into every slot the new
+    // draw had not published yet, and the rule below ("a blank never replaces a
+    // known number") then kept them there. That is how 27/09s 1st prize, 8791,
+    // ended up sitting under 30/09s date mixed with a few numbers from the new
+    // draw - which reads as "the app has no live result".
+    const baseSg = (cards["table-11"] || {}) as Record<string, string>;
+    const finalSg: Record<string, string> = sgDate(baseSg) === newest ? { ...baseSg } : {};
     for (const p of sgParts) {
       if (sgDate(p) !== newest) continue;
       for (const [k, v] of Object.entries(p)) {
@@ -587,6 +595,20 @@ export async function buildSnapshot(): Promise<Snapshot> {
         if (isDashVal(v) && cur && !isDashVal(cur)) continue;
         finalSg[k] = String(v);
       }
+    }
+    // Anything today's sources have not published yet is blank, never
+    // yesterday's number.
+    if (newest > 0 && !finalSg.date) {
+      finalSg.date = weekdayOf(new Date(newest).toISOString().slice(0, 10));
+    }
+    for (const k of ["first_prize", "second_prize", "third_prize"]) {
+      if (!(k in finalSg)) finalSg[k] = "----";
+    }
+    for (let i = 1; i <= 15; i++) {
+      if (!("special-" + i in finalSg)) finalSg["special-" + i] = "----";
+    }
+    for (let i = 1; i <= 10; i++) {
+      if (!("consolation-" + i in finalSg)) finalSg["consolation-" + i] = "----";
     }
     // Live4D.sg publishes the new draw before it knows the official draw
     // number. Never keep the previous draw's number with the new date.
@@ -667,11 +689,20 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const a = dayScore(nextDate), b = dayScore(prevDate);
     return !!(a && b && a < b);
   };
+  const isDash = (v?: string) => !v || /^----+$/.test(String(v).trim());
+  /** Same draw: keep every number we have already shown, add the new ones. */
+  const addNew = (before: Record<string, string>, now: Record<string, string>): Record<string, string> => {
+    const out: Record<string, string> = { ...before, ...now };
+    for (const k of Object.keys(before)) if (isDash(now[k]) && !isDash(before[k])) out[k] = before[k];
+    return out;
+  };
   const prev = cache;
   if (prev) {
     for (const [cls, vals] of Object.entries(cards)) {
       const before = prev.cards ? prev.cards[cls] : undefined;
-      if (before && isOlder(vals.date, before.date)) cards[cls] = before;
+      if (!before) continue;
+      if (isOlder(vals.date, before.date)) { cards[cls] = before; continue; }
+      if (dayScore(vals.date) && dayScore(vals.date) === dayScore(before.date)) cards[cls] = addNew(before, vals);
     }
     for (const t of ["15:30", "19:30"]) {
       const pBefore = prev.perdana ? prev.perdana[t] : null;
