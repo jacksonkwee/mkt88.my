@@ -263,8 +263,14 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
           if (slot.six) {
             col.push(sixCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, main: slot.six.main, subs: slot.six.subs }));
           }
+          // The jackpot card belongs with the rest of this draw. Pushing it as
+          // its own column gave four columns for two draws, which wrapped the
+          // 7:30PM jackpot onto a second row on its own - the two draw times
+          // are meant to sit one on each side.
+          if (extras.length) {
+            col.push(jpCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, extras }));
+          }
           if (want("hari") && col.length) columns.push(col);
-          if (want("hari") && extras.length) columns.push([jpCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, extras })]);
         };
         hari("15:30", date + "-hari330", "Lucky HariHari 天天好运 (3:30PM)");
         hari("19:30", date + "-hari730", "Lucky HariHari 天天好运 (7:30PM)");
@@ -283,7 +289,7 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
       {cols.map((col, ci) => (
         <div key={ci} className="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">
           {col.map((c, ii) => (
-            <div key={c.id} className={ii > 0 ? "mt-3" : ""}>
+            <div key={c.id + "-" + ii} className={ii > 0 ? "mt-3" : ""}>
               <LotteryCard card={c} />
             </div>
           ))}
