@@ -20,7 +20,7 @@ export type Snapshot = {
 };
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
-export const SNAPSHOT_TTL = 4000;
+export const SNAPSHOT_TTL = 2500;
 
 /**
  * How old a copy may be before we refuse to show it on a live draw.
@@ -762,18 +762,23 @@ export async function getSnapshot(opts: { wait?: boolean } = {}): Promise<Snapsh
   if (cached && Date.now() - cached.at < SNAPSHOT_TTL) return cached;
   const usable = cached && Object.keys(cached.cards || {}).length > 0;
   const age = cached ? Date.now() - cached.at : Number.POSITIVE_INFINITY;
-  if (cached && usable && age < MAX_STALE_MS) {
-    // A second or two behind is fine - hand it over and refresh behind it.
-    if (!warming) {
-      warming = true;
-      void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
+  // Only a page render may be handed a slightly old copy. The waiting callers
+    // are the app's live polling endpoints: handing them a snapshot that was
+    // already several seconds old is what made a number that had been published
+    // for a while still take ~10s to reach the screen.
+    if (!opts.wait && cached && usable && age < MAX_STALE_MS) {
+      // A second or two behind is fine for a page render - hand it over and
+      // refresh behind it.
+      if (!warming) {
+        warming = true;
+        void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
+      }
+      return cached;
     }
-    return cached;
-  }
-  // Too old to be trusted during a draw, or nothing usable at all.
-  // The polling endpoints wait for a fresh build; a page render hands over the
-  // cached copy so the app opens fast and lets the client catch up.
-  if (!opts.wait && cached && usable) return cached;
+    // Too old to be trusted during a draw, or nothing usable at all.
+    // The polling endpoints wait for a fresh build; a page render hands over the
+    // cached copy so the app opens fast and lets the client catch up.
+    if (!opts.wait && cached && usable) return cached;
   warming = true;
   try { return await buildSnapshot(); } finally { warming = false; }
 }

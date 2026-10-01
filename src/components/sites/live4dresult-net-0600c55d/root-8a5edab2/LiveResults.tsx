@@ -28,7 +28,7 @@ function nextInterval(): number {
   // used to be eight seconds and only covered the evening, so a number that
   // was already on the server could still wait up to eight seconds to appear,
   // and the 3:30pm Perdana / HariHari draws waited up to twenty.
-  return inDrawWindow() ? 3000 : 20000;
+  return inDrawWindow() ? 2000 : 20000;
 }
 
 /**

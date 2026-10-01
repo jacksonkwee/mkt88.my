@@ -17,7 +17,7 @@ export async function GET() {
       // old while another was rebuilding every 2.5 seconds. That is what made a
       // live number arrive up to half a minute after the other app had it.
       // Edge caching makes the freshness the same for everybody.
-      "cache-control": "public, s-maxage=2, stale-while-revalidate=3",
+      "cache-control": "public, s-maxage=1, stale-while-revalidate=1",
     } }
   );
 }
