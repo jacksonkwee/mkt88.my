@@ -404,7 +404,13 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
     const prevDay = new Date(Date.UTC(y, m - 1, d));
     prevDay.setUTCDate(prevDay.getUTCDate() - 1);
     const prevIso = prevDay.toISOString().slice(0, 10);
-    const [html, prevHtml] = await Promise.all([get(gdUrl(iso)), get(gdUrl(prevIso))]);
+    // gdlotto is frequently unreachable from our host and used to take the full
+// 12s timeout plus a retry - about 24 seconds. Because this fetch sits in the
+// pre-warmed snapshot build, that single source was making every page render
+// wait, which is what slowed the whole app down. 4s and no retry: whatever it
+// does not answer is picked up by the other Grand Dragon sources and the
+// client's own (also bounded) fetch.
+    const [html, prevHtml] = await Promise.all([get(gdUrl(iso), false, 4000, 0), get(gdUrl(prevIso), false, 4000, 0)]);
     if (!html) return { six: null, jp: null };
     const today = gdPartsOf(html);
     const previous = prevHtml ? gdPartsOf(prevHtml) : null;
