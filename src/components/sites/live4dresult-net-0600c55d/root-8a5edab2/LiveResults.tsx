@@ -23,6 +23,8 @@ function myHourNow(): number {
     return new Date().getHours();
   }
 }
+/* Hard ceiling on any single source fetch. */
+const FETCH_TIMEOUT_MS = 6000;
 function nextInterval(): number {
   // Three seconds while a draw is being published, twenty otherwise. This
   // used to be eight seconds and only covered the evening, so a number that
@@ -188,11 +190,14 @@ async function fetchText(url: string): Promise<string | null> {
   try {
     try {
       if (DIRECT_HOSTS.includes(new URL(url).hostname)) {
-        const direct = await fetch(url, { cache: "no-store" });
+        const direct = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
         if (direct.ok) return await direct.text();
       }
     } catch { /* CORS or offline - fall back to the server proxy */ }
-    const res = await fetch("/api/live?u=" + encodeURIComponent(url), { cache: "no-store" });
+    // Never wait indefinitely on a source. gdlotto in particular can hang, and
+    // an unbounded fetch here blocked the whole refresh loop - which stopped
+    // every one of the 11 games updating, not just Grand Dragon.
+    const res = await fetch("/api/live?u=" + encodeURIComponent(url), { cache: "no-store", signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
     if (!res.ok) return null;
     return await res.text();
   } catch {
@@ -1149,7 +1154,14 @@ export default function LiveResults() {
       busy = true;
       try {
         const wantFull = firstCycle || (inDrawWindow() && Date.now() - lastFull >= FULL_SWEEP_MS);
-        await refreshOnce(wantFull);
+        // Cap one refresh cycle. Sources are fetched in sequence in places, and
+        // a single unresponsive host used to hold the tick open for up to a
+        // minute - the page then showed nothing new for any game until it gave
+        // up. Whatever has not answered by now simply gets picked up next tick.
+        await Promise.race([
+          refreshOnce(wantFull),
+          new Promise((r) => window.setTimeout(r, wantFull ? 9000 : 5000)),
+        ]);
         if (wantFull) lastFull = Date.now();
         firstCycle = false;
         if (alive) collectSnapshot();

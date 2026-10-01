@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     const res = await fetch(url.toString(), {
       headers: { "User-Agent": UA, Accept: "*/*" },
       cache: "no-store",
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(8000),
     });
     if (!res.ok) return NextResponse.json({ error: "upstream " + res.status }, { status: 502 });
     const text = await res.text();
