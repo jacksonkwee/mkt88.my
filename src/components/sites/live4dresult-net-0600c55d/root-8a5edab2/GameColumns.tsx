@@ -35,14 +35,17 @@ export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; 
     if (!stored) continue;
     const { result, jp } = splitSixCard(stored);
     const base = id.replace(/-6d$/, "");
-    if (/-6d$/.test(id)) {
-      const col = cols.find((x) => x.key === base);
-      if (col) col.items.push(result);
-      else cols.push({ key: base, items: [result] });
-    } else {
-      cols.push({ key: base, items: [result] });
+    // The draw's jackpot card belongs in the same column as the draw itself.
+    // Giving it a column of its own put Perdana / Lucky HariHari into four
+    // columns for two draw times, so the 7:30PM jackpot wrapped onto a row of
+    // its own instead of sitting beside the 3:30PM draw.
+    let col = cols.find((x) => x.key === base);
+    if (!col) {
+      col = { key: base, items: [] };
+      cols.push(col);
     }
-    if (jp) cols.push({ key: id + "-jp", items: [jp] });
+    col.items.push(result);
+    if (jp) col.items.push(jp);
   }
 
   // When a game has both draw times, the active one goes first.
