@@ -1024,8 +1024,14 @@ async function refreshOnce(full = true) {
       const hari = full ? updateHariHome() : null;
       await syncFromServerFast();
       if (full) await Promise.all([
+        // table-13 (Grand Dragon) is deliberately NOT mirrored from
+        // live4dresult.net. That page's Special grid has blank cells where ours
+        // holds numbers, and a blank source cell is skipped - so every later
+        // number was written one column too early and the same number showed in
+        // two cells (K and L). The card is kept current by the server snapshot
+        // plus updateCambodiaFeed(), and both match the official board exactly.
         syncLiveTable("https://live4dresult.net/", [
-          "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5", "table-13",
+          "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5",
         ]),
         updateGdNineCards(),
         (async () => { await updateSGFeed(); await updateSGOfficial(); })(),
@@ -1047,7 +1053,9 @@ async function refreshOnce(full = true) {
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncFromServerFast();
       if (!full) return;
-      await syncLiveTable("https://live4dresult.net/lotto-4d/", ["table-13"]);
+      // Grand Dragon (table-13) is NOT mirrored from live4dresult.net - see the
+      // note in refresh(): that page's blank Special cells slid our numbers one
+      // column left. updateCambodiaFeed() below writes them correctly.
       await updateGdNineCards();
       await updateCambodiaFeed();
       // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
