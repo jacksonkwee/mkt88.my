@@ -165,11 +165,11 @@ export default function GameQuickLinks() {
         gap: 6,
         overflowX: "auto",
         overflowY: "hidden",
-        // flex-start, never center: with 11 icons the row overflows, and a
-        // centred flex row hides its left overflow beyond any scrollable
-        // range - which is what made Magnum / Da Ma Cai / Sports Toto
-        // unreachable on the phone.
-        justifyContent: "flex-start",
+        // "safe center" centres the row when all 11 tiles fit and falls back to
+        // flex-start when they overflow. Plain "center" would hide the left
+        // overflow beyond any scrollable range, which is what made Magnum /
+        // Da Ma Cai / Sports Toto unreachable on the phone.
+        justifyContent: "safe center",
         padding: "6px 4px 2px",
         background: "#fff",
         WebkitOverflowScrolling: "touch",
