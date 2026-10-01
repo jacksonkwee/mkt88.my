@@ -420,11 +420,11 @@ body.mkt-in-app .card td > a:has(> .anchor) {
  * ------------------------------------------------------------------ */
 @keyframes mktNewNumberFade {
   0%   { background-color: #cc0000; color: #ffffff; box-shadow: 0 0 0 2px rgba(204,0,0,0.35); }
-  70%  { background-color: #cc0000; color: #ffffff; }
+  85%  { background-color: #cc0000; color: #ffffff; }
   100% { background-color: transparent; color: inherit; box-shadow: none; }
 }
 .mkt-new-number {
-  animation: mktNewNumberFade 6.6s ease-out forwards;
+  animation: mktNewNumberFade 3s ease-out forwards;
   border-radius: 4px;
   padding: 0 3px;
 }

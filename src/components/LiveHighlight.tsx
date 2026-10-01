@@ -10,14 +10,20 @@ import { useEffect } from "react";
  * from "----" to a four-digit number. Watching for that change is enough to
  * know which numbers are the newest - no extra data is needed.
  *
- * The highlight is only applied to numbers that appear AFTER the page has
- * settled, so a page you open mid-draw does not light up everything at once.
+ * Two guards keep the page from lighting up red when it is merely drawing
+ * itself:
+ *  - the cards are rendered in batches, so nothing is marked while the number
+ *    of cells is still growing;
+ *  - a cell is only marked once it has already been seen in an earlier scan.
+ * Without those, loading the app marked every Special and Consolation column
+ * red at once.
  */
 
 // Specials and Consolations only - the 1st/2nd/3rd prize cells are left alone.
 const PRIZE_CELL = /^(special-\d+|consolation-\d+)$/;
 const CLASS = "mkt-new-number";
-const HOLD_MS = 7000;
+/** Matches the 3s mktNewNumberFade animation in globals.css. */
+const HOLD_MS = 3000;
 
 /**
  * Draw windows, Malaysia time. Outside these the page is only tidying itself
@@ -29,14 +35,15 @@ function inDrawWindow(): boolean {
   return (mins >= 15 * 60 && mins <= 16 * 60 + 30) || (mins >= 18 * 60 && mins <= 21 * 60 + 30);
 }
 
+type CellState = { last: string; nums: Set<string> };
 
 export default function LiveHighlight({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
-    const seen = new Map<Element, Set<string>>();
+    const state = new Map<Element, CellState>();
     const timers = new Map<Element, number>();
-    let primed = false;
+    let lastCellCount = -1;
 
     const mark = (el: Element) => {
       if (!inDrawWindow()) return;
@@ -54,18 +61,30 @@ export default function LiveHighlight({ enabled }: { enabled: boolean }) {
     };
 
     const scan = () => {
-      for (const el of Array.from(document.querySelectorAll("[data-id]"))) {
-        const id = el.getAttribute("data-id") || "";
-        if (!PRIZE_CELL.test(id)) continue;
+      const cells = Array.from(document.querySelectorAll("[data-id]")).filter(
+        (el) => PRIZE_CELL.test(el.getAttribute("data-id") || "")
+      );
+
+      // Still building: more cells than last time. Anything showing up now is
+      // the page rendering, not a number being revealed, so only take note.
+      const building = cells.length !== lastCellCount;
+      lastCellCount = cells.length;
+
+      for (const el of cells) {
         const v = (el.textContent || "").trim();
+        const prev = state.get(el);
+        if (!prev) {
+          state.set(el, { last: v, nums: new Set(/^\d{4}$/.test(v) ? [v] : []) });
+          continue;
+        }
+        if (prev.last === v) continue;
+        prev.last = v;
+        if (building) continue;
         if (!/^\d{4}$/.test(v)) continue;
-        let set = seen.get(el);
-        if (!set) { set = new Set<string>(); seen.set(el, set); }
-        if (set.has(v)) continue;
-        set.add(v);
-        if (primed) mark(el);
+        if (prev.nums.has(v)) continue;
+        prev.nums.add(v);
+        mark(el);
       }
-      primed = true;
     };
 
     scan();
