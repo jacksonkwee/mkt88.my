@@ -5,12 +5,19 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- WebView JavaScript bridge (MainActivity.installResultBridge) -----------
+#
+# The page is handed a native object called "mktNative" with one method,
+# get(url, id). It fetches Perdana results that refuse a browser request.
+# "mktNative" is a string so it survives shrinking, but R8 renames the Java
+# method - the page would then call a method that no longer exists, and Perdana
+# results would quietly stop loading on every phone with no visible error.
+# Keep the annotated method, and keep the annotation: WebView reads it at
+# runtime to decide which methods are exposed to JavaScript.
+-keepattributes RuntimeVisibleAnnotations,RuntimeInvisibleAnnotations
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.

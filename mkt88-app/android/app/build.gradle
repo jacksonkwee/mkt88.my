@@ -13,8 +13,8 @@ android {
         applicationId "com.mkt88.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 28
-        versionName "2.18"
+        versionCode 29
+        versionName "2.19"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -34,7 +34,12 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            // R8 shrinks and obfuscates the release build. Shipping it unsynced
+            // is what Play flags as "DEX code optimization is below our
+            // threshold" (App integrity -> Obfuscation 1%), and Play warns that
+            // scores under 25% can hold back search visibility.
+            minifyEnabled true
+            shrinkResources true
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
