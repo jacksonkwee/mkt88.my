@@ -659,6 +659,36 @@ function clearCardNumbers(card: Element) {
   }
 }
 
+/**
+ * The operator updates the 4D jackpot letter LAST.
+ *
+ * While a draw is being revealed the result page still carries the PREVIOUS
+ * draw's letter and number, and writing it straight onto the card is what put
+ * "L 3823" under today's 02-10-2026 Grand Dragon 4D result all evening - only
+ * corrected to "M 6210" once the draw finished. Measured on 2 Oct 2026.
+ *
+ * The jackpot letter's number is always one of the current draw's thirteen
+ * special numbers, so it can be checked against the card itself: if the number
+ * is not on the board, the value belongs to an older draw and is written as
+ * blank instead. A short "----" is right; yesterday's letter under today's date
+ * is not. The next sweep fills in the real letter as soon as it is published.
+ */
+function liveJackpotLetter(cardId: string, jp4: Record<string, string>): Record<string, string> {
+  const raw = jp4.jp4_letter;
+  if (!raw) return jp4;
+  // "M: 6210" / "M 6210" / "M6210" all reduce to the four digits.
+  const num = raw.replace(/^[A-Za-z]\s*:?\s*/, "").replace(/[^0-9]/g, "").slice(0, 4);
+  if (!/^\d{4}$/.test(num)) return { ...jp4, jp4_letter: "----" };
+  const card = document.getElementById(cardId);
+  if (!card) return jp4;
+  for (let i = 1; i <= 13; i++) {
+    const el = card.querySelector('[data-id="special-' + i + '"]');
+    const v = el ? (el.textContent || "").trim() : "";
+    if (/^\d{4}$/.test(v) && v === num) return jp4;
+  }
+  return { ...jp4, jp4_letter: "----" };
+}
+
 async function updateGdNineCards() {
   // Grand Dragon 6D + 4D jackpot + 6+1D jackpot (official gdlotto endpoint)
   try {
@@ -667,7 +697,7 @@ async function updateGdNineCards() {
       applySixValues("table-14-2026-09-06-6d", gd.six);
       // The jackpot card is its own card - keep its date in step too.
       if (gd.six.date) applyIdValues("table-14-2026-09-06-6d-jp", { date: gd.six.date });
-      applyIdValues("table-13-2026-09-06", gd.jp4);
+      applyIdValues("table-13-2026-09-06", liveJackpotLetter("table-13-2026-09-06", gd.jp4));
       // The 6+1D jackpot is written only from the server snapshot, which knows
       // whether today's jackpot has actually been settled. Writing it here too
       // showed the previous draw's pool under today's date.
