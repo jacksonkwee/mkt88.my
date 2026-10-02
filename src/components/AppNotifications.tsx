@@ -53,7 +53,7 @@ const LIVE_GAMES: { name: string; zh: string; days: number[]; hour: number; minu
   { name: "Sports Toto 5D / 6D", zh: "多多六合彩", days: MON_WED_SAT, hour: 19, minute: 45 },
   { name: "Grand Dragon 4D", zh: "豪龙", days: EVERY_DAY, hour: 20, minute: 0 },
   { name: "Nine Lotto", zh: "开彩", days: EVERY_DAY, hour: 20, minute: 2 },
-  { name: "Perdana 4D", zh: "Perdana", days: EVERY_DAY, hour: 15, minute: 45 },
+  // Perdana dropped its 3:30PM draw on 1 Oct 2026, so only the 7:30PM draw rings.
   { name: "Perdana 4D", zh: "Perdana", days: EVERY_DAY, hour: 19, minute: 50 },
   { name: "Lucky HariHari 4D", zh: "天天好运", days: EVERY_DAY, hour: 15, minute: 47 },
   { name: "Lucky HariHari 4D", zh: "天天好运", days: EVERY_DAY, hour: 19, minute: 52 },
