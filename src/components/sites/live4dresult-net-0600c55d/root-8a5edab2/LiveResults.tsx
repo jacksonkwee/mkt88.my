@@ -26,11 +26,12 @@ function myHourNow(): number {
 /* Hard ceiling on any single source fetch. */
 const FETCH_TIMEOUT_MS = 6000;
 function nextInterval(): number {
-  // Three seconds while a draw is being published, twenty otherwise. This
-  // used to be eight seconds and only covered the evening, so a number that
-  // was already on the server could still wait up to eight seconds to appear,
-  // and the 3:30pm Perdana / HariHari draws waited up to twenty.
-  return inDrawWindow() ? 2000 : 20000;
+  // 1.5 seconds while a draw is being published, twenty otherwise. This used to
+  // be eight seconds and only covered the evening, so a number that was already
+  // on the server could still wait up to eight seconds to appear. The server
+  // hands out a copy no older than FRESH_MS in live-snapshot.ts, so this poll is
+  // now the last remaining wait - which is why it was halved again.
+  return inDrawWindow() ? 1500 : 20000;
 }
 
 /**

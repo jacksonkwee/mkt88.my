@@ -33,9 +33,39 @@ export const SNAPSHOT_TTL = 4000;
  */
 const MAX_STALE_MS = 5000;
 
+/**
+ * How old a copy may be before a POLLING request stops being answered from
+ * cache.
+ *
+ * The phone polls these endpoints every couple of seconds during a draw, and it
+ * used to be handed whatever the instance had for up to MAX_STALE_MS - measured
+ * at 4 to 6 seconds old, which is most of the gap the other 4D apps were beating
+ * us by. Past this age the request now waits for the rebuild instead, so what
+ * reaches the phone is at most this old plus the build itself.
+ *
+ * Page renders are deliberately NOT held to this: they still take whatever is
+ * cached so the app keeps opening instantly, then correct themselves on the
+ * first poll a moment later.
+ */
+const FRESH_MS = 2500;
+
 let cache: Snapshot | null = null;
 let warming = false;
+let inflight: Promise<Snapshot> | null = null;
 let warmer: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * One rebuild at a time. Several phones can poll in the same second, and each
+ * one used to fire its own sweep of ~13 upstream pages. They now share a single
+ * build, which is what makes the shorter freshness window affordable.
+ */
+function rebuildOnce(): Promise<Snapshot> {
+  if (!inflight) {
+    warming = true;
+    inflight = buildSnapshot().finally(() => { inflight = null; warming = false; });
+  }
+  return inflight;
+}
 
 async function get(url: string, json = false, timeoutMs = 12000, retries = 1): Promise<any> {
   // One retry: these result sites drop a request now and then, and a single
@@ -762,30 +792,27 @@ export async function buildSnapshot(): Promise<Snapshot> {
 export async function getSnapshot(opts: { wait?: boolean } = {}): Promise<Snapshot> {
   startWarmer();
   const cached = cache;
-  if (cached && Date.now() - cached.at < SNAPSHOT_TTL) return cached;
+  if (cached && Date.now() - cached.at < FRESH_MS) return cached;
   const usable = cached && Object.keys(cached.cards || {}).length > 0;
   const age = cached ? Date.now() - cached.at : Number.POSITIVE_INFINITY;
-  if (cached && usable && age < MAX_STALE_MS) {
-    // A second or two behind is fine - hand it over and refresh behind it.
-    // Serving this from cache rather than waiting on a full rebuild matters:
-    // a rebuild fetches ~10 upstream pages, and blocking every poll on one
-    // starved the function and made the homepage take 11 seconds to open.
-    if (!warming) {
-      warming = true;
-      void buildSnapshot().catch(() => {}).finally(() => { warming = false; });
-    }
+  // Page renders (wait: false) still take a copy up to MAX_STALE_MS old and
+  // refresh behind it. Blocking a render on a rebuild once made the homepage
+  // take 11 seconds to open, which is worse than a number that is a second late.
+  if (!opts.wait && cached && usable && age < MAX_STALE_MS) {
+    void rebuildOnce().catch(() => {});
     return cached;
   }
-  // Too old to be trusted during a draw, or nothing usable at all.
-  // The polling endpoints wait for a fresh build; a page render hands over the
-  // cached copy so the app opens fast and lets the client catch up.
-  if (!opts.wait && cached && usable) return cached;
-  warming = true;
-  try { return await buildSnapshot(); } finally { warming = false; }
+  // Polling endpoints wait: a copy older than FRESH_MS is not worth sending.
+  try { return await rebuildOnce(); }
+  catch (e) {
+    // A failed sweep must not turn into a blank page - keep the last good copy.
+    if (cached && usable) return cached;
+    throw e;
+  }
 }
 
 export function startWarmer() {
   if (warmer) return;
-  warmer = setInterval(() => { void buildSnapshot().catch(() => {}); }, SNAPSHOT_TTL);
+  warmer = setInterval(() => { void rebuildOnce().catch(() => {}); }, SNAPSHOT_TTL);
   (warmer as unknown as { unref?: () => void }).unref?.();
 }
