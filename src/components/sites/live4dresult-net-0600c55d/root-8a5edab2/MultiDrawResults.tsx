@@ -20,7 +20,7 @@ export default function MultiDrawResults({ snap: serverSnap }: { snap?: unknown 
   const night = useDrawOrder();
   const ctxSnap = useSnap();
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
-  const per = perdanaIds(night);
+  const per = perdanaIds();
   const hari = hariIds(night);
 
   const splitColumn = (ids: string[]): LotteryCardData[][] => {
@@ -38,8 +38,7 @@ export default function MultiDrawResults({ snap: serverSnap }: { snap?: unknown 
   const columns: LotteryCardData[][] = [
     ...splitColumn(["table-13-2026-09-06", "table-14-2026-09-06-6d"]),
     ...splitColumn(["table-17-2026-09-06", "table-18-2026-09-06-6d"]),
-    ...splitColumn([per[0]]),
-    ...splitColumn([per[1]]),
+    ...per.flatMap((id) => splitColumn([id])),
     ...splitColumn([hari[0], hari[1]]),
     ...splitColumn([hari[2], hari[3]]),
   ].filter((col) => col.length > 0);

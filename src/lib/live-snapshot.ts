@@ -250,11 +250,6 @@ function parsePerdana(html: string, iso: string): Record<string, PrizeSet> {
     if (hasAnyNumber(set) && !out[time]) out[time] = set;
   }
   return out;
-}/** Hour of the day in Kuala Lumpur. */
-function klHour(): number {
-  try {
-    return Number(new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
-  } catch { return new Date().getHours(); }
 }
 
 /** "20-09-2026 (Sun)" -> "2026-09-20". */
@@ -271,13 +266,12 @@ function isoFromDateLabel(s: string): string | null {
  * feed is the one every other game already uses and it carries Perdana under
  * its P entry.
  *
- * It holds ONE draw per day with no time, so the draw is filed under the slot
- * it belongs to - the evening draw once that has passed, otherwise the
- * afternoon one - and the card always carries the feed's own date, never a
- * date borrowed from somewhere else.
+ * It holds ONE draw per day with no time. Perdana's only draw is 7:30PM, so the
+ * value is always filed there, and the card always carries the feed's own date,
+ * never a date borrowed from somewhere else.
  */
 function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
-  const out: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
+  const out: Record<string, PrizeSet | null> = { "19:30": null };
   const p = (feed as { P?: Record<string, unknown> } | null)?.P;
   if (!p) return out;
   const val = (v: unknown): string => {
@@ -290,9 +284,7 @@ function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
   const cons = Array.from({ length: 10 }, (_, i) => val(p["C" + (i + 1)]));
   const dd = typeof p.DD === "string" ? p.DD : "";
   const iso = isoFromDateLabel(dd);
-  const today = myDate(0).iso;
-  const slot = iso && iso >= today ? (klHour() >= 19 ? "19:30" : "15:30") : "19:30";
-  out[slot] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
+  out["19:30"] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
   return out;
 }
 /**
@@ -649,11 +641,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // back on screen in the middle of today's live reveal.
   if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
-  const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
+  const perdana: Record<string, PrizeSet | null> = { "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
     if (!html) continue;
     const sets = parsePerdana(html, d.iso);
-    for (const time of ["15:30", "19:30"]) {
+    for (const time of ["19:30"]) {
       const s = sets[time];
       if (hasAnyNumber(s) && !perdana[time]) perdana[time] = s;
     }
@@ -665,18 +657,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // that wait on every build that still had an empty slot.
   const fileDays = (perdanaOfficial as unknown as { days?: Record<string, Record<string, PrizeSet>> }).days || {};
   for (const [time, set] of Object.entries(fileDays[today.iso] || {})) {
+    if (!(time in perdana)) continue;   // the operator dropped the 3:30PM draw on 1 Oct 2026
     if (!perdana[time] && set && set.prize.length && set.prize.some((v) => !isDash(v))) {
       perdana[time] = { ...set, date: weekdayOf(today.iso) };
     }
   }
   // Official page first, then the collected copy, then the reader, then the
   // shared live feed - so a draw is shown as soon as any of them has it.
-  if (!perdana["15:30"] || !perdana["19:30"]) {
+  if (!perdana["19:30"]) {
     const relayed = await perdanaFromRelay(today.iso);
-    for (const time of ["15:30", "19:30"]) if (!perdana[time] && relayed[time]) perdana[time] = relayed[time];
+    if (relayed["19:30"]) perdana["19:30"] = relayed["19:30"];
   }
   const feedPerdana = perdanaFromFeed(feed);
-  for (const t of ["15:30", "19:30"]) if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
+  if (!perdana["19:30"] && feedPerdana["19:30"]) perdana["19:30"] = feedPerdana["19:30"];
 
   // A source that drops out for one round must not wipe the cards we already
   // had: blank cards were being served until the next successful rebuild.
@@ -722,10 +715,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
       if (dayScore(vals.date) && dayScore(vals.date) === dayScore(before.date)) cards[cls] = addNew(before, vals);
     }
     for (const t of ["15:30", "19:30"]) {
-      const pBefore = prev.perdana ? prev.perdana[t] : null;
-      const pNow = perdana[t];
-      if (pBefore && pNow && isOlder(pNow.date, pBefore.date)) perdana[t] = pBefore;
-      else if (pBefore && !pNow) perdana[t] = pBefore;
+      // `in` keeps a 15:30 entry from an older snapshot out of the record now
+      // that Perdana runs a single draw.
+      if (t in perdana) {
+        const pBefore = prev.perdana ? prev.perdana[t] : null;
+        const pNow = perdana[t];
+        if (pBefore && pNow && isOlder(pNow.date, pBefore.date)) perdana[t] = pBefore;
+        else if (pBefore && !pNow) perdana[t] = pBefore;
+      }
 
       const hBefore = prev.hari ? prev.hari[t] : null;
       const hNow = hari[t];

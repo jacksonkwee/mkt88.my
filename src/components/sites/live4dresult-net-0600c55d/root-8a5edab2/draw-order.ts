@@ -1,4 +1,4 @@
-/** Draw-slot ordering helpers for the two-draws-a-day games (Perdana / HariHari). */
+/** Draw-slot ordering helpers for the two-draws-a-day games (Lucky HariHari). */
 
 /**
  * True while the 7:30pm draw is the current one.
@@ -15,16 +15,18 @@ export function nightDrawFirst(now: Date = new Date()): boolean {
   return mins >= 19 * 60 + 30 || mins < 15 * 60 + 30;
 }
 
-export const PERDANA_1530 = "table-16-2026-09-06-1530";
 export const PERDANA_1930 = "table-16-2026-09-06-1930";
 export const HARI_1530 = "table-15-2026-09-06-1530";
 export const HARI_1530_6D = "table-15-2026-09-06-1530-6d";
 export const HARI_1930 = "table-15-2026-09-06-1930";
 export const HARI_1930_6D = "table-15-2026-09-06-1930-6d";
 
-/** Perdana: the draw we are waiting for / just drawn comes first. */
-export function perdanaIds(night: boolean): string[] {
-  return night ? [PERDANA_1930, PERDANA_1530] : [PERDANA_1530, PERDANA_1930];
+/**
+ * Perdana: one draw a day since 1 Oct 2026, so there is only ever one card to
+ * place and nothing to order. Older 3:30PM draws remain in past results.
+ */
+export function perdanaIds(): string[] {
+  return [PERDANA_1930];
 }
 
 /** HariHari: each draw time keeps its 4D result directly above its 6D result. */

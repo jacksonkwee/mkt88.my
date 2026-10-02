@@ -69,15 +69,15 @@ const PAGES: PageDef[] = [
 ];
 
 /**
- * The Perdana / HariHari slides are time aware: the draw we are waiting for
- * (or the one that just came out) sits on top, and every HariHari 6D result
- * sits directly below its own 4D result.
+ * The HariHari slides are time aware: the draw we are waiting for (or the one
+ * that just came out) sits on top, and every HariHari 6D result sits directly
+ * below its own 4D result. Perdana runs a single 7:30PM draw.
  */
 function pagesFor(night: boolean): PageDef[] {
   const loss = PAGES.filter((p) => p.title !== "Perdana 4D" && !p.title.startsWith("Lucky HariHari"));
   return [
     ...loss,
-    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds(night) },
+    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds() },
     { title: "Lucky HariHari 天天好运", slug: "lucky-harihari", kh: true, ids: hariIds(night) },
   ];
 }

@@ -894,7 +894,7 @@ type FastFeed = {
   hari: Record<string, { set: PrizeSet | null; six: SixSet | null; jp: Record<string, string> | null } | null>;
 };
 
-const PERDANA_ID: Record<string, string> = { "15:30": "table-16-2026-09-06-1530", "19:30": "table-16-2026-09-06-1930" };
+const PERDANA_ID: Record<string, string> = { "19:30": "table-16-2026-09-06-1930" };
 const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "19:30": "table-15-2026-09-06-1930" };
 
 /** Apply a table-class -> { dataId: value } map to every matching card. */
@@ -950,7 +950,8 @@ function applyCambodiaFeed(j: FastFeed): boolean {
   {
     let did = false;
     for (const t of ["15:30", "19:30"]) {
-      const st = j.perdana ? j.perdana[t] : null;
+      // Perdana dropped its 3:30PM draw on 1 Oct 2026 - only 7:30PM is fetched.
+      const st = t === "19:30" && j.perdana ? j.perdana[t] : null;
       if (setHasAny(st)) {
         for (const card of Array.from(document.querySelectorAll('[id="' + PERDANA_ID[t] + '"]'))) { applySet(card, st); did = true; }
       }
@@ -973,7 +974,7 @@ async function syncEastHome() {
   await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"], ["table-10"]);
 }
 async function updatePerdanaHome() {
-  for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
+  for (const [time, id] of [["19:30", "table-16-2026-09-06-1930"]]) {
     for (const off of [0, -1]) {
       const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
       const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + d);
@@ -1063,8 +1064,8 @@ async function refreshOnce(full = true) {
       // column left. updateCambodiaFeed() below writes them correctly.
       await updateGdNineCards();
       await updateCambodiaFeed();
-      // Perdana 4D - two draws a day (latest completed date, fallback yesterday)
-      for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
+      // Perdana 4D - one 7:30PM draw a day (latest completed date, fallback yesterday)
+      for (const [time, id] of [["19:30", "table-16-2026-09-06-1930"]]) {
         for (const off of [0, -1]) {
           const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
           const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + d);
