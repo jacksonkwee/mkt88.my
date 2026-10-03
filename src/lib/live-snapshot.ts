@@ -615,8 +615,27 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // stream clearing itself cannot wipe a draw that is on screen.
   const sgParts = [capturedSg(), sgLive4d, liveCards["table-11"], sgOfficial["table-11"]].filter(Boolean) as Record<string, string>[];
   if (sgParts.length) {
-    const newest = Math.max(...sgParts.map((p) => sgDate(p)));
     const isDashVal = (v: string) => /^----+$/.test(String(v || "").trim());
+    /**
+     * A DATE on its own is not a result.
+     *
+     * live4d.sg opens a new draw entry the moment the draw starts: today's date
+     * with a single 1st-prize flag and an empty number list. Taking the newest
+     * DATE threw away the complete board we already held, so the Singapore card
+     * went from a full result to blank in one step - reported on 3 Oct 2026 as
+     * "1st/2nd/3rd missing, blank suddenly", with the board left half filled.
+     *
+     * Only move to the newer date once it carries its main prizes; until then
+     * keep serving the last COMPLETE draw, with its own date on the card. That
+     * is never wrong - it is just the previous draw until today's is real.
+     */
+    const hasMainPrizes = (b?: Record<string, string>): boolean =>
+      !!b && ["first_prize", "second_prize", "third_prize"].every((k) => !!b[k] && !isDashVal(b[k]));
+    let newest = Math.max(...sgParts.map((p) => sgDate(p)));
+    if (!sgParts.some((p) => sgDate(p) === newest && hasMainPrizes(p))) {
+      const completeDates = sgParts.filter((p) => hasMainPrizes(p)).map((p) => sgDate(p)).filter((d) => d > 0);
+      if (completeDates.length) newest = Math.max(...completeDates);
+    }
     // Seed from the card we already have ONLY when it is the same draw.
     //
     // Seeding from an older one carried its numbers into every slot the new
