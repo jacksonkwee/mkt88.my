@@ -67,18 +67,29 @@ function rebuildOnce(): Promise<Snapshot> {
   return inflight;
 }
 
-async function get(url: string, json = false, timeoutMs = 12000, retries = 1): Promise<any> {
-  // One retry: these result sites drop a request now and then, and a single
-  // miss used to empty whole cards out of the snapshot below. Sources that are
-  // known to be unreachable from this host pass retries = 0 - retrying them
-  // only doubled the wait.
+/*
+ * Every source is fetched on a SHORT leash.
+ *
+ * These used to default to a 12s timeout plus one retry, so a single site having
+ * a slow moment could hold the whole snapshot build open for up to ~24 seconds.
+ * buildSnapshot() only publishes once Promise.all has settled, so ONE sluggish
+ * source delayed all eleven games - which is why the app ran so far behind other
+ * 4D apps during a draw even though its own pipeline measured well (reported
+ * 3 Oct 2026).
+ *
+ * 4s with no retry: the sources normally answer in well under a second, so this
+ * is generous. Anything slower is skipped for this cycle and picked up on the
+ * next one - the "a blank never replaces a known number" rule below stops that
+ * from wiping a card that already has its numbers.
+ */
+async function get(url: string, json = false, timeoutMs = 4000, retries = 0): Promise<any> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
       if (!res.ok) throw new Error("upstream " + res.status);
       return json ? await res.json() : await res.text();
     } catch {
-      if (attempt < retries) await new Promise((r) => setTimeout(r, 400));
+      if (attempt < retries) await new Promise((r) => setTimeout(r, 250));
     }
   }
   return null;
