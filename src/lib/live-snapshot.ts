@@ -676,10 +676,49 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
   } catch { return null; }
 }
 
+/**
+ * Special Cash Sweep straight from the operator.
+ *
+ * cashsweep.com.my/live.json is the ~350 byte file its own results page fetches,
+ * so it updates the moment the operator publishes. Key map, verified against
+ * the 03-10-2026 draw:
+ *   1 / 2 / 3     the 1st/2nd/3rd prizes
+ *   9 .. 18       the ten special numbers
+ *   19 .. 28      the ten consolation numbers
+ * Values arrive without their leading zeros (375, 644, 148), so they are
+ * padded back to four digits rather than shown short.
+ */
+async function cashSweepToday(iso: string): Promise<Record<string, string> | null> {
+  try {
+    const res = await fetch("https://www.cashsweep.com.my/live.json", {
+      headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*", Referer: "https://www.cashsweep.com.my/results" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const j = (await res.json()) as { d?: string; n?: Record<string, number | string> };
+    if (String(j.d || "").slice(0, 10) !== iso) return null;   // never an older draw
+    const n = j.n || {};
+    const pad = (v: unknown): string => {
+      const s = v == null ? "" : String(v).replace(/[^0-9]/g, "");
+      return s ? s.padStart(4, "0").slice(-4) : "----";
+    };
+    const out: Record<string, string> = {
+      date: weekdayOf(iso),
+      first_prize: pad(n["1"]), second_prize: pad(n["2"]), third_prize: pad(n["3"]),
+    };
+    for (let i = 1; i <= 10; i++) out["special-" + i] = pad(n[String(8 + i)]);
+    for (let i = 1; i <= 10; i++) out["consolation-" + i] = pad(n[String(18 + i)]);
+    // Nothing published yet - leave the mirror's copy alone.
+    if (out.first_prize === "----") return null;
+    return out;
+  } catch { return null; }
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
@@ -697,6 +736,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     live4dSgToday(today.iso),
     magnumLiveToday(today.iso),
     sabah88Today(),
+    cashSweepToday(today.iso),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -735,6 +775,21 @@ export async function buildSnapshot(): Promise<Snapshot> {
       }
       cards["table-10"] = merged;
     }
+  }
+  /*
+   * Special Cash Sweep from the operator's own feed. This one carries its draw
+   * date, so it is only used when that date IS today - an older draw can never
+   * land under today's heading. A blank still never overwrites a known number.
+   */
+  if (cashSweep) {
+    const base = (cards["table-9"] || {}) as Record<string, string>;
+    const merged: Record<string, string> = { ...base };
+    for (const [k, v] of Object.entries(cashSweep)) {
+      const cur = merged[k];
+      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
+      merged[k] = v;
+    }
+    cards["table-9"] = merged;
   }
   /*
    * Grand Dragon and Nine Lotto publish THIRTEEN special numbers (A-M), but
