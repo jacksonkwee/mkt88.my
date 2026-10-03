@@ -1199,6 +1199,35 @@ export default function LiveResults() {
     let firstCycle = true;
     let lastFull = 0;
     const FULL_SWEEP_MS = 45000;
+    /*
+     * Cheap lane - the pre-warmed server snapshot, once a second.
+     *
+     * The main tick below can spend up to nine seconds sweeping the outside
+     * sites, and while it is busy NOTHING on the page updates. A number the
+     * server already held could therefore sit unseen for the length of that
+     * sweep, on top of the snapshot's own age - which is how the app ended up
+     * roughly twenty seconds behind other 4D apps during a draw, for every one
+     * of the eleven games (reported 3 Oct 2026).
+     *
+     * This lane touches only /api/home-live and /api/cambodia-live. Both are
+     * edge-cached and were measured at 150-300ms, so it can run every second
+     * without loading any third-party site. The expensive sweep stays on the
+     * 45-second cadence, because that is what keeps the source sites happy.
+     */
+    let fastBusy = false;
+    let lastFast = 0;
+    const fastPoll = async () => {
+      if (fastBusy || !alive) return;
+      if (!inDrawWindow() && Date.now() - lastFast < 5000) return;
+      fastBusy = true;
+      try { await syncFromServerFast(); lastFast = Date.now(); }
+      catch { /* picked up on the next tick */ }
+      finally { fastBusy = false; }
+    };
+    lastFast = Date.now();
+    const fastTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible" && alive) void fastPoll();
+    }, 1000);
     const tick = async () => {
       if (busy) return;
       busy = true;
@@ -1232,6 +1261,7 @@ export default function LiveResults() {
     return () => {
       alive = false;
       if (timer) window.clearTimeout(timer);
+      window.clearInterval(fastTimer);
       window.clearInterval(snapTimer);
       window.clearTimeout(restoreTimer);
       document.removeEventListener("visibilitychange", onVis);
