@@ -239,6 +239,25 @@ function setText(el: Element | null, v: string) {
   el.classList.remove("live-pending");
 }
 
+/**
+ * Find a card cell by the name the snapshot uses.
+ *
+ * Sabah 88's grid is the odd one out: its cells are called
+ * special_number_N / consolation_number_N while every other card - and the
+ * server snapshot - uses special-N / consolation-N. The fast path looked up
+ * special-1, found nothing on that card, and quietly wrote nothing, so Sabah 88
+ * was only ever updated by the mirror sweep that runs once every 45 seconds.
+ * That is why its live numbers lagged the other apps by up to three quarters of
+ * a minute (reported 3 Oct 2026).
+ */
+function cellFor(card: Element, id: string): Element | null {
+  const direct = card.querySelector('[data-id="' + id + '"]');
+  if (direct) return direct;
+  const m = /^(special|consolation)-(\d+)$/.exec(id);
+  if (!m) return null;
+  return card.querySelector('[data-id="' + m[1] + '_number_' + m[2] + '"]');
+}
+
 /** If a card is labelled with today's date but has no Draw No yet, the draw has
  *  not happened - clear the stale numbers so nothing shows before it opens. */
 function clearIfNoDraw(target: Element) {
@@ -949,8 +968,7 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
         // flash) on every single refresh.
         if (!v || v === "-") continue;
         if (/^----+$/.test(v) && !newDraw) continue;   // keep good numbers unless the draw changed
-        const el = card.querySelector('[data-id="' + id + '"]');
-        setText(el, v);
+        setText(cellFor(card, id), v);
       }
     }
   }
