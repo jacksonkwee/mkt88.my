@@ -587,10 +587,65 @@ function capturedSg(): Record<string, string> | null {
   return vals;
 }
 
+/**
+ * Magnum 4D straight from the operator's own live feed.
+ *
+ * magnum4d.my/live-draw is the small JSON the operator's own page polls to
+ * update its numbers: about 1.2 KB and 1.4 seconds, measured 3 Oct 2026. The
+ * mirror we used before has to notice the draw and republish it, and that
+ * republish step is what left Magnum 15-20 seconds behind other 4D apps.
+ *
+ * Shape: S01-S13 are the thirteen special numbers and C01-C10 the consolations.
+ * T1/T2/T3 name the LETTERS the 1st/2nd/3rd prizes were drawn from, so S03 with
+ * T1="C" is the 1st prize. Those three positions are shown blank on the card,
+ * exactly as the operator's own board does it.
+ */
+async function magnumLiveToday(iso: string): Promise<Record<string, string> | null> {
+  try {
+    const res = await fetch("https://www.magnum4d.my/live-draw", {
+      headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*", Referer: "https://www.magnum4d.my/" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const r = (await res.json())?.Data?.Results;
+    if (!r) return null;
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(r.DrawDate || "").trim());
+    if (!m) return null;
+    const drawIso = `${m[3]}-${m[2]}-${m[1]}`;
+    if (drawIso !== iso) return null;   // never let an older draw onto today's card
+
+    const val = (v: unknown): string => {
+      const s = v == null ? "" : String(v).trim();
+      return /^\d{4}$/.test(s) ? s : "----";
+    };
+    const S = Array.from({ length: 13 }, (_, i) => val(r["S" + String(i + 1).padStart(2, "0")]));
+    const C = Array.from({ length: 10 }, (_, i) => val(r["C" + String(i + 1).padStart(2, "0")]));
+    const LETTERS = "ABCDEFGHIJKLM";
+    const pick = (v: unknown) => {
+      const i = LETTERS.indexOf(String(v || "").trim().toUpperCase());
+      return { num: i >= 0 ? S[i] : "----", idx: i };
+    };
+    const p1 = pick(r.T1), p2 = pick(r.T2), p3 = pick(r.T3);
+    const moved = new Set([p1.idx, p2.idx, p3.idx].filter((i) => i >= 0));
+
+    const out: Record<string, string> = {
+      date: weekdayOf(drawIso),
+      draw_no: String(r.DrawID || "").trim() || "----",
+      first_prize: p1.num, second_prize: p2.num, third_prize: p3.num,
+    };
+    S.forEach((v, i) => { out["special-" + (i + 1)] = moved.has(i) ? "----" : v; });
+    C.forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
+    // Nothing worth showing yet - leave the mirror's copy in place.
+    if (p1.num === "----" && S.every((v) => /^----+$/.test(v))) return null;
+    return out;
+  } catch { return null; }
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
@@ -606,6 +661,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     gdSixToday(today.iso),
     nineOfficialToday(today.iso),
     live4dSgToday(today.iso),
+    magnumLiveToday(today.iso),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -615,6 +671,18 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const homeCards = parseCards(home);
   const eastCards = parseCards(east);
   const cards = { ...homeCards, ...eastCards, ...sgOfficial, ...liveCards };
+  // Magnum's own feed wins over the mirror when it has today's draw - but a
+  // blank from it must never wipe a number the mirror already published.
+  if (magnumToday) {
+    const base = (cards["table-1"] || {}) as Record<string, string>;
+    const merged: Record<string, string> = { ...base };
+    for (const [k, v] of Object.entries(magnumToday)) {
+      const cur = merged[k];
+      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
+      merged[k] = v;
+    }
+    cards["table-1"] = merged;
+  }
   // Singapore sources can arrive out of order. Use the newest dated result and
   // merge same-date fields so an older archive never overwrites a live draw.
   const sgDate = (v?: Record<string, string>): number => {
