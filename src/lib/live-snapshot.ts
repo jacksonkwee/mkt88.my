@@ -715,10 +715,85 @@ async function cashSweepToday(iso: string): Promise<Record<string, string> | nul
   } catch { return null; }
 }
 
+/**
+ * Sandakan (STC 4D) from the operator's own live-draw page.
+ *
+ * Confirmed against the 03-10-2026 draw: the page carries exactly TEN special
+ * and TEN consolation numbers (not the fifteen special slots the card has), so
+ * the split matters. Assuming fifteen would have pushed every consolation
+ * number into the wrong row.
+ */
+async function stc4dToday(): Promise<Record<string, string> | null> {
+  try {
+    const html = await get("https://stc4d.com/live-draw", false, 4000, 0);
+    if (!html) return null;
+    const four = (v: string): string => (/^\d{3,4}$/.test(v) ? v.padStart(4, "0") : "----");
+    const fm = /id="ld-first"[^>]*>\s*(\d{3,4})\s*</.exec(html);
+    const first = fm ? four(fm[1]) : "----";
+    const nums = [...html.matchAll(/tracking-\[2px\][^>]*>\s*(\d{3,4})\s*</g)].map((m) => four(m[1]));
+    if (first === "----" || nums.length < 20) return null;
+    const out: Record<string, string> = { first_prize: first };
+    for (let i = 0; i < 10; i++) out["special-" + (i + 1)] = nums[i];
+    for (let i = 0; i < 10; i++) out["consolation-" + (i + 1)] = nums[10 + i];
+    return out;
+  } catch { return null; }
+}
+
+/**
+ * Da Ma Cai, both draws, from the operator's own file.
+ *
+ * livedraw.damacai.com.my fetches this JSON from Azure Blob storage, so it is
+ * the same data their live-draw page shows. One file covers BOTH cards:
+ *   p1/p2/p3 + starterList + consolidateList            -> Da Ma Cai 1+3D
+ *   p13p3d/p23p3d/p33p3d + starterList3p3d + ...3p3d    -> Da Ma Cai 3+3D
+ * The read token in the URL is valid until 2028; if they ever rotate it this
+ * simply returns null and the mirror's copy stays on the card.
+ */
+const DAMACAI_JSON =
+  "https://prddmcremt1.blob.core.windows.net/drawresult/DrawResult.json" +
+  "?st=2018-05-24T09%3A54%3A31Z&se=2028-05-25T09%3A54%3A00Z&sp=rl&sv=2017-07-29&sr=b" +
+  "&sig=inT8KHVV3QpYI7e7X0ZQ%2BNX%2BlboBg%2Fs%2FX9GTfUhfRGo%3D";
+
+async function damacaiToday(iso: string): Promise<{ four: Record<string, string>; three: Record<string, string> } | null> {
+  try {
+    const res = await fetch(DAMACAI_JSON, {
+      headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return null;
+    const j = (await res.json()) as Record<string, unknown>;
+    const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(String(j.drawDate || "").trim());
+    if (!m) return null;
+    if (`${m[3]}-${m[2]}-${m[1]}` !== iso) return null;   // never an older draw
+    const pad = (v: unknown, n: number): string => {
+      const s = v == null ? "" : String(v).replace(/[^0-9]/g, "");
+      return s ? s.padStart(n, "0").slice(-n) : "----";
+    };
+    const rows = (a: unknown, n: number): string[] =>
+      Array.isArray(a) ? a.slice(0, 10).map((v) => pad(v, n)) : [];
+    const head = { date: weekdayOf(iso), draw_no: String(j.drawNo || "").trim() || "----" };
+    const four: Record<string, string> = {
+      ...head,
+      first_prize: pad(j.p1, 4), second_prize: pad(j.p2, 4), third_prize: pad(j.p3, 4),
+    };
+    rows(j.starterList, 4).forEach((v, i) => { four["special-" + (i + 1)] = v; });
+    rows(j.consolidateList, 4).forEach((v, i) => { four["consolation-" + (i + 1)] = v; });
+    const three: Record<string, string> = {
+      ...head,
+      first_prize: pad(j.p13p3d, 6), second_prize: pad(j.p23p3d, 6), third_prize: pad(j.p33p3d, 6),
+    };
+    rows(j.starterList3p3d, 6).forEach((v, i) => { three["special-" + (i + 1)] = v; });
+    rows(j.consolidateList3p3d, 6).forEach((v, i) => { three["consolation-" + (i + 1)] = v; });
+    if (four.first_prize === "----" && three.first_prize === "----") return null;
+    return { four, three };
+  } catch { return null; }
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
@@ -737,6 +812,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
     magnumLiveToday(today.iso),
     sabah88Today(),
     cashSweepToday(today.iso),
+    stc4dToday(),
+    damacaiToday(today.iso),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -790,6 +867,26 @@ export async function buildSnapshot(): Promise<Snapshot> {
       merged[k] = v;
     }
     cards["table-9"] = merged;
+  }
+  /*
+   * Sandakan (STC 4D) and Da Ma Cai, straight from each operator. Both are
+   * merged over the mirror the same way: a blank never replaces a number the
+   * mirror already published, so a source that drops out cannot empty a card.
+   */
+  for (const [cls, vals] of [
+    ["table-8", stc4d],
+    ["table-4", damacai ? damacai.four : null],
+    ["table-5", damacai ? damacai.three : null],
+  ] as [string, Record<string, string> | null][]) {
+    if (!vals) continue;
+    const base = (cards[cls] || {}) as Record<string, string>;
+    const merged: Record<string, string> = { ...base };
+    for (const [k, v] of Object.entries(vals)) {
+      const cur = merged[k];
+      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
+      merged[k] = v;
+    }
+    cards[cls] = merged;
   }
   /*
    * Grand Dragon and Nine Lotto publish THIRTEEN special numbers (A-M), but
