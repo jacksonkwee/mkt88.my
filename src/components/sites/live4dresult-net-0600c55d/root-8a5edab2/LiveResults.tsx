@@ -970,6 +970,19 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
         if (/^----+$/.test(v) && !newDraw) continue;   // keep good numbers unless the draw changed
         setText(cellFor(card, id), v);
       }
+      /*
+       * Grand Dragon and Nine Lotto publish only thirteen special numbers
+       * (A-M), but the card has fifteen cells - the last two are spare. A copy
+       * of the 13th value was landing in cell 14, so 6787 and 1993 each showed
+       * twice (reported 3 Oct 2026). Those slots can never hold a real number
+       * for these games, so they are blanked here after every write.
+       */
+      if (cls === "table-13" || cls === "table-17") {
+        for (const id of ["special-14", "special-15"]) {
+          const el = card.querySelector('[data-id="' + id + '"]');
+          if (el && (el.textContent || "").trim() !== "----") el.textContent = "----";
+        }
+      }
     }
   }
 }

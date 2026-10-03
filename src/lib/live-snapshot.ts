@@ -683,6 +683,21 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
     cards["table-1"] = merged;
   }
+  /*
+   * Grand Dragon and Nine Lotto publish THIRTEEN special numbers (A-M), but
+   * their cards have fifteen cells laid out three rows of five - the last two
+   * are spare. A copy of the 13th value was landing in cell 14, so 6787 and
+   * 1993 each appeared TWICE on the card (reported 3 Oct 2026).
+   *
+   * Those two slots can never hold a real number for these games, so they are
+   * forced blank here, whatever source put something there.
+   */
+  for (const cls of ["table-13", "table-17"]) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    c["special-14"] = "----";
+    c["special-15"] = "----";
+  }
   // Singapore sources can arrive out of order. Use the newest dated result and
   // merge same-date fields so an older archive never overwrites a live draw.
   const sgDate = (v?: Record<string, string>): number => {
