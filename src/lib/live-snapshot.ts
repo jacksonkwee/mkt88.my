@@ -642,10 +642,44 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
   } catch { return null; }
 }
 
+/**
+ * Sabah 88 straight from the operator's own site.
+ *
+ * sabah88.net ships the whole draw as structured data in the page, under
+ * window.SABAH88_INITIAL - no scraping of a laid-out board:
+ *   n1/n2/n3  the 1st/2nd/3rd prizes
+ *   s1..s13   the thirteen special numbers
+ *   c1..c10   the ten consolation numbers
+ * That is 103KB and ~1.2s from the operator, against a mirror that has to
+ * notice the draw and republish it first.
+ */
+async function sabah88Today(): Promise<Record<string, string> | null> {
+  try {
+    const html = await get("https://www.sabah88.net/", false, 4000, 0);
+    if (!html) return null;
+    const m = /window\.SABAH88_INITIAL\s*=\s*([\s\S]*?);?\s*<\/script>/.exec(html);
+    if (!m) return null;
+    const draw = (JSON.parse(m[1].replace(/;\s*$/, "")) as { draw?: Record<string, unknown> }).draw;
+    if (!draw) return null;
+    const val = (v: unknown): string => {
+      const s = v == null ? "" : String(v).trim();
+      return /^\d{4}$/.test(s) ? s : "----";
+    };
+    const out: Record<string, string> = {
+      first_prize: val(draw.n1), second_prize: val(draw.n2), third_prize: val(draw.n3),
+    };
+    for (let i = 1; i <= 13; i++) out["special-" + i] = val(draw["s" + i]);
+    for (let i = 1; i <= 10; i++) out["consolation-" + i] = val(draw["c" + i]);
+    // Nothing published yet - leave the mirror's copy alone.
+    if (Object.values(out).every((v) => v === "----")) return null;
+    return out;
+  } catch { return null; }
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday] = await Promise.all([
+  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
@@ -662,6 +696,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     nineOfficialToday(today.iso),
     live4dSgToday(today.iso),
     magnumLiveToday(today.iso),
+    sabah88Today(),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -682,6 +717,24 @@ export async function buildSnapshot(): Promise<Snapshot> {
       merged[k] = v;
     }
     cards["table-1"] = merged;
+  }
+  /*
+   * Sabah 88 straight from the operator - but ONLY onto a card that already
+   * shows TODAY's date. If the card is still on an older draw the official
+   * numbers are ignored, so a parser slip can never put yesterday's draw under
+   * today's heading. Never blank a value the mirror already published either.
+   */
+  if (sabah88) {
+    const base = (cards["table-10"] || {}) as Record<string, string>;
+    if ((base.date || "").trim() === weekdayOf(today.iso)) {
+      const merged: Record<string, string> = { ...base };
+      for (const [k, v] of Object.entries(sabah88)) {
+        const cur = merged[k];
+        if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
+        merged[k] = v;
+      }
+      cards["table-10"] = merged;
+    }
   }
   /*
    * Grand Dragon and Nine Lotto publish THIRTEEN special numbers (A-M), but
