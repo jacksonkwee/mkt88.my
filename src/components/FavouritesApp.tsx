@@ -176,8 +176,14 @@ export default function FavouritesApp() {
               return (
                 <button key={s} onClick={() => toggleScope(s)}
                   style={{
-                    flex: 1, minWidth: 0, textAlign: "center", whiteSpace: "nowrap",
-                    padding: "6px 4px", borderRadius: 12, cursor: "pointer", fontSize: 12.5,
+                    /*
+                     * The row stays one line, but "Consolation 安慰奖" is much
+                     * longer than the other two - so the LABEL is allowed to
+                     * wrap inside its own box instead of spilling over the
+                     * edge. All three boxes still stretch to the same height.
+                     */
+                    flex: 1, minWidth: 0, textAlign: "center", whiteSpace: "normal", lineHeight: 1.15,
+                    padding: "6px 3px", borderRadius: 12, cursor: "pointer", fontSize: 12,
                     border: on ? "2px solid " + RED : "1px solid #ccc",
                     background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#333", fontWeight: on ? 700 : 500,
                   }}>
