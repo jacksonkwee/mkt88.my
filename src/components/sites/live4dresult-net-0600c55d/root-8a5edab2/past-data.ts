@@ -54,14 +54,26 @@ export function formatDate(date: string): string {
   return `${d}-${m}-${y}`;
 }
 
+/**
+ * Sports Toto prints four asterisks in the empty cells of its Special row, and
+ * on the card that reads like one of the winning numbers (reported 4 Oct 2026).
+ * A cell in these grids holds a four-digit number or nothing at all, so the
+ * stored copies are shown with a blank instead.
+ */
+export function blankStarCells(html: string): string {
+  return html.replace(/>\s*\*{3,4}\s*</g, ">----<");
+}
+
 /** Return the HTML for the requested view on a date, or null when unavailable. */
 export function getViewHtml(date: string, view: "my" | "kh"): string | null {
   const e = parsed.entries[date];
   if (!e) return null;
   if (view === "kh") {
-    return e.khHtml || (e.defaultView === "kh" ? e.html : null);
+    const kh = e.khHtml || (e.defaultView === "kh" ? e.html : null);
+    return kh ? blankStarCells(kh) : null;
   }
-  return e.defaultView === "my" ? e.html : null;
+  const my = e.defaultView === "my" ? e.html : null;
+  return my ? blankStarCells(my) : null;
 }
 
 /** Split a captured past-results column into (grid HTML, description HTML). */

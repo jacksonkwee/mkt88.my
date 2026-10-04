@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
+import { blankStarCells, getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
 import { rewriteHtml, stripAdHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
 import recent from "../my-past/recent.json";
 import { GAME_TABLES } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/game-tables";
@@ -37,7 +37,7 @@ function extractCard(html: string, cls: string): string {
 
 /** Keep the past numbers as printed: no live ids, no live placeholder masking. */
 function freeze(html: string): string {
-  return rewriteHtml(html)
+  return blankStarCells(rewriteHtml(html))
     // Mark the card as a past result so the page's live refresher never
     // writes today's numbers into it.
     .replace(/class="card outer-box /g, 'class="card outer-box mkt-past ')
