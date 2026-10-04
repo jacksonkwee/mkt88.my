@@ -1142,7 +1142,18 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * number the player can see on the operator's own board. Each operator does it
    * differently, so this can only be applied where it has been checked.
    */
-  for (const cls of ["table-1", "table-13"]) {
+  /*
+   * These checks apply ONLY to the cards still fed by a mirror.
+   *
+   * The official boards sometimes publish the same number twice, and that is a
+   * real result - not a mistake. Rewriting an official board would hide a number
+   * the player can see on the operator's own page, which is worse than the
+   * duplicate. Only mirror-sourced cards are sanity-checked, because the
+   * mid-reveal glitches come from there: Magnum Life, Magnum Jackpot Gold and
+   * the two Sports Toto cards.
+   */
+  const MIRROR_ONLY = ["table-2", "table-3", "table-6", "table-7"];
+  for (const cls of MIRROR_ONLY) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     const prizes = [c.first_prize, c.second_prize, c.third_prize].filter((v) => v && !/^----+$/.test(v));
@@ -1167,7 +1178,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * They fill in the moment the real values differ. Checked for every game: a
    * draw never repeats a number across 1st, 2nd and 3rd.
    */
-  for (const cls of Object.keys(cards)) {
+  for (const cls of MIRROR_ONLY) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     const p = [c.first_prize, c.second_prize, c.third_prize];
@@ -1193,7 +1204,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * if the feed was one cell out the duplicate disappears rather than showing
    * twice. Same rule for the consolation row.
    */
-  for (const cls of Object.keys(cards)) {
+  for (const cls of MIRROR_ONLY) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     for (const [prefix, count] of [["special-", 15], ["consolation-", 10]] as [string, number][]) {
