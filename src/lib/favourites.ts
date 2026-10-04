@@ -18,7 +18,7 @@ export const ALL_SCOPES: Scope[] = ["main", "special", "consolation"];
 export const SCOPE_LABEL: Record<Scope, string> = {
   main: "Main 正奖",
   special: "Special 特别奖",
-  consolation: "Consolation 安慰奖",
+  consolation: "Con 安慰奖",
 };
 
 export function isNum(v: string): boolean {
