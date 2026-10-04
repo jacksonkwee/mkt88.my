@@ -269,22 +269,25 @@ function cellFor(card: Element, id: string): Element | null {
  * known number" rule below then keeps the repeat on screen, because the
  * server's blank is one of the blanks that rule refuses to write.
  *
- * So the repeat is removed on the card itself, after every write. Only the
- * later cell is blanked, so no published number is ever lost. Only the
- * mirror-fed cards are touched - a sliding mirror grid is what puts the same
- * number in two cells of one grid, and an operator's own board must never be
- * rewritten.
+ * So the grid is tidied on the card itself, after every write: the later copy
+ * of a repeat is blanked, so no published number is ever lost. A cell that
+ * holds something which is not a number at all - Sports Toto prints "****" in
+ * its empty special cells - is blanked too, matching what the card should show.
+ * Only the mirror-fed cards are touched, because a sliding mirror grid is what
+ * puts a repeat or a marker in the wrong cell, and an operator's own board must
+ * never be rewritten.
  */
 const MIRROR_ONLY_CLASSES = ["table-2", "table-3", "table-6", "table-7", "table-13"];
 
-function clearGridRepeats(card: Element): void {
+function cleanGrid(card: Element): void {
   for (const [prefix, count] of [["special-", 15], ["consolation-", 10]] as [string, number][]) {
     const seen = new Set<string>();
     for (let i = 1; i <= count; i++) {
       const el = cellFor(card, prefix + i);
       if (!el) continue;
       const v = (el.textContent || "").trim();
-      if (!/^\d{3,4}$/.test(v)) continue;
+      if (!v || /^----+$/.test(v)) continue;
+      if (!/^\d{3,4}$/.test(v)) { el.textContent = "----"; continue; }
       if (seen.has(v)) el.textContent = "----";
       else seen.add(v);
     }
@@ -1016,9 +1019,9 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
           if (el && (el.textContent || "").trim() !== "----") el.textContent = "----";
         }
       }
-      // A cached copy can hold a repeat the server has already cleared; see
-      // clearGridRepeats().
-      if (MIRROR_ONLY_CLASSES.includes(cls)) clearGridRepeats(card);
+      // A cell can still hold a stale repeat, or a marker like Sports Toto's
+      // "****"; see cleanGrid().
+      if (MIRROR_ONLY_CLASSES.includes(cls)) cleanGrid(card);
     }
   }
 }

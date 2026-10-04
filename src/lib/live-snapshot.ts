@@ -1226,6 +1226,28 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  /*
+   * A cell in these grids holds a four-digit number or nothing at all.
+   *
+   * Sports Toto marks its empty special cells with "****", and that was landing
+   * on the card as though it were one of the winning numbers (reported 4 Oct
+   * 2026). Anything that is not a number is blanked here, so the card shows the
+   * same empty cell the operator does. Only the mirror-fed cards are touched -
+   * an operator's own board is never rewritten.
+   */
+  for (const cls of MIRROR_ONLY) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    for (const [prefix, count] of [["special-", 15], ["consolation-", 10]] as [string, number][]) {
+      for (let i = 1; i <= count; i++) {
+        const k = prefix + i;
+        const v = c[k];
+        if (!v || /^----+$/.test(v)) continue;
+        if (!/^\d{3,4}$/.test(v.trim())) c[k] = "----";
+      }
+    }
+  }
+
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
