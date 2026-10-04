@@ -355,23 +355,17 @@ export default function NumberHistoryApp() {
                 {filtered.slice(0, MAX_ROWS).map((m, i) => {
                   const fav = isFav(m.num);
                   return (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff" }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 12, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
-                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 30, maxHeight: 30 }} /> : <span style={{ fontSize: 11, color: "#999" }}>4D</span>}
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 10px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff", whiteSpace: "nowrap" }}>
+                      <div style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
+                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 10, color: "#999" }}>4D</span>}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.game}</div>
-                        <div style={{ fontSize: 13, color: "#888" }}>{m.date} · {m.region}</div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <span style={{ display: "inline-block", fontSize: 11, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 12, padding: "2px 7px", marginBottom: 3 }}>
-                          {m.prize}
-                        </span>
-                        <div style={{ fontWeight: 800, fontSize: 18, letterSpacing: 2 }}>{m.num}</div>
-                      </div>
+                      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{m.game}</span>
+                      <span style={{ fontSize: 12, color: "#888", flexShrink: 0 }}>{shortDate(m.date)}</span>
+                      <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{shortPrize(m.prize)}</span>
                       <button onClick={() => onToggleFav(m.num)} title="Favourite"
-                        style={{ background: "transparent", border: 0, fontSize: 18, cursor: "pointer", padding: 4, color: fav ? "#e6a700" : "#bbb" }}>
-                        {fav ? <Star size={18} weight="fill" /> : <Star size={18} />}
+                        style={{ background: "transparent", border: 0, cursor: "pointer", padding: 2, color: fav ? "#e6a700" : "#bbb", flexShrink: 0, lineHeight: 0 }}>
+                        {fav ? <Star size={16} weight="fill" /> : <Star size={16} />}
                       </button>
                     </div>
                   );
@@ -418,4 +412,23 @@ function chip(active: boolean): React.CSSProperties {
     border: active ? "2px solid " + RED : "1px solid #ccc",
     background: active ? "#ffe9e9" : "#fff", color: active ? RED : "#333", fontWeight: active ? 700 : 500,
   };
+}
+
+/*
+ * Result rows are one line each (logo · game · date · number · prize), so the
+ * date and the prize name are shortened: "23-08-2025 (Sat)" -> "23/08/25" and
+ * "Consolation" -> "Con". Without this the row wraps and stops being one line.
+ */
+function shortDate(d: string): string {
+  const m = /(\d{2})[-/](\d{2})[-/](\d{4})/.exec(d || "");
+  return m ? `${m[1]}/${m[2]}/${m[3].slice(2)}` : (d || "");
+}
+function shortPrize(p: string): string {
+  const s = p || "";
+  if (/^consol/i.test(s)) return "Con";
+  if (/^spec/i.test(s)) return "Spe";
+  if (/^1st/i.test(s)) return "1st";
+  if (/^2nd/i.test(s)) return "2nd";
+  if (/^3rd/i.test(s)) return "3rd";
+  return s.slice(0, 3);
 }
