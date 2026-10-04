@@ -103,6 +103,21 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
+
+  /*
+   * The 恭喜发财 notification opens the app at /?lucky=1, so the popup is
+   * already showing when someone arrives from the lock screen. The flag is
+   * cleared straight away so a later refresh does not pop it up again.
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const p = new URLSearchParams(window.location.search);
+    if (!p.has("lucky")) return;
+    setLucky(luckyNumber());
+    p.delete("lucky");
+    const q = p.toString();
+    window.history.replaceState(null, "", window.location.pathname + (q ? "?" + q : ""));
+  }, []);
   const lockRef = useRef<WakeLockSentinelLike | null>(null);
 
   const pathname = usePathname();

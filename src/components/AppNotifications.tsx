@@ -12,6 +12,10 @@ type LocalNotificationsPlugin = {
   createChannel?: (channel: Record<string, unknown>) => Promise<void>;
   cancel?: (options: { notifications: { id: number }[] }) => Promise<void>;
   schedule?: (options: { notifications: Record<string, unknown>[] }) => Promise<unknown>;
+  addListener?: (
+    eventName: string,
+    cb: (data: { notification?: { id?: number | string } }) => void
+  ) => { remove?: () => void } | undefined;
 };
 
 function luckyNumber(): string {
@@ -192,6 +196,24 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
     void install();
     return () => { cancelled = true; };
   }, [enabled]);
+
+  /*
+   * Tapping a lucky-number reminder (the 恭喜发财 ones) should land on the main
+   * page with the popup already open, rather than wherever the app happened to
+   * be. The live-draw reminders are deliberately left alone - tapping one still
+   * just opens the app, so nobody is sent to lucky numbers from a results alert.
+   */
+  useEffect(() => {
+    const ln = localNotifications();
+    if (!ln) return;
+    const h = ln.addListener?.("localNotificationActionPerformed", (ev) => {
+      const id = Number(ev?.notification?.id ?? 0);
+      if (id === NOTIFICATION_1800 || id === NOTIFICATION_1830) {
+        window.location.href = "/?lucky=1";
+      }
+    });
+    return () => { try { h?.remove?.(); } catch { /* nothing to clean up */ } };
+  }, []);
 
   return null;
 }
