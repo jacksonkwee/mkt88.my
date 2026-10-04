@@ -1018,16 +1018,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * positions the prizes were drawn from are still cleared by the final pass
    * below, so this cannot reintroduce a duplicate.
    */
-  if (nineOfficial.four) {
-    const base = (cards["table-17"] || {}) as Record<string, string>;
-    const merged: Record<string, string> = { ...base };
-    for (const [k, v] of Object.entries(nineOfficial.four)) {
-      const cur = merged[k];
-      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
-      merged[k] = v;
-    }
-    cards["table-17"] = merged;
-  }
+  /*
+   * 9lotto.com's board is the truth - shown EXACTLY as published, blanks and
+   * all.
+   *
+   * This used to be a guarded merge that kept any value the mirror had when the
+   * operator showed a blank. That is wrong here: the operator's blanks are
+   * deliberate, and merging left a stale number sitting in cell 13 where their
+   * board has nothing (and earlier erased 4538 from cell 5). The official board
+   * is never second-guessed.
+   */
+  if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
   const perdana: Record<string, PrizeSet | null> = { "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
