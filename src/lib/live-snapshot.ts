@@ -1133,7 +1133,16 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * back. Only these three games are touched: for Singapore or Da Ma Cai a
    * number may legitimately appear as both a prize and a starter.
    */
-  for (const cls of ["table-1", "table-13", "table-17"]) {
+  /*
+   * NOTE: only Magnum and Grand Dragon are listed here.
+   *
+   * Nine Lotto was in this list and it was WRONG: its operator shows the
+   * winning number in the special grid AS WELL as in the prize row - on
+   * 04-10-2026 the 3rd prize and special E were both 4538. Blanking it removed a
+   * number the player can see on the operator's own board. Each operator does it
+   * differently, so this can only be applied where it has been checked.
+   */
+  for (const cls of ["table-1", "table-13"]) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     const prizes = [c.first_prize, c.second_prize, c.third_prize].filter((v) => v && !/^----+$/.test(v));
