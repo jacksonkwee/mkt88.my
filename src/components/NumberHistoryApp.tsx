@@ -75,7 +75,9 @@ export default function NumberHistoryApp() {
   const [prizes, setPrizes] = useState<string[]>([]);
   const [companies, setCompanies] = useState<string[]>([]);
   const [showCompanies, setShowCompanies] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  /* Each tab opens ONLY its own chips - Region no longer drags Prize in too. */
+  const [showRegion, setShowRegion] = useState(false);
+  const [showPrize, setShowPrize] = useState(false);
   const [data, setData] = useState<ApiResp | null>(null);
   const [dabo, setDabo] = useState<Dabo | null>(null);
   const [daboBad, setDaboBad] = useState(false);
@@ -253,13 +255,9 @@ export default function NumberHistoryApp() {
           {data ? (
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
-                <button onClick={() => onToggleFav(primary || data.nums[0])}
-                  style={{ border: "1px solid " + RED, borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
-                  {isFav(primary || data.nums[0]) ? <><Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Favourite</> : <><Star size={13} style={{ verticalAlign: "-2px", marginRight: 4 }} />Add favourite</>}
-                </button>
                 <Link href={"/favourites?num=" + (primary || data.nums[0])}
-                  style={{ border: "1px solid #ddd", borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: "#333", textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
-                  <Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Pau / Notify
+                  style={{ border: "1px solid " + RED, borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: RED, textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
+                  <Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Favourite
                 </Link>
               </div>
             </div>
@@ -276,32 +274,30 @@ export default function NumberHistoryApp() {
              */}
             {/* One row for all three filters. */}
             <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setShowFilters((v) => !v)} style={tabBtn(showFilters)}>
+              <button onClick={() => setShowRegion((v) => !v)} style={tabBtn(showRegion)}>
                 Region 地区{regions.length ? " *" : ""}
               </button>
-              <button onClick={() => setShowFilters((v) => !v)} style={tabBtn(showFilters)}>
+              <button onClick={() => setShowPrize((v) => !v)} style={tabBtn(showPrize)}>
                 Prize 奖项{prizes.length ? " *" : ""}
               </button>
               <button onClick={() => setShowCompanies((v) => !v)} style={tabBtn(showCompanies)}>
                 公司 Company{companies.length ? " *" : ""}
               </button>
             </div>
-            {showFilters ? (
-              <div style={{ marginTop: 10 }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Region 地区</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-                  <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
-                  {REGIONS.map((r) => (
-                    <button key={r} onClick={() => TOGGLE_ALL(regions, setRegions, r, REGIONS)} style={chip(isOnAll(regions, r))}>{r}</button>
-                  ))}
-                </div>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Prize 奖项</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-                  <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
-                  {PRIZES.map((p) => (
-                    <button key={p} onClick={() => TOGGLE_ALL(prizes, setPrizes, p, PRIZES)} style={chip(isOnAll(prizes, p))}>{p}</button>
-                  ))}
-                </div>
+            {showRegion ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
+                {REGIONS.map((r) => (
+                  <button key={r} onClick={() => TOGGLE_ALL(regions, setRegions, r, REGIONS)} style={chip(isOnAll(regions, r))}>{r}</button>
+                ))}
+              </div>
+            ) : null}
+            {showPrize ? (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
+                <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
+                {PRIZES.map((p) => (
+                  <button key={p} onClick={() => TOGGLE_ALL(prizes, setPrizes, p, PRIZES)} style={chip(isOnAll(prizes, p))}>{p}</button>
+                ))}
               </div>
             ) : null}
 
