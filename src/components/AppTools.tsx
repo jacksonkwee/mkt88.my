@@ -80,10 +80,24 @@ export default function AppTools() {
       for (const c of cells) {
         const el = c as HTMLElement;
         const v = (el.textContent || "").replace(/\s+/g, "");
-        if (!isNum(v)) continue;
+        const ours = el.getAttribute("data-mkt-fav") === "1";
+        /*
+         * A cell we painted must be un-painted FIRST if it is no longer a
+         * four-digit number. Between draws the board blanks to "----", and the
+         * old `continue` skipped those cells entirely - so yesterday's yellow
+         * sat on today's live results right through the rollover until the new
+         * number appeared (reported 4 Oct 2026).
+         */
+        if (!isNum(v)) {
+          if (ours) {
+            el.style.backgroundColor = "";
+            el.style.boxShadow = "";
+            el.removeAttribute("data-mkt-fav");
+          }
+          continue;
+        }
         const scope = cellScope(el);
         const match = favs.find((f) => f.num === v && f.scopes.indexOf(scope) >= 0);
-        const ours = el.getAttribute("data-mkt-fav") === "1";
         if (match) {
           el.style.backgroundColor = YELLOW;
           el.style.boxShadow = "0 0 0 2px #e6a700 inset";
