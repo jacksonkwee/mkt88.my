@@ -1153,7 +1153,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * mid-reveal glitches come from there: Magnum Life, Magnum Jackpot Gold and
    * the two Sports Toto cards.
    */
-  const MIRROR_ONLY = ["table-2", "table-3", "table-6", "table-7"];
+  /*
+   * Grand Dragon 4D (table-13) belongs here too: its 4D card is fed by the
+   * mirrors, not by an operator page - only its 6D comes from gdlotto. Without
+   * it the stale value in cell 13 that copies cell 12 is never cleared, which is
+   * exactly what was reported on 04-10-2026.
+   */
+  const MIRROR_ONLY = ["table-2", "table-3", "table-6", "table-7", "table-13"];
   for (const cls of MIRROR_ONLY) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
