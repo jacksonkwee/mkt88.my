@@ -232,7 +232,12 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
       if (id !== NOTIFICATION_1600 && id !== NOTIFICATION_1800 && id !== NOTIFICATION_1830) return;
       // The number rides along on the notification, so the popup repeats the
       // number the user actually saw instead of drawing a fresh one.
-      const sent = String(ev?.notification?.extra?.lucky ?? "").trim();
+      //
+      // Reminders scheduled before this was added carry no extra, so fall back
+      // to the number printed in their own text ("... 幸运号码：1236") - the
+      // "16:00" style times never look like four digits in a row.
+      const n = ev?.notification;
+      const sent = (String(n?.extra?.lucky ?? "") || (/(\d{4})/.exec(String(n?.body ?? ""))?.[1] ?? "")).trim();
       window.location.href = /^\d{4}$/.test(sent) ? "/?lucky=" + sent : "/?lucky=1";
     });
     return () => { try { h?.remove?.(); } catch { /* nothing to clean up */ } };
