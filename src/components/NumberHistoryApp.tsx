@@ -75,6 +75,7 @@ export default function NumberHistoryApp() {
   const [prizes, setPrizes] = useState<string[]>([]);
   const [companies, setCompanies] = useState<string[]>([]);
   const [showCompanies, setShowCompanies] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [data, setData] = useState<ApiResp | null>(null);
   const [dabo, setDabo] = useState<Dabo | null>(null);
   const [daboBad, setDaboBad] = useState(false);
@@ -175,6 +176,18 @@ export default function NumberHistoryApp() {
   const toggleIn = (arr: string[], set: (v: string[]) => void, v: string) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
+  /*
+   * Region and Prize start with EVERYTHING on - an empty list means "no filter".
+   * So a chip click has to switch from "all" to "all except this one" rather
+   * than adding it, which would have narrowed the results to just that one.
+   */
+  const TOGGLE_ALL = (arr: string[], set: (v: string[]) => void, v: string, universe: string[]) => {
+    const current = arr.length ? arr : universe;
+    const next = current.includes(v) ? current.filter((x) => x !== v) : [...current, v];
+    set(next.length === universe.length ? [] : next);
+  };
+  const isOnAll = (arr: string[], v: string) => arr.length === 0 || arr.includes(v);
+
   const isFav = (n: string) => favs.some((f) => f.num === n);
   const onToggleFav = (n: string) => { toggleFav(n); setFavs(loadFavs()); };
 
@@ -230,15 +243,9 @@ export default function NumberHistoryApp() {
             <>
               <div style={{ marginTop: 10, fontWeight: 700, fontSize: 13 }}>What to check 查询方式</div>
               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-                <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一 {primary}</button>
+                <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一</button>
                 <button onClick={() => setSelected(perms)} style={modeBtn(mode === "pau")}>Pau 包 (all {perms.length})</button>
-                <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>Reverse 来回 {reverseSet.join(" / ")}</button>
-              </div>
-              <div style={{ marginTop: 10, fontSize: 13, color: "#555" }}>
-                Checking <b>{selected.length}</b> number{selected.length === 1 ? "" : "s"}:{" "}
-                <span style={{ color: "#111", fontWeight: 600 }}>
-                  {selected.slice(0, 16).join(", ")}{selected.length > 16 ? ` +${selected.length - 16} more` : ""}
-                </span>
+                <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>Reverse 来回</button>
               </div>
             </>
           ) : null}
@@ -266,21 +273,41 @@ export default function NumberHistoryApp() {
         {/* Filters */}
         {data ? (
           <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Region 地区 {regions.length ? <span style={{ color: RED }}>({regions.length})</span> : null}</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-              <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
-              {REGIONS.map((r) => (
-                <button key={r} onClick={() => toggleIn(regions, setRegions, r)} style={chip(regions.includes(r))}>{r}</button>
-              ))}
+            {/*
+             * One bar for Region and Prize. Everything is included until you
+             * change something, so the chip rows stay tucked away instead of
+             * pushing the results off the screen.
+             */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <div style={{ fontWeight: 700, fontSize: 15 }}>
+                Region 地区 · Prize 奖项
+                {regions.length || prizes.length
+                  ? <span style={{ color: RED }}> filtered</span>
+                  : <span style={{ color: "#999", fontWeight: 400, fontSize: 13 }}> all</span>}
+              </div>
+              <button onClick={() => setShowFilters((v) => !v)}
+                style={{ border: "1px solid " + RED, background: showFilters ? RED : "#fff", color: showFilters ? "#fff" : RED, borderRadius: 12, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
+                {showFilters ? <>收起 Filter <CaretUp size={12} weight="bold" /></> : <>筛选 Filter <CaretDown size={12} weight="bold" /></>}
+              </button>
             </div>
-
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Prize 奖项 {prizes.length ? <span style={{ color: RED }}>({prizes.length})</span> : null}</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
-              <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
-              {PRIZES.map((p) => (
-                <button key={p} onClick={() => toggleIn(prizes, setPrizes, p)} style={chip(prizes.includes(p))}>{p}</button>
-              ))}
-            </div>
+            {showFilters ? (
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Region 地区</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                  <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
+                  {REGIONS.map((r) => (
+                    <button key={r} onClick={() => TOGGLE_ALL(regions, setRegions, r, REGIONS)} style={chip(isOnAll(regions, r))}>{r}</button>
+                  ))}
+                </div>
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Prize 奖项</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+                  <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
+                  {PRIZES.map((p) => (
+                    <button key={p} onClick={() => TOGGLE_ALL(prizes, setPrizes, p, PRIZES)} style={chip(isOnAll(prizes, p))}>{p}</button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {/* Company filter (optional) */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
