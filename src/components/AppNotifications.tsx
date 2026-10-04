@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 const CHANNEL_ID = "mkt88-live-draw";
+const NOTIFICATION_1600 = 1600;
 const NOTIFICATION_1800 = 1800;
 const NOTIFICATION_1830 = 1830;
 
@@ -69,7 +70,7 @@ function liveIds(): number[] {
   LIVE_GAMES.forEach((g, gi) => g.days.forEach((_, di) => ids.push(3000 + gi * 10 + di)));
   return ids;
 }
-const ALL_IDS = [...liveIds(), NOTIFICATION_1800, NOTIFICATION_1830];
+const ALL_IDS = [...liveIds(), NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830];
 
 function LIVE_GAME_SCHEDULE(): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = [];
@@ -161,10 +162,20 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
           } catch { /* already exists or unsupported on this platform */ }
 
           await ln.cancel?.({ notifications: [...ALL_IDS.map((id) => ({ id }))] });
+          const earlyLucky = luckyNumber();
           const firstLucky = luckyNumber();
           const secondLucky = luckyNumber();
           await ln.schedule?.({
             notifications: [
+              {
+                id: NOTIFICATION_1600,
+                title: "恭喜发财 幸运号码",
+                body: `16:00 4D Live 开奖提醒\n幸运号码：${earlyLucky}`,
+                largeBody: `16:00 4D Live 开奖提醒\n恭喜发财 幸运号码：${earlyLucky}`,
+                channelId: CHANNEL_ID,
+                autoCancel: true,
+                schedule: { on: { hour: 16, minute: 0 }, repeats: true, allowWhileIdle: true },
+              },
               {
                 id: NOTIFICATION_1800,
                 title: "恭喜发财 幸运号码",
@@ -208,7 +219,7 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
     if (!ln) return;
     const h = ln.addListener?.("localNotificationActionPerformed", (ev) => {
       const id = Number(ev?.notification?.id ?? 0);
-      if (id === NOTIFICATION_1800 || id === NOTIFICATION_1830) {
+      if (id === NOTIFICATION_1600 || id === NOTIFICATION_1800 || id === NOTIFICATION_1830) {
         window.location.href = "/?lucky=1";
       }
     });
