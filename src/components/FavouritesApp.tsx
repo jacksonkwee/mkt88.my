@@ -7,7 +7,7 @@ import {
   ALL_SCOPES, FAV_EVENT, SCOPE_LABEL, YELLOW, addFav, isNum, loadFavs, removeFav, saveFavs,
   type Fav, type Scope,
 } from "../lib/favourites";
-import { ArrowLeft, ArrowRight, BellRinging, BellSlash, Check, Star, X } from "@phosphor-icons/react";
+import { ArrowLeft, ArrowRight, BellRinging, BellSlash, X } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
 
@@ -66,9 +66,6 @@ export default function FavouritesApp() {
     if (!isNum(input)) return;
     setPicked((p) => (p.includes(input) ? p : [...p, input]));
   }, [input]);
-
-  const togglePick = (n: string) =>
-    setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
 
   const selectAll = () => setPicked(perms);
   /*
@@ -166,26 +163,9 @@ export default function FavouritesApp() {
                 <button onClick={() => (allPicked ? setPicked([]) : selectAll())} style={mini(allPicked ? RED : "#333")}>Pau 包</button>
                 <button onClick={() => setPicked(reversePicked ? [] : reverseSet)} style={mini(reversePicked ? RED : "#333")}>Reverse 来回</button>
               </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {perms.map((p) => {
-                  const on = picked.includes(p);
-                  const already = favs.some((f) => f.num === p);
-                  return (
-                    <button key={p} onClick={() => togglePick(p)}
-                      style={{
-                        minWidth: 66, padding: "7px 8px", borderRadius: 12, fontSize: 15, fontWeight: 700, letterSpacing: 1, cursor: "pointer",
-                        border: on ? "2px solid " + RED : "1px solid #ccc",
-                        background: on ? "#ffe9e9" : already ? "#fffbe0" : "#fff",
-                        color: "#111",
-                      }}>
-                      {on ? <Check size={14} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{p}{already ? <Star size={14} weight="fill" color="#e6a700" style={{ verticalAlign: "-2px", marginLeft: 3 }} /> : null}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
           ) : (
-            <div style={{ marginTop: 12, fontSize: 13, color: "#888" }}>Type a 4-digit number to see all 24 permutations (pau).</div>
+            <div style={{ marginTop: 12 }} />
           )}
 
           <div style={{ marginTop: 14, fontWeight: 700, fontSize: 15 }}>Alert for 提醒奖项</div>
