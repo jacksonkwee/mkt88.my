@@ -1008,7 +1008,26 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // anything at all; otherwise the live archive's own board is kept. Never
   // fall back to the previous snapshot: that put yesterday's finished draw
   // back on screen in the middle of today's live reveal.
-  if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
+  /*
+   * 9lotto.com is the authority for this card - but its gaps must not ERASE a
+   * number the mirror already published. This used a plain spread, so a blank
+   * cell on the operator page overwrote a good value and a special number
+   * simply vanished from the middle of the grid (reported 04-10-2026).
+   *
+   * Same rule as everywhere else: a blank never replaces a known number. The
+   * positions the prizes were drawn from are still cleared by the final pass
+   * below, so this cannot reintroduce a duplicate.
+   */
+  if (nineOfficial.four) {
+    const base = (cards["table-17"] || {}) as Record<string, string>;
+    const merged: Record<string, string> = { ...base };
+    for (const [k, v] of Object.entries(nineOfficial.four)) {
+      const cur = merged[k];
+      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
+      merged[k] = v;
+    }
+    cards["table-17"] = merged;
+  }
 
   const perdana: Record<string, PrizeSet | null> = { "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
