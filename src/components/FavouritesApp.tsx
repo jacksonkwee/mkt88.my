@@ -139,22 +139,12 @@ export default function FavouritesApp() {
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
           <div style={{ fontWeight: 800, fontSize: 15, color: "#111" }}>Add favourite numbers 添加收藏号码</div>
-          <div style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
-            Your numbers glow <span style={{ background: YELLOW, padding: "0 4px" }}>yellow</span> on the results and can send a
-            special notification the moment they appear.
-          </div>
-
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               placeholder="4-digit number"
               inputMode="numeric"
               style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
-            <Link href={isNum(input) ? "/number-history?num=" + input : "#"}
-              onClick={(e) => { if (!isNum(input)) e.preventDefault(); }}
-              style={{ display: "flex", alignItems: "center", flexShrink: 0, whiteSpace: "nowrap", background: "#f2f2f2", color: "#333", border: "1px solid #ddd", borderRadius: 12, padding: "0 12px", fontSize: 13, textDecoration: "none" }}>
-              History
-            </Link>
           </div>
 
           {perms.length ? (
@@ -195,7 +185,7 @@ export default function FavouritesApp() {
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13, color: "#333" }}>
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} style={{ width: 18, height: 18 }} />
-            Special notification 特别通知 when my number appears
+            Special notification 特别通知
           </label>
 
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
