@@ -928,12 +928,23 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * keep serving the last COMPLETE draw, with its own date on the card. That
      * is never wrong - it is just the previous draw until today's is real.
      */
-    const hasMainPrizes = (b?: Record<string, string>): boolean =>
-      !!b && ["first_prize", "second_prize", "third_prize"].every((k) => !!b[k] && !isDashVal(b[k]));
+    /*
+     * A date counts as live as soon as ANY of its numbers is published - not
+     * only once all three main prizes are in. Waiting for the whole board held
+     * the card on the previous draw right through the reveal, which is why
+     * Singapore stopped showing anything live and then produced the finished
+     * result in one step (reported 4 Oct 2026).
+     *
+     * What it still refuses is a date with NO numbers at all - that is the case
+     * that used to blank the card, and it stays blocked.
+     */
+    const hasAnyResult = (b?: Record<string, string>): boolean =>
+      !!b && Object.entries(b).some(([k, v]) =>
+        k !== "date" && k !== "draw_no" && !!v && !isDashVal(v));
     let newest = Math.max(...sgParts.map((p) => sgDate(p)));
-    if (!sgParts.some((p) => sgDate(p) === newest && hasMainPrizes(p))) {
-      const completeDates = sgParts.filter((p) => hasMainPrizes(p)).map((p) => sgDate(p)).filter((d) => d > 0);
-      if (completeDates.length) newest = Math.max(...completeDates);
+    if (!sgParts.some((p) => sgDate(p) === newest && hasAnyResult(p))) {
+      const liveDates = sgParts.filter((p) => hasAnyResult(p)).map((p) => sgDate(p)).filter((d) => d > 0);
+      if (liveDates.length) newest = Math.max(...liveDates);
     }
     // Seed from the card we already have ONLY when it is the same draw.
     //
