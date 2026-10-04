@@ -251,16 +251,6 @@ export default function NumberHistoryApp() {
             </>
           ) : null}
 
-          {data ? (
-            <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
-                <Link href={"/favourites?num=" + (primary || data.nums[0])}
-                  style={{ border: "1px solid " + RED, borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, color: RED, textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
-                  <Star size={13} weight="fill" style={{ verticalAlign: "-2px", marginRight: 4 }} />Favourite
-                </Link>
-              </div>
-            </div>
-          ) : null}
         </div>
 
         {/* Filters */}
@@ -341,11 +331,20 @@ export default function NumberHistoryApp() {
               </div>
             ) : (
               <div>
-                <div style={{ padding: "10px 12px", borderBottom: "1px solid #eee", fontSize: 13, color: "#777" }}>
-                  Showing {Math.min(filtered.length, MAX_ROWS)} of {filtered.length} result{filtered.length === 1 ? "" : "s"}
-                  {regions.length ? " · " + regions.join(" + ") : ""}
-                  {prizes.length ? " · " + prizes.join(" + ") : ""}
-                  {companies.length ? " · " + companies.length + " company(s)" : ""}
+                {/* Count on the left, Favourite on the same line on the right. */}
+                <div style={{ padding: "8px 10px", borderBottom: "1px solid #eee", fontSize: 13, color: "#777", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    Showing {Math.min(filtered.length, MAX_ROWS)} of {filtered.length} result{filtered.length === 1 ? "" : "s"}
+                    {regions.length ? " · " + regions.join(" + ") : ""}
+                    {prizes.length ? " · " + prizes.join(" + ") : ""}
+                    {companies.length ? " · " + companies.length + " company(s)" : ""}
+                  </span>
+                  {data ? (
+                    <Link href={"/favourites?num=" + (primary || data.nums[0])}
+                      style={{ border: "1px solid " + RED, borderRadius: 12, padding: "4px 9px", fontSize: 12.5, fontWeight: 700, color: RED, textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
+                      <Star size={12} weight="fill" style={{ verticalAlign: "-2px", marginRight: 3 }} />Favourite
+                    </Link>
+                  ) : null}
                 </div>
                 {filtered.slice(0, MAX_ROWS).map((m, i) => {
                   const fav = isFav(m.num);
