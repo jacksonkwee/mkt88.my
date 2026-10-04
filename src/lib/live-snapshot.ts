@@ -1115,6 +1115,32 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  /*
+   * The three main prizes are ALWAYS three different numbers in a real draw.
+   *
+   * While a draw is being revealed the feeds sometimes push the first number
+   * they have into all three prize cells - Magnum showed 2306 as 1st, 2nd and
+   * 3rd at 19:21 on 04-10-2026, then corrected itself a minute later. We were
+   * passing that straight through, so the app showed a result that cannot
+   * happen.
+   *
+   * A repeated prize therefore means "this board is not finished yet", and the
+   * three cells are held blank rather than showing a number that may be wrong.
+   * They fill in the moment the real values differ. Checked for every game: a
+   * draw never repeats a number across 1st, 2nd and 3rd.
+   */
+  for (const cls of Object.keys(cards)) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    const p = [c.first_prize, c.second_prize, c.third_prize];
+    const real = p.filter((v) => v && !/^----+$/.test(v));
+    if (real.length >= 2 && new Set(real).size < real.length) {
+      c.first_prize = "----";
+      c.second_prize = "----";
+      c.third_prize = "----";
+    }
+  }
+
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
