@@ -1092,6 +1092,29 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  /*
+   * Magnum, Grand Dragon and Nine Lotto draw their 1st/2nd/3rd prizes OUT of
+   * their special numbers, so the operator blanks those three positions on its
+   * own board. If any writer leaves the winning number in the grid as well, the
+   * same number shows twice - once as the prize and again as a "special", which
+   * is what Magnum showed on 04-10-2026 (1st prize 2306 and special-1 2306).
+   *
+   * Done here, at the very END, because the merge and "never move backwards"
+   * passes above both treat a blank as "no news" and would put the duplicate
+   * back. Only these three games are touched: for Singapore or Da Ma Cai a
+   * number may legitimately appear as both a prize and a starter.
+   */
+  for (const cls of ["table-1", "table-13", "table-17"]) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    const prizes = [c.first_prize, c.second_prize, c.third_prize].filter((v) => v && !/^----+$/.test(v));
+    if (!prizes.length) continue;
+    for (let i = 1; i <= 15; i++) {
+      const v = c["special-" + i];
+      if (v && !/^----+$/.test(v) && prizes.includes(v)) c["special-" + i] = "----";
+    }
+  }
+
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
