@@ -242,7 +242,8 @@ export default function NumberHistoryApp() {
           {primary ? (
             <>
               <div style={{ marginTop: 10, fontWeight: 700, fontSize: 13 }}>What to check 查询方式</div>
-              <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
+              {/* One line: the three checks share the width instead of wrapping. */}
+              <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "nowrap" }}>
                 <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一</button>
                 <button onClick={() => setSelected(perms)} style={modeBtn(mode === "pau")}>Pau 包 (all {perms.length})</button>
                 <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>Reverse 来回</button>
@@ -278,16 +279,16 @@ export default function NumberHistoryApp() {
              * change something, so the chip rows stay tucked away instead of
              * pushing the results off the screen.
              */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>
-                Region 地区 · Prize 奖项
-                {regions.length || prizes.length
-                  ? <span style={{ color: RED }}> filtered</span>
-                  : <span style={{ color: "#999", fontWeight: 400, fontSize: 13 }}> all</span>}
-              </div>
-              <button onClick={() => setShowFilters((v) => !v)}
-                style={{ border: "1px solid " + RED, background: showFilters ? RED : "#fff", color: showFilters ? "#fff" : RED, borderRadius: 12, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                {showFilters ? <>收起 Filter <CaretUp size={12} weight="bold" /></> : <>筛选 Filter <CaretDown size={12} weight="bold" /></>}
+            {/* One row for all three filters. */}
+            <div style={{ display: "flex", gap: 6 }}>
+              <button onClick={() => setShowFilters((v) => !v)} style={tabBtn(showFilters)}>
+                Region 地区{regions.length ? " *" : ""}
+              </button>
+              <button onClick={() => setShowFilters((v) => !v)} style={tabBtn(showFilters)}>
+                Prize 奖项{prizes.length ? " *" : ""}
+              </button>
+              <button onClick={() => setShowCompanies((v) => !v)} style={tabBtn(showCompanies)}>
+                公司 Company{companies.length ? " *" : ""}
               </button>
             </div>
             {showFilters ? (
@@ -309,16 +310,7 @@ export default function NumberHistoryApp() {
               </div>
             ) : null}
 
-            {/* Company filter (optional) */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>
-                公司 Company {companies.length ? <span style={{ color: RED }}>({companies.length})</span> : <span style={{ color: "#999", fontWeight: 400, fontSize: 13 }}> all {companyCounts.size}</span>}
-              </div>
-              <button onClick={() => setShowCompanies((v) => !v)}
-                style={{ border: "1px solid " + RED, background: showCompanies ? RED : "#fff", color: showCompanies ? "#fff" : RED, borderRadius: 12, padding: "5px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
-                {showCompanies ? <>收起 Filter <CaretUp size={12} weight="bold" /></> : <>筛选 Filter <CaretDown size={12} weight="bold" /></>}
-              </button>
-            </div>
+            {/* The Company chips open under the Company tab above. */}
             {showCompanies ? (
               <div style={{ marginTop: 8 }}>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
@@ -411,8 +403,18 @@ export default function NumberHistoryApp() {
 
 function modeBtn(active: boolean): React.CSSProperties {
   return {
-    padding: "6px 12px", borderRadius: 12, fontSize: 13, fontWeight: active ? 700 : 500, cursor: "pointer",
+    flex: 1, minWidth: 0, textAlign: "center", whiteSpace: "nowrap",
+    padding: "6px 6px", borderRadius: 12, fontSize: 12.5, fontWeight: active ? 700 : 500, cursor: "pointer",
     border: active ? "2px solid " + RED : "1px solid #ccc", background: active ? "#ffe9e9" : "#fff", color: active ? RED : "#333",
+  };
+}
+/** Region / Prize / Company tabs - all three sit on one row. */
+function tabBtn(active: boolean): React.CSSProperties {
+  return {
+    flex: 1, minWidth: 0, textAlign: "center", whiteSpace: "nowrap",
+    padding: "6px 4px", borderRadius: 12, fontSize: 12.5, cursor: "pointer",
+    border: active ? "2px solid " + RED : "1px solid #ccc",
+    background: active ? RED : "#fff", color: active ? "#fff" : "#333", fontWeight: 700,
   };
 }
 function chip(active: boolean): React.CSSProperties {
