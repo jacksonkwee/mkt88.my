@@ -15,7 +15,7 @@ type LocalNotificationsPlugin = {
   schedule?: (options: { notifications: Record<string, unknown>[] }) => Promise<unknown>;
   addListener?: (
     eventName: string,
-    cb: (data: { notification?: { id?: number | string } }) => void
+    cb: (data: { notification?: { id?: number | string; extra?: { lucky?: unknown } } }) => void
   ) => { remove?: () => void } | undefined;
 };
 
@@ -174,6 +174,9 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
                 largeBody: `16:00 4D Live 开奖提醒\n恭喜发财 幸运号码：${earlyLucky}`,
                 channelId: CHANNEL_ID,
                 autoCancel: true,
+                // The popup reuses this exact number, so what the lock screen
+                // showed is what opens with the app.
+                extra: { lucky: earlyLucky },
                 schedule: { on: { hour: 16, minute: 0 }, repeats: true, allowWhileIdle: true },
               },
               {
@@ -183,6 +186,9 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
                 largeBody: `18:00 4D Live 开奖开始\n恭喜发财 幸运号码：${firstLucky}`,
                 channelId: CHANNEL_ID,
                 autoCancel: true,
+                // The popup reuses this exact number, so what the lock screen
+                // showed is what opens with the app.
+                extra: { lucky: firstLucky },
                 schedule: { on: { hour: 18, minute: 0 }, repeats: true, allowWhileIdle: true },
               },
               {
@@ -192,6 +198,9 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
                 largeBody: `18:30 4D Live 开奖进行中\n恭喜发财 幸运号码：${secondLucky}`,
                 channelId: CHANNEL_ID,
                 autoCancel: true,
+                // The popup reuses this exact number, so what the lock screen
+                // showed is what opens with the app.
+                extra: { lucky: secondLucky },
                 schedule: { on: { hour: 18, minute: 30 }, repeats: true, allowWhileIdle: true },
               },
               ...LIVE_GAME_SCHEDULE(),
@@ -210,18 +219,21 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
 
   /*
    * Tapping a lucky-number reminder (the 恭喜发财 ones) should land on the main
-   * page with the popup already open, rather than wherever the app happened to
-   * be. The live-draw reminders are deliberately left alone - tapping one still
-   * just opens the app, so nobody is sent to lucky numbers from a results alert.
+   * page with the popup already open and showing the SAME number the reminder
+   * showed - 1236 on the lock screen opens 1236. The live-draw reminders are
+   * deliberately left alone: tapping one just opens the app, so nobody is sent
+   * to lucky numbers from a results alert.
    */
   useEffect(() => {
     const ln = localNotifications();
     if (!ln) return;
     const h = ln.addListener?.("localNotificationActionPerformed", (ev) => {
       const id = Number(ev?.notification?.id ?? 0);
-      if (id === NOTIFICATION_1600 || id === NOTIFICATION_1800 || id === NOTIFICATION_1830) {
-        window.location.href = "/?lucky=1";
-      }
+      if (id !== NOTIFICATION_1600 && id !== NOTIFICATION_1800 && id !== NOTIFICATION_1830) return;
+      // The number rides along on the notification, so the popup repeats the
+      // number the user actually saw instead of drawing a fresh one.
+      const sent = String(ev?.notification?.extra?.lucky ?? "").trim();
+      window.location.href = /^\d{4}$/.test(sent) ? "/?lucky=" + sent : "/?lucky=1";
     });
     return () => { try { h?.remove?.(); } catch { /* nothing to clean up */ } };
   }, []);

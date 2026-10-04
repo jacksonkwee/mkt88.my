@@ -105,15 +105,19 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [soundOn, setSoundOn] = useState(true);
 
   /*
-   * The 恭喜发财 notification opens the app at /?lucky=1, so the popup is
-   * already showing when someone arrives from the lock screen. The flag is
-   * cleared straight away so a later refresh does not pop it up again.
+   * The 恭喜发财 reminders open the app at /?lucky=<number>, so the popup is
+   * already showing the same number when someone arrives from the lock screen.
+   * The flag is cleared straight away so a later refresh does not pop it up
+   * again.
    */
   useEffect(() => {
     if (typeof window === "undefined") return;
     const p = new URLSearchParams(window.location.search);
     if (!p.has("lucky")) return;
-    setLucky(luckyNumber());
+    // A reminder carries its own number (/?lucky=1236) so the popup repeats what
+    // the user saw; the bare old flag (/?lucky=1) still draws a fresh number.
+    const sent = (p.get("lucky") || "").trim();
+    setLucky(/^\d{4}$/.test(sent) ? sent : luckyNumber());
     p.delete("lucky");
     const q = p.toString();
     window.history.replaceState(null, "", window.location.pathname + (q ? "?" + q : ""));
