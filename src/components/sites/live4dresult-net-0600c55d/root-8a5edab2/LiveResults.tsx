@@ -115,7 +115,6 @@ function applySnapshot(): boolean {
         const el = card.querySelector('[data-id="' + k + '"]');
         if (el && (el.textContent || "").trim() !== v) { el.textContent = v; el.classList.remove("live-pending"); applied++; }
       }
-      if (MIRROR_ONLY_CLASSES.some((c) => card.classList.contains(c))) clearGridRepeats(card);
     }
     return applied > 0;
   } catch { return false; }
@@ -262,18 +261,19 @@ function cellFor(card: Element, id: string): Element | null {
 /**
  * A repeat inside the same grid is never a real result.
  *
- * The mirror feeds sometimes publish a stale copy of the neighbouring cell
- * while a draw is being revealed - Grand Dragon's cell 13 held the same number
- * as cell 12 (reported 4 Oct 2026). The server blanks the repeat, but a phone
- * that was open when it happened already has the repeat in its own saved copy,
- * and the "never blank a known number" rule below then refuses to clear it: the
- * blank from the server is skipped, so the duplicate stays on the screen and is
- * saved again on every pass.
+ * The server clears a repeat before it hands the snapshot over, but it is not
+ * the only writer: the mirror sweep writes these cards by position, and a blank
+ * cell in the mirror's own grid slides every later number one column left - the
+ * documented cause of 9184 appearing twice on Sports Toto and of Grand Dragon's
+ * cell 13 holding cell 12's number (reported 4 Oct 2026). The "never blank a
+ * known number" rule below then keeps the repeat on screen, because the
+ * server's blank is one of the blanks that rule refuses to write.
  *
  * So the repeat is removed on the card itself, after every write. Only the
- * later cell is blanked, so no published number is ever lost, and only the
- * mirror-fed cards are touched - an official board really does publish the same
- * number twice sometimes, and rewriting that would hide a real result.
+ * later cell is blanked, so no published number is ever lost. Only the
+ * mirror-fed cards are touched - a sliding mirror grid is what puts the same
+ * number in two cells of one grid, and an operator's own board must never be
+ * rewritten.
  */
 const MIRROR_ONLY_CLASSES = ["table-2", "table-3", "table-6", "table-7", "table-13"];
 
