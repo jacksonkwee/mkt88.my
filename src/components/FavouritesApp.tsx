@@ -71,7 +71,12 @@ export default function FavouritesApp() {
     setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
 
   const selectAll = () => setPicked(perms);
-  const clearAll = () => setPicked([]);
+  /*
+   * Pau / Reverse act as on-off switches: pressing the active one clears it.
+   * That replaced a separate Clear button.
+   */
+  const allPicked = perms.length > 0 && perms.every((p) => picked.includes(p));
+  const reversePicked = reverseSet.length > 0 && reverseSet.every((p) => picked.includes(p));
 
   const toggleScope = (s: Scope) =>
     setScopes((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
@@ -157,15 +162,9 @@ export default function FavouritesApp() {
 
           {perms.length ? (
             <div style={{ marginTop: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6, flexWrap: "wrap", gap: 8 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  Permutation 排列 (Pau) <span style={{ color: "#999", fontWeight: 400, fontSize: 13 }}>tap to pick</span>
-                </div>
-                <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                  <button onClick={selectAll} style={mini("#333")}>Pau 包</button>
-                  <button onClick={() => setPicked(reverseSet)} style={mini("#333")}>Reverse 来回</button>
-                  <button onClick={clearAll} style={mini("#888")}>Clear</button>
-                </div>
+              <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", marginBottom: 6 }}>
+                <button onClick={() => (allPicked ? setPicked([]) : selectAll())} style={mini(allPicked ? RED : "#333")}>Pau 包</button>
+                <button onClick={() => setPicked(reversePicked ? [] : reverseSet)} style={mini(reversePicked ? RED : "#333")}>Reverse 来回</button>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {perms.map((p) => {
@@ -190,13 +189,15 @@ export default function FavouritesApp() {
           )}
 
           <div style={{ marginTop: 14, fontWeight: 700, fontSize: 15 }}>Alert for 提醒奖项</div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 6 }}>
+          {/* Main · Special · Consolation on one line. */}
+          <div style={{ display: "flex", flexWrap: "nowrap", gap: 6, marginTop: 6 }}>
             {ALL_SCOPES.map((s) => {
               const on = scopes.includes(s);
               return (
                 <button key={s} onClick={() => toggleScope(s)}
                   style={{
-                    padding: "6px 12px", borderRadius: 12, cursor: "pointer", fontSize: 13,
+                    flex: 1, minWidth: 0, textAlign: "center", whiteSpace: "nowrap",
+                    padding: "6px 4px", borderRadius: 12, cursor: "pointer", fontSize: 12.5,
                     border: on ? "2px solid " + RED : "1px solid #ccc",
                     background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#333", fontWeight: on ? 700 : 500,
                   }}>
