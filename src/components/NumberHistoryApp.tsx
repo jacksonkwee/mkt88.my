@@ -241,7 +241,6 @@ export default function NumberHistoryApp() {
 
           {primary ? (
             <>
-              <div style={{ marginTop: 10, fontWeight: 700, fontSize: 13 }}>What to check 查询方式</div>
               {/* One line: the three checks share the width instead of wrapping. */}
               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "nowrap" }}>
                 <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一</button>
@@ -253,10 +252,6 @@ export default function NumberHistoryApp() {
 
           {data ? (
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-              <div style={{ fontSize: 13, color: "#555" }}>
-                {data.total} result{data.total === 1 ? "" : "s"} from {data.nums.length} number{data.nums.length === 1 ? "" : "s"}
-                {data.dbFrom ? <span style={{ color: "#999" }}> (records {data.dbFrom} to {data.dbTo})</span> : null}
-              </div>
               <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                 <button onClick={() => onToggleFav(primary || data.nums[0])}
                   style={{ border: "1px solid " + RED, borderRadius: 12, padding: "6px 10px", fontSize: 13, fontWeight: 700, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap", background: isFav(primary || data.nums[0]) ? YELLOW : "#fff", color: isFav(primary || data.nums[0]) ? "#111" : RED }}>
