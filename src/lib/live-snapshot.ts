@@ -1141,6 +1141,35 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  /*
+   * A draw never repeats a number INSIDE the same grid.
+   *
+   * Several feeds publish thirteen special numbers into a fifteen-cell grid and
+   * leave the last one sitting in the spare cell too - Sports Toto 4D showed
+   * 9184 in both cell 13 and cell 14 on 04-10-2026, exactly the fault Grand
+   * Dragon and Nine Lotto had. That fix named only those two games, which is
+   * why it came back on a third.
+   *
+   * This runs for EVERY card instead. The first occurrence is kept and the
+   * repeat is blanked: if the value genuinely belongs in that slot it stays, and
+   * if the feed was one cell out the duplicate disappears rather than showing
+   * twice. Same rule for the consolation row.
+   */
+  for (const cls of Object.keys(cards)) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    for (const [prefix, count] of [["special-", 15], ["consolation-", 10]] as [string, number][]) {
+      const seenNums = new Set<string>();
+      for (let i = 1; i <= count; i++) {
+        const k = prefix + i;
+        const v = c[k];
+        if (!v || /^----+$/.test(v)) continue;
+        if (seenNums.has(v)) c[k] = "----";
+        else seenNums.add(v);
+      }
+    }
+  }
+
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
