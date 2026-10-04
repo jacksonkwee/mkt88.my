@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
@@ -52,6 +52,13 @@ const ICON_BOX: React.CSSProperties = {
 const NAME: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: INK, lineHeight: 1.15 };
 const SUB: React.CSSProperties = { fontSize: 11, color: INK_MUTED, lineHeight: 1.15 };
 
+/**
+ * Runs before the browser paints on the client and does nothing on the server.
+ * The body classes that hide the site behind the first page must be back in
+ * place in the same frame as hydration, or the app would flash the results.
+ */
+const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
+
 function luckyNumber(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
 }
@@ -98,7 +105,10 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // page loads: otherwise the results page paints first and the user sees it
   // for a moment before this screen appears. The layout knows from the
   // request whether this is the app, so it tells us to start open.
-  const [open, setOpen] = useState(initialOpen);
+  // The overlay's markup is always rendered now, so the server and the client
+  // agree on the HTML and the page can be cached; only the body classes decide
+  // whether it is actually shown, and those are set for the app before paint.
+  const [open, setOpen] = useState(() => initialOpen || isCapacitorApp());
   const [lucky, setLucky] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
@@ -225,18 +235,20 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    * phones where the ad banner pads the WebView the fixed layer does not cover
    * that strip - so the results page showed through at the bottom.
    */
-  useEffect(() => {
-    // The class is what hides the site (see globals.css). The server already
-    // sets it for the app, so the results markup never paints behind the tiles.
-    document.body.classList.toggle(HOME_OPEN_CLASS, open);
-    document.body.style.background = open ? "#fff" : "";
+  useIsoLayoutEffect(() => {
+    // These classes are what hide the site behind the first page (globals.css).
+    // The boot script puts them on <body> before the first paint; this keeps
+    // them in step afterwards, and puts them back if React rewrites the class
+    // list while hydrating.
+    const app = isCapacitorApp();
+    document.body.classList.toggle("mkt-in-app", app);
+    document.body.classList.toggle(HOME_OPEN_CLASS, app && open);
+    document.body.style.background = app && open ? "#fff" : "";
     return () => {
-      document.body.classList.remove(HOME_OPEN_CLASS);
+      if (app) document.body.classList.remove(HOME_OPEN_CLASS);
       document.body.style.background = "";
     };
   }, [open]);
-
-  if (!open) return null;
 
   const defs = Object.fromEntries(GAME_DEFS.map((g) => [g.slug, g]));
   const east = Object.fromEntries(EAST_LINKS.map((g) => [g.slug, g]));
@@ -268,7 +280,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   ];
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+    <div className="mkt-app-home" style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px" }}>
         {/* Brand logo, top of the first page. */}
         <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>

@@ -1,5 +1,7 @@
 "use client";
 
+import { isCapacitorApp } from "../lib/is-capacitor-app";
+
 import { useEffect } from "react";
 
 /**
@@ -29,9 +31,11 @@ function inDrawWindow(): boolean {
 }
 
 
-export default function LiveKnock({ enabled }: { enabled: boolean }) {
+export default function LiveKnock({ enabled }: { enabled?: boolean }) {
+  // Worked out in the page so one cached copy serves the app and the website.
+  const on = enabled ?? isCapacitorApp();
   useEffect(() => {
-    if (!enabled) return;
+    if (!on) return;
     if (typeof window === "undefined") return;
 
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -114,7 +118,7 @@ export default function LiveKnock({ enabled }: { enabled: boolean }) {
       window.removeEventListener("click", arm);
       try { void ctx?.close(); } catch { /* ignore */ }
     };
-  }, [enabled]);
+  }, [on]);
 
   return null;
 }

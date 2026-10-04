@@ -1,5 +1,7 @@
 "use client";
 
+import { isCapacitorApp } from "../lib/is-capacitor-app";
+
 import { useEffect } from "react";
 
 const CHANNEL_ID = "mkt88-live-draw";
@@ -130,9 +132,15 @@ function localNotifications(): LocalNotificationsPlugin | null {
  * component talks to the native Local Notifications plugin when available.
  * It schedules two daily Malaysia-time reminders at 18:00 and 18:30.
  */
-export default function AppNotifications({ enabled }: { enabled: boolean }) {
+export default function AppNotifications({ enabled }: { enabled?: boolean }) {
+  /*
+   * Whether this is the installed app is worked out in the page itself, not by
+   * the server, so that one cached copy of the page serves both. This component
+   * renders nothing either way, so there is no markup to mismatch.
+   */
+  const on = enabled ?? isCapacitorApp();
   useEffect(() => {
-    if (!enabled) return;
+    if (!on) return;
     let cancelled = false;
 
     const install = async () => {
@@ -215,7 +223,7 @@ export default function AppNotifications({ enabled }: { enabled: boolean }) {
 
     void install();
     return () => { cancelled = true; };
-  }, [enabled]);
+  }, [on]);
 
   /*
    * Tapping a lucky-number reminder (the 恭喜发财 ones) should land on the main

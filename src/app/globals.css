@@ -244,8 +244,14 @@ body.mkt-in-app {
 
 /* The app first page covers the site. Hiding the results markup instead of only
    covering it stops it being laid out and painted behind the tiles - including on
-   the first frame, which the server already marks for the app. */
+   the first frame, which the boot script marks for the app before it paints. */
 body.mkt-in-app.mkt-home-open #mkt-site { display: none; }
+
+/* The first page's markup is in every page so that one cached copy of the page
+   is correct for the app and the website alike. Only the app ever shows it:
+   the boot script puts mkt-in-app + mkt-home-open on <body>. */
+.mkt-app-home { display: none !important; }
+body.mkt-in-app.mkt-home-open .mkt-app-home { display: block !important; }
 
 /* ------------------------------------------------------------------ *
  * mkt-btn-system - app buttons

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { headers } from "next/headers";
 import PWARegister from "../components/PWARegister";
 import NoticeBar from "../components/NoticeBar";
 import TopBanner from "../components/TopBanner";
@@ -47,9 +46,17 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#1633c7", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
-// The snapshot must be current for every request, so pages are rendered on the
-// server (the snapshot itself comes from memory in a few milliseconds).
-export const dynamic = "force-dynamic";
+/*
+ * Pages are cached at the edge for a few seconds instead of being rebuilt for
+ * every visitor. Nothing user-specific is rendered here any more - whether
+ * someone is in the app is decided in the page itself - so one cached copy is
+ * correct for everybody, and the app stops waiting 4-6 seconds for a cold
+ * server (measured 4 Oct 2026).
+ *
+ * The numbers stay live: the page corrects itself from /api/home-live on its
+ * first tick, and that endpoint is deliberately cached for about a second.
+ */
+export const revalidate = 5;
 
 /**
  * Boot script (runs while the HTML is still parsing, before the app's JS):
@@ -60,6 +67,12 @@ export const dynamic = "force-dynamic";
 const BOOT_SCRIPT = `
 (function(){
   var __mktPath = location.pathname || '';
+  // The installed app needs these on <body> before the first paint, so its main
+  // screen is up and the results page never shows first. It is done here rather
+  // than on the server so that one cached copy of the page suits everybody.
+  if (/MKT88Android|Capacitor|Android.*; wv\\)/i.test(navigator.userAgent || '')) {
+    document.body.className += ' mkt-in-app mkt-home-open';
+  }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;
   var changed = false;
@@ -278,23 +291,20 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     };
   } catch { /* ignore */ }
   const snapJson = JSON.stringify(snapObj).replace(/</g, "\\u003c");
-  // Inside the installed Android app the top menu is kept short (Favourite
-  // Number + 大伯公 only). Detected from the request so there is no flicker.
-  let inApp = false;
-  try {
-    const ua = (await headers()).get("user-agent") || "";
-    inApp = /MKT88Android|Capacitor|Android.*; wv\)/i.test(ua);
-  } catch { /* ignore */ }
+  // Whether someone is in the installed app is now worked out by the page
+  // itself: the boot script above marks <body> before the first paint and
+  // AppHome keeps it in step. Reading the request user agent here was what
+  // forced every page to be rendered per request, and so impossible to cache.
   return (
     <html lang="zh">
-      <body className={"home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-" + (inApp ? " mkt-in-app mkt-home-open" : "")}>
+      <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         {/* Everything the site normally shows. The app's first page hides this
             while it is open, so no part of the results can show behind it. */}
         {/* The first page comes first so the tiles can paint before the heavy
             results markup behind them is parsed. */}
-        <AppHome initialOpen={inApp} />
+        <AppHome />
         <div id="mkt-site">
           <LiveSnapshotProvider value={snapObj}>
             <NoticeBar />
@@ -305,10 +315,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <SiteCustomizer />
           <AppTools />
         </div>
-        <AppNotifications enabled={inApp} />
-      <LiveKnock enabled={inApp} />
+        <AppNotifications />
+      <LiveKnock />
       <LiveHighlight enabled />
-        <LiveSound enabled={inApp} />
+        <LiveSound />
       </body>
     </html>
   );

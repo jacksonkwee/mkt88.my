@@ -1,5 +1,7 @@
 "use client";
 
+import { isCapacitorApp } from "./is-capacitor-app";
+
 import { useEffect, useRef } from "react";
 
 /**
@@ -13,14 +15,16 @@ import { useEffect, useRef } from "react";
 const READY_IDS = ["first_prize", "d5_number_1", "number_1", "six_main"];
 const isReady = (el: Element | null) => !!el && /^\d{3,6}$/.test((el.textContent || "").replace(/\s+/g, ""));
 
-export default function LiveSound({ enabled = false }: { enabled?: boolean }) {
+export default function LiveSound({ enabled }: { enabled?: boolean }) {
+  // Worked out in the page so one cached copy serves the app and the website.
+  const on = enabled ?? isCapacitorApp();
   const ctxRef = useRef<AudioContext | null>(null);
   const seen = useRef<Set<string>>(new Set());
   const seeded = useRef(false);
 
   // Browsers block sound until the user has touched the page at least once.
   useEffect(() => {
-    if (!enabled) return;
+    if (!on) return;
     const unlock = () => {
       try {
         const Ctor = window.AudioContext
@@ -36,10 +40,10 @@ export default function LiveSound({ enabled = false }: { enabled?: boolean }) {
       document.removeEventListener("touchstart", unlock);
       document.removeEventListener("click", unlock);
     };
-  }, [enabled]);
+  }, [on]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!on) return;
 
     const beep = () => {
       let ctx = ctxRef.current;
@@ -106,7 +110,7 @@ export default function LiveSound({ enabled = false }: { enabled?: boolean }) {
     // Marker so the chime can be checked from outside.
     document.documentElement.setAttribute("data-mkt-sound", "on");
     return () => { window.clearTimeout(seed); window.clearInterval(sweep); mo.disconnect(); };
-  }, [enabled]);
+  }, [on]);
 
   return null;
 }
