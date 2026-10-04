@@ -15,7 +15,7 @@ type LocalNotificationsPlugin = {
   schedule?: (options: { notifications: Record<string, unknown>[] }) => Promise<unknown>;
   addListener?: (
     eventName: string,
-    cb: (data: { notification?: { id?: number | string; extra?: { lucky?: unknown } } }) => void
+    cb: (data: { notification?: { id?: number | string; body?: string; extra?: { lucky?: unknown } } }) => void
   ) => { remove?: () => void } | undefined;
 };
 
