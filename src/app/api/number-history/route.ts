@@ -12,6 +12,35 @@ export const dynamic = "force-dynamic";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
+const IMG = "/sites/live4dresult-net-0600c55d/root-8a5edab2/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
+
+/*
+ * Logo for a result that carries no path of its own.
+ *
+ * Hits built from the local snapshots arrive without a logo - Nine Lotto is the
+ * one people search most - so the number-history page showed a bare "4D" tile
+ * instead of the game's mark. This maps the game NAME to its logo and covers
+ * every game the page can list, including the three the deep archive names but
+ * the card table never did (Grand Dragon, Perdana, Lucky HariHari).
+ */
+const NINELOTTO_LOGO = IMG + "logo_ninelotto.png?v=1";
+const LOGO_BY_NAME: [RegExp, string][] = [
+  [/nine\s*lotto/i, NINELOTTO_LOGO],
+  [/grand\s*dragon/i, IMG + "logo_granddragon.jpg?v=1"],
+  [/perdana/i, IMG + "logo_perdana.jpg?v=1"],
+  [/hari\s*hari|harihari/i, IMG + "logo_harihari.jpg?v=1"],
+  [/sabah/i, IMG + "logo_sabah88.gif?v=1"],
+  [/sandakan|stc/i, IMG + "logo_stc4d.gif?v=1"],
+  [/cash\s*sweep/i, IMG + "logo_cashsweep.gif?v=1"],
+  [/da\s*ma\s*cai|damacai/i, IMG + "logo_damacai.gif?v=1"],
+  [/toto/i, IMG + "logo_toto.gif?v=1"],
+  [/singapore/i, SG_LOGO],
+  [/magnum/i, IMG + "logo_magnum.gif?v=1"],
+];
+function logoForGame(game: string): string {
+  for (const [re, path] of LOGO_BY_NAME) if (re.test(game || "")) return path;
+  return "";
+}
 const MAX_NUMS = 60;
 
 /** Ten minutes: one upstream fetch per date, reused by every lookup. */
@@ -189,8 +218,8 @@ export async function GET(req: NextRequest) {
     const date = fmtIso(h.date);
     const key = date + "|" + h.game + "|" + h.prize + "|" + h.num;
     if (map.has(key)) return;
-    let logo = h.logo;
-    if (!logo && /singapore/i.test(h.game)) logo = SG_LOGO;
+    // A saved path wins; otherwise fall back to the game's own mark.
+    let logo = h.logo || logoForGame(h.game);
     map.set(key, { date, game: h.game, logo: logoKey(logo), region: regionOf(h.table), prize: h.prize, num: h.num });
   };
 
