@@ -191,7 +191,6 @@ export default function NumberHistoryApp() {
   const isOnAll = (arr: string[], v: string) => arr.length === 0 || arr.includes(v);
 
   const isFav = (n: string) => favs.some((f) => f.num === n);
-  const onToggleFav = (n: string) => { toggleFav(n); setFavs(loadFavs()); };
 
   const daboThumb = dabo ? (daboBad ? "/api/dabogong/img?u=" + encodeURIComponent(dabo.image) : dabo.image) : "";
 
@@ -359,10 +358,6 @@ export default function NumberHistoryApp() {
                       <span style={{ fontSize: 12, color: "#888", flexShrink: 0 }}>{shortDate(m.date)}</span>
                       <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
                       <span style={{ fontSize: 10.5, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{shortPrize(m.prize)}</span>
-                      <button onClick={() => onToggleFav(m.num)} title="Favourite"
-                        style={{ background: "transparent", border: 0, cursor: "pointer", padding: 2, color: fav ? "#e6a700" : "#bbb", flexShrink: 0, lineHeight: 0 }}>
-                        {fav ? <Star size={16} weight="fill" /> : <Star size={16} />}
-                      </button>
                     </div>
                   );
                 })}
