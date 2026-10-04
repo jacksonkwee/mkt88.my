@@ -897,7 +897,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * Those two slots can never hold a real number for these games, so they are
    * forced blank here, whatever source put something there.
    */
-  for (const cls of ["table-13", "table-17"]) {
+  /*
+   * Sports Toto 4D publishes THIRTEEN specials but its card carries fifteen
+   * slots. Slot 14 caught a stray value once while the grid was filling, and the
+   * "a blank never replaces a known number" rule kept it there for good - the
+   * feeds send nothing for that slot, so nothing could ever clear it. That is
+   * why 9184 sat in both cell 13 and cell 14.
+   *
+   * Slots 14 and 15 hold no real number for this game, so they are forced blank
+   * every build - the cause, rather than deleting the duplicate each time.
+   */
+  for (const cls of ["table-6", "table-13", "table-17"]) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     c["special-14"] = "----";
