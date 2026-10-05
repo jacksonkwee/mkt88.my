@@ -35,14 +35,12 @@ function luckyNumber(): string {
  * closed. A web page cannot do that; only the native alarm can.
  *
  * Times are Malaysia time and follow each operator's draw days:
- *   Wed / Sat / Sun - the Malaysia 4D games (they draw on those days)
- *   Wed / Sat       - Sports Toto (no Monday draw)
+ *   Wed / Sat / Sun - the Malaysia 4D games and Sports Toto
+ *                     (no Monday draw for any of them)
  *   every day       - Grand Dragon, Nine Lotto, Perdana, Lucky HariHari
  * 1 = Sunday ... 7 = Saturday (Capacitor's weekday numbering).
  */
 const WED_SAT_SUN = [4, 7, 1];
-/** Sports Toto draws on Wednesday and Saturday only - there is no Monday draw. */
-const WED_SAT = [4, 7];
 const EVERY_DAY = [0];
 
 /*
@@ -61,8 +59,8 @@ const LIVE_GAMES: { name: string; zh: string; days: number[]; hour: number; minu
   { name: "Sabah 88 4D", zh: "沙巴88", days: WED_SAT_SUN, hour: 19, minute: 37 },
   { name: "Sandakan 4D", zh: "山打根", days: WED_SAT_SUN, hour: 19, minute: 39 },
   { name: "Special Cash Sweep", zh: "沙捞越", days: WED_SAT_SUN, hour: 19, minute: 41 },
-  { name: "Sports Toto 4D", zh: "多多", days: WED_SAT, hour: 19, minute: 43 },
-  { name: "Sports Toto 5D / 6D", zh: "多多六合彩", days: WED_SAT, hour: 19, minute: 45 },
+  { name: "Sports Toto 4D", zh: "多多", days: WED_SAT_SUN, hour: 19, minute: 43 },
+  { name: "Sports Toto 5D / 6D", zh: "多多六合彩", days: WED_SAT_SUN, hour: 19, minute: 45 },
   { name: "Grand Dragon 4D", zh: "豪龙", days: EVERY_DAY, hour: 20, minute: 0 },
   { name: "Nine Lotto", zh: "开彩", days: EVERY_DAY, hour: 20, minute: 2 },
   // Perdana dropped its 3:30PM draw on 1 Oct 2026, so only the 7:30PM draw rings.
