@@ -16,8 +16,8 @@ const PLAY_URL = "https://play.google.com/store/apps/details?id=com.mkt88.app";
 
 /** Same order the swipe strip uses. */
 const GAME_ORDER = [
-  "magnum", "damacai", "sportstoto", "sg", "grand-dragon", "nine-lotto",
-  "sabah88", "sandakan", "cashsweep", "perdana", "lucky-harihari",
+  "magnum", "damacai", "sportstoto", "sg", "sabah88", "sandakan",
+  "cashsweep", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
 ];
 
 type Tile = { href: string; logo: string; name: string; zh?: string; lucky?: boolean; settings?: boolean };

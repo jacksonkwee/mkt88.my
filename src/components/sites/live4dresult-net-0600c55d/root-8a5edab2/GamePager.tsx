@@ -61,11 +61,11 @@ const PAGES: PageDef[] = [
   { title: "Da Ma Cai", slug: "damacai", ids: ["table-4-2026-09-06", "table-5-2026-09-06"] },
   { title: "Sports Toto", slug: "sportstoto", ids: ["table-6-2026-09-06", "table-7-2026-09-06"] },
   { title: "Singapore 4D", slug: "sg", ids: ["table-11-2026-09-06"] },
-  { title: "Grand Dragon", slug: "grand-dragon", kh: true, ids: ["table-13-2026-09-06", "table-14-2026-09-06-6d"] },
-  { title: "Nine Lotto", slug: "nine-lotto", kh: true, ids: ["table-17-2026-09-06", "table-18-2026-09-06-6d"] },
   { title: "Sabah 88 沙巴88", slug: "sabah88", html: extractEast("table-10") },
   { title: "Sandakan 山打根", slug: "sandakan", html: extractEast("table-8") },
   { title: "Cash Sweep 沙捞越", slug: "cashsweep", html: extractEast("table-9") },
+  { title: "Grand Dragon", slug: "grand-dragon", kh: true, ids: ["table-13-2026-09-06", "table-14-2026-09-06-6d"] },
+  { title: "Nine Lotto", slug: "nine-lotto", kh: true, ids: ["table-17-2026-09-06", "table-18-2026-09-06-6d"] },
 ];
 
 /**
@@ -84,8 +84,8 @@ function pagesFor(night: boolean): PageDef[] {
 
 /** Game name order used by the icon pages to pick the starting slide. */
 export const GAME_PAGER_ORDER = [
-  "magnum", "damacai", "sportstoto", "sg", "grand-dragon", "nine-lotto",
-  "sabah88", "sandakan", "cashsweep", "perdana", "lucky-harihari",
+  "magnum", "damacai", "sportstoto", "sg", "sabah88", "sandakan",
+  "cashsweep", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
 ];
 export function gamePagerIndex(name: string): number {
   const i = GAME_PAGER_ORDER.indexOf(name);
