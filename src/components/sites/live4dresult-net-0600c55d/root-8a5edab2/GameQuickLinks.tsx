@@ -7,8 +7,8 @@ const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d
 
 // Pager order used by the phone swipe (mirrors GamePager).
 const PAGER_ORDER = [
-  "magnum", "damacai", "sportstoto", "sg", "sabah88", "sandakan",
-  "cashsweep", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
+  "magnum", "damacai", "sportstoto", "sg", "sabah88", "cashsweep",
+  "sandakan", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
 ];
 
 function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {

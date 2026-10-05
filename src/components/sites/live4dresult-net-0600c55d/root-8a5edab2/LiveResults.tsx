@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { nativeHttpGet } from "../../../../lib/native-http";
 import { gameBySlug } from "./GameDefs";
 
@@ -1219,7 +1219,6 @@ async function refreshOnce(full = true) {
 }
 
 export default function LiveResults() {
-  const [status, setStatus] = useState("…");
   useEffect(() => {
     let alive = true;
     let busy = false;
@@ -1302,7 +1301,6 @@ export default function LiveResults() {
         busy = false;
       }
       if (!alive) return;
-      setStatus(new Date().toLocaleTimeString());
       timer = window.setTimeout(tick, nextInterval());
     };
     timer = window.setTimeout(tick, 0);
@@ -1321,25 +1319,5 @@ export default function LiveResults() {
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
-  return (
-    <div
-      className="mkt-live-only"
-      style={{
-        position: "fixed",
-        right: 12,
-        bottom: 64,
-        zIndex: 9999,
-        background: "rgba(22,51,199,0.92)",
-        color: "#fff",
-        fontSize: 12,
-        padding: "4px 10px",
-        borderRadius: 12,
-        boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-        pointerEvents: "none",
-      }}
-    >
-      <span style={{ display: "inline-block", width: 8, height: 8, background: "#6cf46c", borderRadius: 8, marginRight: 6, animation: "blinker 1s linear infinite" }} />
-      LIVE · updated {status}
-    </div>
-  );
+  return null;
 }
