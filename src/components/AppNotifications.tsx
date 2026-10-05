@@ -14,6 +14,7 @@ type LocalNotificationsPlugin = {
   requestPermissions?: () => Promise<{ display?: string }>;
   createChannel?: (channel: Record<string, unknown>) => Promise<void>;
   cancel?: (options: { notifications: { id: number }[] }) => Promise<void>;
+  getPending?: () => Promise<{ notifications?: { id?: number | string }[] }>;
   schedule?: (options: { notifications: Record<string, unknown>[] }) => Promise<unknown>;
   addListener?: (
     eventName: string,
@@ -169,7 +170,24 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
             });
           } catch { /* already exists or unsupported on this platform */ }
 
-          await ln.cancel?.({ notifications: [...ALL_IDS.map((id) => ({ id }))] });
+          /*
+           * Only add what is missing.
+           *
+           * This used to cancel every reminder and schedule it again on every
+           * app open. Opening the app inside a reminder's own minute made the
+           * plugin look for the NEXT match - tomorrow - so that reminder never
+           * arrived: that is why the 16:00 / 18:00 / 18:30 ones were sometimes
+           * missing (reported 5 Oct 2026). A pending reminder is left alone now,
+           * so nothing is thrown away while Android is about to fire it.
+           */
+          const pending = new Set<number>();
+          try {
+            const got = await ln.getPending?.();
+            for (const n of got?.notifications || []) pending.add(Number(n.id));
+          } catch { /* no list - schedule everything below */ }
+
+          if (ALL_IDS.every((id) => pending.has(id))) return;
+
           const earlyLucky = luckyNumber();
           const firstLucky = luckyNumber();
           const secondLucky = luckyNumber();
@@ -212,7 +230,7 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
                 schedule: { on: { hour: 18, minute: 30 }, repeats: true, allowWhileIdle: true },
               },
               ...LIVE_GAME_SCHEDULE(),
-            ],
+            ].filter((n) => !pending.has(Number(n.id))),
           });
         } catch {
           // Notification failure must never affect the results app.
