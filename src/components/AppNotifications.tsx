@@ -9,6 +9,9 @@ const NOTIFICATION_1600 = 1600;
 const NOTIFICATION_1800 = 1800;
 const NOTIFICATION_1830 = 1830;
 
+/** Fingerprint of the reminder plan, so it is only rebuilt when it changes. */
+const PLAN_KEY = "mkt_live_notif_plan";
+
 type LocalNotificationsPlugin = {
   checkPermissions?: () => Promise<{ display?: string }>;
   requestPermissions?: () => Promise<{ display?: string }>;
@@ -171,22 +174,44 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
           } catch { /* already exists or unsupported on this platform */ }
 
           /*
-           * Only add what is missing.
+           * Lay the reminders down once, and only again when the plan changes.
            *
-           * This used to cancel every reminder and schedule it again on every
-           * app open. Opening the app inside a reminder's own minute made the
-           * plugin look for the NEXT match - tomorrow - so that reminder never
-           * arrived: that is why the 16:00 / 18:00 / 18:30 ones were sometimes
-           * missing (reported 5 Oct 2026). A pending reminder is left alone now,
-           * so nothing is thrown away while Android is about to fire it.
+           * Cancelling and re-scheduling them on every app open is what lost
+           * reminders: opening the app inside a reminder's own minute makes the
+           * plugin look for the NEXT match - tomorrow - so that day's reminder
+           * never arrived (reported 5 Oct 2026).
+           *
+           * But never re-scheduling is wrong too: a reminder left over from an
+           * older plan keeps its id, and the plugin treats that id as "already
+           * scheduled", so the new time would never be laid down.
+           *
+           * So the plan itself is fingerprinted and remembered. Same plan and
+           * every reminder still pending: leave them all exactly where they
+           * are. Different plan, or something missing: clear our ids and lay
+           * the whole plan down again, once.
            */
+          const plan =
+            "v2|" + LIVE_GAMES.map((g) => g.days.join("") + "@" + g.hour + ":" + g.minute).join("|");
+          let remembered = "";
+          try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
+
           const pending = new Set<number>();
           try {
             const got = await ln.getPending?.();
             for (const n of got?.notifications || []) pending.add(Number(n.id));
-          } catch { /* no list - schedule everything below */ }
+          } catch { /* no list - rebuild below */ }
 
-          if (ALL_IDS.every((id) => pending.has(id))) return;
+          if (remembered === plan && ALL_IDS.every((id) => pending.has(id))) return;
+
+          // Clear our own ids, including any left behind by an older plan.
+          await ln.cancel?.({
+            notifications: [
+              ...Array.from({ length: 200 }, (_, i) => 3000 + i),
+              NOTIFICATION_1600,
+              NOTIFICATION_1800,
+              NOTIFICATION_1830,
+            ].map((id) => ({ id })),
+          });
 
           const earlyLucky = luckyNumber();
           const firstLucky = luckyNumber();
@@ -230,8 +255,9 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
                 schedule: { on: { hour: 18, minute: 30 }, repeats: true, allowWhileIdle: true },
               },
               ...LIVE_GAME_SCHEDULE(),
-            ].filter((n) => !pending.has(Number(n.id))),
+            ],
           });
+          try { window.localStorage.setItem(PLAN_KEY, plan); } catch { /* private mode */ }
         } catch {
           // Notification failure must never affect the results app.
         }
