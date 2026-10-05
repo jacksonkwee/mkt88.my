@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 
-const logo = ASSET_BASE + "/logo-mkt88.svg?v=3";
+const logo = ASSET_BASE + "/logo-mkt88.webp?v=4";
 
 const REGION_ITEMS = [
   { label: "Sabah Sarawak 4D Results", href: "/sabah-sarawak-4d-results" },

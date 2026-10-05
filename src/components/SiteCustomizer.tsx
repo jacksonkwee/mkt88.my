@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-const DEFAULT_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg";
+const DEFAULT_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4";
 
 export default function SiteCustomizer() {
   /**

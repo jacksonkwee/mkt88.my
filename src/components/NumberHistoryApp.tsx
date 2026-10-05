@@ -208,7 +208,7 @@ export default function NumberHistoryApp() {
       {/* Brand logo at the top of the page. */}
       <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg?v=3" alt="MKT 發發" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
+        <img src="/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4" alt="MKT 發發" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
       </div>
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         {/* Search + 大伯公 */}

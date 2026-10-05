@@ -1,0 +1,110 @@
+{
+ "checkedAt": "2026-09-30T08:15:31.663Z",
+ "sgt": {
+  "day": "20260930",
+  "hour": 16
+ },
+ "notes": [],
+ "rows": [
+  {
+   "game": "Magnum",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "1063/2421/5815",
+   "refDate": "27-09-2026 (Sun)",
+   "refNums": "1063/2421/5815",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Da Ma Cai",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "2371/3396/3151",
+   "refDate": "27-09-2026 (Sun)",
+   "refNums": "2371/3396/3151",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Sports Toto",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "9069/1317/7612",
+   "refDate": "27-09-2026 (Sun)",
+   "refNums": "9069/1317/7612",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Sandakan",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "6709/8046/4746",
+   "refDate": "27-09-2026 (Sun)",
+   "refNums": "6709/8046/4746",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Cash Sweep",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "4372/5825/7077",
+   "refDate": "27-09-2026 (Sun)",
+   "refNums": "4372/5825/7077",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Sabah 88",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "3147/5743/9951",
+   "refDate": "27-09-2026 (Sun)",
+   "refNums": "3147/5743/9951",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Grand Dragon",
+   "appDate": "29-09-2026 (Tue)",
+   "appNums": "9071/3658/9799",
+   "refDate": "29-09-2026 (Tue)",
+   "refNums": "9071/3658/9799",
+   "source": "live4d2u",
+   "state": "match"
+  },
+  {
+   "game": "Perdana",
+   "appDate": "30-09-2026 (Wed)",
+   "appNums": "//",
+   "refDate": "29-09-2026 (Tue)",
+   "refNums": "7415/3852/4395",
+   "source": "live4d2u",
+   "state": "ahead"
+  },
+  {
+   "game": "HariHari",
+   "appDate": "30-09-2026 (Wed)",
+   "appNums": "4199/7921/2583",
+   "refDate": "30-09-2026",
+   "refNums": "4199/7921/2583",
+   "source": "hari4d.com (official)",
+   "state": "match"
+  },
+  {
+   "game": "Singapore",
+   "appDate": "27-09-2026 (Sun)",
+   "appNums": "8791/0860/1578",
+   "refDate": "27-09-2026",
+   "refNums": "8791/0860/1578",
+   "source": "singaporepools (official)",
+   "state": "match"
+  },
+  {
+   "game": "Nine Lotto",
+   "appDate": "29-09-2026 (Tue)",
+   "appNums": "0849/3268/4987",
+   "refDate": "29-09-2026",
+   "refNums": "0849/3268/4987",
+   "source": "9lotto (official)",
+   "state": "match"
+  }
+ ],
+ "problems": []
+}

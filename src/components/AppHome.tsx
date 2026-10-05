@@ -11,7 +11,7 @@ import { GearSix } from "@phosphor-icons/react";
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
 const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
 /** The brand logo, at the top of the first page. */
-const MKT_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.svg?v=3";
+const MKT_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.mkt88.app";
 
 /** Same order the swipe strip uses. */
