@@ -1270,7 +1270,9 @@ export default function LiveResults() {
     let lastFast = 0;
     const fastPoll = async () => {
       if (fastBusy || !alive) return;
-      if (!inDrawWindow() && Date.now() - lastFast < 5000) return;
+      // Outside a draw a slower beat is plenty; the app is on screen, so a
+      // number published out of the usual hours still shows up within a second.
+      if (Date.now() - lastFast < 1000) return;
       fastBusy = true;
       try { await syncFromServerFast(); lastFast = Date.now(); }
       catch { /* picked up on the next tick */ }

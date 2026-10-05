@@ -424,13 +424,17 @@ body.mkt-in-app .card td > a:has(> .anchor) {
  * The newest numbers on the 11 game cards: a red background that fades
  * out, so it is obvious at a glance which numbers have just come out.
  * ------------------------------------------------------------------ */
-@keyframes mktNewNumberFade {
-  0%   { background-color: #cc0000; color: #ffffff; box-shadow: 0 0 0 2px rgba(204,0,0,0.35); }
-  85%  { background-color: #cc0000; color: #ffffff; }
-  100% { background-color: transparent; color: inherit; box-shadow: none; }
-}
+/*
+ * The newest number turns RED.
+ *
+ * It used to be a red block with white text behind the number, which read as
+ * the whole column lighting up. The colour now goes on the number itself and
+ * the block is gone. LiveHighlight removes the class after 3s and the colour
+ * fades back on its own, so nothing snaps.
+ */
 .mkt-new-number {
-  animation: mktNewNumberFade 3s ease-out forwards;
+  color: #cc0000 !important;
+  transition: color 600ms ease-out;
   border-radius: 4px;
   padding: 0 3px;
 }
