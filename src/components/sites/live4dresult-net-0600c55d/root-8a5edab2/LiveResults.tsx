@@ -44,7 +44,7 @@ function inDrawWindow(now = new Date()): boolean {
   const d = new Date(now.getTime() + 8 * 60 * 60 * 1000); // Malaysia = UTC+8
   const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
   return (mins >= 15 * 60 && mins <= 16 * 60 + 30)    // Cambodia 3:30pm draw
-      || (mins >= 18 * 60 && mins <= 21 * 60 + 30);   // evening draws
+      || (mins >= 18 * 60 && mins <= 21 * 60);   // evening draws settle by 9pm   // evening draws
 }
 
 /* ------------------------------------------------------------------ *
@@ -1421,7 +1421,7 @@ export default function LiveResults() {
       if (fastBusy || !alive) return;
       // Outside a draw a slower beat is plenty; the app is on screen, so a
       // number published out of the usual hours still shows up within a second.
-      if (Date.now() - lastFast < 1000) return;
+      if (Date.now() - lastFast < (inDrawWindow() ? 1000 : 60000)) return;
       fastBusy = true;
       try { await syncFromServerFast(); lastFast = Date.now(); }
       catch { /* picked up on the next tick */ }

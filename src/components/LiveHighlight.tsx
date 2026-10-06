@@ -32,7 +32,7 @@ const HOLD_MS = 3000;
 function inDrawWindow(): boolean {
   const my = new Date(Date.now() + 8 * 60 * 60 * 1000);
   const mins = my.getUTCHours() * 60 + my.getUTCMinutes();
-  return (mins >= 15 * 60 && mins <= 16 * 60 + 30) || (mins >= 18 * 60 && mins <= 21 * 60 + 30);
+  return (mins >= 15 * 60 && mins <= 16 * 60 + 30) || (mins >= 18 * 60 && mins <= 21 * 60);
 }
 
 type CellState = { last: string; nums: Set<string> };
