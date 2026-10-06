@@ -793,6 +793,20 @@ async function gdInfo(): Promise<GdInfo | null> {
     cand.push({ six, jp4: { ...jp4, ...from4 }, jp7 });
   }
   if (!cand.length) return null;
+  /*
+   * The jackpot letter moves on one step every draw: A -> B -> ... -> M -> A.
+   * The official board puts the letter up LAST, so while today's is still
+   * missing it is worked out from yesterday's, which is the rule the operator
+   * follows (confirmed 6 Oct 2026).
+   */
+  if (cand.length >= 2) {
+    const seen = /[A-M]/.exec(String(cand[0].jp4.jp4_letter || "").toUpperCase());
+    const prev = /[A-M]/.exec(String(cand[1].jp4.jp4_letter || "").toUpperCase());
+    if (!seen && prev) {
+      const ABC = "ABCDEFGHIJKLM";
+      cand[0].jp4.jp4_letter = ABC[(ABC.indexOf(prev[0]) + 1) % 13];
+    }
+  }
   if (cand.length >= 2) {
     // gdlotto answers today's URL with yesterday's draw until today's is out.
     // A difference anywhere (6D, jackpot pool, jackpot number) means a new draw
@@ -835,7 +849,12 @@ function liveJackpotLetter(cardId: string, jp4: Record<string, string>): Record<
   if (!raw) return jp4;
   // "M: 6210" / "M 6210" / "M6210" all reduce to the four digits.
   const num = raw.replace(/^[A-Za-z]\s*:?\s*/, "").replace(/[^0-9]/g, "").slice(0, 4);
-  if (!/^\d{4}$/.test(num)) return { ...jp4, jp4_letter: "----" };
+  if (!/^\d{4}$/.test(num)) {
+    // A letter on its own is the next one in the sequence, worked out from
+    // yesterday's draw - not a stale number - so it is allowed through.
+    if (/^[A-M]$/i.test(String(raw).trim())) return jp4;
+    return { ...jp4, jp4_letter: "----" };
+  }
   const card = document.getElementById(cardId);
   if (!card) return jp4;
   for (let i = 1; i <= 13; i++) {
