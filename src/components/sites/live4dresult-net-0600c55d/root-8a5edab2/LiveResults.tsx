@@ -545,6 +545,10 @@ function jackpotLetterCell(card: Element): Element | null {
 const PRIZES_FIRST_CARDS = ["table-4", "table-5", "table-9"];
 function anyLiveCard(): boolean {
   for (const card of Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)"))) {
+    // Cards with no prize cells at all (the 6D and jackpot cards) can never
+    // "finish" by this rule, so they must not hold the page on the fast beat
+    // all day - that was making the app poll every second around the clock.
+    if (!card.querySelector('[data-id="first_prize"]')) continue;
     const prizes = ["first_prize", "second_prize", "third_prize"].every((id) => {
       const cell = card.querySelector('[data-id="' + id + '"]');
       return !!cell && /^\d{3,6}$/.test((cell.textContent || "").trim());
