@@ -1246,6 +1246,7 @@ async function updateHariHome() {
               if (jp.number) nums.push(String(jp.number));
               if (jp.number2) nums.push(String(jp.number2));
               if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
+              showJackpotLetter(id, nums.join(" or "));
               applyIdValues(id, vals);
             }
           }
@@ -1338,6 +1339,7 @@ async function refreshOnce(full = true) {
                     if (jp.number) nums.push(String(jp.number));
                     if (jp.number2) nums.push(String(jp.number2));
                     if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
+              showJackpotLetter(id, nums.join(" or "));
                     applyIdValues(id, vals);
                   }
                 }
