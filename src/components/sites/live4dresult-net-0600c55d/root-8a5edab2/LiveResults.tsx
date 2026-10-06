@@ -535,6 +535,19 @@ function jackpotLetterCell(card: Element): Element | null {
   return value;
 }
 
+/** True while any card on the page still has prizes to come. */
+function anyLiveCard(): boolean {
+  const cards = document.querySelectorAll(".card.outer-box:not(.mkt-past)");
+  for (const card of Array.from(cards)) {
+    const done = ["first_prize", "second_prize", "third_prize"].every((id) => {
+      const cell = card.querySelector('[data-id="' + id + '"]');
+      return !!cell && /^\d{3,6}$/.test((cell.textContent || "").trim());
+    });
+    if (!done) return true;
+  }
+  return false;
+}
+
 /** Parse perdana4d.com innerText into { time -> set }. */
 function parsePerdana(doc: Document): Record<string, PrizeSet> {
   const lines = (doc.body ? doc.body.innerText : "").split("\n").map((l) => l.trim());
@@ -1421,7 +1434,10 @@ export default function LiveResults() {
       if (fastBusy || !alive) return;
       // Outside a draw a slower beat is plenty; the app is on screen, so a
       // number published out of the usual hours still shows up within a second.
-      if (Date.now() - lastFast < (inDrawWindow() ? 1000 : 60000)) return;
+      // No clock rule: a page that still has a card being revealed is checked
+      // every second, and a page where every card is finished is checked every
+      // few seconds - just enough to notice the next draw starting.
+      if (Date.now() - lastFast < (anyLiveCard() ? 1000 : 5000)) return;
       fastBusy = true;
       try { await syncFromServerFast(); lastFast = Date.now(); }
       catch { /* picked up on the next tick */ }
