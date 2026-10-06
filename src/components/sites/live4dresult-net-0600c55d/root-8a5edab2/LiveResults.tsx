@@ -1171,7 +1171,8 @@ function applyCambodiaFeed(j: FastFeed): boolean {
         for (const card of Array.from(document.querySelectorAll('[id="' + PERDANA_ID[t] + '"]'))) { applySet(card, st); did = true; }
       }
       const h = j.hari ? j.hari[t] : null;
-      if (h && setHasAny(h.set)) {
+      // A draw that has started but published nothing yet still moves the card on.
+      if (h && h.set) {
         for (const card of Array.from(document.querySelectorAll('[id="' + HARI_ID[t] + '"]'))) { applySet(card, h.set); did = true; }
         if (h.six) applySixValues(HARI_ID[t] + "-6d", h.six);
         if (h.jp) { applyIdValues(HARI_ID[t], h.jp); showJackpotLetter(HARI_ID[t], h.jp.jp_no || ""); }
@@ -1212,7 +1213,8 @@ async function updateHariHome() {
         const j = JSON.parse(txt);
         const set = hariSetFromJson(j);
         const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-        if (!setHasAny(set)) continue;
+        // Accept a started draw even with every cell still blank.
+        if (!set) continue;
         for (const card of cards) applySet(card, set);
         applySixValues(id + "-6d", sixFromHariJson(j));
         try {
