@@ -151,7 +151,7 @@ function restoreUnfilled(): void {
   }
 }
 
-type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
+type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string; from?: string[] };
 
 function isDash(v: string) {
   const t = (v || "").trim();
@@ -430,13 +430,29 @@ function applySet(card: Element, s: PrizeSet) {
     if (isDash(val) && !force && !newDraw) return;
     pending.push({ el, v: val });
   };
+  /*
+   * Letters in front of the numbers, exactly as the operator prints them: the
+   * prize rows carry the special each prize came from, and the Special column
+   * is labelled A to M. They are stamped on the cell and drawn by CSS so the
+   * cell's own text stays just the number - anything reading the numbers (the
+   * favourite highlight, the number-history links) keeps working.
+   */
   const tables = [...card.querySelectorAll("table")];
   const prizeRows = tables[0] ? [...tables[0].querySelectorAll("tr")] : [];
+  (s.from || []).forEach((L, i) => {
+    const row = prizeRows[i];
+    const cell = row ? row.querySelector("td.lottery-prize-number") : null;
+    const letter = (L || "").trim().toUpperCase();
+    if (cell && /^[A-W]$/.test(letter)) cell.setAttribute("data-letter", letter);
+  });
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
     stage(row ? row.querySelector("td.lottery-prize-number") : null, v, newDraw);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
+  specialCells.slice(0, 13).forEach((cell, i) => {
+    if (cell && !cell.hasAttribute("data-letter")) cell.setAttribute("data-letter", LETTERS[i]);
+  });
   s.special.forEach((v, i) => stage(specialCells[i], v, newDraw));
   if (s.special.length > 0 && specialCells.length > s.special.length) {
     for (let i = s.special.length; i < specialCells.length; i++) {
@@ -458,6 +474,49 @@ function applySet(card: Element, s: PrizeSet) {
   // full HariHari card take over two seconds to fill in, number by number.
   for (const c of pending) setText(c.el, c.v);
   flash(card);
+}
+
+/**
+ * The jackpot letter is the special the jackpot number fell on, so it is read
+ * back off the card itself. The operator has no letter field for it in the
+ * feed, but the numbers it sends are the same ones already printed.
+ */
+function showJackpotLetter(cardId: string, nums: string) {
+  const wanted = (nums || "").split(/[^0-9]+/).filter((v) => /^\d{4}$/.test(v));
+  if (!wanted.length) return;
+  applyToCardsById(cardId, (card) => {
+    const letters: string[] = [];
+    card.querySelectorAll("td.lottery-number[data-letter]").forEach((el) => {
+      const v = (el.textContent || "").trim();
+      const L = el.getAttribute("data-letter") || "";
+      if (wanted.includes(v) && L && !letters.includes(L)) letters.push(L);
+    });
+    const cell = jackpotLetterCell(card);
+    if (cell) cell.textContent = letters.join(" · ") || "----";
+  });
+}
+
+/** Add the "Jackpot Letter 积宝字母" row to a card the first time it is needed. */
+function jackpotLetterCell(card: Element): Element | null {
+  const existing = card.querySelector('[data-id="jp_letter"]');
+  if (existing) return existing;
+  const noCell = card.querySelector('[data-id="jp_no"]');
+  const tr = noCell ? noCell.closest("tr") : null;
+  if (!tr || !tr.parentElement) return null;
+  const row = document.createElement("tr");
+  const label = document.createElement("td");
+  label.className = "lottery-prize-title text-center";
+  label.setAttribute("width", "45%");
+  label.textContent = "Jackpot Letter 积宝字母";
+  const value = document.createElement("td");
+  value.className = "lottery-prize-number border text-center";
+  value.setAttribute("data-id", "jp_letter");
+  value.setAttribute("width", "55%");
+  value.textContent = "----";
+  row.appendChild(label);
+  row.appendChild(value);
+  tr.parentElement.insertBefore(row, tr.nextSibling);
+  return value;
 }
 
 /** Parse perdana4d.com innerText into { time -> set }. */
@@ -531,6 +590,8 @@ function hariSetFromJson(j: any): PrizeSet | null {
     cons,
     drawNo: j.id != null ? String(j.id) : undefined,
     date: iso ? weekdayOf(iso) : undefined,
+    // The operator prints which special each prize came from: prize1From=H.
+    from: [j.prize1From, j.prize2From, j.prize3From].map((v) => String(v ?? "").trim()),
   };
 }
 
@@ -690,6 +751,14 @@ async function gdInfo(): Promise<GdInfo | null> {
       const gd7 = grand.replace(/[^0-9]/g, "");
       if (/^\d{7}$/.test(gd7)) jp7.jp7_grand = gd7.slice(0, 6) + " + " + gd7[6];
     }
+    // The operator prints the special each prize came from, in brackets:
+    // "1st Prize ( H ) 4921".
+    const from4: Record<string, string> = {};
+    for (const [domId, key] of [["1stAlph", "p1"], ["2ndAlph", "p2"], ["3rdAlph", "p3"]] as [string, string][]) {
+      const el = doc.getElementById(domId);
+      const v = el ? (el.textContent || "").trim().toUpperCase() : "";
+      if (/^[A-M]$/.test(v)) from4[key] = v;
+    }
     const main = m ? m[1].replace(/\s+/g, "") : "----";
     const hasDraw = /^\d{6}$/.test(main) || (jp7.jp7_grand || "").includes(" + ");
     if (!hasDraw) continue;
@@ -705,7 +774,7 @@ async function gdInfo(): Promise<GdInfo | null> {
           },
         }
       : { main: "----", date };
-    cand.push({ six, jp4, jp7 });
+    cand.push({ six, jp4: { ...jp4, ...from4 }, jp7 });
   }
   if (!cand.length) return null;
   if (cand.length >= 2) {
@@ -770,6 +839,14 @@ async function updateGdNineCards() {
       // The jackpot card is its own card - keep its date in step too.
       if (gd.six.date) applyIdValues("table-14-2026-09-06-6d-jp", { date: gd.six.date });
       applyIdValues("table-13-2026-09-06", liveJackpotLetter("table-13-2026-09-06", gd.jp4));
+      for (const [key, id] of [["p1", "first_prize"], ["p2", "second_prize"], ["p3", "third_prize"]] as [string, string][]) {
+        const L = gd.jp4[key];
+        if (!L) continue;
+        applyToCardsById("table-13-2026-09-06", (card) => {
+          const cell = card.querySelector('[data-id="' + id + '"]');
+          if (cell) cell.setAttribute("data-letter", L);
+        });
+      }
       // The 6+1D jackpot is written only from the server snapshot, which knows
       // whether today's jackpot has actually been settled. Writing it here too
       // showed the previous draw's pool under today's date.
@@ -1077,7 +1154,7 @@ function applyCambodiaFeed(j: FastFeed): boolean {
       if (h && setHasAny(h.set)) {
         for (const card of Array.from(document.querySelectorAll('[id="' + HARI_ID[t] + '"]'))) { applySet(card, h.set); did = true; }
         if (h.six) applySixValues(HARI_ID[t] + "-6d", h.six);
-        if (h.jp) applyIdValues(HARI_ID[t], h.jp);
+        if (h.jp) { applyIdValues(HARI_ID[t], h.jp); showJackpotLetter(HARI_ID[t], h.jp.jp_no || ""); }
       }
     }
     return did;

@@ -424,6 +424,15 @@ body.mkt-in-app .card td > a:has(> .anchor) {
  * The newest numbers on the 11 game cards: a red background that fades
  * out, so it is obvious at a glance which numbers have just come out.
  * ------------------------------------------------------------------ */
+/* Letters in front of the numbers, as the operators print them: the prize rows
+   show the special each prize came from, and the Special column is labelled
+   A to M. Drawn here so the cell's own text stays just the number. */
+.card.outer-box [data-letter]::before {
+  content: attr(data-letter) " ";
+  color: #8a8f98;
+  font-weight: 700;
+}
+
 /*
  * The newest number turns RED.
  *
