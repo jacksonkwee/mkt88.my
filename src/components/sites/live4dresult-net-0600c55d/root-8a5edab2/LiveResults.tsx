@@ -404,7 +404,6 @@ const shownDrawNo = new WeakMap<Element, string>();
 function applySet(card: Element, s: PrizeSet) {
   if (!s || !s.prize || s.prize.length === 0) return;
   const hasAny = (arr?: string[]) => !!arr && arr.some((v) => !isDash(v));
-  if (!hasAny(s.prize) && !hasAny(s.special) && !hasAny(s.cons)) return; // nothing drawn yet
   const pending: { el: Element; v: string }[] = [];
   // A brand-new draw (different date) shows every prize as published, including
   // the ones the official site has not released yet ("----"), so an in-progress
@@ -422,6 +421,15 @@ function applySet(card: Element, s: PrizeSet) {
   // source has not revealed yet are written as "----" instead of keeping the
   // previous draw's numbers.
   const newDraw = (!!s.date && s.date !== curDate) || (!!s.drawNo && !!curDrawNo && s.drawNo !== curDrawNo);
+  /*
+   * An empty board is normally ignored, so a source hiccup cannot wipe a good
+   * result. But when the draw number has moved on, the card MUST move with it -
+   * even to an empty board, because that is the new draw starting. Leaving the
+   * old numbers there is what showed a past number beside a live prize: the
+   * 7:30pm HariHari card kept yesterday's 5202 in cell H while the new draw's
+   * 1st prize was already lettered H (reported 6 Oct 2026).
+   */
+  if (!hasAny(s.prize) && !hasAny(s.special) && !hasAny(s.cons) && !newDraw) return;
   const stage = (el: Element | null, v: string | undefined, force = false) => {
     if (!el || v === undefined) return;
     const val = v.trim();
