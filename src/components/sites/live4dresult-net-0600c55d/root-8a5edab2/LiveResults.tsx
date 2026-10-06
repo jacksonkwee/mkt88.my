@@ -1428,8 +1428,23 @@ export default function LiveResults() {
       finally { fastBusy = false; }
     };
     lastFast = Date.now();
+    /*
+     * HariHari's draw carries its 1st/2nd/3rd prize letters inside the same
+     * payload as the numbers - but only the phone can fetch it (the operator's
+     * API refuses our server) and it used to run on the slow sweep alone. So the
+     * number arrived first and its letter up to a minute later, or not at all if
+     * that sweep was cut short. It now rides the fast lane, throttled, and only
+     * while a draw is actually being published.
+     */
+    let lastHari = 0;
+    const hariPoll = async () => {
+      if (!alive || !inDrawWindow()) return;
+      if (Date.now() - lastHari < 15000) return;
+      lastHari = Date.now();
+      try { await updateHariHome(); } catch { /* picked up on the next tick */ }
+    };
     const fastTimer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && alive) void fastPoll();
+      if (document.visibilityState === "visible" && alive) { void fastPoll(); void hariPoll(); }
     }, 1000);
     const tick = async () => {
       if (busy) return;
