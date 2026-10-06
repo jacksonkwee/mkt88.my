@@ -442,8 +442,13 @@ function applySet(card: Element, s: PrizeSet) {
   (s.from || []).forEach((L, i) => {
     const row = prizeRows[i];
     const cell = row ? row.querySelector("td.lottery-prize-number") : null;
+    if (!cell) return;
     const letter = (L || "").trim().toUpperCase();
-    if (cell && /^[A-W]$/.test(letter)) cell.setAttribute("data-letter", letter);
+    const num = String(s.prize[i] ?? "").trim();
+    // The operator knows which special a prize came from before it prints the
+    // number. A letter with no number reads as a mistake, so it waits.
+    if (/^[A-W]$/.test(letter) && /^\d{3,6}$/.test(num)) cell.setAttribute("data-letter", letter);
+    else cell.removeAttribute("data-letter");
   });
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
@@ -841,10 +846,14 @@ async function updateGdNineCards() {
       applyIdValues("table-13-2026-09-06", liveJackpotLetter("table-13-2026-09-06", gd.jp4));
       for (const [key, id] of [["p1", "first_prize"], ["p2", "second_prize"], ["p3", "third_prize"]] as [string, string][]) {
         const L = gd.jp4[key];
-        if (!L) continue;
         applyToCardsById("table-13-2026-09-06", (card) => {
           const cell = card.querySelector('[data-id="' + id + '"]');
-          if (cell) cell.setAttribute("data-letter", L);
+          if (!cell) return;
+          const num = (cell.textContent || "").trim();
+          // The official board publishes the letter before the number; showing
+          // it on its own looks like a result that is not there yet.
+          if (L && /^[A-M]$/.test(L) && /^\d{4}$/.test(num)) cell.setAttribute("data-letter", L);
+          else cell.removeAttribute("data-letter");
         });
       }
       // The 6+1D jackpot is written only from the server snapshot, which knows
