@@ -41,6 +41,10 @@ export default function LiveHighlight({ enabled }: { enabled: boolean }) {
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
 
+    // Nothing is marked for the first few seconds after the page opens: that
+    // window is the page's own build catching up with the first live update, and
+    // a card that is already finished must not blink because of it.
+    const openedAt = Date.now();
     const state = new Map<Element, CellState>();
     const timers = new Map<Element, number>();
     let lastCellCount = -1;
@@ -77,6 +81,7 @@ export default function LiveHighlight({ enabled }: { enabled: boolean }) {
     };
 
     const mark = (el: Element) => {
+      if (Date.now() - openedAt < 8000) return;
       if (settled(el)) return;
       if (!inDrawWindow()) return;
       el.classList.remove(CLASS);
