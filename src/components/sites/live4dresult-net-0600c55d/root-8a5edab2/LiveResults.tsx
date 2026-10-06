@@ -500,8 +500,8 @@ function showJackpotLetter(cardId: string, nums: string) {
 function jackpotLetterCell(card: Element): Element | null {
   const existing = card.querySelector('[data-id="jp_letter"]');
   if (existing) return existing;
-  const noCell = card.querySelector('[data-id="jp_no"]');
-  const tr = noCell ? noCell.closest("tr") : null;
+  const unitsCell = card.querySelector('[data-id="jp_units"]');
+  const tr = unitsCell ? unitsCell.closest("tr") : null;
   if (!tr || !tr.parentElement) return null;
   const row = document.createElement("tr");
   const label = document.createElement("td");
@@ -515,7 +515,7 @@ function jackpotLetterCell(card: Element): Element | null {
   value.textContent = "----";
   row.appendChild(label);
   row.appendChild(value);
-  tr.parentElement.insertBefore(row, tr.nextSibling);
+  tr.parentElement.insertBefore(row, tr);
   return value;
 }
 
@@ -1204,7 +1204,7 @@ async function updateHariHome() {
               const nums: string[] = [];
               if (jp.number) nums.push(String(jp.number));
               if (jp.number2) nums.push(String(jp.number2));
-              if (nums.length) vals.jp_no = nums.join(" or ");
+              if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
               applyIdValues(id, vals);
             }
           }
@@ -1296,7 +1296,7 @@ async function refreshOnce(full = true) {
                     const nums: string[] = [];
                     if (jp.number) nums.push(String(jp.number));
                     if (jp.number2) nums.push(String(jp.number2));
-                    if (nums.length) vals.jp_no = nums.join(" or ");
+                    if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
                     applyIdValues(id, vals);
                   }
                 }
