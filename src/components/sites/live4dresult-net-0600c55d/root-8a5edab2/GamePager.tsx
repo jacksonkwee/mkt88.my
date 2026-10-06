@@ -200,6 +200,9 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     const el = track.current;
     if (!el) return;
     let placedWidth = -1;
+    // While the page is still settling its width, the slide index flickers;
+    // acting on that was what scrolled the page under the user's finger.
+    const startedAt = Date.now();
     /**
      * Put the track on the slide this page is for.
      *
