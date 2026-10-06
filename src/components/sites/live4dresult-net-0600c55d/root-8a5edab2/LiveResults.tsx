@@ -430,6 +430,9 @@ function applySet(card: Element, s: PrizeSet) {
    * 1st prize was already lettered H (reported 6 Oct 2026).
    */
   if (!hasAny(s.prize) && !hasAny(s.special) && !hasAny(s.cons) && !newDraw) return;
+  // force = true: the operator's board is taken exactly as published, blanks
+  // included. It is the same source the official site shows, and skipping a
+  // blank is what left a past draw's number in a cell the operator had cleared.
   const stage = (el: Element | null, v: string | undefined, force = false) => {
     if (!el || v === undefined) return;
     const val = v.trim();
@@ -460,20 +463,20 @@ function applySet(card: Element, s: PrizeSet) {
   });
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
-    stage(row ? row.querySelector("td.lottery-prize-number") : null, v, newDraw);
+    stage(row ? row.querySelector("td.lottery-prize-number") : null, v, true);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
   specialCells.slice(0, 13).forEach((cell, i) => {
     if (cell && !cell.hasAttribute("data-letter")) cell.setAttribute("data-letter", LETTERS[i]);
   });
-  s.special.forEach((v, i) => stage(specialCells[i], v, newDraw));
+  s.special.forEach((v, i) => stage(specialCells[i], v, true));
   if (s.special.length > 0 && specialCells.length > s.special.length) {
     for (let i = s.special.length; i < specialCells.length; i++) {
       if (specialCells[i]) (specialCells[i] as HTMLElement).innerHTML = "&nbsp;";
     }
   }
   const consCells = tables[2] ? [...tables[2].querySelectorAll("td.lottery-number")] : [];
-  s.cons.forEach((v, i) => stage(consCells[i], v, newDraw));
+  s.cons.forEach((v, i) => stage(consCells[i], v, true));
   if (s.date) {
     const dt = card.querySelector('[data-id="date"]');
     if (dt && dt.textContent !== s.date) pending.unshift({ el: dt, v: s.date });
