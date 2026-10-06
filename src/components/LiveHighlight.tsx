@@ -45,7 +45,24 @@ export default function LiveHighlight({ enabled }: { enabled: boolean }) {
     const timers = new Map<Element, number>();
     let lastCellCount = -1;
 
+    /*
+     * A card is finished once its own 1st/2nd/3rd prizes are all published - the
+     * specials and consolations always land before them. Nothing on a finished
+     * card is "live" any more, so it stops flashing and simply reads as a
+     * settled result. It comes alive again when the next draw clears those
+     * prize cells.
+     */
+    const settled = (el: Element): boolean => {
+      const card = el.closest(".card.outer-box");
+      if (!card) return false;
+      return ["first_prize", "second_prize", "third_prize"].every((id) => {
+        const cell = card.querySelector('[data-id="' + id + '"]');
+        return !!cell && /^\d{3,6}$/.test((cell.textContent || "").trim());
+      });
+    };
+
     const mark = (el: Element) => {
+      if (settled(el)) return;
       if (!inDrawWindow()) return;
       el.classList.remove(CLASS);
       // Force the browser to notice, so the fade restarts for a number that
