@@ -535,15 +535,28 @@ function jackpotLetterCell(card: Element): Element | null {
   return value;
 }
 
-/** True while any card on the page still has prizes to come. */
+/**
+ * True while any card on the page still has something to come.
+ *
+ * Da Ma Cai and Cash Sweep put their 1st/2nd/3rd prizes up first and fill the
+ * specials and consolations afterwards, so those two are only finished when the
+ * whole grid is in. Every other game finishes with its prizes.
+ */
+const PRIZES_FIRST_CARDS = ["table-4", "table-5", "table-9"];
 function anyLiveCard(): boolean {
-  const cards = document.querySelectorAll(".card.outer-box:not(.mkt-past)");
-  for (const card of Array.from(cards)) {
-    const done = ["first_prize", "second_prize", "third_prize"].every((id) => {
+  for (const card of Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)"))) {
+    const prizes = ["first_prize", "second_prize", "third_prize"].every((id) => {
       const cell = card.querySelector('[data-id="' + id + '"]');
       return !!cell && /^\d{3,6}$/.test((cell.textContent || "").trim());
     });
-    if (!done) return true;
+    if (!prizes) return true;
+    if (!PRIZES_FIRST_CARDS.some((c) => card.classList.contains(c))) continue;
+    for (const prefix of ["special-", "consolation-"]) {
+      for (let i = 1; i <= 10; i++) {
+        const cell = card.querySelector('[data-id="' + prefix + i + '"]');
+        if (cell && !/^\d{3,4}$/.test((cell.textContent || "").trim())) return true;
+      }
+    }
   }
   return false;
 }

@@ -52,13 +52,28 @@ export default function LiveHighlight({ enabled }: { enabled: boolean }) {
      * settled result. It comes alive again when the next draw clears those
      * prize cells.
      */
+    /*
+     * Da Ma Cai and Cash Sweep publish the 1st/2nd/3rd prizes FIRST, before the
+     * specials and consolations. For those two a card is only finished when the
+     * whole grid is in; every other game finishes with its prizes.
+     */
+    const PRIZES_FIRST = ["table-4", "table-5", "table-9"];
     const settled = (el: Element): boolean => {
       const card = el.closest(".card.outer-box");
       if (!card) return false;
-      return ["first_prize", "second_prize", "third_prize"].every((id) => {
+      const prizes = ["first_prize", "second_prize", "third_prize"].every((id) => {
         const cell = card.querySelector('[data-id="' + id + '"]');
         return !!cell && /^\d{3,6}$/.test((cell.textContent || "").trim());
       });
+      if (!prizes) return false;
+      if (!PRIZES_FIRST.some((c) => card.classList.contains(c))) return true;
+      for (const prefix of ["special-", "consolation-"]) {
+        for (let i = 1; i <= 10; i++) {
+          const cell = card.querySelector('[data-id="' + prefix + i + '"]');
+          if (cell && !/^\d{3,4}$/.test((cell.textContent || "").trim())) return false;
+        }
+      }
+      return true;
     };
 
     const mark = (el: Element) => {
