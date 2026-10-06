@@ -110,6 +110,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // whether it is actually shown, and those are set for the app before paint.
   const [open, setOpen] = useState(() => initialOpen || isCapacitorApp());
   const [lucky, setLucky] = useState<string | null>(null);
+  const [specialDraw, setSpecialDraw] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
@@ -132,6 +133,16 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     const q = p.toString();
     window.history.replaceState(null, "", window.location.pathname + (q ? "?" + q : ""));
   }, []);
+  /*
+   * Special draw days: opening the app on one of these dates shows the same
+   * words the phone reminder carries. Every open that day, as agreed.
+   */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur" }).format(new Date());
+    if (today === "2026-10-27" || today === "2026-12-29") setSpecialDraw(true);
+  }, []);
+
   const lockRef = useRef<WakeLockSentinelLike | null>(null);
 
   const pathname = usePathname();
@@ -405,6 +416,19 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
               A short knock sounds as each number comes out during a live draw.
             </div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
+          </div>
+        </div>
+      ) : null}
+
+      {specialDraw ? (
+        <div
+          onClick={() => setSpecialDraw(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 26px", textAlign: "center", maxWidth: 320, width: "88%" }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: ACCENT }}>Special Draw Today 今天特别彩</div>
+            <div style={{ fontSize: 14, color: "#888", marginTop: 8 }}>记得查看今天的特别开彩成绩</div>
+            <button type="button" onClick={() => setSpecialDraw(false)} style={{ marginTop: 18, padding: "11px 22px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, fontWeight: 800, cursor: "pointer" }}>OK 好的</button>
           </div>
         </div>
       ) : null}

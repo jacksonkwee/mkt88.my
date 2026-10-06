@@ -75,7 +75,14 @@ function liveIds(): number[] {
   LIVE_GAMES.forEach((g, gi) => g.days.forEach((_, di) => ids.push(3000 + gi * 10 + di)));
   return ids;
 }
-const ALL_IDS = [...liveIds(), NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830];
+/** Two one-off special draws to remind everyone about. */
+const SPECIAL_DATES = [
+  { date: "2026-10-27", id: 1700 },
+  { date: "2026-12-29", id: 1710 },
+];
+const SPECIAL_TIMES: [number, number][] = [[12, 0], [15, 0], [18, 10]];
+const specialIds = () => SPECIAL_DATES.flatMap((d) => SPECIAL_TIMES.map((_, i) => d.id + i));
+const ALL_IDS = [...liveIds(), ...specialIds(), NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830];
 
 function LIVE_GAME_SCHEDULE(): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = [];
@@ -190,7 +197,9 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
            * the whole plan down again, once.
            */
           const plan =
-            "v2|" + LIVE_GAMES.map((g) => g.days.join("") + "@" + g.hour + ":" + g.minute).join("|");
+            // v3: the two special-draw reminders were added, so every phone
+            // lays its reminders down once more and picks them up.
+            "v3|" + LIVE_GAMES.map((g) => g.days.join("") + "@" + g.hour + ":" + g.minute).join("|");
           let remembered = "";
           try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
 
@@ -253,6 +262,19 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
                 extra: { lucky: secondLucky },
                 schedule: { on: { hour: 18, minute: 30 }, repeats: true, allowWhileIdle: true },
               },
+              // One-off special draws: 12pm, 3pm and 6:10pm on the date.
+              ...SPECIAL_DATES.flatMap((d) => {
+                const [y, mo, day] = d.date.split("-").map(Number);
+                return SPECIAL_TIMES.map(([h, mi], i) => ({
+                  id: d.id + i,
+                  title: "Special Draw Today 今天特别彩",
+                  body: "Special Draw Today 今天特别彩",
+                  largeBody: "Special Draw Today 今天特别彩",
+                  channelId: CHANNEL_ID,
+                  autoCancel: true,
+                  schedule: { on: { year: y, month: mo, day, hour: h, minute: mi }, allowWhileIdle: true },
+                }));
+              }),
               ...LIVE_GAME_SCHEDULE(),
             ],
           });
