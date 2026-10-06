@@ -390,6 +390,17 @@ function flash(card: Element) {
   setTimeout(() => card.classList.remove("live-flash"), 900);
 }
 
+/**
+ * The draw number last written to each card.
+ *
+ * HariHari (and any game with two draws in a day) publishes a second draw under
+ * the SAME date, so a date change alone cannot tell us a new draw has started -
+ * and without that, the cells the source has not revealed yet kept the previous
+ * draw's numbers, leaving a mixed board (reported 6 Oct 2026: special H showed
+ * 3503 from the past draw while the live one had 4921).
+ */
+const shownDrawNo = new WeakMap<Element, string>();
+
 function applySet(card: Element, s: PrizeSet) {
   if (!s || !s.prize || s.prize.length === 0) return;
   const hasAny = (arr?: string[]) => !!arr && arr.some((v) => !isDash(v));
@@ -404,7 +415,13 @@ function applySet(card: Element, s: PrizeSet) {
   // is what made a finished card flicker between today's and yesterday's result.
   const inDay = dateScore(s.date), curDay = dateScore(curDate);
   if (inDay && curDay && inDay < curDay) return;
-  const newDraw = !!s.date && s.date !== curDate;
+  const drawNoEl = card.querySelector('[data-id="draw_no"]');
+  const curDrawNo = ((drawNoEl ? drawNoEl.textContent : "") || "").trim() || shownDrawNo.get(card) || "";
+  if (s.drawNo) shownDrawNo.set(card, s.drawNo);
+  // A new draw is a new date OR a new draw number. Either way the cells the
+  // source has not revealed yet are written as "----" instead of keeping the
+  // previous draw's numbers.
+  const newDraw = (!!s.date && s.date !== curDate) || (!!s.drawNo && !!curDrawNo && s.drawNo !== curDrawNo);
   const stage = (el: Element | null, v: string | undefined, force = false) => {
     if (!el || v === undefined) return;
     const val = v.trim();
