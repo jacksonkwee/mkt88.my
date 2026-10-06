@@ -1147,6 +1147,19 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
        * for these games, so they are blanked here after every write.
        */
       if (cls === "table-13" || cls === "table-17") {
+        // The operator leaves the cells that became the 1st/2nd/3rd prizes empty
+        // and shows only their letter. The "never blank" rule above would
+        // otherwise keep the number sitting there (reported 6 Oct 2026: the 3rd
+        // prize 4940 was still shown in special cell A).
+        const prizeNums = ["first_prize", "second_prize", "third_prize"].map((id) => {
+          const el = card.querySelector('[data-id="' + id + '"]');
+          return el ? (el.textContent || "").trim() : "";
+        });
+        for (let i = 1; i <= 13; i++) {
+          const el = card.querySelector('[data-id="special-' + i + '"]');
+          const v = el ? (el.textContent || "").trim() : "";
+          if (el && /^\d{4}$/.test(v) && prizeNums.includes(v)) el.textContent = "----";
+        }
         for (const id of ["special-14", "special-15"]) {
           const el = card.querySelector('[data-id="' + id + '"]');
           if (el && (el.textContent || "").trim() !== "----") el.textContent = "----";
