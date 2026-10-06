@@ -596,7 +596,7 @@ const CONS_LETTERS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 
 /** Parse a hari4d.com JSON draw payload. */
 function hariSetFromJson(j: any): PrizeSet | null {
-  if (!j || !j.prize1) return null;
+  // A draw that exists but has published nothing yet still has to move the card\n  // on: requiring a 1st prize kept the previous draw on screen while the new one\n  // started (reported 6 Oct 2026). id 0 means there is no such draw yet.\n  if (!j || !(Number(j.id) > 0)) return null;
   const special = LETTERS.map((L) => String(j["prize" + L] ?? "----"));
   const cons = CONS_LETTERS.map((L) => String(j["prize" + L] ?? "----"));
   const iso = typeof j.drawDate === "string" ? j.drawDate.slice(0, 10) : undefined;
