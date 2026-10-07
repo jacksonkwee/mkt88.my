@@ -514,3 +514,28 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   padding: 0 1px !important;
   white-space: nowrap;
 }
+/* --- The four Cambodia cards: Grand Dragon, Perdana, HariHari, Nine Lotto ---
+   One font size for BOTH grids (the special row had been shrunk on its own, so
+   it looked different from the consolation row), and the letter sits in front
+   of the number as ordinary text - small enough that it neither covers the
+   number nor pushes the row outside the card. */
+.card.outer-box.table-13 td.lottery-number,
+.card.outer-box.table-15 td.lottery-number,
+.card.outer-box.table-16 td.lottery-number,
+.card.outer-box.table-17 td.lottery-number {
+  font-size: 0.82em !important;
+  padding: 0 2px !important;
+  white-space: nowrap;
+}
+.card.outer-box.table-13 td.lottery-number::before,
+.card.outer-box.table-15 td.lottery-number::before,
+.card.outer-box.table-16 td.lottery-number::before,
+.card.outer-box.table-17 td.lottery-number::before {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  font-size: 0.75em !important;
+  margin-right: 1px;
+  pointer-events: none;
+}
