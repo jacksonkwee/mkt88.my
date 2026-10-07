@@ -450,35 +450,21 @@ function applySet(card: Element, s: PrizeSet) {
    */
   const tables = [...card.querySelectorAll("table")];
   const prizeRows = tables[0] ? [...tables[0].querySelectorAll("tr")] : [];
-  (s.from || []).forEach((L, i) => {
-    const row = prizeRows[i];
-    const cell = row ? row.querySelector("td.lottery-prize-number") : null;
-    if (!cell) return;
-    const letter = (L || "").trim().toUpperCase();
-    const num = String(s.prize[i] ?? "").trim();
-    // The operator knows which special a prize came from before it prints the
-    // number. A letter with no number reads as a mistake, so it waits.
-    if (/^[A-W]$/.test(letter) && /^\d{3,6}$/.test(num)) cell.setAttribute("data-letter", letter);
-    else cell.removeAttribute("data-letter");
-  });
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
-    // The letter goes INTO the text, not behind it: "D 9330". CSS was tried
-    // three times and never showed, because the attribute was not there to draw.
     const cell = row ? row.querySelector("td.lottery-prize-number") : null;
-    const L = ((s.from || [])[i] || "").trim().toUpperCase();
-    let shown = v;
-    if (/^[A-W]$/.test(L) && /^\d{3,6}$/.test(String(v ?? "").trim())) {
-      shown = L + " " + String(v).trim();
-    } else if (cell && /^\d{3,6}$/.test(String(v ?? "").trim())) {
-      // This set carries no letters (it comes from our server, which cannot
-      // reach the operator's API). Keep the letter the phone already put there
-      // instead of overwriting it with the bare number every second - that was
-      // why the letter never stuck.
-      const seen = /^([A-W])\s+(\d{3,6})$/.exec((cell.textContent || "").trim());
-      if (seen && seen[2] === String(v).trim()) shown = seen[1] + " " + seen[2];
+    if (cell) {
+      // The letter goes on the cell, NOT into its text - the same way Grand
+      // Dragon has always drawn its 1st-3rd prize letters. Writing "D 9330"
+      // into the text instead broke the number-history tap and the
+      // newest-number flash, which both read the cell's digits.
+      const L = ((s.from || [])[i] || "").trim().toUpperCase();
+      // The operator knows which special a prize came from before it prints the
+      // number. A letter with no number reads as a mistake, so it waits.
+      if (/^[A-W]$/.test(L) && /^\d{3,6}$/.test(String(v ?? "").trim())) cell.setAttribute("data-letter", L);
+      else cell.removeAttribute("data-letter");
     }
-    stage(cell, shown, true);
+    stage(cell, v, true);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
   specialCells.slice(0, 13).forEach((cell, i) => {

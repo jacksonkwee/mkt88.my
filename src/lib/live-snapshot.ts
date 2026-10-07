@@ -5,7 +5,7 @@ import sgLiveCapture from "../../data/sg-live.json";
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
  * their HTML (no waiting for the browser to fetch anything).
  */
-export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
+export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string; from?: string[] };
 export type HariEntry = { set: PrizeSet | null; six: { main: string; subs: Record<string, string> } | null; jp: Record<string, string> | null } | null;
 export type SixEntry = { main: string; subs: Record<string, string>; date?: string } | null;
 export type Snapshot = {
@@ -366,6 +366,12 @@ function hariSet(j: any, iso: string): PrizeSet | null {
     cons: CONS.map((L) => String(j["prize" + L] ?? "----")),
     date: weekdayOf(realIso),
     drawNo: j.id != null && j.id !== 0 ? String(j.id) : undefined,
+    // The operator prints which special column each prize came from
+    // (prize1From="D"), and the cell that became a prize is left blank on the
+    // board - so this is the only way to know the letter. Without it the whole
+    // app showed a bare "9330" where the official board shows "D 9330"
+    // (reported repeatedly, 7 Oct 2026).
+    from: [j.prize1From, j.prize2From, j.prize3From].map((v) => String(v ?? "").trim()),
   };
 }
 
@@ -459,7 +465,15 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
     // so they only count as this draw's when they actually changed.
     const sameJp = !!previous && (today.jp.jp7_pool || "") === (previous.jp.jp7_pool || "")
       && (today.jp.jp7_grand || "") === (previous.jp.jp7_grand || "");
-    const jp = (sameDraw || sameJp) ? null : (Object.keys(draw.jp).length ? draw.jp : null);
+    /*
+     * When both pages still match, the whole card IS the previous draw (it
+     * carries that draw's own date), so its jackpot belongs with it - blanking
+     * it there is what left 6+1D JP Pool and 6+1D Grand Prize stuck on "----"
+     * for every finished draw whenever today's page repeated yesterday's
+     * (reported 6 and 7 Oct 2026). The jackpot is only held back while a NEW
+     * draw is already showing (pages differ) but its jackpot has not settled.
+     */
+    const jp = (!sameDraw && sameJp) ? null : (Object.keys(draw.jp).length ? draw.jp : null);
     return { six, jp };
   } catch { return { six: null, jp: null }; }
 }

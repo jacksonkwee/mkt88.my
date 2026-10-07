@@ -133,7 +133,23 @@ const BOOT_SCRIPT = `
     }
     var tables = card.querySelectorAll("table");
     var rows = tables[0] ? tables[0].querySelectorAll("tr") : [];
-    (set.prize || []).forEach(function(v, i){ var row = rows[i]; if(!row) return; put(row.querySelector("td.lottery-prize-number"), v); });
+    (set.prize || []).forEach(function(v, i){
+      var row = rows[i]; if(!row) return;
+      var td = row.querySelector("td.lottery-prize-number");
+      // Which special column the prize came from, drawn by CSS in front of the
+      // number - the cell's text stays the plain number (same as Grand Dragon).
+      if(td){
+        var L = String(((set.from||[])[i])||"").trim().toUpperCase();
+        // No backslash escapes here: this script lives inside a template
+        // literal, which eats "\d" and left a regex that matched nothing - so
+        // every prize cell had its letter removed again (found 7 Oct 2026).
+        var num = String(v||"").trim();
+        var isNumber = num.length >= 3 && num.length <= 6 && !/[^0-9]/.test(num);
+        if(/^[A-W]$/.test(L) && isNumber) td.setAttribute("data-letter", L);
+        else td.removeAttribute("data-letter");
+      }
+      put(td, v);
+    });
     if(tables[1]){ var sp = tables[1].querySelectorAll("td.lottery-number"); (set.special || []).forEach(function(v, i){ if(sp[i]) put(sp[i], v); }); }
     if(tables[2]){ var cn = tables[2].querySelectorAll("td.lottery-number"); (set.cons || []).forEach(function(v, i){ if(cn[i]) put(cn[i], v); }); }
     if(set.date) txt(card.querySelector('[data-id="date"]'), set.date);
