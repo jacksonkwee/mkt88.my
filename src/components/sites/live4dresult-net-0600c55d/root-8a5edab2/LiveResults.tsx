@@ -1167,7 +1167,15 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
         // letting those overwrite good numbers made the cards rewrite (and
         // flash) on every single refresh.
         if (!v || v === "-") continue;
-        if (/^----+$/.test(v) && !newDraw) continue;   // keep good numbers unless the draw changed
+        /*
+         * Magnum is taken exactly as the snapshot has it, blanks included. It
+         * is the only game with no second writer on the phone - the operator's
+         * feed and both mirrors are already merged into that one snapshot
+         * server-side - so refusing its blanks only ever kept a value the
+         * snapshot had deliberately cleared: a prize number left in the special
+         * row, or the mirror's spare 14th slot, stayed on the card for good.
+         */
+        if (/^----+$/.test(v) && !newDraw && cls !== "table-1") continue;   // keep good numbers unless the draw changed
         setText(cellFor(card, id), v);
       }
       /*
@@ -1177,7 +1185,15 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
        * twice (reported 3 Oct 2026). Those slots can never hold a real number
        * for these games, so they are blanked here after every write.
        */
-      if (cls === "table-13" || cls === "table-17") {
+      /*
+       * Magnum is in this group for the same reason. It also publishes thirteen
+       * specials into a fifteen-cell grid, and the mirror's Magnum board comes
+       * through one cell short near the end - so the 13th number appeared in
+       * cell 14 as well, and the three numbers drawn as the top prizes were
+       * left sitting in the special row beside them, because the "never blank"
+       * rule above refused the operator's empty cells (reported 7 Oct 2026).
+       */
+      if (cls === "table-1" || cls === "table-13" || cls === "table-17") {
         // The operator leaves the cells that became the 1st/2nd/3rd prizes empty
         // and shows only their letter. The "never blank" rule above would
         // otherwise keep the number sitting there (reported 6 Oct 2026: the 3rd

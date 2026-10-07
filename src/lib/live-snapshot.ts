@@ -941,7 +941,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * Slots 14 and 15 hold no real number for this game, so they are forced blank
    * every build - the cause, rather than deleting the duplicate each time.
    */
-  for (const cls of ["table-6", "table-13", "table-17"]) {
+  /*
+   * Magnum belongs in this list too: it publishes thirteen special numbers into
+   * a fifteen-cell grid just like the others. The mirror's Magnum board comes
+   * through one cell short near the end, so the 13th number landed in slot 14
+   * and showed as 9869 in cell 14 with cell 13 holding 8446 (reported 7 Oct
+   * 2026). Slot 14 and 15 can never hold a Magnum number, so they are forced
+   * blank every build.
+   */
+  for (const cls of ["table-1", "table-6", "table-13", "table-17"]) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     c["special-14"] = "----";
