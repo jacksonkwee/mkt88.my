@@ -427,10 +427,21 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 /* Letters in front of the numbers, as the operators print them: the prize rows
    show the special each prize came from, and the Special column is labelled
    A to M. Drawn here so the cell's own text stays just the number. */
+.card.outer-box [data-letter] { position: relative; }
+/* The letter sits at the edge of the cell instead of in front of the number, so
+   it adds no width. In front it pushed the five-cell special row outside the
+   card on the narrow desktop columns. */
 .card.outer-box [data-letter]::before {
-  content: attr(data-letter) " ";
+  content: attr(data-letter);
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
   color: #8a8f98;
   font-weight: 700;
+  font-size: 0.72em;
+  line-height: 1;
+  pointer-events: none;
 }
 
 /*
