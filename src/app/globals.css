@@ -539,3 +539,18 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   margin-right: 1px;
   pointer-events: none;
 }
+/* The prize cells too: the letter sits in front of the number as text, not
+   behind it. The last change only covered the special and consolation grids,
+   which is why the Lucky 1st-3rd prize letters went missing. */
+.card.outer-box.table-13 td.lottery-prize-number::before,
+.card.outer-box.table-15 td.lottery-prize-number::before,
+.card.outer-box.table-16 td.lottery-prize-number::before,
+.card.outer-box.table-17 td.lottery-prize-number::before {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  font-size: 0.8em !important;
+  margin-right: 3px;
+  pointer-events: none;
+}
