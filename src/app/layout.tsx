@@ -204,9 +204,26 @@ const BOOT_SCRIPT = `
   // Watch the 6D sub-prize cells: whatever writes them (React re-render or a
   // source that has no value), the current number is restored immediately.
   var sixObs = null;
+  /**
+   * The Grand Dragon 6+1D rows belong to this group too.
+   *
+   * React renders those two cells from the snapshot baked into the page, and on
+   * a page whose snapshot was built while gdlotto was slow that is the "----"
+   * placeholder - so the good value the writer had just put there was replaced
+   * again and the pool and grand prize never showed on the website (reported
+   * 6 and 7 Oct 2026). Same guard as the 6D rows: whatever React draws, the
+   * real value is restored.
+   */
+  var JP7_IDS = ["jp7_pool", "jp7_grand"];
+  var GUARDED = '[data-id^="six_"],[data-id="jp7_pool"],[data-id="jp7_grand"]';
   function sixWant(el){
     if(!el || !el.getAttribute) return null;
     var id = el.getAttribute("data-id") || "";
+    if(JP7_IDS.indexOf(id) >= 0){
+      if(!snap || !snap.gdjp7) return null;
+      var v7 = snap.gdjp7[id];
+      return v7 && !/^----+$/.test(String(v7).trim()) ? String(v7) : null;
+    }
     if(!/^six_/.test(id)) return null;
     var card = el.closest ? el.closest(".card") : null;
     var cid = card && card.id ? card.id : "";
@@ -228,7 +245,7 @@ const BOOT_SCRIPT = `
     if(!sixObs) sixObs = new MutationObserver(function(muts){
       for(var i=0;i<muts.length;i++){ var n = muts[i].target; if(n && n.nodeType === 3) n = n.parentNode; fixSix(n); }
     });
-    var cells = document.querySelectorAll('[data-id^="six_"]');
+    var cells = document.querySelectorAll(GUARDED);
     for(var i=0;i<cells.length;i++){
       if(cells[i].getAttribute("data-mkt-watch")) continue;
       cells[i].setAttribute("data-mkt-watch", "1");
@@ -241,7 +258,7 @@ const BOOT_SCRIPT = `
     if(snap && snap.cards) applyCards(snap.cards);
     applyCambodia(snap);
     watchSix();
-    var sixCells = document.querySelectorAll('[data-id^="six_"]');
+    var sixCells = document.querySelectorAll(GUARDED);
     for(var si=0;si<sixCells.length;si++) fixSix(sixCells[si]);
     // No event dispatch here: it made React re-render (and re-insert the stale
     // markup) in a loop. React gets its values from the server snapshot; the
