@@ -496,3 +496,21 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   line-height: 1;
   pointer-events: none;
 }
+/* Letter and number share one narrow cell, so neither may cover the other: the
+   letter goes back in front and both are drawn small enough to fit inside the
+   cell - the earlier absolute positioning let the number sit over the letter. */
+.card.outer-box.table-13 [data-id^="special-"]::before,
+.card.outer-box.table-17 [data-id^="special-"]::before {
+  position: static;
+  transform: none;
+  left: auto;
+  top: auto;
+  font-size: 0.62em;
+  margin-right: 1px;
+}
+.card.outer-box.table-13 [data-id^="special-"],
+.card.outer-box.table-17 [data-id^="special-"] {
+  font-size: 0.8em;
+  padding: 0 1px !important;
+  white-space: nowrap;
+}
