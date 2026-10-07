@@ -582,3 +582,28 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   font-weight: 700 !important;
   pointer-events: none;
 }
+/* The consolation row is the reference size. An earlier rule shrunk every
+   lottery-number cell, so the consolations came out smaller than the specials -
+   both grids are pinned to 1em here. */
+.card.outer-box.table-13 table:nth-of-type(3) td.lottery-number,
+.card.outer-box.table-15 table:nth-of-type(3) td.lottery-number,
+.card.outer-box.table-16 table:nth-of-type(3) td.lottery-number,
+.card.outer-box.table-17 table:nth-of-type(3) td.lottery-number {
+  font-size: 1em !important;
+  padding: 0 2px !important;
+}
+
+/* The prize letter draws nothing unless its content is set on this rule too -
+   the general rule was being overridden on those cells. */
+.card.outer-box.table-13 td.lottery-prize-number::before,
+.card.outer-box.table-15 td.lottery-prize-number::before,
+.card.outer-box.table-16 td.lottery-prize-number::before,
+.card.outer-box.table-17 td.lottery-prize-number::before {
+  content: attr(data-letter) !important;
+  position: static !important;
+  transform: none !important;
+  font-size: 0.8em !important;
+  margin-right: 3px;
+  color: #8a8f98 !important;
+  font-weight: 700 !important;
+}
