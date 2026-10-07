@@ -463,7 +463,11 @@ function applySet(card: Element, s: PrizeSet) {
   });
   s.prize.forEach((v, i) => {
     const row = prizeRows[i];
-    stage(row ? row.querySelector("td.lottery-prize-number") : null, v, true);
+    // The letter goes INTO the text, not behind it: "D 9330". CSS was tried
+    // three times and never showed, because the attribute was not there to draw.
+    const L = ((s.from || [])[i] || "").trim().toUpperCase();
+    const shown = /^[A-W]$/.test(L) && /^\d{3,6}$/.test(String(v ?? "").trim()) ? L + " " + String(v).trim() : v;
+    stage(row ? row.querySelector("td.lottery-prize-number") : null, shown, true);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
   specialCells.slice(0, 13).forEach((cell, i) => {

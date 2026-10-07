@@ -639,3 +639,6 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 .card.outer-box.table-15 td.lottery-prize-number::before {
   margin-right: 4px !important;
 }
+/* The prize letter is now part of the number's own text ("D 9330"), so the CSS
+   copy of it must not draw a second one. */
+.card.outer-box td.lottery-prize-number::before { content: none !important; }
