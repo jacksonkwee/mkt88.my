@@ -465,4 +465,6 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 /* The Lucky HariHari 6D JP card shows nothing but two empty rows ("Jackpot
    Pool" and "Jackpot No."), on both the 3:30pm and 7:30pm cards, so it is
    hidden. */
-.card.outer-box.six-jp { display: none !important; }
+/* Only the Lucky HariHari jackpot cards - Grand Dragon and Nine Lotto keep
+   theirs. Targeted by card id so nothing else can be caught. */
+[id^="table-15-"][id$="-6d-jp"] { display: none !important; }
