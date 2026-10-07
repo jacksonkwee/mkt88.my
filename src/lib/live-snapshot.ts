@@ -637,7 +637,19 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
     const C = Array.from({ length: 10 }, (_, i) => val(r["C" + String(i + 1).padStart(2, "0")]));
     const LETTERS = "ABCDEFGHIJKLM";
     const pick = (v: unknown) => {
-      const i = LETTERS.indexOf(String(v || "").trim().toUpperCase());
+      /*
+       * A blank letter must mean "not drawn yet", and it did not.
+       *
+       * T1/T2/T3 stay blank for the whole draw - the three top prizes are only
+       * named at the very end - and "ABCDEFGHIJKLM".indexOf("") is 0, not -1,
+       * because an empty string matches at position 0. So every blank letter
+       * was read as "A", and S01 was stamped into the 1st, 2nd AND 3rd prize
+       * rows for the last twenty minutes of every draw (reported repeatedly:
+       * "the same number three times on 1st, 2nd and 3rd"). Only a real A-M
+       * may index the grid.
+       */
+      const letter = String(v ?? "").trim().toUpperCase();
+      const i = /^[A-M]$/.test(letter) ? LETTERS.indexOf(letter) : -1;
       return { num: i >= 0 ? S[i] : "----", idx: i };
     };
     const p1 = pick(r.T1), p2 = pick(r.T2), p3 = pick(r.T3);
@@ -843,9 +855,34 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const base = (cards["table-1"] || {}) as Record<string, string>;
     const merged: Record<string, string> = { ...base };
     for (const [k, v] of Object.entries(magnumToday)) {
+      /*
+       * The three prizes are taken exactly as the operator publishes them,
+       * blanks included. They stay blank until the end of the draw, and the
+       * "never blank" rule below otherwise keeps a wrong value on the card for
+       * the rest of the evening - which is how S01 sat on the 1st, 2nd and 3rd
+       * lines long after the operator's board had them empty (7 Oct 2026).
+       */
+      if (k === "first_prize" || k === "second_prize" || k === "third_prize") { merged[k] = v; continue; }
       const cur = merged[k];
       if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
       merged[k] = v;
+    }
+    /*
+     * The three prizes ARE three of the thirteen special numbers, and the
+     * operator blanks those three positions on its own board. The mirror can
+     * still be showing the number there, and the same "never blank" rule then
+     * leaves it in the grid as well - the "same number twice" report. The cell
+     * holding a prize is the cell that prize was drawn from, so it is cleared;
+     * only the first match per prize, so a genuinely repeated special is never
+     * thrown away.
+     */
+    for (const k of ["first_prize", "second_prize", "third_prize"]) {
+      const won = (merged[k] || "").trim();
+      if (!/^\d{4}$/.test(won)) continue;
+      for (let i = 1; i <= 13; i++) {
+        const cell = "special-" + i;
+        if ((merged[cell] || "").trim() === won) { merged[cell] = "----"; break; }
+      }
     }
     cards["table-1"] = merged;
   }
