@@ -607,3 +607,35 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   color: #8a8f98 !important;
   font-weight: 700 !important;
 }
+/* --- Lucky HariHari prize letters -------------------------------------------
+   Grand Dragon's prize letters come from a data-letter attribute drawn by CSS.
+   The Lucky prize cells answered to neither selector used so far, so the letter
+   is drawn from the first table of the card whatever class its cells carry. */
+.card.outer-box.table-15 table:nth-of-type(1) td::before {
+  content: attr(data-letter) !important;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  margin-right: 4px !important;
+  font-size: 0.8em !important;
+  color: #8a8f98 !important;
+  font-weight: 700 !important;
+  pointer-events: none;
+}
+
+/* A clear space between the letter and its number on the four Cambodia cards:
+   some letters were sitting right against the number. */
+.card.outer-box.table-13 table:nth-of-type(2) td.lottery-number::before,
+.card.outer-box.table-15 table:nth-of-type(2) td.lottery-number::before,
+.card.outer-box.table-16 table:nth-of-type(2) td.lottery-number::before,
+.card.outer-box.table-17 table:nth-of-type(2) td.lottery-number::before {
+  margin-right: 4px !important;
+  left: 2px !important;
+}
+.card.outer-box.table-13 td.lottery-prize-number::before,
+.card.outer-box.table-16 td.lottery-prize-number::before,
+.card.outer-box.table-17 td.lottery-prize-number::before,
+.card.outer-box.table-15 td.lottery-prize-number::before {
+  margin-right: 4px !important;
+}
