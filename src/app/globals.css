@@ -554,3 +554,31 @@ body.mkt-in-app .card td > a:has(> .anchor) {
   margin-right: 3px;
   pointer-events: none;
 }
+/* --- Special column on the four Cambodia cards -------------------------------
+   The number is centred at the SAME size as the consolation row, and only the
+   letter is smaller - pinned to the left of the cell so it does not affect the
+   number's position. (2nd table = the special grid, 3rd = consolations.) */
+.card.outer-box.table-13 table:nth-of-type(2) td.lottery-number,
+.card.outer-box.table-15 table:nth-of-type(2) td.lottery-number,
+.card.outer-box.table-16 table:nth-of-type(2) td.lottery-number,
+.card.outer-box.table-17 table:nth-of-type(2) td.lottery-number {
+  position: relative !important;
+  font-size: 1em !important;
+  text-align: center !important;
+  padding: 0 2px !important;
+  white-space: nowrap;
+}
+.card.outer-box.table-13 table:nth-of-type(2) td.lottery-number::before,
+.card.outer-box.table-15 table:nth-of-type(2) td.lottery-number::before,
+.card.outer-box.table-16 table:nth-of-type(2) td.lottery-number::before,
+.card.outer-box.table-17 table:nth-of-type(2) td.lottery-number::before {
+  position: absolute !important;
+  left: 3px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  font-size: 0.72em !important;
+  margin: 0 !important;
+  color: #8a8f98 !important;
+  font-weight: 700 !important;
+  pointer-events: none;
+}
