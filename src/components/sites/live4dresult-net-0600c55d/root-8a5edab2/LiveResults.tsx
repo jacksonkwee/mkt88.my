@@ -465,9 +465,20 @@ function applySet(card: Element, s: PrizeSet) {
     const row = prizeRows[i];
     // The letter goes INTO the text, not behind it: "D 9330". CSS was tried
     // three times and never showed, because the attribute was not there to draw.
+    const cell = row ? row.querySelector("td.lottery-prize-number") : null;
     const L = ((s.from || [])[i] || "").trim().toUpperCase();
-    const shown = /^[A-W]$/.test(L) && /^\d{3,6}$/.test(String(v ?? "").trim()) ? L + " " + String(v).trim() : v;
-    stage(row ? row.querySelector("td.lottery-prize-number") : null, shown, true);
+    let shown = v;
+    if (/^[A-W]$/.test(L) && /^\d{3,6}$/.test(String(v ?? "").trim())) {
+      shown = L + " " + String(v).trim();
+    } else if (cell && /^\d{3,6}$/.test(String(v ?? "").trim())) {
+      // This set carries no letters (it comes from our server, which cannot
+      // reach the operator's API). Keep the letter the phone already put there
+      // instead of overwriting it with the bare number every second - that was
+      // why the letter never stuck.
+      const seen = /^([A-W])\s+(\d{3,6})$/.exec((cell.textContent || "").trim());
+      if (seen && seen[2] === String(v).trim()) shown = seen[1] + " " + seen[2];
+    }
+    stage(cell, shown, true);
   });
   const specialCells = tables[1] ? [...tables[1].querySelectorAll("td.lottery-number")] : [];
   specialCells.slice(0, 13).forEach((cell, i) => {
