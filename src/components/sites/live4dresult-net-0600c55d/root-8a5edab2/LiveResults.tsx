@@ -279,6 +279,21 @@ function cellFor(card: Element, id: string): Element | null {
  */
 const MIRROR_ONLY_CLASSES = ["table-2", "table-3", "table-6", "table-7", "table-13"];
 
+/**
+ * How many special numbers each game really publishes.
+ *
+ * The cards all carry fifteen slots, but most games use fewer, and a slot past
+ * the end of the grid is not a result - it is a leftover the mirror sweep keeps
+ * writing back. Sandakan's last three numbers appeared a second time in cells
+ * 11 to 13, and Da Ma Cai's tenth again in cell 11 (reported 7 Oct 2026). Kept
+ * in step with SPECIAL_SLOTS in lib/live-snapshot.ts.
+ */
+const SPECIAL_SLOTS: Record<string, number> = {
+  "table-1": 13, "table-4": 10, "table-5": 10, "table-6": 13,
+  "table-8": 10, "table-9": 10, "table-10": 13, "table-11": 10,
+  "table-13": 13, "table-17": 13,
+};
+
 function cleanGrid(card: Element): void {
   for (const [prefix, count] of [["special-", 15], ["consolation-", 10]] as [string, number][]) {
     const seen = new Set<string>();
@@ -1207,8 +1222,14 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
           const v = el ? (el.textContent || "").trim() : "";
           if (el && /^\d{4}$/.test(v) && prizeNums.includes(v)) el.textContent = "----";
         }
-        for (const id of ["special-14", "special-15"]) {
-          const el = card.querySelector('[data-id="' + id + '"]');
+      }
+      // Slots past the end of this game's grid are never a result: see
+      // SPECIAL_SLOTS. Checked for every card, so a leftover the mirror sweep
+      // writes back is cleared on the next pass instead of staying all evening.
+      const used = SPECIAL_SLOTS[cls];
+      if (used) {
+        for (let i = used + 1; i <= 15; i++) {
+          const el = card.querySelector('[data-id="special-' + i + '"]');
           if (el && (el.textContent || "").trim() !== "----") el.textContent = "----";
         }
       }

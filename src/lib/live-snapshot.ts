@@ -685,7 +685,18 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
     if (!html) return null;
     const m = /window\.SABAH88_INITIAL\s*=\s*([\s\S]*?);?\s*<\/script>/.exec(html);
     if (!m) return null;
-    const draw = (JSON.parse(m[1].replace(/;\s*$/, "")) as { draw?: Record<string, unknown> }).draw;
+    /*
+     * The operator now appends a second statement to that script -
+     * "...;"stale":false};window.SABAH88_DATE=null" - and JSON.parse threw on
+     * the trailing text, so this whole feed was being discarded and Sabah 88
+     * fell back to the mirror (found 7 Oct 2026, which is why its numbers were
+     * the slowest of the eleven). Take the object and stop at the next
+     * statement.
+     */
+    const body = m[1];
+    const cut = body.indexOf(";window.");
+    const json = cut >= 0 ? body.slice(0, cut) : body.replace(/;\s*$/, "");
+    const draw = (JSON.parse(json) as { draw?: Record<string, unknown> }).draw;
     if (!draw) return null;
     const val = (v: unknown): string => {
       const s = v == null ? "" : String(v).trim();
@@ -942,18 +953,25 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * every build - the cause, rather than deleting the duplicate each time.
    */
   /*
-   * Magnum belongs in this list too: it publishes thirteen special numbers into
-   * a fifteen-cell grid just like the others. The mirror's Magnum board comes
-   * through one cell short near the end, so the 13th number landed in slot 14
-   * and showed as 9869 in cell 14 with cell 13 holding 8446 (reported 7 Oct
-   * 2026). Slot 14 and 15 can never hold a Magnum number, so they are forced
-   * blank every build.
+   * Every card carries fifteen special slots, but most games publish fewer.
+   * A slot past the end of the game's grid is not a result - it is whatever the
+   * mirror left behind, kept there for ever by the "never blank a known number"
+   * rule. That is what showed Sandakan's last three numbers a second time in
+   * cells 11 to 13, and Da Ma Cai's tenth number again in cell 11 (reported
+   * 7 Oct 2026). The counts below are each game's own published grid, checked
+   * against the operator: Magnum 13, Sports Toto 13, Sabah 88 13, Grand Dragon
+   * 13, Nine Lotto 13, and ten for Da Ma Cai (both draws), Sandakan, Cash Sweep
+   * and Singapore.
    */
-  for (const cls of ["table-1", "table-6", "table-13", "table-17"]) {
+  const SPECIAL_SLOTS: Record<string, number> = {
+    "table-1": 13, "table-4": 10, "table-5": 10, "table-6": 13,
+    "table-8": 10, "table-9": 10, "table-10": 13, "table-11": 10,
+    "table-13": 13, "table-17": 13,
+  };
+  for (const [cls, used] of Object.entries(SPECIAL_SLOTS)) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
-    c["special-14"] = "----";
-    c["special-15"] = "----";
+    for (let i = used + 1; i <= 15; i++) c["special-" + i] = "----";
   }
   // Singapore sources can arrive out of order. Use the newest dated result and
   // merge same-date fields so an older archive never overwrites a live draw.
