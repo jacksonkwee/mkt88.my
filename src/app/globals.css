@@ -479,3 +479,20 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 /* Only the Lucky HariHari jackpot cards - Grand Dragon and Nine Lotto keep
    theirs. Targeted by card id so nothing else can be caught. */
 [id^="table-15-"][id$="-6d-jp"] { display: none !important; }
+
+/* Grand Dragon and Nine Lotto have their own hard-coded A-M labels, so they did
+   not pick up the rule above: those labels were still drawn in front of the
+   number and pushed the five-cell row outside the card. Positioned at the cell
+   edge here, which takes no width. */
+.card.outer-box.table-13 [data-id^="special-"],
+.card.outer-box.table-17 [data-id^="special-"] { position: relative; }
+.card.outer-box.table-13 [data-id^="special-"]::before,
+.card.outer-box.table-17 [data-id^="special-"]::before {
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.72em;
+  line-height: 1;
+  pointer-events: none;
+}
