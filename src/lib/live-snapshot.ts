@@ -867,23 +867,6 @@ export async function buildSnapshot(): Promise<Snapshot> {
       if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
       merged[k] = v;
     }
-    /*
-     * The three prizes ARE three of the thirteen special numbers, and the
-     * operator blanks those three positions on its own board. The mirror can
-     * still be showing the number there, and the same "never blank" rule then
-     * leaves it in the grid as well - the "same number twice" report. The cell
-     * holding a prize is the cell that prize was drawn from, so it is cleared;
-     * only the first match per prize, so a genuinely repeated special is never
-     * thrown away.
-     */
-    for (const k of ["first_prize", "second_prize", "third_prize"]) {
-      const won = (merged[k] || "").trim();
-      if (!/^\d{4}$/.test(won)) continue;
-      for (let i = 1; i <= 13; i++) {
-        const cell = "special-" + i;
-        if ((merged[cell] || "").trim() === won) { merged[cell] = "----"; break; }
-      }
-    }
     cards["table-1"] = merged;
   }
   /*
@@ -1295,6 +1278,33 @@ export async function buildSnapshot(): Promise<Snapshot> {
         const v = c[k];
         if (!v || /^----+$/.test(v)) continue;
         if (!/^\d{3,4}$/.test(v.trim())) c[k] = "----";
+      }
+    }
+  }
+
+  /*
+   * Magnum draws its 1st, 2nd and 3rd prizes OUT of the thirteen special
+   * numbers, and the operator's own board leaves those three positions empty.
+   * The mirror can still show the number sitting in the grid beside the prize -
+   * the "same number twice" report - and so does the card whenever Magnum's own
+   * (4-second, no-retry) feed happens to be slow, because the blank the feed
+   * sends is refused by the "never blank a known number" rule.
+   *
+   * So the rule is applied to the finished card instead, whichever source
+   * supplied the numbers: a special cell holding one of the three prizes IS the
+   * cell that prize was drawn from and is cleared. Only the first match per
+   * prize, so a genuinely repeated special is never thrown away.
+   */
+  {
+    const c = cards["table-1"] as Record<string, string> | undefined;
+    if (c) {
+      for (const k of ["first_prize", "second_prize", "third_prize"]) {
+        const won = (c[k] || "").trim();
+        if (!/^\d{4}$/.test(won)) continue;
+        for (let i = 1; i <= 13; i++) {
+          const cell = "special-" + i;
+          if ((c[cell] || "").trim() === won) { c[cell] = "----"; break; }
+        }
       }
     }
   }
