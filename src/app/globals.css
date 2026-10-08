@@ -519,11 +519,31 @@ body.mkt-in-app .card td > a:has(> .anchor) {
    it looked different from the consolation row), and the letter sits in front
    of the number as ordinary text - small enough that it neither covers the
    number nor pushes the row outside the card. */
+.card.outer-box.table-13,
+.card.outer-box.table-15,
+.card.outer-box.table-16,
+.card.outer-box.table-17 {
+  /*
+   * One explicit size for these cards' Special and Consolation numbers.
+   *
+   * These four cards were sized in em, so they inherited whatever the device's
+   * base text size happened to be - 16px in most browsers - while every other
+   * game's numbers carry a fixed 22px from the theme. On a wider phone that
+   * left Grand Dragon, Nine Lotto, Perdana and Lucky HariHari looking
+   * noticeably smaller than the rest; on a narrow one the two sizes nearly
+   * matched, which is why only some phones showed it (reported 8 Oct 2026).
+   * A px value here is the same size on every phone. Measured before the fix:
+   * the other games render 22px, these four rendered 16px.
+   *
+   * The narrow-phone size is set again in the max-width:380px block below.
+   */
+  --mkt-cambodia-number: 22px;
+}
 .card.outer-box.table-13 td.lottery-number,
 .card.outer-box.table-15 td.lottery-number,
 .card.outer-box.table-16 td.lottery-number,
 .card.outer-box.table-17 td.lottery-number {
-  font-size: 0.82em !important;
+  font-size: var(--mkt-cambodia-number) !important;
   padding: 0 2px !important;
   white-space: nowrap;
 }
@@ -563,7 +583,7 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 .card.outer-box.table-16 table:nth-of-type(2) td.lottery-number,
 .card.outer-box.table-17 table:nth-of-type(2) td.lottery-number {
   position: relative !important;
-  font-size: 1em !important;
+  font-size: var(--mkt-cambodia-number) !important;
   text-align: center !important;
   padding: 0 2px !important;
   white-space: nowrap;
@@ -584,12 +604,12 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 }
 /* The consolation row is the reference size. An earlier rule shrunk every
    lottery-number cell, so the consolations came out smaller than the specials -
-   both grids are pinned to 1em here. */
+   both grids carry the same explicit size here. */
 .card.outer-box.table-13 table:nth-of-type(3) td.lottery-number,
 .card.outer-box.table-15 table:nth-of-type(3) td.lottery-number,
 .card.outer-box.table-16 table:nth-of-type(3) td.lottery-number,
 .card.outer-box.table-17 table:nth-of-type(3) td.lottery-number {
-  font-size: 1em !important;
+  font-size: var(--mkt-cambodia-number) !important;
   padding: 0 2px !important;
 }
 
@@ -642,3 +662,19 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 /* The prize letter is now part of the number's own text ("D 9330"), so the CSS
    copy of it must not draw a second one. */
 .card.outer-box td.lottery-prize-number::before { content: none !important; }
+
+/* ------------------------------------------------------------------ *
+ * Narrow phones: the four Cambodia cards keep the same size as the rest
+ * ------------------------------------------------------------------ *
+ * They carry an explicit px size, so the general 17px narrow-phone rule
+ * cannot reach them. This block is last so it wins on source order; put the
+ * override any earlier and the 22px rule below it would take it back.
+ */
+@media (max-width: 380px) {
+  .card.outer-box.table-13,
+  .card.outer-box.table-15,
+  .card.outer-box.table-16,
+  .card.outer-box.table-17 {
+    --mkt-cambodia-number: 17px;
+  }
+}
