@@ -1183,6 +1183,30 @@ export async function buildSnapshot(): Promise<Snapshot> {
   }
 
   /*
+   * 9lotto.com's board is the truth for Nine Lotto, INCLUDING its blanks.
+   *
+   * The official values are merged into the card further up, but the cache
+   * pass above runs after that, and its "a blank never replaces a known
+   * number" rule puts the three prize numbers straight back into the special
+   * grid. The operator blanks the three positions its prizes were drawn
+   * from, so the card then disagreed with the operator and the two fought
+   * each other - reported 08-10-2026 as the Nine Lotto special column
+   * flickering between the right and the wrong value.
+   *
+   * Re-applied here, after the cache pass, and only when the official board
+   * is for the SAME draw the card is already showing. If the operator is
+   * still serving yesterday's page while today's draw is on the card, the
+   * cache pass is right to keep today's, so that case is left alone.
+   */
+  {
+    const off = nineOfficial.four;
+    const c = cards["table-17"] as Record<string, string> | undefined;
+    if (off && c && dayScore(off.date) && dayScore(off.date) === dayScore(c.date)) {
+      cards["table-17"] = { ...c, ...off };
+    }
+  }
+
+  /*
    * Magnum, Grand Dragon and Nine Lotto draw their 1st/2nd/3rd prizes OUT of
    * their special numbers, so the operator blanks those three positions on its
    * own board. If any writer leaves the winning number in the grid as well, the
