@@ -896,9 +896,20 @@ function liveJackpotLetter(cardId: string, jp4: Record<string, string>): Record<
   // "M: 6210" / "M 6210" / "M6210" all reduce to the four digits.
   const num = raw.replace(/^[A-Za-z]\s*:?\s*/, "").replace(/[^0-9]/g, "").slice(0, 4);
   if (!/^\d{4}$/.test(num)) {
-    // A letter on its own is the next one in the sequence, worked out from
-    // yesterday's draw - not a stale number - so it is allowed through.
-    if (/^[A-M]$/i.test(String(raw).trim())) return jp4;
+    /*
+     * A letter with no number yet is the CURRENT draw's jackpot letter, not a
+     * stale value.
+     *
+     * The operator publishes the letter the moment the draw opens and attaches
+     * the winning number afterwards. While it is pending it writes "F :", not a
+     * bare "F". The old test asked whether the whole value was exactly one
+     * letter, so "F :" failed it, fell through, and the letter was blanked to
+     * "----" for the whole live window - it only appeared once the number
+     * arrived, which is why the row looked empty all evening (reported 8 Oct
+     * 2026: yesterday was E, the operator had F, the app showed "----").
+     */
+    const bare = /^\s*([A-M])\s*:?\s*$/i.exec(String(raw));
+    if (bare) return { ...jp4, jp4_letter: bare[1].toUpperCase() };
     return { ...jp4, jp4_letter: "----" };
   }
   const card = document.getElementById(cardId);
