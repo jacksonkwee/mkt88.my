@@ -29,52 +29,20 @@ function luckyNumber(): string {
   return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
 }
 
-/**
- * Live-result notifications, one per game, fired by Android itself - so the
- * phone sounds and vibrates even when the screen is locked or the app is
- * closed. A web page cannot do that; only the native alarm can.
- *
- * Times are Malaysia time and follow each operator's draw days:
- *   Wed / Sat / Sun - the Malaysia 4D games and Sports Toto
- *                     (no Monday draw for any of them)
- *   every day       - Grand Dragon, Nine Lotto, Perdana, Lucky HariHari
- * 1 = Sunday ... 7 = Saturday (Capacitor's weekday numbering).
- */
-const WED_SAT_SUN = [4, 7, 1];
-const EVERY_DAY = [0];
-
 /*
- * One reminder per game per draw, timed for when that draw is normally
- * published rather than when it is drawn - the earlier times rang while the
- * board was still empty, and Perdana and HariHari only had their afternoon
- * draw listed at all, so their 7:30pm results never rang.
+ * The per-game "live result" alarms are gone.
+ *
+ * They were fixed clock times - one per game, set for when that draw is
+ * normally published - so they rang whether or not the operator had actually
+ * published, and the body claimed the result was out when it might not be. A
+ * phone alarm cannot know when a result appears.
+ *
+ * Results are announced from the result itself instead: the app knocks as each
+ * number lands while it is open (LiveKnock), and the server-side push planned
+ * for the next build will carry the same alert to a locked phone. The old ids
+ * are still cancelled below so a phone that installed the old plan clears
+ * them.
  */
-const LIVE_GAMES: { name: string; zh: string; days: number[]; hour: number; minute: number }[] = [
-  { name: "Magnum 4D", zh: "萬能", days: WED_SAT_SUN, hour: 19, minute: 25 },
-  { name: "Magnum Life", zh: "万能天天彩", days: WED_SAT_SUN, hour: 19, minute: 27 },
-  { name: "Magnum Jackpot Gold", zh: "萬能黃金万字积宝", days: WED_SAT_SUN, hour: 19, minute: 29 },
-  { name: "Da Ma Cai 1+3D", zh: "大馬彩", days: WED_SAT_SUN, hour: 19, minute: 31 },
-  { name: "Da Ma Cai 3+3D", zh: "大馬彩", days: WED_SAT_SUN, hour: 19, minute: 33 },
-  { name: "Singapore 4D", zh: "新加坡", days: WED_SAT_SUN, hour: 19, minute: 35 },
-  { name: "Sabah 88 4D", zh: "沙巴88", days: WED_SAT_SUN, hour: 19, minute: 37 },
-  { name: "Sandakan 4D", zh: "山打根", days: WED_SAT_SUN, hour: 19, minute: 39 },
-  { name: "Special Cash Sweep", zh: "沙捞越", days: WED_SAT_SUN, hour: 19, minute: 41 },
-  { name: "Sports Toto 4D", zh: "多多", days: WED_SAT_SUN, hour: 19, minute: 43 },
-  { name: "Sports Toto 5D / 6D", zh: "多多六合彩", days: WED_SAT_SUN, hour: 19, minute: 45 },
-  { name: "Grand Dragon 4D", zh: "豪龙", days: EVERY_DAY, hour: 20, minute: 0 },
-  { name: "Nine Lotto", zh: "开彩", days: EVERY_DAY, hour: 20, minute: 2 },
-  // Perdana dropped its 3:30PM draw on 1 Oct 2026, so only the 7:30PM draw rings.
-  { name: "Perdana 4D", zh: "Perdana", days: EVERY_DAY, hour: 19, minute: 50 },
-  { name: "Lucky HariHari 4D", zh: "天天好运", days: EVERY_DAY, hour: 15, minute: 47 },
-  { name: "Lucky HariHari 4D", zh: "天天好运", days: EVERY_DAY, hour: 19, minute: 52 },
-];
-
-/** Stable ids so a later launch can cancel exactly what it scheduled. */
-function liveIds(): number[] {
-  const ids: number[] = [];
-  LIVE_GAMES.forEach((g, gi) => g.days.forEach((_, di) => ids.push(3000 + gi * 10 + di)));
-  return ids;
-}
 /** Two one-off special draws to remind everyone about. */
 const SPECIAL_DATES = [
   { date: "2026-10-27", id: 1700 },
@@ -82,31 +50,7 @@ const SPECIAL_DATES = [
 ];
 const SPECIAL_TIMES: [number, number][] = [[12, 0], [15, 0], [18, 10]];
 const specialIds = () => SPECIAL_DATES.flatMap((d) => SPECIAL_TIMES.map((_, i) => d.id + i));
-const ALL_IDS = [...liveIds(), ...specialIds(), NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830];
-
-function LIVE_GAME_SCHEDULE(): Record<string, unknown>[] {
-  const out: Record<string, unknown>[] = [];
-  LIVE_GAMES.forEach((g, gi) => {
-    g.days.forEach((weekday, di) => {
-      const at = String(g.hour).padStart(2, "0") + ":" + String(g.minute).padStart(2, "0");
-      const body = `${g.name} 开奖成绩已出炉 — 点开查看最新结果`;
-      out.push({
-        id: 3000 + gi * 10 + di,
-        title: `${g.name} ${g.zh} Live Result`,
-        body,
-        largeBody: `${at}  ${body}`,
-        channelId: CHANNEL_ID,
-        autoCancel: true,
-        schedule: {
-          on: weekday === 0 ? { hour: g.hour, minute: g.minute } : { weekday, hour: g.hour, minute: g.minute },
-          repeats: true,
-          allowWhileIdle: true,
-        },
-      });
-    });
-  });
-  return out;
-}
+const ALL_IDS = [...specialIds(), NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830];
 
 type CapacitorGlobal = {
   Plugins?: { LocalNotifications?: LocalNotificationsPlugin };
@@ -196,10 +140,10 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
            * are. Different plan, or something missing: clear our ids and lay
            * the whole plan down again, once.
            */
-          const plan =
-            // v3: the two special-draw reminders were added, so every phone
-            // lays its reminders down once more and picks them up.
-            "v3|" + LIVE_GAMES.map((g) => g.days.join("") + "@" + g.hour + ":" + g.minute).join("|");
+          // v4: the per-game live-result alarms were removed, so every phone
+          // re-runs this, cancels the ones it already holds, and keeps only the
+          // lucky-number and special-draw reminders.
+          const plan = "v4";
           let remembered = "";
           try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
 
@@ -275,7 +219,6 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
                   schedule: { on: { year: y, month: mo, day, hour: h, minute: mi }, allowWhileIdle: true },
                 }));
               }),
-              ...LIVE_GAME_SCHEDULE(),
             ],
           });
           try { window.localStorage.setItem(PLAN_KEY, plan); } catch { /* private mode */ }
