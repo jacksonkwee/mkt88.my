@@ -176,20 +176,17 @@ export default function NumberHistoryApp() {
   }, [data]);
 
   /*
-   * One chip selects one value.
+   * A chip adds to the selection; tapping it again removes it.
    *
    * An empty list means "no filter", so every chip in a group reads as on while
-   * everything is included. The old handler started from that and toggled, so
-   * the first tap ran the exclusion path: tapping Malaysia turned Malaysia OFF
-   * and filtered to the other three regions, which read as the tap doing
-   * nothing. A tap now narrows the group to exactly the value tapped and clears
-   * the rest, which is what the chip looks like it should do. "All 全部" clears
-   * the group back to everything.
+   * everything is included. Because adding to an empty list is the same as
+   * picking that one value, the first tap narrows the group to just the value
+   * tapped. After that the taps accumulate: Malaysia then Sabah shows both,
+   * then tapping Malaysia again leaves Sabah on. The All chip clears the group
+   * back to everything.
    */
-  const pickOne = (arr: string[], set: (v: string[]) => void, v: string) => {
-    if (arr.length === 1 && arr[0] === v) return; // already the only one on
-    set([v]);
-  };
+  const toggleChip = (arr: string[], set: (v: string[]) => void, v: string) =>
+    set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
   const isOnAll = (arr: string[], v: string) => arr.length === 0 || arr.includes(v);
 
   const isFav = (n: string) => favs.some((f) => f.num === n);
@@ -260,9 +257,10 @@ export default function NumberHistoryApp() {
           <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
             {/*
              * One bar for Region, Prize and Company. Everything is included
-             * until you tap a chip, which narrows that group to the one value
-             * you tapped. The chip rows stay tucked away until their tab is
-             * opened, so they never push the results off the screen.
+             * until you tap a chip, and further taps add to the group, so
+             * Malaysia plus Sabah can both be on at once. The chip rows stay
+             * tucked away until their tab is opened, so they never push the
+             * results off the screen.
              */}
             {/* One row for all three filters. */}
             <div style={{ display: "flex", gap: 6 }}>
@@ -280,7 +278,7 @@ export default function NumberHistoryApp() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                 <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
                 {REGIONS.map((r) => (
-                  <button key={r} onClick={() => pickOne(regions, setRegions, r)} style={chip(isOnAll(regions, r))}>{r}</button>
+                  <button key={r} onClick={() => toggleChip(regions, setRegions, r)} style={chip(isOnAll(regions, r))}>{r}</button>
                 ))}
               </div>
             ) : null}
@@ -288,7 +286,7 @@ export default function NumberHistoryApp() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                 <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
                 {PRIZES.map((p) => (
-                  <button key={p} onClick={() => pickOne(prizes, setPrizes, p)} style={chip(isOnAll(prizes, p))}>{p}</button>
+                  <button key={p} onClick={() => toggleChip(prizes, setPrizes, p)} style={chip(isOnAll(prizes, p))}>{p}</button>
                 ))}
               </div>
             ) : null}
@@ -301,13 +299,13 @@ export default function NumberHistoryApp() {
                   {COMPANIES.filter((c) => companyCounts.has(c.key)).map((c) => {
                     const on = companies.includes(c.key);
                     return (
-                      <button key={c.key} onClick={() => pickOne(companies, setCompanies, c.key)} style={chip(on)}>
+                      <button key={c.key} onClick={() => toggleChip(companies, setCompanies, c.key)} style={chip(on)}>
                         {on ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{c.label} <span style={{ color: "#999" }}>{companyCounts.get(c.key)}</span>
                       </button>
                     );
                   })}
                   {companyCounts.has("other") ? (
-                    <button onClick={() => pickOne(companies, setCompanies, "other")} style={chip(companies.includes("other"))}>
+                    <button onClick={() => toggleChip(companies, setCompanies, "other")} style={chip(companies.includes("other"))}>
                       {companies.includes("other") ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}其他 Other <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
                     </button>
                   ) : null}
