@@ -25,8 +25,31 @@ type LocalNotificationsPlugin = {
   ) => { remove?: () => void } | undefined;
 };
 
-function luckyNumber(): string {
-  return String(Math.floor(Math.random() * 10000)).padStart(4, "0");
+/** The Malaysia date, so the number turns over at local midnight. */
+function myToday(): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
+/*
+ * The number belongs to the DAY.
+ *
+ * An Android repeating notification repeats its text verbatim, so a number
+ * drawn once when the plan was laid down said the same thing every morning -
+ * the same number as yesterday (reported 9 Oct 2026). It is derived from the
+ * date instead, and the plan below carries that date, so the first open on a
+ * new day lays the three reminders down again with that day's numbers.
+ */
+function luckyNumber(seed: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return String((h >>> 0) % 10000).padStart(4, "0");
 }
 
 /*
@@ -140,10 +163,12 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
            * are. Different plan, or something missing: clear our ids and lay
            * the whole plan down again, once.
            */
-          // v4: the per-game live-result alarms were removed, so every phone
-          // re-runs this, cancels the ones it already holds, and keeps only the
-          // lucky-number and special-draw reminders.
-          const plan = "v4";
+          // v4 removed the per-game live-result alarms. v5 puts the DATE in
+          // the fingerprint: the lucky number is derived from the day, so the
+          // first open on a new day lays the three reminders down again with
+          // that day's numbers instead of repeating yesterday for ever.
+          const today = myToday();
+          const plan = "v5:" + today;
           let remembered = "";
           try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
 
@@ -165,9 +190,9 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
             ].map((id) => ({ id })),
           });
 
-          const earlyLucky = luckyNumber();
-          const firstLucky = luckyNumber();
-          const secondLucky = luckyNumber();
+          const earlyLucky = luckyNumber(today + "|16:00");
+          const firstLucky = luckyNumber(today + "|18:00");
+          const secondLucky = luckyNumber(today + "|18:30");
           await ln.schedule?.({
             notifications: [
               {
