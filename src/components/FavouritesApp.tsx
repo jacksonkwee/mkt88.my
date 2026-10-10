@@ -88,13 +88,11 @@ export default function FavouritesApp() {
   const add = () => {
     const list = picked.length ? picked : isNum(input) ? [input] : [];
     const valid = list.filter(isNum);
-    if (!valid.length) { setFlash("Enter a 4-digit number first."); return; }
+    if (!valid.length) { setFlash(tr("favNeedNum", lang)); return; }
     let next = loadFavs();
     for (const n of valid) next = addFav(n, scopes.length ? scopes : [...ALL_SCOPES], notify);
     setFavs(next);
-    setFlash(notify
-      ? `Added ${valid.length} number${valid.length === 1 ? "" : "s"}: you will be notified when they appear.`
-      : `Added ${valid.length} number${valid.length === 1 ? "" : "s"}: they will glow yellow when drawn.`);
+    setFlash(tr("favAdded", lang) + " " + valid.length + " " + (valid.length === 1 ? tr("favNumOne", lang) : tr("favNumMany", lang)) + tr(notify ? "favAddedNotif" : "favAddedGlow", lang));
     window.setTimeout(() => setFlash(""), 5000);
   };
 
@@ -105,7 +103,7 @@ export default function FavouritesApp() {
       setPerm(p);
       if (p === "granted") {
         setNotify(true);
-        setFlash("Notifications enabled. Tap the bell on a favourite to switch it on.");
+        setFlash(tr("favNotifyOn", lang));
         window.setTimeout(() => setFlash(""), 5000);
       }
     } catch { /* ignore */ }
@@ -135,7 +133,7 @@ export default function FavouritesApp() {
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {tr("favTitle", lang)}
         </div>
-        <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
+        <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</Link>
       </div>
 
       {/* Brand logo at the top of the page. */}
@@ -149,7 +147,7 @@ export default function FavouritesApp() {
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
-              placeholder="4-digit number"
+              placeholder={tr("favPlaceholder", lang)}
               inputMode="numeric"
               style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
           </div>
@@ -192,16 +190,16 @@ export default function FavouritesApp() {
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13, color: "#333" }}>
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} style={{ width: 18, height: 18 }} />
-            {tr("specialNotif", lang)}
+            {tr("favSpecialNotif", lang)}
           </label>
 
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
             <button onClick={add} style={{ flex: 2, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
-              Add to favourites
+              {tr("favAddBtn", lang)}
             </button>
             <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
               style={{ flex: 1, background: "#fff", color: "#333", border: "1px solid #ccc", borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-              Back
+              {tr("favBack", lang)}
             </button>
           </div>
 
@@ -212,17 +210,17 @@ export default function FavouritesApp() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ fontWeight: 800, fontSize: 15 }}>{tr("favMine", lang)} ({favs.length})</div>
             {favs.length ? (
-              <button onClick={() => { saveFavs([]); setFavs([]); }} style={mini(RED)}>Clear all</button>
+              <button onClick={() => { saveFavs([]); setFavs([]); }} style={mini(RED)}>{tr("favClearAll", lang)}</button>
             ) : null}
           </div>
 
           {perm !== "granted" ? (
             <div style={{ marginTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#fff8e1", borderRadius: 12, padding: "8px 10px" }}>
               <div style={{ fontSize: 13, color: "#7a5b00" }}>
-                {perm === "unsupported" ? "This device will show in-app alerts." : "Allow notifications to get an alert when your number appears."}
+                {perm === "unsupported" ? tr("favInApp", lang) : tr("favAllowNotif", lang)}
               </div>
               {perm !== "unsupported" ? (
-                <button onClick={askNotify} style={{ ...mini(RED), whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><BellRinging size={16} weight="bold" />Enable</button>
+                <button onClick={askNotify} style={{ ...mini(RED), whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", gap: 5 }}><BellRinging size={16} weight="bold" />{tr("favEnable", lang)}</button>
               ) : null}
             </div>
           ) : null}
@@ -239,13 +237,13 @@ export default function FavouritesApp() {
                       <div style={{ fontSize: 13, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {f.scopes.map((s) => scopeName(s, lang)).join(" · ")}
                       </div>
-                      <Link href={"/number-history?num=" + f.num} style={{ fontSize: 13, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
+                      <Link href={"/number-history?num=" + f.num} style={{ fontSize: 13, color: RED, textDecoration: "none" }}>{tr("history", lang)} <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
                     </div>
-                    <button onClick={() => toggleBell(f)} title="Special notification"
+                    <button onClick={() => toggleBell(f)} title={tr("favSpecialNotif", lang)}
                       style={{ background: "transparent", border: 0, fontSize: 18, cursor: "pointer", color: f.notify ? "#e6a700" : "#bbb" }}>
                       {f.notify ? <BellRinging size={19} weight="fill" /> : <BellSlash size={19} />}
                     </button>
-                    <button onClick={() => del(f.num)} title="Remove"
+                    <button onClick={() => del(f.num)} title={tr("favRemove", lang)}
                       style={{ background: "transparent", border: 0, cursor: "pointer", color: RED, display: "inline-flex" }}><X size={17} weight="bold" /></button>
                   </div>
                   <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
@@ -268,13 +266,13 @@ export default function FavouritesApp() {
             </div>
           ) : (
             <div style={{ marginTop: 10, fontSize: 13, color: "#888" }}>
-              No favourites yet. Type a number above and tap <b>Add to favourites</b>.
+              {tr("favEmpty1", lang)}<b>{tr("favAddBtn", lang)}</b>{tr("favEmpty2", lang)}
             </div>
           )}
         </div>
 
         <div style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 14 }}>
-          Favourites are saved on this device and highlight in <span style={{ background: YELLOW, padding: "0 4px" }}>yellow</span> on all result pages.
+          {tr("favNote1", lang)}<span style={{ background: YELLOW, padding: "0 4px" }}>{tr("favNoteYellow", lang)}</span>{tr("favNote2", lang)}
         </div>
       </div>
     </div>

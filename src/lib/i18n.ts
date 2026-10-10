@@ -172,6 +172,29 @@ export const STRINGS: Record<string, Row> = {
     ms: "Rekod: Magnum 4D dari 25/08/1985 · Da Ma Cai 1+3D dan Sports Toto 4D dari 1992 · Sandakan dari 1995 · Cash Sweep dari 1996 · Sabah 88 dari 2001 · Singapore 4D dari 2007 · Perdana dan Lucky HariHari dari 2021 · Grand Dragon dari 2022 · Nine Lotto dari 2023.",
     zh: "收录范围：万能 4D 从 25/08/1985 · 大马彩 1+3D 与多多 4D 从 1992 · 山打根从 1995 · 砂劳越大万从 1996 · 沙巴88 从 2001 · 新加坡 4D 从 2007 · Perdana 与 Lucky HariHari 从 2021 · 豪龙从 2022 · Nine Lotto 从 2023。",
   },
+
+  // Favourites page - the labels the first pass left in English.
+  favPlaceholder:  { en: "4-digit number", ms: "Nombor 4 digit", zh: "4 位号码" },
+  favAddBtn:       { en: "Add to favourites", ms: "Tambah ke kegemaran", zh: "添加到收藏" },
+  favBack:         { en: "Back", ms: "Kembali", zh: "返回" },
+  favClearAll:     { en: "Clear all", ms: "Kosongkan semua", zh: "全部清除" },
+  favRemove:       { en: "Remove", ms: "Buang", zh: "移除" },
+  favInApp:        { en: "This device will show in-app alerts.", ms: "Peranti ini akan menunjukkan makluman dalam aplikasi.", zh: "这台手机会在应用内显示提醒。" },
+  favAllowNotif:   { en: "Allow notifications to get an alert when your number appears.", ms: "Benarkan pemberitahuan untuk mendapat makluman apabila nombor anda muncul.", zh: "允许通知，号码出现时就会收到提醒。" },
+  favEnable:       { en: "Enable", ms: "Benarkan", zh: "开启" },
+  favAdded:        { en: "Added", ms: "Ditambah", zh: "已添加" },
+  favNumOne:       { en: "number", ms: "nombor", zh: "个号码" },
+  favNumMany:      { en: "numbers", ms: "nombor", zh: "个号码" },
+  favAddedNotif:   { en: ": you will be notified when they appear.", ms: ": anda akan dimaklumkan apabila ia muncul.", zh: "：号码出现时会通知你。" },
+  favAddedGlow:    { en: ": they will glow yellow when drawn.", ms: ": ia akan menyala kuning apabila keluar.", zh: "：号码开出时会以黄色标示。" },
+  favNeedNum:      { en: "Enter a 4-digit number first.", ms: "Taip nombor 4 digit dahulu.", zh: "请先输入 4 位号码。" },
+  favEmpty1:       { en: "No favourites yet. Type a number above and tap ", ms: "Belum ada kegemaran. Taip nombor di atas dan ketik ", zh: "还没有收藏。在上方输入号码，然后点「" },
+  favEmpty2:       { en: ".", ms: ".", zh: "」。" },
+  favNote1:        { en: "Favourites are saved on this device and highlight in ", ms: "Nombor kegemaran disimpan pada peranti ini dan ditandakan ", zh: "收藏号码保存在这台手机上，并会在所有成绩页面以" },
+  favNoteYellow:   { en: "yellow", ms: "kuning", zh: "黄色" },
+  favNote2:        { en: " on all result pages.", ms: " pada semua halaman keputusan.", zh: "标示。" },
+  favNotifyOn:     { en: "Notifications enabled. Tap the bell on a favourite to switch it on.", ms: "Pemberitahuan dihidupkan. Ketik loceng pada kegemaran untuk menghidupkannya.", zh: "通知已开启。点收藏号码旁的铃铛即可开启提醒。" },
+  home:            { en: "Home", ms: "Utama", zh: "首页" },
 };
 
 /** Look a key up in one language; an unknown key is returned unchanged. */

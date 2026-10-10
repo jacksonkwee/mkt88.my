@@ -211,7 +211,7 @@ export default function NumberHistoryApp() {
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
           {tr("history", lang)}
         </div>
-        <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
+        <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</Link>
       </div>
 
       {/* Brand logo at the top of the page. */}
