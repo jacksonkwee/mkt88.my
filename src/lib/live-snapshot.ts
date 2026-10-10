@@ -110,7 +110,16 @@ function parseCards(html: string | null): Record<string, Record<string, string>>
   for (let k = 0; k < starts.length; k++) {
     const seg = html.slice(starts[k].i, k + 1 < starts.length ? starts[k + 1].i : html.length);
     const vals: Record<string, string> = {};
-    const elRe = /<(td|span|div)\b[^>]*data-id="([^"]+)"[^>]*>([\s\S]*?)<\/\1>/gi;
+    /*
+     * Any element, not just td/span/div.
+     *
+     * The mirror prints the Magnum jackpot amounts as
+     * <b data-id="first_jackpot_prize">RM ...</b>, and a tag list that stopped
+     * at div/span/td never picked them up - so the card kept the amount that was
+     * captured months earlier and never matched the operator (reported
+     * 10 Oct 2026 for Magnum 4D Jackpot 1 and 2, and Da Ma Cai 3+3D).
+     */
+    const elRe = /<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*data-id="([^"]+)"[^>]*>([\s\S]*?)<\/\1>/gi;
     let e: RegExpExecArray | null;
     while ((e = elRe.exec(seg))) {
       const id = e[2];
@@ -622,7 +631,9 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
       signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return null;
-    const r = (await res.json())?.Data?.Results;
+    const root = await res.json();
+    const data = root?.Data;
+    const r = data?.Results;
     if (!r) return null;
     const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(r.DrawDate || "").trim());
     if (!m) return null;
@@ -655,10 +666,29 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
     const p1 = pick(r.T1), p2 = pick(r.T2), p3 = pick(r.T3);
     const moved = new Set([p1.idx, p2.idx, p3.idx].filter((i) => i >= 0));
 
+    /*
+     * The two amounts the operator prints on its own Jackpot Gold card come
+     * from the same file. The mirror carries its own figure, which trails the
+     * operator's - that is the amount the operator's site disagreed with
+     * (reported 10 Oct 2026). They travel under gold_jp* so the card-1 merge
+     * skips them; the caller puts them on table-2.
+     */
+    // The operator's own page reads the top-level JackpotAmount; the same
+    // endpoint also nests it under Data depending on the edge it answers from,
+    // so both shapes are accepted.
+    const goldJp = (root?.JackpotAmount?.EstimatedJackpotAmount
+      || data?.JackpotAmount?.EstimatedJackpotAmount || {}) as Record<string, unknown>;
+    const money = (v: unknown): string => {
+      const n = Number(String(v ?? "").replace(/[^0-9.]/g, ""));
+      return Number.isFinite(n) && n > 0
+        ? "RM " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : "";
+    };
     const out: Record<string, string> = {
       date: weekdayOf(drawIso),
       draw_no: String(r.DrawID || "").trim() || "----",
       first_prize: p1.num, second_prize: p2.num, third_prize: p3.num,
+      gold_jp1: money(goldJp.GoldJackpot1), gold_jp2: money(goldJp.GoldJackpot2),
     };
     S.forEach((v, i) => { out["special-" + (i + 1)] = moved.has(i) ? "----" : v; });
     C.forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
@@ -874,11 +904,18 @@ export async function buildSnapshot(): Promise<Snapshot> {
        * lines long after the operator's board had them empty (7 Oct 2026).
        */
       if (k === "first_prize" || k === "second_prize" || k === "third_prize") { merged[k] = v; continue; }
+      if (k.startsWith("gold_jp")) continue;   // these belong to the Jackpot Gold card
       const cur = merged[k];
       if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
       merged[k] = v;
     }
     cards["table-1"] = merged;
+    // The Jackpot Gold amounts go on table-2, and the operator's own figure
+    // replaces the mirror's one - that is the number its website shows.
+    const gold: Record<string, string> = {};
+    if (magnumToday.gold_jp1) gold.first_jackpot_prize = magnumToday.gold_jp1;
+    if (magnumToday.gold_jp2) gold.second_jackpot_prize = magnumToday.gold_jp2;
+    if (Object.keys(gold).length) cards["table-2"] = { ...(cards["table-2"] || {}), ...gold };
   }
   /*
    * Sabah 88 straight from the operator - but ONLY onto a card that already
@@ -924,6 +961,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
     ["table-5", damacai ? damacai.three : null],
   ] as [string, Record<string, string> | null][]) {
     if (!vals) continue;
+    /*
+     * A date on its own is not a result.
+     *
+     * Da Ma Cai publishes one file for both of its draws, and it carries the new
+     * draw date as soon as the 1+3D draw is over - while the 3+3D numbers are
+     * still blank. The "a blank never replaces a known number" rule below then
+     * kept the previous draw's numbers and let the new date through, so the card
+     * read 10-10-2026 across numbers drawn on 07-10 (reported 10 Oct 2026). A
+     * payload that brings no numbers of its own may not set the date.
+     */
+    const hasOwnResult = Object.entries(vals).some(([k, v]) =>
+      k !== "date" && k !== "draw_no" && !!v && !/^----+$/.test(String(v)));
+    if (!hasOwnResult) continue;
     const base = (cards[cls] || {}) as Record<string, string>;
     const merged: Record<string, string> = { ...base };
     for (const [k, v] of Object.entries(vals)) {
@@ -1244,6 +1294,27 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * exactly what was reported on 04-10-2026.
    */
   const MIRROR_ONLY = ["table-2", "table-3", "table-6", "table-7", "table-13"];
+  /*
+   * A mirror card must not wear a new date while it is still showing the old
+   * draw's numbers.
+   *
+   * The mirror turns the date cell over as soon as a draw is announced and
+   * republishes the numbers a few minutes later, so for those minutes the card
+   * read "10-10-2026" across every number drawn on 07-10 (reported 10 Oct 2026
+   * for Sports Toto 5D/6D and Magnum Life). A new date is only accepted once at
+   * least one of the card's numbers has actually changed from the copy already
+   * on screen; until then the card stays on the last draw we can vouch for,
+   * which is the rule Singapore has used since 3 Oct.
+   */
+  for (const cls of MIRROR_ONLY) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    const prev = cache?.cards?.[cls] as Record<string, string> | undefined;
+    if (!c || !prev) continue;
+    if (!c.date || !prev.date || c.date === prev.date) continue;
+    const numbersMoved = Object.keys(c).some((k) =>
+      k !== "date" && k !== "draw_no" && !!c[k] && c[k] !== prev[k] && !/^----+$/.test(String(c[k])));
+    if (!numbersMoved) cards[cls] = { ...prev };
+  }
   for (const cls of MIRROR_ONLY) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;

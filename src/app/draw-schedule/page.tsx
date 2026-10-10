@@ -38,7 +38,7 @@ const LAST: Tri = { en: "Usually the last of the Cambodia games to finish.", ms:
 const NO_MON: Tri = { en: "No draw on Monday.", ms: "Tiada cabutan pada Isnin.", zh: "星期一不开彩。" };
 
 const SCHEDULE: Row[] = [
-  { game: "Singapore 4D", zh: "新加坡", days: WSS, time: "18:40", note: { en: "The result is published shortly after the draw.", ms: "Keputusan diterbitkan tidak lama selepas cabutan.", zh: "开彩结束后不久就会公布成绩。" } },
+  { game: "Singapore 4D", zh: "新加坡", days: WSS, time: "18:30", note: { en: "The result is published shortly after the draw.", ms: "Keputusan diterbitkan tidak lama selepas cabutan.", zh: "开彩结束后不久就会公布成绩。" } },
   { game: "Grand Dragon 4D", zh: "豪龙", days: DAILY, time: "19:00 – 20:10" },
   { game: "Nine Lotto 4D", zh: "九宫格", days: DAILY, time: "19:00 – 20:10", note: LAST },
   { game: "Perdana 4D", zh: "Perdana", days: DAILY, time: "19:00 – 20:10" },
