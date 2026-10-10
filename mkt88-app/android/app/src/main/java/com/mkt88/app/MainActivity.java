@@ -40,6 +40,17 @@ public class MainActivity extends BridgeActivity {
   private final Handler appHandler = new Handler(Looper.getMainLooper());
   private AdView bannerAd;
 
+  /**
+   * Retry delays for a banner that failed to load, then a steady 10-minute retry.
+   *
+   * AdMob answers "no ad" for a brand-new app much more often than it fills, and the
+   * old code gave up for the whole session on the first empty answer - so the app
+   * could show nothing all evening even though ads were working. The view is now
+   * kept alive and asked again instead of being destroyed.
+   */
+  private static final long[] AD_RETRY_MS = { 30_000L, 60_000L, 120_000L, 300_000L, 600_000L };
+  private int adAttempts = 0;
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
     SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
@@ -206,17 +217,31 @@ public class MainActivity extends BridgeActivity {
       @Override
       public void onAdLoaded() {
         if (bannerAd == null) return;
+        adAttempts = 0;
         setWebViewBottomPadding(60);
         bannerAd.animate().alpha(1f).setDuration(200).start();
       }
 
       @Override
       public void onAdFailedToLoad(LoadAdError adError) {
-        removeBannerAd();
+        if (bannerAd == null || isFinishing()) return;
+        long delay = AD_RETRY_MS[Math.min(adAttempts, AD_RETRY_MS.length - 1)];
+        adAttempts++;
+        appHandler.postDelayed(MainActivity.this::reloadBanner, delay);
       }
     });
 
     bannerAd.loadAd(new AdRequest.Builder().build());
+  }
+
+  /** Ask AdMob again. The view is reused, so nothing flickers when it does fill. */
+  private void reloadBanner() {
+    if (bannerAd == null || isFinishing()) return;
+    try {
+      bannerAd.loadAd(new AdRequest.Builder().build());
+    } catch (Exception ignored) {
+      // Ad failure must never stop the results app from working.
+    }
   }
 
   private void removeBannerAd() {
