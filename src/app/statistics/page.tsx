@@ -45,40 +45,6 @@ export default function StatisticsPage() {
               号码过去出现多少次，都不会改变它下一次的机会。本页仅供参考。
             </div>
 
-            <h2 className="h5 mt-4 mb-2">Coverage 数据范围</h2>
-            <p className="text-muted small mb-2">
-              Draws copied up to <strong>{dmy(latest)}</strong> &middot; statistics rebuilt{" "}
-              <strong>{dmy(stats.generated)}</strong>. Both move on their own, every night.
-              <br />
-              资料抄录至 <strong>{dmy(latest)}</strong>，统计于 <strong>{dmy(stats.generated)}</strong> 重建。两个日期每晚自动更新。
-            </p>
-            <div className="table-responsive mb-4">
-              <table className="table table-sm table-striped align-middle">
-                <thead>
-                  <tr>
-                    <th>Game 游戏</th>
-                    <th className="text-end">Draws in archive 档案开彩次数</th>
-                    <th className="text-end">Number records 号码记录</th>
-                    <th>Archive starts 档案最早</th>
-                    <th>Archive ends 档案最近</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {games.map((g) => (
-                    <tr key={g.key}>
-                      <td>
-                        {g.name} <span className="text-muted">{g.zh}</span>
-                      </td>
-                      <td className="text-end">{n(g.draws)}</td>
-                      <td className="text-end">{n(g.totalAppearances)}</td>
-                      <td>{dmy(g.from)}</td>
-                      <td>{dmy(g.to)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
             <h2 className="h5 mt-4 mb-2">Hot numbers by game 各游戏热门号码</h2>
             <p className="text-muted small">
               &ldquo;Times drawn&rdquo; counts every prize position a number appeared in — 1st, 2nd, 3rd,
@@ -126,6 +92,40 @@ export default function StatisticsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <h2 className="h5 mt-4 mb-2">Coverage 数据范围</h2>
+            <p className="text-muted small mb-2">
+              Draws copied up to <strong>{dmy(latest)}</strong> &middot; statistics rebuilt{" "}
+              <strong>{dmy(stats.generated)}</strong>. Both move on their own, every night.
+              <br />
+              资料抄录至 <strong>{dmy(latest)}</strong>，统计于 <strong>{dmy(stats.generated)}</strong> 重建。两个日期每晚自动更新。
+            </p>
+            <div className="table-responsive mb-4">
+              <table className="table table-sm table-striped align-middle">
+                <thead>
+                  <tr>
+                    <th>Game 游戏</th>
+                    <th className="text-end">Draws in archive 档案开彩次数</th>
+                    <th className="text-end">Number records 号码记录</th>
+                    <th>Archive starts 档案最早</th>
+                    <th>Archive ends 档案最近</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {games.map((g) => (
+                    <tr key={g.key}>
+                      <td>
+                        {g.name} <span className="text-muted">{g.zh}</span>
+                      </td>
+                      <td className="text-end">{n(g.draws)}</td>
+                      <td className="text-end">{n(g.totalAppearances)}</td>
+                      <td>{dmy(g.from)}</td>
+                      <td>{dmy(g.to)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
                         <p>
