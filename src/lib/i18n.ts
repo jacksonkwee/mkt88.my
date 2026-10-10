@@ -90,6 +90,13 @@ export const STRINGS: Record<string, Row> = {
     zh: "开奖时每出一个号码，会响一下短促的提示音。",
   },
   done:            { en: "Done",              ms: "Selesai",         zh: "完成" },
+  favTitle:        { en: "Favourite Numbers", ms: "Nombor Kegemaran", zh: "收藏号码" },
+  favAdd:          { en: "Add favourite numbers", ms: "Tambah nombor kegemaran", zh: "添加收藏号码" },
+  favPau:          { en: "Pau", ms: "Pau", zh: "包" },
+  favReverse:      { en: "Reverse", ms: "Sonsang", zh: "来回" },
+  favAlertFor:     { en: "Alert for", ms: "Maklum untuk", zh: "提醒奖项" },
+  favSpecialNotif: { en: "Special notification", ms: "Pemberitahuan khas", zh: "特别通知" },
+  favMine:         { en: "My favourite numbers", ms: "Nombor kegemaran saya", zh: "我的收藏" },
 };
 
 /** Look a key up in one language; an unknown key is returned unchanged. */

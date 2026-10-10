@@ -1,4 +1,5 @@
 "use client";
+import { useLang, tr } from "../lib/i18n";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -29,6 +30,7 @@ function uniquePerms(digits: string): string[] {
 }
 
 export default function FavouritesApp() {
+  const [lang] = useLang();
   const params = useSearchParams();
   const router = useRouter();
   const initial = (params.get("num") || "").replace(/\D/g, "").slice(0, 4);
@@ -126,7 +128,7 @@ export default function FavouritesApp() {
         <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
           style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          Favourite Numbers 收藏号码
+          {tr("favTitle", lang)}
         </div>
         <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
       </div>
@@ -138,7 +140,7 @@ export default function FavouritesApp() {
       </div>
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "#111" }}>Add favourite numbers 添加收藏号码</div>
+          <div style={{ fontWeight: 800, fontSize: 15, color: "#111" }}>{tr("favAdd", lang)}</div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
@@ -150,15 +152,15 @@ export default function FavouritesApp() {
           {perms.length ? (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", marginBottom: 6 }}>
-                <button onClick={() => (allPicked ? setPicked([]) : selectAll())} style={mini(allPicked ? RED : "#333")}>Pau 包</button>
-                <button onClick={() => setPicked(reversePicked ? [] : reverseSet)} style={mini(reversePicked ? RED : "#333")}>Reverse 来回</button>
+                <button onClick={() => (allPicked ? setPicked([]) : selectAll())} style={mini(allPicked ? RED : "#333")}>{tr("favPau", lang)}</button>
+                <button onClick={() => setPicked(reversePicked ? [] : reverseSet)} style={mini(reversePicked ? RED : "#333")}>{tr("favReverse", lang)}</button>
               </div>
             </div>
           ) : (
             <div style={{ marginTop: 12 }} />
           )}
 
-          <div style={{ marginTop: 14, fontWeight: 700, fontSize: 15 }}>Alert for 提醒奖项</div>
+          <div style={{ marginTop: 14, fontWeight: 700, fontSize: 15 }}>{tr("favAlertFor", lang)}</div>
           {/* Main · Special · Consolation on one line. */}
           <div style={{ display: "flex", flexWrap: "nowrap", gap: 6, marginTop: 6 }}>
             {ALL_SCOPES.map((s) => {
@@ -185,7 +187,7 @@ export default function FavouritesApp() {
 
           <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13, color: "#333" }}>
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} style={{ width: 18, height: 18 }} />
-            Special notification 特别通知
+            {tr("specialNotif", lang)}
           </label>
 
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -203,7 +205,7 @@ export default function FavouritesApp() {
 
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>My favourite numbers 我的收藏 ({favs.length})</div>
+            <div style={{ fontWeight: 800, fontSize: 15 }}>{tr("favMine", lang)} ({favs.length})</div>
             {favs.length ? (
               <button onClick={() => { saveFavs([]); setFavs([]); }} style={mini(RED)}>Clear all</button>
             ) : null}
