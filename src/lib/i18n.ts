@@ -18,7 +18,8 @@ export type Lang = "en" | "ms" | "zh";
 const KEY = "mkt_lang";
 const EVT = "mkt-lang";
 
-export const LANG_LABEL: Record<Lang, string> = { en: "English", ms: "Bahasa Melayu", zh: "中文" };
+/** Short labels for the Settings buttons - the full names do not fit three-up. */
+export const LANG_LABEL: Record<Lang, string> = { en: "ENG", ms: "BM", zh: "中文" };
 
 /** The chosen language, else the phone's own. */
 export function detectLang(): Lang {
@@ -195,6 +196,12 @@ export const STRINGS: Record<string, Row> = {
   favNote2:        { en: " on all result pages.", ms: " pada semua halaman keputusan.", zh: "标示。" },
   favNotifyOn:     { en: "Notifications enabled. Tap the bell on a favourite to switch it on.", ms: "Pemberitahuan dihidupkan. Ketik loceng pada kegemaran untuk menghidupkannya.", zh: "通知已开启。点收藏号码旁的铃铛即可开启提醒。" },
   home:            { en: "Home", ms: "Utama", zh: "首页" },
+
+  // Lucky Number popup on the home screen.
+  luckyTitle:      { en: "Your Lucky Number", ms: "Nombor Bertuah Anda", zh: "您的幸运号码" },
+  luckyTry:        { en: "Try Again", ms: "Cuba Lagi", zh: "再试一次" },
+  close:           { en: "Close", ms: "Tutup", zh: "关闭" },
+  luckyTip:        { en: "See this number's draw history", ms: "Lihat sejarah cabutan nombor ini", zh: "查看这个号码的开彩记录" },
 };
 
 /** Look a key up in one language; an unknown key is returned unchanged. */

@@ -452,16 +452,16 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: ACCENT }}>恭喜发财</div>
-            <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>您的幸运号码</div>
+            <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>{tr("luckyTitle", lang)}</div>
             {/* Tap the number to see its full record in Number History. */}
             <Link
               href={"/number-history?num=" + lucky}
               onClick={() => { setLucky(null); openPage("/number-history?num=" + lucky); }}
-              title="查看这个号码的开彩记录"
+              title={tr("luckyTip", lang)}
               style={{ display: "block", fontSize: 32, fontWeight: 900, letterSpacing: 8, color: ACCENT, margin: "14px 0 10px", background: "#fff7e6", borderRadius: RADIUS, padding: "8px 0", fontVariantNumeric: "tabular-nums", textDecoration: "none" }}
             >{lucky}</Link>
-            <button type="button" onClick={() => setLucky(luckyNumber())} style={{ padding: "10px 18px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, marginRight: 8, cursor: "pointer" }}>Try Again</button>
-            <button type="button" onClick={() => setLucky(null)} style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: RADIUS, cursor: "pointer" }}>Close</button>
+            <button type="button" onClick={() => setLucky(luckyNumber())} style={{ padding: "10px 18px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, marginRight: 8, cursor: "pointer" }}>{tr("luckyTry", lang)}</button>
+            <button type="button" onClick={() => setLucky(null)} style={{ padding: "10px 18px", background: "#eee", border: 0, borderRadius: RADIUS, cursor: "pointer" }}>{tr("close", lang)}</button>
           </div>
         </div>
       ) : null}
