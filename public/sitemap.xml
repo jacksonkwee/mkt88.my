@@ -25,4 +25,5 @@
   <url><loc>https://www.mkt88.my/terms</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url><loc>https://www.mkt88.my/disclaimer</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://www.mkt88.my/privacy-policy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://www.mkt88.my/statistics</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>

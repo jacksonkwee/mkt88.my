@@ -113,6 +113,13 @@ export default function Header() {
                       Favourite Number <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>收藏号码</span>
                     </Link>
                   </li>
+                  <li className={LI_BASE + " menu-item-20"}>
+                    <Link href="/statistics" className="nav-link" onClick={closeAll}>
+                      Hot Numbers <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>
+热门号码
+</span>
+                    </Link>
+                  </li>
                   <li className={LI_BASE + " menu-item-19"}>
                     <Link href="/dabogong" className="nav-link" onClick={closeAll}>
                       大伯公 <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>千字图</span>
