@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import NumberHistoryApp from "../../components/NumberHistoryApp";
 import SeoText from "../../components/SeoText";
+import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 
 export const metadata: Metadata = {
   title: "Number History 开彩记录 - 4D Number Search, Permutation (Pau) | mkt88.my",
@@ -65,6 +66,7 @@ export default function NumberHistoryPage() {
         { href: "/favourites", label: <L en="Favourite Numbers" ms="Nombor Kegemaran" zh="收藏号码" /> }
       ]}
     />
+    <Footer />
     </>
   );
 }

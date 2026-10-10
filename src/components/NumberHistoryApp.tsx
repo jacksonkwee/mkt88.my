@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, CaretDown, CaretUp, Check, Star } from "@phosphor-icons/react";
+import { useSearchParams } from "next/navigation";
+import { CaretDown, CaretUp, Check, Star } from "@phosphor-icons/react";
 import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
 import { useLang, tr, type Lang } from "../lib/i18n";
 import { toSimplified } from "../lib/zh-simplified";
+import AppTopBar from "./AppTopBar";
 
 const RED = "#cc0000";
 const YELLOW_SOFT = "#fff3d0";
@@ -71,7 +72,6 @@ const isNum = (v: string) => /^\d{4}$/.test(v);
 
 export default function NumberHistoryApp() {
   const params = useSearchParams();
-  const router = useRouter();
   const [lang] = useLang();
   const initial = (params.get("num") || "").replace(/\D/g, "").slice(0, 4);
 
@@ -206,20 +206,7 @@ export default function NumberHistoryApp() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
-      <div className="mkt-app-topbar" style={{ position: "sticky", top: 0, zIndex: 50, background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
-        <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
-          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
-        <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          {tr("history", lang)}
-        </div>
-        <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</Link>
-      </div>
-
-      {/* Brand logo at the top of the page. */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4" alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
-      </div>
+      <AppTopBar titleKey="history" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         {/* Search + 大伯公 */}
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
