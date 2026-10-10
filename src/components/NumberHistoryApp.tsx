@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CaretDown, CaretUp, Check, Star } from "@phosphor-icons/react";
 import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
+import { useLang, tr, type Lang } from "../lib/i18n";
 
 const RED = "#cc0000";
 const YELLOW_SOFT = "#fff3d0";
@@ -26,6 +27,10 @@ const PRIZES = ["1st", "2nd", "3rd", "Special", "Consolation"];
 const PRIZE_COLORS: Record<string, string> = {
   "1st": "#d40000", "2nd": "#0066cc", "3rd": "#008a3e", Special: "#8a4a00", Consolation: "#555",
 };
+/** The filter values above are the API's own keys; these are their labels. */
+const REGION_KEY: Record<string, string> = { "M'sia": "nhR1", "Sab, Sar": "nhR2", Spore: "nhR3", Others: "nhR4" };
+const PRIZE_KEY: Record<string, string> = { "1st": "nhP1", "2nd": "nhP2", "3rd": "nhP3", Special: "nhPS", Consolation: "nhPC" };
+const PRIZE_SHORT_KEY: Record<string, string> = { "1st": "nhP1short", "2nd": "nhP2short", "3rd": "nhP3short", Special: "nhPSshort", Consolation: "nhPCshort" };
 const MAX_ROWS = 400;
 
 /** The 11 game companies used by the app, plus a catch-all bucket. */
@@ -66,7 +71,12 @@ const isNum = (v: string) => /^\d{4}$/.test(v);
 export default function NumberHistoryApp() {
   const params = useSearchParams();
   const router = useRouter();
+  const [lang] = useLang();
   const initial = (params.get("num") || "").replace(/\D/g, "").slice(0, 4);
+
+  /** The 大伯公 API returns the chart kind in Chinese; show it in the reader's language. */
+  const kindLabel = (k: string) =>
+    k === "万字图" ? tr("dbgKind10k", lang) : k === "大伯公千字图" ? tr("dbgKind1k", lang) : k;
 
   const [input, setInput] = useState(isNum(initial) ? initial : "");
   const [selected, setSelected] = useState<string[]>(isNum(initial) ? [initial] : []);
@@ -82,7 +92,7 @@ export default function NumberHistoryApp() {
   const [dabo, setDabo] = useState<Dabo | null>(null);
   const [daboBad, setDaboBad] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
+  const [errKey, setErrKey] = useState("");
   const [favs, setFavs] = useState<Fav[]>([]);
   const mounted = useRef(true);
   const reqId = useRef(0);
@@ -112,7 +122,7 @@ export default function NumberHistoryApp() {
     if (!list.length) { setData(null); return; }
     const id = ++reqId.current;
     setLoading(true);
-    setErr("");
+    setErrKey("");
     fetch("/api/number-history?nums=" + list.join(","), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
@@ -122,7 +132,7 @@ export default function NumberHistoryApp() {
       })
       .catch(() => {
         if (!mounted.current || id !== reqId.current) return;
-        setErr("Unable to load history. Please try again.");
+        setErrKey("nhLoadFail");
         setLoading(false);
       });
   }, []);
@@ -199,7 +209,7 @@ export default function NumberHistoryApp() {
         <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
           style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
         <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-          Number History 开彩记录
+          {tr("history", lang)}
         </div>
         <Link href="/" onClick={() => window.dispatchEvent(new Event("mkt-home"))} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>Home</Link>
       </div>
@@ -212,15 +222,15 @@ export default function NumberHistoryApp() {
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         {/* Search + 大伯公 */}
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", marginBottom: 12 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>Search a 4D number</div>
+          <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{tr("nhSearchTitle", lang)}</div>
           <div style={{ display: "flex", gap: 8 }}>
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               onKeyDown={(e) => e.key === "Enter" && search()}
-              placeholder="e.g. 1782"
+              placeholder={tr("nhPlaceholder", lang)}
               inputMode="numeric"
               style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
-            <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>Search</button>
+            <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>{tr("nhSearchBtn", lang)}</button>
           </div>
 
           {/* 大伯公 meaning (small) */}
@@ -230,12 +240,12 @@ export default function NumberHistoryApp() {
               <img src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
                 style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 12, background: "#fff", border: "1px solid #eee" }} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: "#8a6d00", fontWeight: 700 }}>大伯公 {dabo.kind}</div>
+                <div style={{ fontSize: 11, color: "#8a6d00", fontWeight: 700 }}>{tr("dabogong", lang)} {kindLabel(dabo.kind)}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {dabo.keyword || primary}{dabo.meaning ? <span style={{ fontWeight: 500, color: "#555" }}> · {dabo.meaning}</span> : null}
                 </div>
               </div>
-              <div style={{ marginLeft: "auto", fontSize: 11, color: "#8a6d00" }}>查看 ›</div>
+              <div style={{ marginLeft: "auto", fontSize: 11, color: "#8a6d00" }}>{tr("nhView", lang)}</div>
             </Link>
           ) : null}
 
@@ -243,9 +253,9 @@ export default function NumberHistoryApp() {
             <>
               {/* One line: the three checks share the width instead of wrapping. */}
               <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "nowrap" }}>
-                <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>Single 单一</button>
-                <button onClick={() => setSelected(perms)} style={modeBtn(mode === "pau")}>Pau 包 (all {perms.length})</button>
-                <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>Reverse 来回</button>
+                <button onClick={() => setSelected([primary])} style={modeBtn(mode === "single")}>{tr("nhSingle", lang)}</button>
+                <button onClick={() => setSelected(perms)} style={modeBtn(mode === "pau")}>{tr("nhPau", lang)} ({tr("nhAll", lang)} {perms.length})</button>
+                <button onClick={() => setSelected(reverseSet)} style={modeBtn(mode === "reverse")}>{tr("nhReverse", lang)}</button>
               </div>
             </>
           ) : null}
@@ -265,28 +275,28 @@ export default function NumberHistoryApp() {
             {/* One row for all three filters. */}
             <div style={{ display: "flex", gap: 6 }}>
               <button onClick={() => setShowRegion((v) => !v)} style={tabBtn(showRegion)}>
-                Region 地区{regions.length ? " *" : ""}
+                {tr("nhRegion", lang)}{regions.length ? " *" : ""}
               </button>
               <button onClick={() => setShowPrize((v) => !v)} style={tabBtn(showPrize)}>
-                Prize 奖项{prizes.length ? " *" : ""}
+                {tr("nhPrize", lang)}{prizes.length ? " *" : ""}
               </button>
               <button onClick={() => setShowCompanies((v) => !v)} style={tabBtn(showCompanies)}>
-                公司 Company{companies.length ? " *" : ""}
+                {tr("nhCompany", lang)}{companies.length ? " *" : ""}
               </button>
             </div>
             {showRegion ? (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-                <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>All 全部</button>
+                <button onClick={() => setRegions([])} style={chip(regions.length === 0)}>{tr("nhAll", lang)}</button>
                 {REGIONS.map((r) => (
-                  <button key={r} onClick={() => toggleChip(regions, setRegions, r)} style={chip(isOnAll(regions, r))}>{r}</button>
+                  <button key={r} onClick={() => toggleChip(regions, setRegions, r)} style={chip(isOnAll(regions, r))}>{tr(REGION_KEY[r] || "", lang)}</button>
                 ))}
               </div>
             ) : null}
             {showPrize ? (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-                <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>All 全部</button>
+                <button onClick={() => setPrizes([])} style={chip(prizes.length === 0)}>{tr("nhAll", lang)}</button>
                 {PRIZES.map((p) => (
-                  <button key={p} onClick={() => toggleChip(prizes, setPrizes, p)} style={chip(isOnAll(prizes, p))}>{p}</button>
+                  <button key={p} onClick={() => toggleChip(prizes, setPrizes, p)} style={chip(isOnAll(prizes, p))}>{tr(PRIZE_KEY[p] || "", lang)}</button>
                 ))}
               </div>
             ) : null}
@@ -295,7 +305,7 @@ export default function NumberHistoryApp() {
             {showCompanies ? (
               <div style={{ marginTop: 8 }}>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  <button onClick={() => setCompanies([])} style={chip(companies.length === 0)}>All 全部</button>
+                  <button onClick={() => setCompanies([])} style={chip(companies.length === 0)}>{tr("nhAll", lang)}</button>
                   {COMPANIES.filter((c) => companyCounts.has(c.key)).map((c) => {
                     const on = companies.includes(c.key);
                     return (
@@ -306,12 +316,12 @@ export default function NumberHistoryApp() {
                   })}
                   {companyCounts.has("other") ? (
                     <button onClick={() => toggleChip(companies, setCompanies, "other")} style={chip(companies.includes("other"))}>
-                      {companies.includes("other") ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}其他 Other <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
+                      {companies.includes("other") ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{tr("nhOther", lang)} <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
                     </button>
                   ) : null}
                 </div>
                 <div style={{ marginTop: 6, fontSize: 11, color: "#999" }}>
-                  Tick the companies you want to see, untick to hide. Nothing ticked = show all.
+                  {tr("nhCompanyHelp", lang)}
                 </div>
               </div>
             ) : null}
@@ -322,28 +332,28 @@ export default function NumberHistoryApp() {
         {selected.length ? (
           <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
             {loading ? (
-              <div style={{ padding: 30, textAlign: "center", color: "#777" }}>Searching past results…</div>
-            ) : err ? (
-              <div style={{ padding: 30, textAlign: "center", color: RED }}>{err}</div>
+              <div style={{ padding: 30, textAlign: "center", color: "#777" }}>{tr("nhSearching", lang)}</div>
+            ) : errKey ? (
+              <div style={{ padding: 30, textAlign: "center", color: RED }}>{tr(errKey, lang)}</div>
             ) : filtered.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: "#777" }}>
-                No past draw found for the selected filters.
-                <div style={{ fontSize: 13, marginTop: 6, color: "#aaa" }}>Try another number or clear the filters.</div>
+                {tr("nhNoDraw", lang)}
+                <div style={{ fontSize: 13, marginTop: 6, color: "#aaa" }}>{tr("nhNoDrawHint", lang)}</div>
               </div>
             ) : (
               <div>
                 {/* Count on the left, Favourite on the same line on the right. */}
                 <div style={{ padding: "8px 10px", borderBottom: "1px solid #eee", fontSize: 13, color: "#777", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    Showing {Math.min(filtered.length, MAX_ROWS)} of {filtered.length} result{filtered.length === 1 ? "" : "s"}
-                    {regions.length ? " · " + regions.join(" + ") : ""}
-                    {prizes.length ? " · " + prizes.join(" + ") : ""}
-                    {companies.length ? " · " + companies.length + " company(s)" : ""}
+                    {tr("nhShowing", lang)} {Math.min(filtered.length, MAX_ROWS)} {tr("nhOf", lang)} {filtered.length} {filtered.length === 1 ? tr("nhResultOne", lang) : tr("nhResultMany", lang)}
+                    {regions.length ? " · " + regions.map((r) => tr(REGION_KEY[r] || "", lang)).join(" + ") : ""}
+                    {prizes.length ? " · " + prizes.map((p) => tr(PRIZE_KEY[p] || "", lang)).join(" + ") : ""}
+                    {companies.length ? " · " + companies.length + " " + tr("nhCompanies", lang) : ""}
                   </span>
                   {data ? (
                     <Link href={"/favourites?num=" + (primary || data.nums[0])}
                       style={{ border: "1px solid " + RED, borderRadius: 12, padding: "4px 9px", fontSize: 12.5, fontWeight: 700, color: RED, textDecoration: "none", background: "#fff", flexShrink: 0, whiteSpace: "nowrap" }}>
-                      <Star size={12} weight="fill" style={{ verticalAlign: "-2px", marginRight: 3 }} />Favourite
+                      <Star size={12} weight="fill" style={{ verticalAlign: "-2px", marginRight: 3 }} />{tr("nhFav", lang)}
                     </Link>
                   ) : null}
                 </div>
@@ -357,7 +367,7 @@ export default function NumberHistoryApp() {
                       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{m.game}</span>
                       <span style={{ fontSize: 12, color: "#888", flexShrink: 0 }}>{shortDate(m.date)}</span>
                       <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{shortPrize(m.prize)}</span>
+                      <span style={{ fontSize: 10.5, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{prizeShort(m.prize, lang)}</span>
                     </div>
                   );
                 })}
@@ -366,14 +376,14 @@ export default function NumberHistoryApp() {
           </div>
         ) : (
           <div style={{ background: "#fff", borderRadius: 12, padding: 30, textAlign: "center", color: "#888", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
-            Type a 4-digit number above to see every draw where it appeared.
+            {tr("nhEmpty", lang)}
           </div>
         )}
 
         <div style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 16 }}>
-          Pau 包 shows every permutation · Reverse 来回 shows the number and its reverse.
+          {tr("nhNotePerm", lang)}
           <div style={{ marginTop: 4 }}>
-            Records: Magnum 4D from 25/08/1985 · Da Ma Cai 1+3D and Sports Toto 4D from 1992 · Sandakan from 1995 · Cash Sweep from 1996 · Sabah 88 from 2001 · Singapore 4D from 2007 · Perdana and Lucky HariHari from 2021 · Grand Dragon from 2022 · Nine Lotto from 2023.
+            {tr("nhNoteRecords", lang)}
           </div>
         </div>
       </div>
@@ -414,12 +424,8 @@ function shortDate(d: string): string {
   const m = /(\d{2})[-/](\d{2})[-/](\d{4})/.exec(d || "");
   return m ? `${m[1]}/${m[2]}/${m[3].slice(2)}` : (d || "");
 }
-function shortPrize(p: string): string {
-  const s = p || "";
-  if (/^consol/i.test(s)) return "Con";
-  if (/^spec/i.test(s)) return "Spe";
-  if (/^1st/i.test(s)) return "1st";
-  if (/^2nd/i.test(s)) return "2nd";
-  if (/^3rd/i.test(s)) return "3rd";
-  return s.slice(0, 3);
+/** The prize badge is one small pill, so each language gets its own short name. */
+function prizeShort(p: string, lang: Lang): string {
+  const key = PRIZE_SHORT_KEY[p];
+  return key ? tr(key, lang) : (p || "").slice(0, 3);
 }
