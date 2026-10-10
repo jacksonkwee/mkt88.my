@@ -162,6 +162,7 @@ export default function StatisticsPage() {
         ]}
         links={[
           { href: "/number-history", label: "Number History 开彩记录" },
+          { href: "/draw-schedule", label: "Draw Schedule 开彩时间表" },
           { href: "/", label: "Live 4D Results 最新开奖" },
           { href: "/past-results", label: "Past Results 过去开彩" },
           { href: "/favourites", label: "Favourite Numbers 收藏号码" },
