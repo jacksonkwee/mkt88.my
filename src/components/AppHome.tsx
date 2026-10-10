@@ -284,6 +284,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     { href: "/favourites", logo: HOME + "/favourite.png?v=2", name: "Favourite Numbers", zh: "收藏号码" },
     { href: "/dabogong", logo: HOME + "/dabogong.png?v=2", name: "大伯公", zh: "千字图" },
     { href: "/number-history", logo: HOME + "/number-history.svg?v=1", name: "Number History", zh: "开彩记录" },
+    { href: "/statistics", logo: HOME + "/hot-numbers.svg?v=1", name: "Hot Numbers", zh: "热门号码" },
     { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
     { href: "#", logo: "", name: "Settings", zh: "设置", settings: true },
     // The icon artwork already reads 恭喜发财, so no second Chinese label here.

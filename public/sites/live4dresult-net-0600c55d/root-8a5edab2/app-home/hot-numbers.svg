@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Hot Numbers">
+  <g fill="#cc0000">
+    <rect x="14" y="74" width="22" height="30" rx="5"/>
+    <rect x="44" y="56" width="22" height="48" rx="5"/>
+    <rect x="74" y="38" width="22" height="66" rx="5"/>
+  </g>
+  <path d="M92 10.5l5.5 11.2 12.3 1.8-8.9 8.7 2.1 12.3L92 38.6l-11 5.9 2.1-12.3-8.9-8.7 12.3-1.8z" fill="#f5a623"/>
+</svg>
