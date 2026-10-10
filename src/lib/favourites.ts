@@ -20,6 +20,12 @@ export const SCOPE_LABEL: Record<Scope, string> = {
   special: "Special 特别奖",
   consolation: "Con 安慰奖",
 };
+/** The same three prize names, one row per language. */
+export const SCOPE_LABEL_I18N: Record<Scope, { en: string; ms: string; zh: string }> = {
+  main: { en: "Main", ms: "Utama", zh: "正奖" },
+  special: { en: "Special", ms: "Istimewa", zh: "特别奖" },
+  consolation: { en: "Con", ms: "Saguhati", zh: "安慰奖" },
+};
 
 export function isNum(v: string): boolean {
   return /^\d{4}$/.test(v);

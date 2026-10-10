@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ALL_SCOPES, FAV_EVENT, SCOPE_LABEL, YELLOW, addFav, isNum, loadFavs, removeFav, saveFavs,
+  ALL_SCOPES, FAV_EVENT, SCOPE_LABEL, SCOPE_LABEL_I18N, YELLOW, addFav, isNum, loadFavs, removeFav, saveFavs,
   type Fav, type Scope,
 } from "../lib/favourites";
 import { ArrowLeft, ArrowRight, BellRinging, BellSlash, X } from "@phosphor-icons/react";
@@ -29,6 +29,11 @@ function uniquePerms(digits: string): string[] {
   return [...set].sort();
 }
 
+/** Prize name in the chosen language. */
+function scopeName(s: string, l: "en" | "ms" | "zh"): string {
+  const row = SCOPE_LABEL_I18N[s as keyof typeof SCOPE_LABEL_I18N];
+  return row ? row[l] : s;
+}
 export default function FavouritesApp() {
   const [lang] = useLang();
   const params = useSearchParams();
@@ -179,7 +184,7 @@ export default function FavouritesApp() {
                     border: on ? "2px solid " + RED : "1px solid #ccc",
                     background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#333", fontWeight: on ? 700 : 500,
                   }}>
-                  {SCOPE_LABEL[s]}
+                  {scopeName(s, lang)}
                 </button>
               );
             })}
@@ -232,7 +237,7 @@ export default function FavouritesApp() {
                     </Link>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {f.scopes.map((s) => SCOPE_LABEL[s]).join(" · ")}
+                        {f.scopes.map((s) => scopeName(s, lang)).join(" · ")}
                       </div>
                       <Link href={"/number-history?num=" + f.num} style={{ fontSize: 13, color: RED, textDecoration: "none" }}>Number History <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
                     </div>
@@ -253,7 +258,7 @@ export default function FavouritesApp() {
                             border: on ? "1.5px solid " + RED : "1px solid #ddd",
                             background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#888",
                           }}>
-                          {SCOPE_LABEL[s]}
+                          {scopeName(s, lang)}
                         </button>
                       );
                     })}
