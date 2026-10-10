@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { GearSix } from "@phosphor-icons/react";
+import { useLang, tr, LANG_LABEL } from "../lib/i18n";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
@@ -20,7 +21,7 @@ const GAME_ORDER = [
   "sandakan", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
 ];
 
-type Tile = { href: string; logo: string; name: string; zh?: string; lucky?: boolean; settings?: boolean };
+type Tile = { href: string; logo: string; name: string; zh?: string; key?: string; subKey?: string; lucky?: boolean; settings?: boolean };
 
 /* Design tokens for the app first page.
  *
@@ -110,6 +111,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // whether it is actually shown, and those are set for the app before paint.
   const [open, setOpen] = useState(() => initialOpen || isCapacitorApp());
   const [lucky, setLucky] = useState<string | null>(null);
+  const [lang, setLang] = useLang();
   const [specialDraw, setSpecialDraw] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
@@ -281,14 +283,14 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   });
 
   const actions: Tile[] = [
-    { href: "/favourites", logo: HOME + "/favourite.png?v=2", name: "Favourite Numbers", zh: "收藏号码" },
-    { href: "/dabogong", logo: HOME + "/dabogong.png?v=2", name: "大伯公", zh: "千字图" },
-    { href: "/number-history", logo: HOME + "/number-history.svg?v=1", name: "Number History", zh: "开彩记录" },
-    { href: "/statistics", logo: HOME + "/hot-numbers.svg?v=1", name: "Hot Numbers", zh: "热门号码" },
+    { href: "/favourites", logo: HOME + "/favourite.png?v=2", name: "Favourite Numbers", zh: "收藏号码", key: "favourite" },
+    { href: "/dabogong", logo: HOME + "/dabogong.png?v=2", name: "大伯公", zh: "千字图", key: "dabogong", subKey: "dabogongSub" },
+    { href: "/number-history", logo: HOME + "/number-history.svg?v=1", name: "Number History", zh: "开彩记录", key: "history" },
+    { href: "/statistics", logo: HOME + "/hot-numbers.svg?v=1", name: "Hot Numbers", zh: "热门号码", key: "hot" },
     // The icon artwork already reads 恭喜发财, so no second Chinese label here.
-    { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", lucky: true },
-    { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
-    { href: "#", logo: "", name: "Settings", zh: "设置", settings: true },
+    { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", key: "lucky", lucky: true },
+    { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分", key: "rate" },
+    { href: "#", logo: "", name: "Settings", zh: "设置", key: "settings", settings: true },
   ];
 
   return (
@@ -317,7 +319,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           onClick={() => setOpen(false)}
           style={{ width: "100%", margin: "8px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, letterSpacing: 0.2, cursor: "pointer" }}
         >
-          See live results 查看成绩
+          {tr("seeLive", lang)}
         </button>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
@@ -349,8 +351,8 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                   <GearSix size={30} weight="bold" color={ACCENT} aria-hidden="true" />
                 )}
               </span>
-              <span style={NAME}>{t.name}</span>
-              {t.zh ? <span style={{ ...SUB, fontWeight: 700, color: ACCENT }}>{t.zh}</span> : null}
+              <span style={NAME}>{t.key ? tr(t.key, lang) : t.name}</span>
+              {t.subKey ? <span style={{ ...SUB, fontWeight: 700, color: ACCENT }}>{tr(t.subKey, lang)}</span> : (!t.key && t.zh ? <span style={{ ...SUB, fontWeight: 700, color: ACCENT }}>{t.zh}</span> : null)}
             </Nav>
           ))}
         </div>
@@ -376,11 +378,25 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "20px 20px 16px", width: "88%", maxWidth: 340 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: ACCENT, marginBottom: 14 }}>Settings 设置</div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: ACCENT, marginBottom: 14 }}>{tr("settings", lang)}</div>
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{tr("language", lang)}</div>
+              <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                {(["en", "ms", "zh"] as const).map((l) => (
+                  <button key={l} type="button" onClick={() => setLang(l)}
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700,
+                      border: lang === l ? "2px solid " + ACCENT : "1px solid #ccc",
+                      background: lang === l ? "#ffe9e9" : "#fff", color: lang === l ? ACCENT : "#333" }}>
+                    {LANG_LABEL[l]}
+                  </button>
+                ))}
+              </div>
+              <div style={{ fontSize: 12, color: "#999", marginTop: 6 }}>{tr("languageHelp", lang)}</div>
+            </div>
+
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Keep screen on</div>
-                <div style={{ fontSize: 13, color: "#777" }}>屏幕常亮</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{tr("keepScreen", lang)}</div>
               </div>
               <button
                 type="button"
@@ -393,14 +409,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: keepOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>
-              While this is on the phone will not sleep during a live draw.
-            </div>
+            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("keepScreenHelp", lang)}</div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
               <div>
-                <div style={{ fontSize: 15, fontWeight: 700 }}>Live draw sound</div>
-                <div style={{ fontSize: 13, color: "#777" }}>开奖提示音</div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{tr("drawSound", lang)}</div>
               </div>
               <button
                 type="button"
@@ -413,10 +426,8 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: soundOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>
-              A short knock sounds as each number comes out during a live draw.
-            </div>
-            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>Done 完成</button>
+            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("drawSoundHelp", lang)}</div>
+            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>{tr("done", lang)}</button>
           </div>
         </div>
       ) : null}
