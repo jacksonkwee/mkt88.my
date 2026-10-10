@@ -285,10 +285,10 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     { href: "/dabogong", logo: HOME + "/dabogong.png?v=2", name: "大伯公", zh: "千字图" },
     { href: "/number-history", logo: HOME + "/number-history.svg?v=1", name: "Number History", zh: "开彩记录" },
     { href: "/statistics", logo: HOME + "/hot-numbers.svg?v=1", name: "Hot Numbers", zh: "热门号码" },
-    { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
-    { href: "#", logo: "", name: "Settings", zh: "设置", settings: true },
     // The icon artwork already reads 恭喜发财, so no second Chinese label here.
     { href: "#", logo: HOME + "/gongxi.png?v=2", name: "Lucky Numbers", lucky: true },
+    { href: PLAY_URL, logo: HOME + "/rate-us.png?v=2", name: "Rate us", zh: "评分" },
+    { href: "#", logo: "", name: "Settings", zh: "设置", settings: true },
   ];
 
   return (
@@ -320,7 +320,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           See live results 查看成绩
         </button>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
           {actions.map((t) => (
             <Nav
               key={t.name}
