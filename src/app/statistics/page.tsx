@@ -45,7 +45,13 @@ export default function StatisticsPage() {
               号码过去出现多少次，都不会改变它下一次的机会。本页仅供参考。
             </div>
 
-            <h2 className="h5 mt-4 mb-3">Coverage 数据范围</h2>
+            <h2 className="h5 mt-4 mb-2">Coverage 数据范围</h2>
+            <p className="text-muted small mb-2">
+              Draws copied up to <strong>{dmy(latest)}</strong> &middot; statistics rebuilt{" "}
+              <strong>{dmy(stats.generated)}</strong>. Both move on their own, every night.
+              <br />
+              资料抄录至 <strong>{dmy(latest)}</strong>，统计于 <strong>{dmy(stats.generated)}</strong> 重建。两个日期每晚自动更新。
+            </p>
             <div className="table-responsive mb-4">
               <table className="table table-sm table-striped align-middle">
                 <thead>

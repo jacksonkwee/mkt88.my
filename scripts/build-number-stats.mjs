@@ -32,7 +32,7 @@ const GAMES = [
   ["lucky", "Lucky HariHari 4D", "天天好运", 2],
 ];
 
-const out = { generated: new Date().toISOString().slice(0, 10), games: [] };
+const out = { generated: new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10), games: [] };
 for (const [key, name, zh, gi] of GAMES) {
   const appear = new Map();   // number -> total appearances (any prize)
   const asFirst = new Map();  // number -> times it was 1st prize
