@@ -1,17 +1,21 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 /**
  * Server-rendered information block. Google needs real text on the page, so
  * every result / tool page carries a short explanation + internal links.
+ *
+ * The copy may be plain text or, for pages that carry all three languages in
+ * the markup, the hidden-by-CSS spans that pick one.
  */
 export default function SeoText({
   heading,
   paragraphs,
   links,
 }: {
-  heading: string;
-  paragraphs: string[];
-  links?: { href: string; label: string }[];
+  heading: ReactNode;
+  paragraphs: ReactNode[];
+  links?: { href: string; label: ReactNode }[];
 }) {
   return (
     <section style={{ maxWidth: 900, margin: "18px auto 30px", padding: "0 14px", color: "#333", lineHeight: 1.65 }}>

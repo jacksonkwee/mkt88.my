@@ -97,6 +97,27 @@ export const STRINGS: Record<string, Row> = {
   favAlertFor:     { en: "Alert for", ms: "Maklum untuk", zh: "提醒奖项" },
   favSpecialNotif: { en: "Special notification", ms: "Pemberitahuan khas", zh: "特别通知" },
   favMine:         { en: "My favourite numbers", ms: "Nombor kegemaran saya", zh: "我的收藏" },
+
+  // 大伯公 page (/dabogong).
+  dabogongTitle:   { en: "DABOGONG Number Chart", ms: "DABOGONG Carta Nombor", zh: "大伯公 千字图万字图" },
+  dbgPlaceholder:  { en: "Number or word", ms: "Nombor atau perkataan", zh: "号码或词语" },
+  dbgHint:         {
+    en: "Type 3-4 digits or a word in Chinese, English or BM · e.g. 666 · okra · dog",
+    ms: "Taip 3-4 digit atau perkataan dalam Cina, Inggeris atau BM · cth. 666 · okra · bendi · anjing",
+    zh: "输入 3-4 位数或词语（中文 / English / BM）· 例 666 · okra · 狗",
+  },
+  dbgSearch:       { en: "Search", ms: "Cari", zh: "查询" },
+  dbgClear:        { en: "Clear", ms: "Kosongkan", zh: "清除" },
+  loading:         { en: "Loading…", ms: "Memuatkan…", zh: "载入中…" },
+  dbgNothing:      { en: "Nothing found.", ms: "Tiada hasil ditemui.", zh: "找不到结果。" },
+  dbgLoadFail:     { en: "Unable to load. Please try again.", ms: "Gagal memuatkan. Sila cuba lagi.", zh: "无法载入，请再试一次。" },
+  dbgResultOne:    { en: "result for", ms: "hasil untuk", zh: "个结果" },
+  dbgResultMany:   { en: "results for", ms: "hasil untuk", zh: "个结果" },
+  dbgTapHistory:   { en: "tap a number for its Number History", ms: "ketik nombor untuk Sejarah Nombor", zh: "点号码看开彩记录" },
+  dbgNoMatch:      { en: "No number found for that word.", ms: "Tiada nombor ditemui untuk perkataan itu.", zh: "找不到与这个词相关的号码。" },
+  dbgImage:        { en: "image", ms: "imej", zh: "图片" },
+  dbgKind10k:      { en: "10,000-number chart", ms: "Carta 10,000 nombor", zh: "万字图" },
+  dbgKind1k:       { en: "Tua Pek Kong 1,000-number chart", ms: "Carta 1,000 nombor Tua Pek Kong", zh: "大伯公千字图" },
 };
 
 /** Look a key up in one language; an unknown key is returned unchanged. */
