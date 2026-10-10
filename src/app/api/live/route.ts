@@ -24,8 +24,8 @@ const ALLOWED = [
   "www.diriwan88.com",
   "live4d2u.net",
   "www.live4d2u.net",
-  "gdlotto.net",
-  "www.gdlotto.net",
+  "gdlotto.com",
+  "www.gdlotto.com",
   "9lotto.com",
   "www.9lotto.com",
 ];

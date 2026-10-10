@@ -294,8 +294,8 @@ async function gdHasNewDraw(date: string): Promise<boolean> {
     const prev = prevDayIso(date);
     const [py, pm, pd] = prev.split("-");
     const [cur, before] = await Promise.all([
-      httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y),
-      httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + pm + "/" + pd + "/" + py),
+      httpGet("https://gdlotto.com/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y),
+      httpGet("https://gdlotto.com/results/ajax/_result.aspx?past=1&v=1&d=" + pm + "/" + pd + "/" + py),
     ]);
     const a = sixMainOf(cur);
     const b = sixMainOf(before);
@@ -338,7 +338,7 @@ async function nineHasNewDraw(date: string): Promise<boolean> {
 async function gdPastParts(date: string): Promise<{ four?: Set; gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } | null> {
   try {
     const [y, m, d] = date.split("-");
-    const html = await httpGet("https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);
+    const html = await httpGet("https://gdlotto.com/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);
     const txt = cleanHtml(html);
     const out: { four?: Set; gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } = {};
     const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);

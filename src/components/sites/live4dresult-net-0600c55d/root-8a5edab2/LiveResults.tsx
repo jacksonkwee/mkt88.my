@@ -791,7 +791,7 @@ async function gdInfo(): Promise<GdInfo | null> {
     const iso = dateStrNoPad(new Date(Date.now() - off * 86400000));
     const [y, mo, dd] = iso.split("-");
     const doc = await fetchDoc(
-      "https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + mo + "/" + dd + "/" + y
+      "https://gdlotto.com/results/ajax/_result.aspx?past=1&v=1&d=" + mo + "/" + dd + "/" + y
     );
     if (!doc || !doc.body) continue;
     const text = (doc.body.innerText || "").replace(/\s+/g, " ");

@@ -426,7 +426,7 @@ function gdPartsOf(html: string): { six: SixEntry; jp: Record<string, string>; k
 
 function gdUrl(iso: string): string {
   const [y, m, d] = iso.split("-");
-  return "https://gdlotto.net/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y;
+  return "https://gdlotto.com/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y;
 }
 
 /**
