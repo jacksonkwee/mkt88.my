@@ -8,7 +8,7 @@ import stats from "../../lib/number-stats.json";
 export const metadata: Metadata = {
   title: "All-Time 4D Hot Numbers 万字热门号码统计 | mkt88.my",
   description:
-    "Which 4D numbers come up most often? All-time hot number statistics for Magnum 4D, Da Ma Cai, Sports Toto, Singapore 4D, Sabah 88, Cash Sweep, Sandakan, Grand Dragon, Nine Lotto, Perdana and Lucky HariHari, covering draws from 1985 to today.",
+    "Which 4D numbers come up most often? Hot number statistics for Magnum 4D, Da Ma Cai, Sports Toto, Singapore 4D, Sabah 88, Cash Sweep, Sandakan, Grand Dragon, Nine Lotto, Perdana and Lucky HariHari, counted from every draw in our archive.",
   alternates: { canonical: "https://www.mkt88.my/statistics" },
 };
 
@@ -21,16 +21,11 @@ const dmy = (iso: string | null) => {
   return d + "/" + m + "/" + y;
 };
 
-function totalDraws(games: Game[]) {
-  return games.reduce((s, g) => s + g.draws, 0);
-}
-
 export default function StatisticsPage() {
   const games = stats.games as Game[];
-  const draws = totalDraws(games);
+  const draws = games.reduce((s, g) => s + g.draws, 0);
   const appearances = games.reduce((s, g) => s + g.totalAppearances, 0);
-  const earliest = games.map((g) => g.from).filter(Boolean).sort()[0] || stats.games[0].from;
-  const latest = games.map((g) => g.to).filter(Boolean).sort().slice(-1)[0] || stats.games[0].to;
+  const latest = games.map((g) => g.to).filter(Boolean).sort().slice(-1)[0];
 
   return (
     <>
@@ -43,14 +38,14 @@ export default function StatisticsPage() {
 
             <p>
               This page ranks the numbers that have come up most often in each 4D game, counted
-              across every draw we hold. The history runs from <strong>{dmy(earliest)}</strong> to{" "}
-              <strong>{dmy(latest)}</strong> and covers <strong>{n(draws)}</strong> draws and{" "}
-              <strong>{n(appearances)}</strong> winning-number appearances across all 11 games.
+              across every draw in <strong>our archive</strong> — <strong>{n(draws)}</strong> draws
+              and <strong>{n(appearances)}</strong> winning-number records across all 11 games,
+              copied up to <strong>{dmy(latest)}</strong>.
             </p>
             <p>
-              这一页列出每个万字游戏里<strong>出现次数最多</strong>的号码，是根据我们保存的每一次开彩记录统计出来的，
-              从 <strong>{dmy(earliest)}</strong> 到 <strong>{dmy(latest)}</strong>，共 <strong>{n(draws)}</strong> 次开彩、
-              <strong>{n(appearances)}</strong> 个中奖号码记录，涵盖全部 11 个游戏。
+              这一页列出每个万字游戏里<strong>出现次数最多</strong>的号码，是根据我们档案里的每一次开彩记录统计出来的
+              —— 共 <strong>{n(draws)}</strong> 次开彩、<strong>{n(appearances)}</strong> 个中奖号码记录，
+              涵盖全部 11 个游戏，资料抄录至 <strong>{dmy(latest)}</strong>。
             </p>
 
             <div className="alert alert-secondary small">
@@ -63,15 +58,23 @@ export default function StatisticsPage() {
             </div>
 
             <h2 className="h5 mt-4 mb-3">Coverage 数据范围</h2>
+            <p className="text-muted small">
+              The dates below describe <strong>our archive</strong>, not necessarily every draw a game
+              has ever held. Grand Dragon&rsquo;s earlier draws are still being added, so its counts
+              are lower and its start date later than the real game.
+              <br />
+              下表日期描述的是<strong>我们的档案</strong>，不一定等于该游戏的全部历史。
+              豪龙（Grand Dragon）的早期开彩还在补齐，所以它的次数偏少、起始日期偏迟。
+            </p>
             <div className="table-responsive mb-4">
               <table className="table table-sm table-striped align-middle">
                 <thead>
                   <tr>
                     <th>Game 游戏</th>
-                    <th className="text-end">Draws 开彩次数</th>
-                    <th className="text-end">Numbers logged 号码记录</th>
-                    <th>First result 最早</th>
-                    <th>Latest result 最近</th>
+                    <th className="text-end">Draws in archive 档案开彩次数</th>
+                    <th className="text-end">Number records 号码记录</th>
+                    <th>Archive starts 档案最早</th>
+                    <th>Archive ends 档案最近</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -105,7 +108,7 @@ export default function StatisticsPage() {
                     {g.name} <span className="text-muted">{g.zh}</span>
                   </h3>
                   <div className="text-muted small mb-2">
-                    {dmy(g.from)} &ndash; {dmy(g.to)} &middot; {n(g.draws)} draws
+                    {dmy(g.from)} &ndash; {dmy(g.to)} &middot; {n(g.draws)} draws in archive
                   </div>
                   <div className="table-responsive">
                     <table className="table table-sm table-bordered align-middle mb-4">
@@ -149,15 +152,16 @@ export default function StatisticsPage() {
             <p>
               Click any number to open it in <a href="/number-history">Number History 开彩记录</a>,
               where you can see every single draw it appeared in — the exact date, game and prize —
-              and check other numbers, their permutations (Pau 包) or their reverse (来回).
+              and check other numbers, their permutations (Pau 包) or their reverse (来回). Draw days
+              and times for every game are on the <a href="/draw-schedule">draw schedule</a>.
             </p>
           </div>
         </div>
       </main>
       <SeoText
-        heading="4D Hot Numbers 万字热门号码 - 41 年历史统计"
+        heading="4D Hot Numbers 万字热门号码 - 历史统计"
         paragraphs={[
-          "本页统计 11 个万字游戏从 1985 年至 2026 年共超过 46,000 次开彩记录，列出每个游戏出现次数最多的号码，并标明它作为头奖出现的次数以及最近一次出现的日期。",
+          "本页统计 11 个万字游戏的开彩记录，列出每个游戏出现次数最多的号码，并标明它作为头奖出现的次数以及最近一次出现的日期。统计只根据我们档案里已有的记录计算，资料仍在持续补齐。",
           "Use the all-time hot number list alongside the Number History search: the list shows which numbers come up most often, and Number History shows exactly when and where each one appeared.",
         ]}
         links={[
