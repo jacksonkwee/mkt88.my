@@ -60,11 +60,12 @@ export default function StatisticsPage() {
             <h2 className="h5 mt-4 mb-3">Coverage 数据范围</h2>
             <p className="text-muted small">
               The dates below describe <strong>our archive</strong>, not necessarily every draw a game
-              has ever held. Grand Dragon&rsquo;s earlier draws are still being added, so its counts
-              are lower and its start date later than the real game.
+              has ever held. Grand Dragon&rsquo;s archive starts 12/06/2020 &mdash; the earliest draw its
+              operator still publishes; the 2017&ndash;2019 draws are no longer available from them.
               <br />
               下表日期描述的是<strong>我们的档案</strong>，不一定等于该游戏的全部历史。
-              豪龙（Grand Dragon）的早期开彩还在补齐，所以它的次数偏少、起始日期偏迟。
+              豪龙（Grand Dragon）的档案从 12/06/2020 开始 —— 这是营运商目前仍然提供的最早成绩；
+              2017–2019 年的成绩，营运商已经不再提供。
             </p>
             <div className="table-responsive mb-4">
               <table className="table table-sm table-striped align-middle">

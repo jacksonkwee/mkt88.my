@@ -55,9 +55,25 @@ if (storedTo < target) {
   console.log("already current - nothing to fetch");
 }
 
-// Perdana, HariHari, Grand Dragon and Nine Lotto are kept current by the
-// fifteen-minute results job, so this picks those up for free.
+// Perdana and HariHari are picked up from the files in the repo.
 run("merge-local-history.mjs");
+
+// Nine Lotto and Grand Dragon are NOT on the mirror the date merge reads, so
+// they are read straight from their operators. Without this Nine Lotto sat
+// frozen at 2026-09-28 while every other game moved on: the old comment here
+// assumed the fifteen-minute results job would keep them current, and that job
+// ran on GitHub Actions, which died with the account suspension.
+for (const [game, label] of [["nine", "Nine Lotto"], ["gd", "Grand Dragon"]]) {
+  const cur = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+  const gi = cur.games.findIndex((g) => (game === "nine" ? /Nine ?Lotto/i : /Grand Dragon/i).test(g.name));
+  if (gi < 0) { console.log(label + ": not in the database, skipped"); continue; }
+  let max = -Infinity;
+  for (const list of Object.values(cur.hits)) for (const [dd, g] of list) if (g === gi && dd > max) max = dd;
+  if (!Number.isFinite(max)) { console.log(label + ": no draws stored, skipped"); continue; }
+  const from = isoFromOffset(cur.dayBase + max + 1);
+  if (from > target) { console.log(label + ": already current to " + target); continue; }
+  run("merge-official-history.mjs", [game, from, target]);
+}
 
 const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
 const after = countHits(db);
