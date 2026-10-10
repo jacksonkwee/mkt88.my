@@ -1,0 +1,48 @@
+# GitLab CI for mkt88.my
+#
+# ONE job only: the daily number-history refresh. It used to run on GitHub
+# Actions, which stopped dead when that account was suspended - and that is why
+# the archive froze at 2026-09-29.
+#
+# Why only the daily job: GitLab's free tier gives 400 compute minutes a month.
+# A once-a-day job taking 2-3 minutes uses roughly 60-90 of those, which fits
+# comfortably. The jobs that run every 5-15 minutes would burn the whole quota in
+# a single day, so those stay on the PC (or wait for GitHub to come back).
+#
+# One-time setup in GitLab:
+#   1. Settings -> CI/CD -> Job token permissions
+#      turn ON "Allow Git push requests to the repository"
+#   2. CI/CD -> Schedules -> New schedule
+#        Description      : daily number history
+#        Interval pattern : 30 16 * * *
+#        Target branch    : main
+#        Timezone         : UTC   (16:30 UTC = 00:30 Malaysia, after the last draw)
+#
+# This never runs on an ordinary push - only on a schedule or when started by
+# hand from the GitLab web UI.
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - when: never
+
+number-history:
+  image: node:20
+  timeout: 30m
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  script:
+    - node scripts/refresh-number-history.mjs
+    - node scripts/build-number-stats.mjs
+    - git config user.name "mkt88-results-bot"
+    - git config user.email "ci@mkt88.my"
+    - git add -- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json src/lib/number-stats.json
+    - |
+      if git diff --cached --quiet; then
+        echo "nothing new today"
+        exit 0
+      fi
+    - git commit -m "Number history updated $(date -u '+%Y-%m-%d %H:%M UTC')"
+    - git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
