@@ -1023,6 +1023,33 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (!c) continue;
     for (let i = used + 1; i <= 15; i++) c["special-" + i] = "----";
   }
+  /*
+   * The three east cards (Sandakan, Cash Sweep, Sabah 88) are captured HTML and
+   * address their cells as special_number_N / consolation_number_N - not
+   * special-N. The snapshot only ever carried the feed's special-N keys, so
+   * nothing on those cards ever moved: they stayed on whatever the page was
+   * captured with, and none of the spare-cell rules above could reach them.
+   *
+   * Sabah 88 showed it plainly. The mirror prints its thirteen specials across
+   * cells 1-10 and 12-14, leaving cell 11 spare, so the last number sits in
+   * cell 14 - one column past where the operator's board has it - and while the
+   * draw is running the card keeps the captured leftovers beside it (reported
+   * 10 Oct 2026). The feed carries the same numbers in the operator's order, so
+   * they are copied onto the ids the card actually reads, with every slot past
+   * the game's own grid blanked.
+   */
+  for (const [cls, used] of [["table-8", 10], ["table-9", 10], ["table-10", 13]] as [string, number][]) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    for (let i = 1; i <= 15; i++) {
+      const v = i <= used ? c["special-" + i] : "";
+      c["special_number_" + i] = v && !/^----+$/.test(v) ? v : "----";
+    }
+    for (let i = 1; i <= 10; i++) {
+      const v = c["consolation-" + i];
+      c["consolation_number_" + i] = v && !/^----+$/.test(v) ? v : "----";
+    }
+  }
   // Singapore sources can arrive out of order. Use the newest dated result and
   // merge same-date fields so an older archive never overwrites a live draw.
   const sgDate = (v?: Record<string, string>): number => {
