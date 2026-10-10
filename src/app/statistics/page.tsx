@@ -36,18 +36,6 @@ export default function StatisticsPage() {
           <div className="col-sm-12 mt-3 mb-4">
             <h1 className="h4 mb-3">All-Time 4D Hot Numbers 万字热门号码统计</h1>
 
-            <p>
-              This page ranks the numbers that have come up most often in each 4D game, counted
-              across every draw in <strong>our archive</strong> — <strong>{n(draws)}</strong> draws
-              and <strong>{n(appearances)}</strong> winning-number records across all 11 games,
-              copied up to <strong>{dmy(latest)}</strong>.
-            </p>
-            <p>
-              这一页列出每个万字游戏里<strong>出现次数最多</strong>的号码，是根据我们档案里的每一次开彩记录统计出来的
-              —— 共 <strong>{n(draws)}</strong> 次开彩、<strong>{n(appearances)}</strong> 个中奖号码记录，
-              涵盖全部 11 个游戏，资料抄录至 <strong>{dmy(latest)}</strong>。
-            </p>
-
             <div className="alert alert-secondary small">
               <strong>These are historical counts, not predictions.</strong> Every draw is independent:
               how often a number has appeared in the past does not change its chance in the next draw.
@@ -58,15 +46,6 @@ export default function StatisticsPage() {
             </div>
 
             <h2 className="h5 mt-4 mb-3">Coverage 数据范围</h2>
-            <p className="text-muted small">
-              The dates below describe <strong>our archive</strong>, not necessarily every draw a game
-              has ever held. Grand Dragon&rsquo;s archive starts 12/06/2020 &mdash; the earliest draw its
-              operator still publishes; the 2017&ndash;2019 draws are no longer available from them.
-              <br />
-              下表日期描述的是<strong>我们的档案</strong>，不一定等于该游戏的全部历史。
-              豪龙（Grand Dragon）的档案从 12/06/2020 开始 —— 这是营运商目前仍然提供的最早成绩；
-              2017–2019 年的成绩，营运商已经不再提供。
-            </p>
             <div className="table-responsive mb-4">
               <table className="table table-sm table-striped align-middle">
                 <thead>
@@ -142,6 +121,18 @@ export default function StatisticsPage() {
                 </div>
               ))}
             </div>
+
+                        <p>
+              This page ranks the numbers that have come up most often in each 4D game, counted
+              across every draw in <strong>our archive</strong> — <strong>{n(draws)}</strong> draws
+              and <strong>{n(appearances)}</strong> winning-number records across all 11 games,
+              copied up to <strong>{dmy(latest)}</strong>.
+            </p>
+            <p>
+              这一页列出每个万字游戏里<strong>出现次数最多</strong>的号码，是根据我们档案里的每一次开彩记录统计出来的
+              —— 共 <strong>{n(draws)}</strong> 次开彩、<strong>{n(appearances)}</strong> 个中奖号码记录，
+              涵盖全部 11 个游戏，资料抄录至 <strong>{dmy(latest)}</strong>。
+            </p>
 
             <h2 className="h5 mt-4 mb-2">How to read this 怎么看</h2>
             <p>
