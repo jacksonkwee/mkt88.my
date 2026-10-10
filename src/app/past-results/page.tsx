@@ -20,14 +20,14 @@ export default function PastResultsPage() {
       <RegionButtons />
       <PastResultsView date={DEFAULT_PAST_DATE} />
       <SeoText
-        heading="Past 4D Results 過去開彩記錄"
+        heading="Past 4D Results 过去开彩记录"
         paragraphs={[
           "Browse past 4D draw results by date for Malaysia, Singapore and Cambodia - Magnum 4D, Magnum Life, Magnum Jackpot Gold, Da Ma Cai 1+3D, Sports Toto 4D / 5D / 6D, Singapore Pools 4D, Sandakan 4D, Sabah 88 4D, Special Cash Sweep 4D, Grand Dragon 4D / 6D, Nine Lotto, Perdana 4D and Lucky HariHari.",
           "Use the calendar or the Malaysia & Singapore / Cambodia tabs at the top to pick a date. Every day is kept, so you can look back at older draws any time.",
-          "Looking for one number instead of one date? Use Number History 開彩記錄 to see every draw a specific number has appeared in since 1985."
+          "Looking for one number instead of one date? Use Number History 开彩记录 to see every draw a specific number has appeared in since 1985."
         ]}
         links={[
-          { href: "/number-history", label: "Number History 開彩記錄" },
+          { href: "/number-history", label: "Number History 开彩记录" },
           { href: "/", label: "Today's Live Results" },
           { href: "/lotto-4d", label: "Lotto 4D 柬埔寨" }
         ]}

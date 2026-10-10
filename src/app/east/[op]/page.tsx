@@ -8,8 +8,8 @@ import raw from "../../../components/sites/live4dresult-net-0600c55d/root-8a5eda
 
 const OPS: Record<string, { cls: string; title: string; desc: string }> = {
   stc: { cls: "table-8", title: "Sandakan 4D 山打根赛马会 Result", desc: "Sandakan 4D live results." },
-  sabah88: { cls: "table-10", title: "Sabah 88 4D 沙巴萬字 Result", desc: "Sabah 88 4D live results." },
-  cashsweep: { cls: "table-9", title: "Special Cash Sweep 4D 砂勞越大萬 Result", desc: "Special Cash Sweep 4D live results." },
+  sabah88: { cls: "table-10", title: "Sabah 88 4D 沙巴万字 Result", desc: "Sabah 88 4D live results." },
+  cashsweep: { cls: "table-9", title: "Special Cash Sweep 4D 砂拉越大万 Result", desc: "Special Cash Sweep 4D live results." },
 };
 
 const html = (raw as { colHtml: string }).colHtml || "";

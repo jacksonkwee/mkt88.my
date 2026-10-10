@@ -7,6 +7,7 @@
  * grids, exactly as the operator published them.
  */
 import deepRaw from "./deep-past.json";
+import { toSimplified } from "./zh-simplified";
 
 export interface DeepGame { n: string; d: string; dn: string; p: [string, string][]; g: [string, string[]][] }
 type Store = Record<string, Record<string, DeepGame>>;
@@ -20,22 +21,22 @@ const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d
 /** Which archive records make up each game page, and how to draw them. */
 export const DEEP_CARDS: Record<string, { key: string; table: string; bg: string; logo: string; name: string }[]> = {
   magnum: [
-    { key: "magnum", table: "table-1", bg: "magnum-bg", logo: ASSET + "logo_magnum.gif?v=1", name: "Magnum 4D 萬能" },
+    { key: "magnum", table: "table-1", bg: "magnum-bg", logo: ASSET + "logo_magnum.gif?v=1", name: "Magnum 4D 万能" },
     { key: "magnum-life", table: "table-3", bg: "magnum-bg", logo: ASSET + "logo_magnum.gif?v=1", name: "Magnum Life万能天天彩" },
-    { key: "magnum-jp", table: "table-2", bg: "magnum-bg", logo: ASSET + "logo_magnum.gif?v=1", name: "Magnum Jackpot Gold萬能黃金万字积宝" },
+    { key: "magnum-jp", table: "table-2", bg: "magnum-bg", logo: ASSET + "logo_magnum.gif?v=1", name: "Magnum Jackpot Gold万能黄金万字积宝" },
   ],
   damacai: [
-    { key: "damacai", table: "table-4", bg: "damacai-bg", logo: ASSET + "logo_damacai.gif?v=1", name: "Da Ma Cai 1+3D 大馬彩" },
-    { key: "damacai33", table: "table-5", bg: "damacai-bg", logo: ASSET + "logo_damacai.gif?v=1", name: "Da Ma Cai 3+3D 大馬彩" },
+    { key: "damacai", table: "table-4", bg: "damacai-bg", logo: ASSET + "logo_damacai.gif?v=1", name: "Da Ma Cai 1+3D 大马彩" },
+    { key: "damacai33", table: "table-5", bg: "damacai-bg", logo: ASSET + "logo_damacai.gif?v=1", name: "Da Ma Cai 3+3D 大马彩" },
   ],
   sportstoto: [
     { key: "sportstoto", table: "table-6", bg: "sportstoto-bg", logo: ASSET + "logo_toto.gif?v=1", name: "SportsToto 4D 多多" },
     { key: "sportstoto56", table: "table-7", bg: "sportstoto-bg", logo: ASSET + "logo_toto.gif?v=1", name: "SportsToto 5D, 6D, Lotto多多六合彩" },
   ],
   sg: [{ key: "sg", table: "table-11", bg: "singapore-bg", logo: SG_LOGO, name: "Singapore 4D" }],
-  sabah88: [{ key: "sabah88", table: "table-10", bg: "sabah88-bg", logo: ASSET + "logo_sabah88.gif?v=1", name: "Sabah 88 4D 沙巴萬字" }],
+  sabah88: [{ key: "sabah88", table: "table-10", bg: "sabah88-bg", logo: ASSET + "logo_sabah88.gif?v=1", name: "Sabah 88 4D 沙巴万字" }],
   sandakan: [{ key: "sandakan", table: "table-8", bg: "sandakan-bg", logo: ASSET + "logo_stc4d.gif?v=1", name: "Sandakan 4D山打根赛马会" }],
-  cashsweep: [{ key: "cashsweep", table: "table-9", bg: "cashsweep-bg", logo: ASSET + "logo_cashsweep.gif?v=1", name: "Special CashSweep 砂勞越大萬" }],
+  cashsweep: [{ key: "cashsweep", table: "table-9", bg: "cashsweep-bg", logo: ASSET + "logo_cashsweep.gif?v=1", name: "Special CashSweep 砂拉越大万" }],
 };
 
 DEEP_CARDS.east = [...DEEP_CARDS.sandakan, ...DEEP_CARDS.cashsweep, ...DEEP_CARDS.sabah88];
@@ -91,7 +92,9 @@ export function buildDeepCard(date: string, slug: string, cardId: string): { htm
         pairsTable(g.p) + extra + grids +
       "</div>" +
     "</div>";
-  return { html, name: info.name || g.n };
+  // This HTML is injected straight into the page, so the Traditional text the
+  // operators printed in the archived tables is converted here.
+  return { html: toSimplified(html), name: toSimplified(info.name || g.n) };
 }
 
 /** True when the archive holds this game on this date. */

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { rewriteHtml, toLocal } from "./site-paths";
+import { toSimplified } from "../../../../lib/zh-simplified";
 
 export interface CardCellAttrs {
   width?: string;
@@ -105,7 +106,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
           <div className="lottery-logo">
             <img src={toLocal(h.logo.src)} alt={h.logo.alt} />
           </div>
-          <div className="lottery-name">{h.name}</div>
+          <div className="lottery-name">{toSimplified(h.name)}</div>
         </div>
         <div className="row mx-0 justify-content-between">
           <div className="date">

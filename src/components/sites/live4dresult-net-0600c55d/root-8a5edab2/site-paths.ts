@@ -1,3 +1,5 @@
+import { toSimplified } from "../../../../lib/zh-simplified";
+
 export const ASSET_BASE = "/sites/live4dresult-net-0600c55d/root-8a5edab2";
 
 const HOST = "https://live4dresult.net";
@@ -18,6 +20,8 @@ export function toLocal(src: string): string {
  * - point same-site images at the local asset namespace,
  * - neutralise same-site page links (those pages are out of clone scope),
  * - leave external links untouched.
+ * - the operators write their tables in Traditional Chinese, so the text is
+ *   passed through toSimplified on the way out.
  */
 export function rewriteHtml(html: string): string {
   let h = html.replace(new RegExp(HOST.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), "");
@@ -29,7 +33,7 @@ export function rewriteHtml(html: string): string {
   h = h.replace(/(this\.src=')(\/[^']*)/g, (_m, p: string, path2: string) =>
     p + (path2.startsWith("/sites/") ? path2 : ASSET_BASE + path2)
   );
-  return h;
+  return toSimplified(h);
 }
 
 /** Parse a CSS inline-style string into a React style object. */

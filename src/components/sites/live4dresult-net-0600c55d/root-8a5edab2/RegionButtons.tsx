@@ -3,7 +3,7 @@ import GameQuickLinks from "./GameQuickLinks";
 const BUTTONS = [
   { label1: "4D Result", label2: "马来西亚", href: "/" },
   { label1: "SG", label2: "新加坡", href: "/singapore-4d-results" },
-  { label1: "East 4D", label2: "東馬", href: "/sabah-sarawak-4d-results" },
+  { label1: "East 4D", label2: "东马", href: "/sabah-sarawak-4d-results" },
   { label1: "Lotto 4D", label2: "柬埔寨", href: "/lotto-4d" },
 ];
 

@@ -235,7 +235,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     setOpen(true);
   }, []);
 
-  // The header logo asks for this screen back, so tapping MKT 發發 on any
+  // The header logo asks for this screen back, so tapping MKT 发发 on any
   // results page returns to the first page.
   useEffect(() => {
     const onHome = () => setOpen(true);
@@ -299,7 +299,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         {/* Brand logo, top of the first page. */}
         <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={MKT_LOGO} alt="MKT 發發" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
+          <img src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>

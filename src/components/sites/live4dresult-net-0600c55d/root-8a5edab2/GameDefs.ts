@@ -16,8 +16,8 @@ export const GAME_DEFS: GameDef[] = [
   {
     slug: "magnum",
     name: "Magnum 4D",
-    zh: "萬能",
-    title: "Magnum 4D Result 萬能 4D 开奖结果",
+    zh: "万能",
+    title: "Magnum 4D Result 万能 4D 开奖结果",
     desc: "Magnum 4D, Magnum Life and Magnum Jackpot Gold results - live and updated instantly after each draw.",
     logo: L("logo_magnum.gif?v=1"),
     cardIds: ["table-1-2026-09-06", "table-3-2026-09-06", "table-2-2026-09-06"],
@@ -36,8 +36,8 @@ export const GAME_DEFS: GameDef[] = [
   {
     slug: "damacai",
     name: "Da Ma Cai 1+3D",
-    zh: "大馬彩",
-    title: "Da Ma Cai 4D Result 大馬彩 4D 开奖结果",
+    zh: "大马彩",
+    title: "Da Ma Cai 4D Result 大马彩 4D 开奖结果",
     desc: "Da Ma Cai 1+3D and Da Ma Cai 3+3D results - live and updated instantly after each draw.",
     logo: L("logo_damacai.gif?v=1"),
     cardIds: ["table-4-2026-09-06", "table-5-2026-09-06"],

@@ -22,7 +22,7 @@ const OP_LABEL: Record<string, string> = {
   sandakan: "Sandakan 4D 山打根",
   sabah88: "Sabah 88 4D 沙巴88",
   cashsweep: "Cash Sweep 4D 沙捞越",
-  east: "Sabah Sarawak 4D 東馬",
+  east: "Sabah Sarawak 4D 东马",
 };
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ op?: string }> }) {
@@ -53,10 +53,10 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
       </div>
       <EastFilter />
       <SeoText
-        heading="Sabah Sarawak 4D Results 東馬開彩結果"
+        heading="Sabah Sarawak 4D Results 东马开彩结果"
         paragraphs={[
-          "Live Sabah Sarawak 4D results: Sandakan 4D 山打根赛马会, Sabah 88 4D 沙巴萬字 and Special Cash Sweep 4D 砂勞越大萬, updated within seconds of every official draw.",
-          "Each card shows the draw date, draw number, the 1st, 2nd and 3rd prize numbers, all Special 特別獎 and Consolation 安慰獎 numbers, plus the 3D and lotto jackpot prizes where the operator publishes them.",
+          "Live Sabah Sarawak 4D results: Sandakan 4D 山打根赛马会, Sabah 88 4D 沙巴万字 and Special Cash Sweep 4D 砂拉越大万, updated within seconds of every official draw.",
+          "Each card shows the draw date, draw number, the 1st, 2nd and 3rd prize numbers, all Special 特别奖 and Consolation 安慰奖 numbers, plus the 3D and lotto jackpot prizes where the operator publishes them.",
           "Sandakan 4D, Sabah 88 4D and Special Cash Sweep 4D draw on their own weekly schedules - the card always shows that game's latest published draw and date."
         ]}
         links={[

@@ -38,9 +38,9 @@ export default async function Page() {
         <SnapshotPage html={colHtml} />
       </div>
       <SeoText
-        heading="Singapore Pools 4D Results 新加坡4D開彩結果"
+        heading="Singapore Pools 4D Results 新加坡4D开彩结果"
         paragraphs={[
-          "Live Singapore 4D results from Singapore Pools: 1st Prize 首獎, 2nd Prize 二獎, 3rd Prize 三獎, all 10 Starter 特別獎 and 10 Consolation 安慰獎 numbers, with the draw number and draw date.",
+          "Live Singapore 4D results from Singapore Pools: 1st Prize 首奖, 2nd Prize 二奖, 3rd Prize 三奖, all 10 Starter 特别奖 and 10 Consolation 安慰奖 numbers, with the draw number and draw date.",
           "The card is checked continuously and updates within seconds of the official Singapore Pools release - every Monday, Wednesday, Saturday and Sunday draw.",
           "See the past Singapore 4D draws on the Past Results page, or check how often a number has appeared with Number History."
         ]}

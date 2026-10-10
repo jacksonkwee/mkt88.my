@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, CaretDown, CaretUp, Check, Star } from "@phosphor-icons/react";
 import { FAV_EVENT, YELLOW, loadFavs, toggleFav, type Fav } from "../lib/favourites";
 import { useLang, tr, type Lang } from "../lib/i18n";
+import { toSimplified } from "../lib/zh-simplified";
 
 const RED = "#cc0000";
 const YELLOW_SOFT = "#fff3d0";
@@ -35,8 +36,8 @@ const MAX_ROWS = 400;
 
 /** The 11 game companies used by the app, plus a catch-all bucket. */
 const COMPANIES: { key: string; label: string; re: RegExp }[] = [
-  { key: "magnum", label: "Magnum 萬能", re: /magnum 4d/i },
-  { key: "damacai", label: "Da Ma Cai 大馬彩", re: /da ma cai/i },
+  { key: "magnum", label: "Magnum 万能", re: /magnum 4d/i },
+  { key: "damacai", label: "Da Ma Cai 大马彩", re: /da ma cai/i },
   { key: "toto", label: "Sports Toto 多多", re: /sportstoto|sports ?toto/i },
   { key: "sg", label: "Singapore 4D 新加坡", re: /singapore/i },
   { key: "gd", label: "Grand Dragon 豪龙", re: /grand dragon/i },
@@ -217,7 +218,7 @@ export default function NumberHistoryApp() {
       {/* Brand logo at the top of the page. */}
       <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4" alt="MKT 發發" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
+        <img src="/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4" alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
       </div>
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         {/* Search + 大伯公 */}
@@ -364,7 +365,7 @@ export default function NumberHistoryApp() {
                       <div style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
                         {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 10, color: "#999" }}>4D</span>}
                       </div>
-                      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{m.game}</span>
+                      <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{toSimplified(m.game)}</span>
                       <span style={{ fontSize: 12, color: "#888", flexShrink: 0 }}>{shortDate(m.date)}</span>
                       <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
                       <span style={{ fontSize: 10.5, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{prizeShort(m.prize, lang)}</span>

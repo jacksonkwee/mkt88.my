@@ -100,8 +100,8 @@ async function hariDirect(date: string, time: "15:30" | "19:30"): Promise<HariSl
 }
 
 function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; set: SetData; more: string; extra?: Array<[string, string]> }): LotteryCardData {
-  const prize: Array<[string, string]> = [["1st Prize 首獎", o.set.prize[0] || "----"], ["2nd Prize 二獎", o.set.prize[1] || "----"], ["3rd Prize 三獎", o.set.prize[2] || "----"]];
-  const tables: LotteryCardData["tables"] = [prizeTable(prize), gridTable("Special 特別獎", o.set.special), gridTable("Consolation 安慰獎", o.set.cons)];
+  const prize: Array<[string, string]> = [["1st Prize 首奖", o.set.prize[0] || "----"], ["2nd Prize 二奖", o.set.prize[1] || "----"], ["3rd Prize 三奖", o.set.prize[2] || "----"]];
+  const tables: LotteryCardData["tables"] = [prizeTable(prize), gridTable("Special 特别奖", o.set.special), gridTable("Consolation 安慰奖", o.set.cons)];
   if (o.extra && o.extra.length) tables.push(prizeTable(o.extra));
   tables.push(moreTable(o.more));
   return {
@@ -112,12 +112,12 @@ function fourCard(o: { id: string; cardCls: string; bg: string; logo: string; na
 }
 
 function sixCard(o: { id: string; cardCls: string; bg: string; logo: string; name: string; date: string; main?: string; subs?: Record<string, string>; extras?: Array<[string, string]> }): LotteryCardData {
-  const rows: Array<[string, string]> = [["1st Prize 首獎", o.main || "----"]];
+  const rows: Array<[string, string]> = [["1st Prize 首奖", o.main || "----"]];
   const or = (a?: string, b?: string) => (a && a !== "----" ? a : "----") + " or " + (b && b !== "----" ? b : "----");
-  rows.push(["2nd Prize 二獎", or(o.subs?.six_2a, o.subs?.six_2b)]);
-  rows.push(["3rd Prize 三獎", or(o.subs?.six_3a, o.subs?.six_3b)]);
-  rows.push(["4th Prize 四獎", or(o.subs?.six_4a, o.subs?.six_4b)]);
-  rows.push(["5th Prize 五獎", or(o.subs?.six_5a, o.subs?.six_5b)]);
+  rows.push(["2nd Prize 二奖", or(o.subs?.six_2a, o.subs?.six_2b)]);
+  rows.push(["3rd Prize 三奖", or(o.subs?.six_3a, o.subs?.six_3b)]);
+  rows.push(["4th Prize 四奖", or(o.subs?.six_4a, o.subs?.six_4b)]);
+  rows.push(["5th Prize 五奖", or(o.subs?.six_5a, o.subs?.six_5b)]);
   return {
     id: o.id, cardCls: o.cardCls + " mkt-past",
     header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name, date: o.date, drawNo: null },
@@ -180,7 +180,7 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
         if (j.gd && j.gd.prize && j.gd.prize.length) {
           const extra: Array<[string, string]> = [];
           if (j.gdjp4) {
-            if (j.gdjp4.jp4_pool) extra.push(["Jackpot Pool 積宝奖金池", j.gdjp4.jp4_pool]);
+            if (j.gdjp4.jp4_pool) extra.push(["Jackpot Pool 积宝奖金池", j.gdjp4.jp4_pool]);
             if (j.gdjp4.jp4_letter) extra.push(["Jackpot Letter 开彩字母", j.gdjp4.jp4_letter]);
             if (j.gdjp4.jp4_units) extra.push(["Winning Units 中奖注数", j.gdjp4.jp4_units]);
           }

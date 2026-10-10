@@ -19,12 +19,12 @@ const iso = (dd) => new Date(DAY0 + (j.dayBase + dd) * 86400000).toISOString().s
 
 // The 11 games the app actually shows, in the app's order.
 const GAMES = [
-  ["magnum", "Magnum 4D", "萬能", 3],
-  ["damacai", "Da Ma Cai 1+3D", "大馬彩", 11],
+  ["magnum", "Magnum 4D", "万能", 3],
+  ["damacai", "Da Ma Cai 1+3D", "大马彩", 11],
   ["sportstoto", "Sports Toto 4D", "多多", 7],
   ["singapore", "Singapore 4D", "新加坡", 6],
   ["sabah88", "Sabah 88 4D", "沙巴88", 13],
-  ["cashsweep", "Cash Sweep 4D", "砂勞越大萬", 10],
+  ["cashsweep", "Cash Sweep 4D", "砂拉越大万", 10],
   ["sandakan", "Sandakan 4D", "山打根", 9],
   ["granddragon", "Grand Dragon 4D", "豪龙", 0],
   ["ninelotto", "Nine Lotto 4D", "九宫格", 14],

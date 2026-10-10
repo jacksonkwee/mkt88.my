@@ -43,11 +43,11 @@ const SCHEDULE: Row[] = [
   { game: "Nine Lotto 4D", zh: "九宫格", days: DAILY, time: "19:00 – 20:10", note: LAST },
   { game: "Perdana 4D", zh: "Perdana", days: DAILY, time: "19:00 – 20:10" },
   { game: "Lucky HariHari 4D", zh: "天天好运", days: DAILY, time: "19:00 – 20:10", note: LAST },
-  { game: "Magnum 4D", zh: "萬能", days: WSS, time: "19:00", note: TUE },
-  { game: "Da Ma Cai 1+3D", zh: "大馬彩", days: WSS, time: "19:00", note: TUE },
+  { game: "Magnum 4D", zh: "万能", days: WSS, time: "19:00", note: TUE },
+  { game: "Da Ma Cai 1+3D", zh: "大马彩", days: WSS, time: "19:00", note: TUE },
   { game: "Sports Toto 4D", zh: "多多", days: WSS, time: "19:00", note: { en: "Plus Tuesday special draws. No draw on Monday.", ms: "Termasuk cabutan khas Selasa. Tiada cabutan pada Isnin.", zh: "另加星期二特别开彩；星期一不开彩。" } },
   { game: "Sabah 88 4D", zh: "沙巴88", days: WSS, time: "19:00", note: TUE },
-  { game: "Cash Sweep 4D", zh: "砂勞越大萬", days: WSS, time: "19:00", note: TUE },
+  { game: "Cash Sweep 4D", zh: "砂拉越大万", days: WSS, time: "19:00", note: TUE },
   { game: "Sandakan 4D", zh: "山打根", days: WSS, time: "19:00", note: TUE },
 ];
 
@@ -133,7 +133,7 @@ export default function DrawSchedulePage() {
               <L
                 en="Special draws are normally held on a Tuesday, on dates the operators announce. There is no fixed weekly pattern and the number of special draws changes from year to year — usually around ten a year. Magnum 4D, Da Ma Cai, Sports Toto, Sabah 88, Cash Sweep and Sandakan all take part in the same special draws."
                 ms="Cabutan khas biasanya diadakan pada hari Selasa, pada tarikh yang diumumkan oleh pengendali. Tiada corak mingguan yang tetap dan bilangan cabutan khas berbeza setiap tahun — biasanya sekitar sepuluh setahun. Magnum 4D, Da Ma Cai, Sports Toto, Sabah 88, Cash Sweep dan Sandakan semuanya menyertai cabutan khas yang sama."
-                zh="特别开彩通常落在星期二，日期由营运商公布，没有固定的每周规律，每年次数也不同（一般约十次）。万能、大马彩、多多、沙巴88、砂勞越大萬和山打根都会参与同一场特别开彩。"
+                zh="特别开彩通常落在星期二，日期由营运商公布，没有固定的每周规律，每年次数也不同（一般约十次）。万能、大马彩、多多、沙巴88、砂拉越大万和山打根都会参与同一场特别开彩。"
               />
             </p>
             <div className="table-responsive mb-4">
