@@ -49,9 +49,9 @@ export default function NumberHistoryPage() {
           zh="搜索任何 4 位数号码，即可看到它在每一个彩票公司（Magnum 万能、Da Ma Cai 大马彩、Sports Toto 多多、Singapore 4D、Grand Dragon 豪龙、Nine Lotto、Sabah 88、Sandakan、Cash Sweep、Perdana、Lucky HariHari）的开彩记录，最早可追溯到 25/08/1985。"
         />,
         <L
-          en="Use Pau to check every permutation of a number at once, or Reverse to check the number and its reverse (for example 1782 and 2871). Filter the list by region (M'sia, Sab, Sar, Spore, Others), by prize (1st, 2nd, 3rd, Special, Consolation) or by game company."
-          ms="Guna Pau untuk menyemak setiap susunan nombor sekali gus, atau Reverse untuk menyemak nombor itu dan sonsangannya (contohnya 1782 dan 2871). Tapis senarai mengikut wilayah (M'sia, Sab, Sar, Spore, Lain-lain), mengikut hadiah (1st, 2nd, 3rd, Istimewa, Saguhati) atau mengikut syarikat permainan."
-          zh="用 Pau 包 一次过查看一个号码的所有排列，或用 Reverse 来回 查看号码本身与其倒转（例如 1782 和 2871）。可以用地区（M'sia、Sab, Sar、Spore、Others）、奖项（1st、2nd、3rd、特别奖、安慰奖）或彩票公司来筛选列表。"
+          en="Use Pau to check every permutation of a number at once, or Reverse to check the number and its reverse (for example 1236 and 6321). Filter the list by region (M'sia, Sab, Sar, Spore, Others), by prize (1st, 2nd, 3rd, Special, Consolation) or by game company."
+          ms="Guna Pau untuk menyemak setiap susunan nombor sekali gus, atau Reverse untuk menyemak nombor itu dan sonsangannya (contohnya 1236 dan 6321). Tapis senarai mengikut wilayah (M'sia, Sab, Sar, Spore, Lain-lain), mengikut hadiah (1st, 2nd, 3rd, Istimewa, Saguhati) atau mengikut syarikat permainan."
+          zh="用 Pau 包 一次过查看一个号码的所有排列，或用 Reverse 来回 查看号码本身与其倒转（例如 1236 和 6321）。可以用地区（M'sia、Sab, Sar、Spore、Others）、奖项（1st、2nd、3rd、特别奖、安慰奖）或彩票公司来筛选列表。"
         />,
         <L
           en="Each result shows the draw date, the game, the prize type and the winning number, with the Dabogong picture and meaning shown under the search bar."
