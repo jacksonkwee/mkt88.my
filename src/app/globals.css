@@ -678,3 +678,16 @@ body.mkt-in-app .card td > a:has(> .anchor) {
     --mkt-cambodia-number: 17px;
   }
 }
+
+/* One language at a time.
+ *
+ * The language setting writes data-lang onto <html> (see src/lib/i18n.ts), so
+ * pages that are rendered once on the server - like /statistics - can carry all
+ * three languages in the HTML and let CSS hide the two that are not wanted.
+ * Keeping them static is what keeps them fast.
+ *
+ * With no data-lang (the very first paint) nothing is hidden.
+ */
+html[data-lang="en"] .L-ms, html[data-lang="en"] .L-zh { display: none !important; }
+html[data-lang="ms"] .L-en, html[data-lang="ms"] .L-zh { display: none !important; }
+html[data-lang="zh"] .L-en, html[data-lang="zh"] .L-ms { display: none !important; }

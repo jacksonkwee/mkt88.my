@@ -21,6 +21,16 @@ const dmy = (iso: string | null) => {
   return d + "/" + m + "/" + y;
 };
 
+/** One label per language; CSS shows only the chosen one (see globals.css). */
+function L({ en, ms, zh }: { en: string; ms: string; zh: string }) {
+  return (
+    <>
+      <span className="L-en">{en}</span>
+      <span className="L-ms">{ms}</span>
+      <span className="L-zh">{zh}</span>
+    </>
+  );
+}
 export default function StatisticsPage() {
   const games = stats.games as Game[];
   const draws = games.reduce((s, g) => s + g.draws, 0);
@@ -30,7 +40,7 @@ export default function StatisticsPage() {
   return (
     <>
       <Header />
-      <RegionButtons />
+      <RegionButtons hideGames />
       <main className="container flex-shrink-0" style={{ minHeight: "60vh" }}>
         <div className="row">
           <div className="col-sm-12 mt-3 mb-4">
@@ -68,8 +78,8 @@ export default function StatisticsPage() {
                         <tr>
                           <th style={{ width: 42 }}>#</th>
                           <th>Number 号码</th>
-                          <th className="text-end">Times drawn</th>
-                          <th className="text-end">As 1st prize</th>
+                          <th className="text-end"><L en="Times drawn" ms="Kali dikeluarkan" zh="开彩次数" /></th>
+                          <th className="text-end"><L en="As 1st prize" ms="Sebagai hadiah pertama" zh="首奖记录" /></th>
                           <th>Last seen 最近一次</th>
                         </tr>
                       </thead>

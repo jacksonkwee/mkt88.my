@@ -63,13 +63,13 @@ type Row = { en: string; ms: string; zh: string };
 /** Everything wired up so far. Add a row here and use its key with tr(). */
 export const STRINGS: Record<string, Row> = {
   favourite:       { en: "Favourite Numbers", ms: "Nombor Kegemaran", zh: "收藏号码" },
-  dabogong:        { en: "Tua Pek Kong",      ms: "Tua Pek Kong",    zh: "大伯公" },
+  dabogong:        { en: "DABOGONG", ms: "DABOGONG", zh: "大伯公" },
   dabogongSub:     { en: "Number Chart",      ms: "Carta Nombor",    zh: "千字图" },
   history:         { en: "Number History",    ms: "Sejarah Nombor",  zh: "开彩记录" },
   hot:             { en: "Hot Numbers",       ms: "Nombor Panas",    zh: "热门号码" },
   rate:            { en: "Rate us",           ms: "Nilai Kami",      zh: "评分" },
   settings:        { en: "Settings",          ms: "Tetapan",         zh: "设置" },
-  lucky:           { en: "Lucky Numbers",     ms: "Nombor Bertuah",  zh: "恭喜发财" },
+  lucky:           { en: "Lucky Number", ms: "Nombor Bertuah", zh: "幸运号码" },
   seeLive:         { en: "See live results",  ms: "Lihat Keputusan Langsung", zh: "查看成绩" },
   language:        { en: "Language",          ms: "Bahasa",          zh: "语言" },
   languageHelp:    {
