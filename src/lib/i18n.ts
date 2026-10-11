@@ -201,6 +201,11 @@ export const STRINGS: Record<string, Row> = {
   luckyTry:        { en: "Try Again", ms: "Cuba Lagi", zh: "再试一次" },
   close:           { en: "Close", ms: "Tutup", zh: "关闭" },
   luckyTip:        { en: "See this number's draw history", ms: "Lihat sejarah cabutan nombor ini", zh: "查看这个号码的开彩记录" },
+
+  // Result-ready reminder (one per game, with the game's name).
+  resultAlerts:     { en: "Result alerts", ms: "Makluman keputusan", zh: "成绩出炉提醒" },
+  resultAlertsHelp: { en: "A reminder with the game's name the moment its result is out, while the app is running.", ms: "Peringatan dengan nama permainan sebaik keputusan keluar, semasa apl berjalan.", zh: "每个游戏成绩一出炉，就用游戏名称提醒你（App 开着时）。" },
+  resultReady:      { en: "Result ready · tap to open", ms: "Keputusan siap · ketik untuk buka", zh: "成绩已出炉 · 点击打开" },
 };
 
 /** Look a key up in one language; an unknown key is returned unchanged. */

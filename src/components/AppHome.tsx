@@ -7,6 +7,7 @@ import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { GearSix } from "@phosphor-icons/react";
 import { useLang, tr, LANG_LABEL } from "../lib/i18n";
+import { RESULT_ALERT_KEY } from "./ResultAlerts";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
@@ -116,6 +117,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [keepOn, setKeepOn] = useState(true);
   const [soundOn, setSoundOn] = useState(true);
+  const [alertsOn, setAlertsOn] = useState(true);
 
   /*
    * The 恭喜发财 reminders open the app at /?lucky=<number>, so the popup is
@@ -179,6 +181,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     try {
       if (localStorage.getItem(WAKE_KEY) === "0") setKeepOn(false);
       if (localStorage.getItem(LIVE_SOUND_KEY) === "0") setSoundOn(false);
+      if (localStorage.getItem(RESULT_ALERT_KEY) === "0") setAlertsOn(false);
     } catch { /* private mode - keep the default */ }
   }, []);
 
@@ -221,6 +224,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const setLiveSound = (on: boolean) => {
     setSoundOn(on);
     try { localStorage.setItem(LIVE_SOUND_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+  };
+
+  const setResultAlerts = (on: boolean) => {
+    setAlertsOn(on);
+    try { localStorage.setItem(RESULT_ALERT_KEY, on ? "1" : "0"); } catch { /* ignore */ }
   };
 
   useEffect(() => {
@@ -427,6 +435,23 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
               </button>
             </div>
             <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("drawSoundHelp", lang)}</div>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700 }}>{tr("resultAlerts", lang)}</div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={alertsOn}
+                aria-label="Result ready alerts"
+                onClick={() => setResultAlerts(!alertsOn)}
+                style={{ border: 0, borderRadius: 999, width: 58, height: 32, background: alertsOn ? "#12b76a" : "#c9c9c9", cursor: "pointer", position: "relative", flex: "0 0 auto" }}
+              >
+                <span style={{ position: "absolute", top: 3, left: alertsOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
+              </button>
+            </div>
+            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>{tr("done", lang)}</button>
           </div>
         </div>

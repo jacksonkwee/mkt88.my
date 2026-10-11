@@ -4,7 +4,7 @@ import { isCapacitorApp } from "../lib/is-capacitor-app";
 
 import { useEffect } from "react";
 
-const CHANNEL_ID = "mkt88-live-draw";
+export const CHANNEL_ID = "mkt88-live-draw";
 const NOTIFICATION_1600 = 1600;
 const NOTIFICATION_1800 = 1800;
 const NOTIFICATION_1830 = 1830;
@@ -12,7 +12,7 @@ const NOTIFICATION_1830 = 1830;
 /** Fingerprint of the reminder plan, so it is only rebuilt when it changes. */
 const PLAN_KEY = "mkt_live_notif_plan";
 
-type LocalNotificationsPlugin = {
+export type LocalNotificationsPlugin = {
   checkPermissions?: () => Promise<{ display?: string }>;
   requestPermissions?: () => Promise<{ display?: string }>;
   createChannel?: (channel: Record<string, unknown>) => Promise<void>;
@@ -52,6 +52,40 @@ function luckyNumber(seed: string): string {
   return String((h >>> 0) % 10000).padStart(4, "0");
 }
 
+/**
+ * This install's own id.
+ *
+ * It is what makes two phones show different lucky numbers: the number is
+ * derived from the day AND this id, so it is stable for the user all day, fresh
+ * again tomorrow, and never the same as the next phone's (reported 11 Oct 2026
+ * - every user saw the same number, because the seed was only the date).
+ */
+const DEVICE_KEY = "mkt_device_id";
+function deviceId(): string {
+  try {
+    let id = window.localStorage.getItem(DEVICE_KEY);
+    if (!id) {
+      id = (Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).slice(0, 16);
+      window.localStorage.setItem(DEVICE_KEY, id);
+    }
+    return id;
+  } catch {
+    return "anon";
+  }
+}
+
+/** The three numbers of one day, forced apart from each other. */
+function dailyLuckyNumbers(seed: string): [string, string, string] {
+  const out: string[] = [luckyNumber(seed + "|16:00")];
+  for (const slot of ["|18:00", "|18:30"]) {
+    let n = luckyNumber(seed + slot);
+    let guard = 0;
+    while (out.includes(n) && guard++ < 10000) n = String((Number(n) + 7) % 10000).padStart(4, "0");
+    out.push(n);
+  }
+  return out as [string, string, string];
+}
+
 /*
  * The per-game "live result" alarms are gone.
  *
@@ -88,7 +122,7 @@ type CapacitorGlobal = {
  * scheduled. `registerPlugin` is on `window.Capacitor` and builds the native
  * bridge proxy from the plugin headers the Android app injects.
  */
-function localNotifications(): LocalNotificationsPlugin | null {
+export function localNotifications(): LocalNotificationsPlugin | null {
   const cap = (window as unknown as { Capacitor?: CapacitorGlobal }).Capacitor;
   if (!cap) return null;
   const ready = cap.Plugins?.LocalNotifications;
@@ -190,9 +224,8 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
             ].map((id) => ({ id })),
           });
 
-          const earlyLucky = luckyNumber(today + "|16:00");
-          const firstLucky = luckyNumber(today + "|18:00");
-          const secondLucky = luckyNumber(today + "|18:30");
+          // Per user, per day, and the three of them different from each other.
+          const [earlyLucky, firstLucky, secondLucky] = dailyLuckyNumbers(deviceId() + "|" + today);
           await ln.schedule?.({
             notifications: [
               {
