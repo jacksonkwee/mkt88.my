@@ -43,23 +43,22 @@ export default function Header() {
             </div>
           </a>
           <div className="navbar-collapse" id="navbarSupportedContent">
-            <div className="container px-0">
-              <div className="menu-top-menu-container">
-                <ul
-                  id="menu-top-menu"
-                  className="navbar-nav"
-                  style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "flex-end" }}
+            {/* One rounded group rather than five loose links, so a wrapped row
+                on a narrow screen still reads as one bar. */}
+            <div
+              id="menu-top-menu"
+              style={{ marginLeft: "auto", maxWidth: "100%", display: "flex", flexWrap: "nowrap", overflowX: "auto", gap: 2, background: "#fff", border: "1px solid #e6e6e6", borderRadius: 999, padding: 4 }}
+            >
+              {MENU.map((m) => (
+                <Link
+                  key={m.href}
+                  href={m.href}
+                  style={{ display: "inline-flex", alignItems: "center", padding: "5px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, color: "#333333", textDecoration: "none", whiteSpace: "nowrap" }}
                 >
-                  {MENU.map((m) => (
-                    <li key={m.href} className="menu-item nav-item">
-                      <Link href={m.href} className="nav-link">
-                        {m.en}{" "}
-                        <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 7px", marginLeft: 4, fontWeight: 700, whiteSpace: "nowrap" }}>{m.zh}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                  {m.en}
+                  <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 6px", marginLeft: 5, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{m.zh}</span>
+                </Link>
+              ))}
             </div>
           </div>
         </div>

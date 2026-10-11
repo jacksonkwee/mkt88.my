@@ -117,10 +117,13 @@ body.mkt-in-app {
   padding-bottom: env(safe-area-inset-bottom);
 }
 body.mkt-in-app .mkt-app-topbar {
-  top: env(safe-area-inset-top) !important;
   padding-top: 10px !important;
   touch-action: manipulation;
 }
+
+/* The five site-menu links belong to the website. Inside the app those screens
+   are reached from the first page's tiles, so the row is not shown at all. */
+body.mkt-in-app #navbarSupportedContent { display: none !important; }
 body.mkt-in-app .mkt-app-topbar button,
 body.mkt-in-app .mkt-app-topbar a {
   min-width: 44px;
