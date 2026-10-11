@@ -858,6 +858,20 @@ async function stc4dToday(): Promise<Record<string, string> | null> {
     const out: Record<string, string> = { first_prize: first };
     for (let i = 0; i < 10; i++) out["special-" + (i + 1)] = nums[i];
     for (let i = 0; i < 10; i++) out["consolation-" + (i + 1)] = nums[10 + i];
+    /*
+     * The operator's jackpot pools sit on its home page, not on the live draw
+     * page: "4D Jackpot 1" carries the amount in .reference-jackpot-value, and
+     * "Jackpot 2 Pool" in the <strong> beside it.
+     */
+    const home = await get("https://stc4d.com/", false, 4000, 0);
+    if (home) {
+      const j1 = /class="reference-jackpot-value"[^>]*>([^<]+)</.exec(home);
+      const j2 = /Jackpot 2 Pool[\s\S]{0,240}?<strong>([^<]+)</.exec(home);
+      const m1 = moneyOf(j1 ? j1[1] : "");
+      if (m1) out.jackpot1_prize = m1;
+      const m2 = moneyOf(j2 ? j2[1] : "");
+      if (m2) out.jackpot2_prize = m2;
+    }
     return out;
   } catch { return null; }
 }

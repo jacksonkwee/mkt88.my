@@ -162,8 +162,28 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     const cls = c ? (/^table-\d+/.exec(c.id) || [""])[0] : "";
     const ids = JACKPOT_IDS[cls];
     if (!c || !ids) return c;
-    const extra = cls === "table-10" ? [jackpotTable(ids), lottoBoard("Lotto 5", "5", 8), lottoBoard("Lotto 6", "6", 5)] : [jackpotTable(ids)];
-    return { ...c, tables: [...c.tables, ...extra] };
+    // The jackpot board sits directly under the consolation grid, the way
+    // Magnum's does; the operator's remaining boards follow it.
+    const head = c.tables.slice(0, 3);   // 4D prizes, Special, Consolation
+    const tail = c.tables.slice(3);      // 3D, Lotto 6/45
+    const lotto = cls === "table-10" ? [lottoBoard("Lotto 5", "5", 8), lottoBoard("Lotto 6", "6", 5)] : [];
+    /*
+     * The captured 3D board's title row spans five columns, which gives that
+     * table a five-column grid - so its "1st Prize / 859" rows only filled part
+     * of the card while the 4D rows beside them ran the full width. Two columns
+     * is the shape the 4D prize table uses, and the one the operator's own board
+     * has.
+     */
+    const tidy = tail.map((t) => {
+      const title = plain(t.rows[0]?.cells[0]?.html || "");
+      if (title !== "3D" || !t.rows[0]?.cells[0]) return t;
+      const titleCell = t.rows[0].cells[0];
+      const rows = t.rows.map((r, i) =>
+        i === 0 ? { ...r, cells: [{ ...titleCell, attrs: { ...titleCell.attrs, colspan: "2" } }] } : r
+      );
+      return { ...t, rows };
+    });
+    return { ...c, tables: [...head, jackpotTable(ids), ...tidy, ...lotto] };
   })
   .filter((c): c is LotteryCardData => Boolean(c));
 
