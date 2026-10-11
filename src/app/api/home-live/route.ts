@@ -1,11 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getSnapshot } from "../../../lib/live-snapshot";
+import { pushConfigured } from "../../../lib/fcm";
+import { checkAndPush } from "../../../lib/push-notify";
 
 /** Pre-warmed snapshot of every result card (+ the two-draw games). */
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   const s = await getSnapshot({ wait: true });
+  /*
+   * Every open app polls this, so it is the natural place to notice that a draw
+   * has just finished and wake the phones that are closed. after() runs it once
+   * the response is on its way, so nobody waits for it, and it does nothing at
+   * all until FIREBASE_SERVICE_ACCOUNT is set.
+   */
+  if (pushConfigured()) after(() => checkAndPush());
   return NextResponse.json(
     { at: s.at, cards: s.cards, perdana: s.perdana, hari: s.hari },
     { headers: {

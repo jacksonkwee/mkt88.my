@@ -8,6 +8,7 @@ import AppHome from "../components/AppHome";
 import LiveSound from "../lib/LiveSound";
 import AppNotifications from "../components/AppNotifications";
 import ResultAlerts from "../components/ResultAlerts";
+import PushRegister from "../components/PushRegister";
 import LiveKnock from "../components/LiveKnock";
 import LiveHighlight from "../components/LiveHighlight";
 import { getSnapshotForRender } from "../lib/live-snapshot";
@@ -357,6 +358,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         </div>
         <AppNotifications />
       <ResultAlerts />
+      <PushRegister />
       <LiveKnock />
       <LiveHighlight enabled />
         <LiveSound />
