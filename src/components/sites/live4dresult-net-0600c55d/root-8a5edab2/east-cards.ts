@@ -77,20 +77,6 @@ function tablesOf(seg: string): CardTable[] {
   return out;
 }
 
-/**
- * Only the tables the live data feeds.
- *
- * The captured Sabah 88 page carries the operator's 3D and Lotto 6/45 boards as
- * well, and they came along into the card. Nothing updates them - the live
- * snapshot only knows the 4D prizes and the two grids - so they showed the
- * numbers from the day the page was captured, and they made these three cards
- * taller than every other game's (reported 11 Oct 2026). Only the 4D tables are
- * kept, which is exactly what Magnum and the rest carry.
- */
-const LIVE_CELL = /^(date|draw_no|first_prize|second_prize|third_prize|special[_-]|consolation[_-])/;
-const liveTables = (tables: CardTable[]): CardTable[] =>
-  tables.filter((t) => t.rows.some((r) => r.cells.some((c) => LIVE_CELL.test(c.attrs["data-id"] || ""))));
-
 function cardFor(cls: string): LotteryCardData | null {
   const seg = segmentOf(cls);
   if (!seg) return null;
@@ -106,7 +92,7 @@ function cardFor(cls: string): LotteryCardData | null {
       date: plain(/data-id="date"[^>]*>([\s\S]*?)<\/span>/i.exec(seg)?.[1] || ""),
       drawNo: plain(/data-id="draw_no"[^>]*>([\s\S]*?)<\/span>/i.exec(seg)?.[1] || "") || null,
     },
-    tables: liveTables(tablesOf(seg)),
+    tables: tablesOf(seg),
   };
 }
 
