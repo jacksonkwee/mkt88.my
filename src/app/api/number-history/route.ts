@@ -214,9 +214,24 @@ export async function GET(req: NextRequest) {
     logos[k] = toLocal(path);
     return k;
   };
+  /** The game's own name without the Chinese label, for comparing sources. */
+  const gameKey = (name: string): string => {
+    const ascii = (name || "").replace(/[^\x20-\x7e]/g, "").replace(/\s+/g, " ").trim();
+    return ascii || (name || "").trim();
+  };
   const add = (h: RawHit) => {
     const date = fmtIso(h.date);
-    const key = date + "|" + h.game + "|" + h.prize + "|" + h.num;
+    /*
+     * The key must not depend on how a source spells the operator.
+     *
+     * The deep archive files "Magnum 4D 万能" while the scraped boards carry
+     * "Magnum 4D 萬能", and the Chinese suffix is only a label - the Latin part
+     * names the game. Keeping the whole string in the key meant the same draw
+     * was filed twice: 7896 showed as a Magnum 1st prize on 27-11-2021 on two
+     * rows (reported 11 Oct 2026). Two draws of the SAME date and prize for
+     * different games still stay apart, because their Latin names differ.
+     */
+    const key = date + "|" + gameKey(h.game) + "|" + h.prize + "|" + h.num;
     if (map.has(key)) return;
     // A saved path wins; otherwise fall back to the game's own mark.
     let logo = h.logo || logoForGame(h.game);
