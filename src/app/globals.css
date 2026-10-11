@@ -226,6 +226,24 @@ html {
   word-break: normal;
 }
 
+/*
+ * ...except the three east cards.
+ *
+ * Sabah 88, Cash Sweep and Sandakan come from a captured page, and their result
+ * tables carry the old site's cell padding. Under the automatic layout the
+ * five-across Special and Consolation grids ended up 79px a cell - five of them
+ * is 395px inside a 342px card - so the numbers ran past the card's frame and
+ * the grid did not line up with every other game's (reported 11 Oct 2026).
+ * Every cell in these tables declares a percentage width, so fixing the layout
+ * pins them to their share. The note above does not apply: these tables hold
+ * numbers only - no zodiac artwork to squash.
+ */
+.card.outer-box.table-8 table,
+.card.outer-box.table-9 table,
+.card.outer-box.table-10 table {
+  table-layout: fixed;
+}
+
 /* ------------------------------------------------------------------ *
  * App typography                                                     *
  * ------------------------------------------------------------------ */
