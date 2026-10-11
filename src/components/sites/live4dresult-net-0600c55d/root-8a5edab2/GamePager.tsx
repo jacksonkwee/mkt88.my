@@ -5,6 +5,7 @@ import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
 import { EAST_CARDS } from "./east-cards";
+import { SG_CARDS } from "./sg-cards";
 import { hariIds, perdanaIds } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
@@ -15,6 +16,7 @@ const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
   ...((lottoRaw as unknown as { cards: LotteryCardData[] }).cards || []),
   ...EAST_CARDS,
+  ...SG_CARDS,
 ];
 const byId = new Map<string, LotteryCardData>(allCards.map((c) => [c.id, c]));
 
@@ -29,7 +31,9 @@ const PAGES: PageDef[] = [
   { title: "Magnum 4D", slug: "magnum", ids: ["table-1-2026-09-06", "table-3-2026-09-06", "table-2-2026-09-06"] },
   { title: "Da Ma Cai", slug: "damacai", ids: ["table-4-2026-09-06", "table-5-2026-09-06"] },
   { title: "Sports Toto", slug: "sportstoto", ids: ["table-6-2026-09-06", "table-7-2026-09-06"] },
-  { title: "Singapore 4D", slug: "sg", ids: ["table-11-2026-09-06"] },
+  // The Toto card has no live feed, so it is a fixed capture the app shows
+  // under the 4D draw, exactly as the website does.
+  { title: "Singapore 4D", slug: "sg", ids: ["table-11-2026-09-06", "table-12-2026-09-03"] },
   { title: "Sabah 88 沙巴88", slug: "sabah88", ids: ["table-10-2026-09-06"] },
   { title: "Cash Sweep 沙捞越", slug: "cashsweep", ids: ["table-9-2026-09-06"] },
   { title: "Sandakan 山打根", slug: "sandakan", ids: ["table-8-2026-09-06"] },

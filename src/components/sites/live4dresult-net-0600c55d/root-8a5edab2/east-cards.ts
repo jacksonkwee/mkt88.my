@@ -1,4 +1,5 @@
-import type { CardCell, CardRow, CardTable, LotteryCardData } from "./LotteryCard";
+import type { CardRow, CardTable, LotteryCardData } from "./LotteryCard";
+import { attr, plain, segmentOf, tablesOf } from "./card-parse";
 import raw from "./snapshots/sabah-sarawak-4d-results.content.json";
 
 /**
@@ -25,60 +26,8 @@ const NAMES: Record<string, string> = {
   "table-10": "Sabah 88 4D 沙巴万字",
 };
 
-/** The card's own block of markup: from its opening div to its matching close. */
-function segmentOf(cls: string): string {
-  const key = 'class="card outer-box ' + cls + '"';
-  const at = html.indexOf(key);
-  if (at < 0) return "";
-  const start = html.lastIndexOf("<div", at);
-  let i = start;
-  let depth = 0;
-  while (i < html.length) {
-    const open = html.indexOf("<div", i);
-    const close = html.indexOf("</div>", i);
-    if (close === -1 || (open !== -1 && open < close)) { depth++; i = open + 4; }
-    else { depth--; i = close + 6; if (depth === 0) break; }
-  }
-  return html.slice(start, i);
-}
-
-const plain = (s: string): string =>
-  s.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
-
-const attr = (attrs: string, name: string): string => new RegExp('\\b' + name + '="([^"]*)"').exec(attrs)?.[1] || "";
-
-function cellsOf(inner: string): CardCell[] {
-  const out: CardCell[] = [];
-  const re = /<(td|th)\b([^>]*)>([\s\S]*?)<\/\1>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(inner))) {
-    const a = m[2];
-    const attrs: CardCell["attrs"] = {};
-    const width = attr(a, "width"); if (width) attrs.width = width;
-    const colspan = attr(a, "colspan"); if (colspan) attrs.colspan = colspan;
-    const rowspan = attr(a, "rowspan"); if (rowspan) attrs.rowspan = rowspan;
-    const id = attr(a, "data-id"); if (id) attrs["data-id"] = id;
-    out.push({ tag: m[1].toLowerCase() === "th" ? "th" : "td", cls: attr(a, "class"), attrs, html: m[3] });
-  }
-  return out;
-}
-
-function tablesOf(seg: string): CardTable[] {
-  const out: CardTable[] = [];
-  const re = /<table\b([^>]*)>([\s\S]*?)<\/table>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(seg))) {
-    const rows: CardRow[] = [];
-    const rowRe = /<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi;
-    let r: RegExpExecArray | null;
-    while ((r = rowRe.exec(m[2]))) rows.push({ cls: attr(r[1], "class"), cells: cellsOf(r[2]) });
-    out.push({ cls: attr(m[1], "class"), widthAttr: attr(m[1], "width") || null, rows });
-  }
-  return out;
-}
-
 function cardFor(cls: string): LotteryCardData | null {
-  const seg = segmentOf(cls);
+  const seg = segmentOf(html, cls);
   if (!seg) return null;
   const openTag = seg.slice(0, seg.indexOf(">") + 1);
   const bg = /class="row mx-0 align-items-center justify-content-center ([^"]*)"/.exec(seg)?.[1] || "";
@@ -137,17 +86,18 @@ function jackpotTable(ids: string[]): CardTable {
  * jackpot - and the captured page does not carry these two boards at all, so the
  * table is built here. The ids match what the live snapshot writes.
  */
-function lottoBoard(title: string, group: "5" | "6", rows: number): CardTable {
+function lottoBoard(title: string, group: "5" | "6", rows: number, separated = false): CardTable {
   const cells: CardRow[] = [];
   /*
-   * One red heading over the two boards, the way Sports Toto's 5D / 6D card
-   * heads its sections - only the first table gets it, the second carries on
-   * underneath it.
+   * One heading over the two boards, the way Sports Toto's 5D / 6D card heads
+   * its sections - only the first table gets it, the second carries on
+   * underneath it. It wears the Sabah 88 blue, the same colour as that card's
+   * own header band (11 Oct 2026).
    */
   if (title) {
     cells.push({
       cls: "",
-      cells: [{ tag: "td", cls: "lottery-prize-title plus text-center", attrs: { colspan: "4" }, html: title }],
+      cells: [{ tag: "td", cls: "lottery-prize-title sabah88-bg text-center", attrs: { colspan: "4" }, html: title }],
     });
   }
   for (let i = 1; i <= rows; i++) {
@@ -162,7 +112,9 @@ function lottoBoard(title: string, group: "5" | "6", rows: number): CardTable {
       ],
     });
   }
-  return { cls: "my-1 mkt-lotto", widthAttr: "100%", rows: cells };
+  // "mkt-lotto-sep" opens a gap above the board, so the Lotto blocks read as
+  // their own section instead of running straight on from the 4D rows.
+  return { cls: "my-1 mkt-lotto" + (separated ? " mkt-lotto-sep" : ""), widthAttr: "100%", rows: cells };
 }
 
 /**
@@ -202,7 +154,7 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     // Magnum's does; the operator's remaining boards follow it.
     const head = c.tables.slice(0, 3);   // 4D prizes, Special, Consolation
     const tail = c.tables.slice(3);      // 3D, Lotto 6/45
-    const lotto = cls === "table-10" ? [lottoBoard("Sabah 88 Lotto 5, Lotto 6 六合彩", "5", 8), lottoBoard("", "6", 5)] : [];
+    const lotto = cls === "table-10" ? [lottoBoard("Sabah 88 Lotto 5, Lotto 6 六合彩", "5", 8, true), lottoBoard("", "6", 5)] : [];
     // Cash Sweep's own 3D board, directly under its jackpot rows.
     if (cls === "table-9") return { ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] };
     /*
@@ -217,9 +169,14 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
       const titleCell = t.rows[0]?.cells[0];
       if (!titleCell) return t;
       // The operator's Lotto 6/45 board only differs by its heading; give it
-      // the same red band the Lotto 5 / 6 heading uses (reported 11 Oct 2026).
+      // the same Sabah 88 blue as the Lotto 5 / 6 heading, and the gap that
+      // keeps the Lotto boards apart from the 4D results above them.
       if (title === "Lotto 6/45") {
-        return { ...t, rows: t.rows.map((r, i) => (i === 0 ? { ...r, cells: [{ ...titleCell, cls: titleCell.cls + " plus" }] } : r)) };
+        return {
+          ...t,
+          cls: (t.cls + " mkt-lotto-sep").trim(),
+          rows: t.rows.map((r, i) => (i === 0 ? { ...r, cells: [{ ...titleCell, cls: titleCell.cls + " sabah88-bg" }] } : r)),
+        };
       }
       if (title !== "3D") return t;
       const rows = t.rows.map((r, i) =>

@@ -84,8 +84,12 @@ function Cell(props: { cell: CardCell; override?: string; frozen?: boolean; draw
 
 export default function LotteryCard({ card, values, prizeSet }: { card: LotteryCardData } & CardOverride) {
   const h = card.header;
-  // Past-result cards carry already-final numbers and must never be masked.
-  const frozen = /(^|\s)mkt-past(\s|$)/.test(card.cardCls || "");
+  /*
+   * Cards the operator only ever printed carry already-final numbers and must
+   * never be masked while a live draw is being waited for: the archived past
+   * results, and Singapore's Toto card, which has no feed this app can poll.
+   */
+  const frozen = /(^|\s)(mkt-past|mkt-static)(\s|$)/.test(card.cardCls || "");
   const hasDate = Boolean(values?.date || prizeSet?.date);
   const hasDraw = Boolean(values?.draw_no || prizeSet?.drawNo);
   const freshDate = hasDate;
@@ -103,9 +107,11 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
     <div className={card.cardCls} id={card.id}>
       <div className="card-body p-2">
         <div className={headerClass}>
-          <div className="lottery-logo">
-            <img src={toLocal(h.logo.src)} alt={h.logo.alt} />
-          </div>
+          {h.logo.src ? (
+            <div className="lottery-logo">
+              <img src={toLocal(h.logo.src)} alt={h.logo.alt} />
+            </div>
+          ) : null}
           {/*
             The card header keeps the game's name on ONE line. At the site's
             18px a long name - "Special CashSweep 砂拉越大万" is the longest -

@@ -320,6 +320,23 @@ body:not(.mkt-in-app) .card.outer-box.table-10 .mkt-lotto-jp,
   white-space: nowrap;
 }
 
+/* A gap above each Lotto block, so the Lotto 6/45 and Lotto 5 / 6 boards read
+   as their own section instead of running straight on from the 4D prize rows
+   above them. The tables carry Bootstrap's .my-1, whose margin is !important,
+   so this one has to be too. */
+.card.outer-box .mkt-lotto-sep {
+  margin-top: 16px !important;
+}
+
+/* Those two headings wear the Sabah 88 blue - the same colour as that card's
+   own header band (.sabah88-bg in theme-style.css). The theme sets the grey
+   .lottery-prize-title background after .sabah88-bg, so the colour is repeated
+   here with enough weight to win. */
+.card.outer-box .lottery-prize-title.sabah88-bg {
+  color: #ffffff;
+  background-color: #3333ff;
+}
+
 /* ------------------------------------------------------------------ *
  * App typography                                                     *
  * ------------------------------------------------------------------ */
