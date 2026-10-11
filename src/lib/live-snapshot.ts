@@ -827,6 +827,14 @@ async function cashSweepToday(): Promise<Record<string, string> | null> {
     };
     for (let i = 1; i <= 10; i++) out["special-" + i] = pad(n[String(8 + i)]);
     for (let i = 1; i <= 10; i++) out["consolation-" + i] = pad(n[String(18 + i)]);
+    // Keys 4, 5 and 6 carry the operator's 3D prizes (3 digits, not 4).
+    const d3 = (v: unknown): string => {
+      const s = v == null ? "" : String(v).replace(/[^0-9]/g, "");
+      return s ? s.padStart(3, "0").slice(-3) : "----";
+    };
+    out.first_d3_prize = d3(n["4"]);
+    out.second_d3_prize = d3(n["5"]);
+    out.third_d3_prize = d3(n["6"]);
     // The same file carries the jackpot amounts (j1v / j2v).
     const jp1 = moneyOf(j.j1v);
     if (jp1) out.jackpot1_prize = jp1;

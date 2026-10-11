@@ -156,6 +156,33 @@ function lottoBoard(title: string, group: "5" | "6", rows: number): CardTable {
   return { cls: "my-1", widthAttr: "100%", rows: cells };
 }
 
+/**
+ * Cash Sweep's 3D board.
+ *
+ * The operator publishes it in the same live.json (keys 4 to 6) but its page has
+ * no board for it, so the table is built here in the shape the other games' 3D
+ * boards use. The user asked for it under the 4D Jackpot rows (11 Oct 2026).
+ */
+function d3Table(): CardTable {
+  const row = (label: string, id: string): CardRow => ({
+    cls: "",
+    cells: [
+      { tag: "td", cls: "lottery-prize-title text-center", attrs: { width: "45%" }, html: label },
+      { tag: "td", cls: "lottery-prize-number border text-center", attrs: { "data-id": id }, html: "----" },
+    ],
+  });
+  return {
+    cls: "my-1",
+    widthAttr: "100%",
+    rows: [
+      { cls: "", cells: [{ tag: "td", cls: "lottery-prize-title text-center", attrs: { colspan: "2" }, html: "3D" }] },
+      row("1st Prize 首奖", "first_d3_prize"),
+      row("2nd Prize 二奖", "second_d3_prize"),
+      row("3rd Prize 三奖", "third_d3_prize"),
+    ],
+  };
+}
+
 export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
   .map(cardFor)
   .map((c) => {
@@ -167,6 +194,8 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     const head = c.tables.slice(0, 3);   // 4D prizes, Special, Consolation
     const tail = c.tables.slice(3);      // 3D, Lotto 6/45
     const lotto = cls === "table-10" ? [lottoBoard("Lotto 5", "5", 8), lottoBoard("Lotto 6", "6", 5)] : [];
+    // Cash Sweep's own 3D board, directly under its jackpot rows.
+    if (cls === "table-9") return { ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] };
     /*
      * The captured 3D board's title row spans five columns, which gives that
      * table a five-column grid - so its "1st Prize / 859" rows only filled part
