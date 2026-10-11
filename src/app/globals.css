@@ -240,6 +240,29 @@ html {
 }
 
 /*
+ * The three east cards, on the website only.
+ *
+ * Sabah 88, Cash Sweep and Sandakan carry the operator's extra boards, so on a
+ * desktop they get a wider column and larger figures than the other games. The
+ * app keeps the sizes it had: body.mkt-in-app is set there while the page is
+ * loading, so these rules never match inside it.
+ */
+body:not(.mkt-in-app) .mkt-east-col {
+  flex: 0 0 83.3333%;
+  max-width: 83.3333%;
+}
+body:not(.mkt-in-app) .card.outer-box.table-8 .lottery-number,
+body:not(.mkt-in-app) .card.outer-box.table-9 .lottery-number,
+body:not(.mkt-in-app) .card.outer-box.table-10 .lottery-number {
+  font-size: 28px;
+}
+body:not(.mkt-in-app) .card.outer-box.table-8 .lottery-prize-number,
+body:not(.mkt-in-app) .card.outer-box.table-9 .lottery-prize-number,
+body:not(.mkt-in-app) .card.outer-box.table-10 .lottery-prize-number {
+  font-size: 30px;
+}
+
+/*
  * ...except the three east cards.
  *
  * Sabah 88, Cash Sweep and Sandakan come from a captured page, and their result

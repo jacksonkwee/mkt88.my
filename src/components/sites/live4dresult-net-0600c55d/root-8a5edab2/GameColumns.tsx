@@ -70,7 +70,7 @@ export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; 
   return (
     <div className="row">
       {cols.map((col) => (
-        <div key={col.key} className={"col-12 col-sm-12 col-md-6 mt-2 px-1 " + (EAST_GAME.test(col.key) ? "col-lg-8" : "col-lg-4")}>
+        <div key={col.key} className={"col-12 col-sm-12 col-md-6 mt-2 px-1 " + (EAST_GAME.test(col.key) ? "col-lg-8 mkt-east-col" : "col-lg-4")}>
           {col.items.map((c, i) => (
             <div key={c.id} className={i > 0 ? "mt-3" : ""}>
               <LotteryCard card={c} {...overridesFor(snap, c.id, c.cardCls)} />
