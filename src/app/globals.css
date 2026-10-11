@@ -117,7 +117,7 @@ body.mkt-in-app {
   padding-bottom: env(safe-area-inset-bottom);
 }
 body.mkt-in-app .mkt-app-topbar {
-  padding-top: 10px !important;
+  padding-top: 6px !important;
   touch-action: manipulation;
 }
 

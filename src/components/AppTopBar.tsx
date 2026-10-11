@@ -54,13 +54,15 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
       </div>
 
       {/* Brand logo, fixed with the bar. */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "10px 0 2px", background: "#f4f4f4" }}>
+      {/* Kept tight: this block is pinned, so every pixel it takes is a pixel
+          the results below never get. */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "5px 0 0", background: "#f4f4f4" }}>
         {/* display:contents keeps the link clickable without giving it a box of
             its own, so the logo is laid out exactly as it is on the screens
             that render it as a plain <img> - one centred item, same size. */}
         <Link href="/" onClick={goHome} aria-label="MKT 88 4D home" style={{ display: "contents" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
+          <img src={LOGO} alt="MKT 发发" style={{ height: 30, width: "auto", maxWidth: "70%", display: "block" }} />
         </Link>
       </div>
     </div>
