@@ -856,10 +856,11 @@ async function cashSweepToday(): Promise<Record<string, string> | null> {
 /**
  * Sandakan (STC 4D) from the operator's own live-draw page.
  *
- * Confirmed against the 03-10-2026 draw: the page carries exactly TEN special
- * and TEN consolation numbers (not the fifteen special slots the card has), so
- * the split matters. Assuming fifteen would have pushed every consolation
- * number into the wrong row.
+ * The page prints TEN consolation numbers in order, and a special board that is
+ * NUMBERED 1..13. Three of those thirteen boxes are printed as "----" because
+ * those specials were drawn as the 1st/2nd/3rd prize - 07-10-2026 blanks boxes
+ * 3, 8 and 10; 10-10-2026 blanks 4, 5 and 8. The box number IS the position, so
+ * each value is written to its own box and the blanks are kept.
  */
 async function stc4dToday(): Promise<Record<string, string> | null> {
   try {
@@ -868,11 +869,35 @@ async function stc4dToday(): Promise<Record<string, string> | null> {
     const four = (v: string): string => (/^\d{3,4}$/.test(v) ? v.padStart(4, "0") : "----");
     const fm = /id="ld-first"[^>]*>\s*(\d{3,4})\s*</.exec(html);
     const first = fm ? four(fm[1]) : "----";
-    const nums = [...html.matchAll(/tracking-\[2px\][^>]*>\s*(\d{3,4})\s*</g)].map((m) => four(m[1]));
-    if (first === "----" || nums.length < 20) return null;
-    const out: Record<string, string> = { first_prize: first };
-    for (let i = 0; i < 10; i++) out["special-" + (i + 1)] = nums[i];
-    for (let i = 0; i < 10; i++) out["consolation-" + (i + 1)] = nums[10 + i];
+    /*
+     * Reading only the digits (what this used to do) packed the ten surviving
+     * numbers into boxes 1..10, so a number the operator prints in box 11 came
+     * out in box 8 and everything after the first blank sat in the wrong place
+     * - the card and the operator's board disagreed on where every number was
+     * (reported 11 Oct 2026). The leading "N." on each box is the position.
+     */
+    const boxes = new Map<number, string>();
+    for (const m of html.matchAll(/min-w-\[20px\][^>]*>\s*(\d{1,2})\.<\/span>\s*<span[^>]*>\s*([^<\s]+)\s*</g)) {
+      const box = Number(m[1]);
+      if (box >= 1 && box <= 13) boxes.set(box, four(m[2]));
+    }
+    const consIdx = html.indexOf('id="ld-consolation"');
+    const cons = (consIdx >= 0 ? [...html.slice(consIdx).matchAll(/tracking-\[2px\][^>]*>\s*(\d{3,4})\s*</g)] : []).map((m) => four(m[1]));
+    if (first === "----" || boxes.size < 13 || cons.length < 10) return null;
+    /* The board carries the draw it belongs to, so an older one can be refused. */
+    const dm = /id="ld-draw-date"[^>]*>\s*(\d{2})\/(\d{2})\/(\d{4})/.exec(html);
+    const dn = /id="ld-draw-no"[^>]*>\s*([^<\s]+)/.exec(html);
+    const out: Record<string, string> = {
+      first_prize: first,
+      date: dm ? weekdayOf(`${dm[3]}-${dm[2]}-${dm[1]}`) : "----",
+      draw_no: dn ? dn[1].trim() : "----",
+    };
+    const second = /id="ld-second"[^>]*>\s*(\d{3,4})\s*</.exec(html);
+    const third = /id="ld-third"[^>]*>\s*(\d{3,4})\s*</.exec(html);
+    if (second) out.second_prize = four(second[1]);
+    if (third) out.third_prize = four(third[1]);
+    for (const [box, v] of boxes) out["special-" + box] = v;
+    for (let i = 0; i < 10; i++) out["consolation-" + (i + 1)] = cons[i];
     /*
      * The operator's jackpot pools sit on its home page, not on the live draw
      * page: "4D Jackpot 1" carries the amount in .reference-jackpot-value, and
@@ -1047,12 +1072,28 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
   /*
-   * Sandakan (STC 4D) and Da Ma Cai, straight from each operator. Both are
-   * merged over the mirror the same way: a blank never replaces a number the
-   * mirror already published, so a source that drops out cannot empty a card.
+   * Sandakan (STC 4D) from the operator's own board.
+   *
+   * Its special board is BOXED, so it is taken exactly - blanks included - but
+   * only for the draw the card is already showing. Its "----" boxes are three
+   * of the thirteen specials, blanked because they were drawn as the 1st, 2nd
+   * and 3rd prize, and they belong on the card in those boxes. Treating them as
+   * "no value yet" (the rule the mirror-fed cards use) kept the mirror's own
+   * numbers there instead, which is how a number the operator prints in box 11
+   * came out in box 8 (reported 11 Oct 2026).
+   */
+  if (stc4d) {
+    const base = (cards["table-8"] || {}) as Record<string, string>;
+    if (!stc4d.date || stc4d.date === "----" || base.date === stc4d.date) {
+      cards["table-8"] = { ...base, ...stc4d };
+    }
+  }
+  /*
+   * Da Ma Cai, straight from its operator. Merged over the mirror the way the
+   * mirror-fed cards are: a blank never replaces a number the mirror already
+   * published, so a source that drops out cannot empty a card.
    */
   for (const [cls, vals] of [
-    ["table-8", stc4d],
     ["table-4", damacai ? damacai.four : null],
     ["table-5", damacai ? damacai.three : null],
   ] as [string, Record<string, string> | null][]) {
@@ -1105,13 +1146,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * rule. That is what showed Sandakan's last three numbers a second time in
    * cells 11 to 13, and Da Ma Cai's tenth number again in cell 11 (reported
    * 7 Oct 2026). The counts below are each game's own published grid, checked
-   * against the operator: Magnum 13, Sports Toto 13, Sabah 88 13, Grand Dragon
-   * 13, Nine Lotto 13, and ten for Da Ma Cai (both draws), Sandakan, Cash Sweep
-   * and Singapore.
+   * against the operator: Magnum 13, Sports Toto 13, Sabah 88 13, Sandakan 13,
+   * Grand Dragon 13, Nine Lotto 13, and ten for Da Ma Cai (both draws), Cash
+   * Sweep and Singapore.
    */
   const SPECIAL_SLOTS: Record<string, number> = {
     "table-1": 13, "table-4": 10, "table-5": 10, "table-6": 13,
-    "table-8": 10, "table-9": 10, "table-10": 13, "table-11": 10,
+    "table-8": 13, "table-9": 10, "table-10": 13, "table-11": 10,
     "table-13": 13, "table-17": 13,
   };
   for (const [cls, used] of Object.entries(SPECIAL_SLOTS)) {
@@ -1134,7 +1175,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * they are copied onto the ids the card actually reads, with every slot past
    * the game's own grid blanked.
    */
-  for (const [cls, used] of [["table-8", 10], ["table-9", 10], ["table-10", 13]] as [string, number][]) {
+  for (const [cls, used] of [["table-8", 13], ["table-9", 10], ["table-10", 13]] as [string, number][]) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
     for (let i = 1; i <= 15; i++) {

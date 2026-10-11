@@ -286,11 +286,13 @@ const MIRROR_ONLY_CLASSES = ["table-2", "table-3", "table-6", "table-7", "table-
  * the end of the grid is not a result - it is a leftover the mirror sweep keeps
  * writing back. Sandakan's last three numbers appeared a second time in cells
  * 11 to 13, and Da Ma Cai's tenth again in cell 11 (reported 7 Oct 2026). Kept
- * in step with SPECIAL_SLOTS in lib/live-snapshot.ts.
+ * in step with SPECIAL_SLOTS in lib/live-snapshot.ts. Sandakan publishes
+ * thirteen boxes, three of them blank by design - the specials that became its
+ * 1st/2nd/3rd prize - so its grid runs to box 13.
  */
 const SPECIAL_SLOTS: Record<string, number> = {
   "table-1": 13, "table-4": 10, "table-5": 10, "table-6": 13,
-  "table-8": 10, "table-9": 10, "table-10": 13, "table-11": 10,
+  "table-8": 13, "table-9": 10, "table-10": 13, "table-11": 10,
   "table-13": 13, "table-17": 13,
 };
 
@@ -330,7 +332,7 @@ function clearIfNoDraw(target: Element) {
  * card is also filled by the snapshot, and blanking its gaps made the two
  * writers fight, which slid the numbers around.
  */
-async function syncLiveTable(url: string, tableClasses: string[], clearGaps: string[] = []) {
+async function syncLiveTable(url: string, tableClasses: string[]) {
   const doc = await fetchDoc(url);
   if (!doc) return;
   for (const cls of tableClasses) {
@@ -356,13 +358,7 @@ async function syncLiveTable(url: string, tableClasses: string[], clearGaps: str
         // leaves gaps that the snapshot fills by data-id. Mirroring those gaps
         // blanked good numbers and made the snapshot write them back, which is
         // what slid the Special numbers back and forth roughly once a second.
-        if (v === "") {
-          if (clearGaps.includes(cls) && !isDash(cur) && /lottery-prize-number|lottery-number/.test(tgtEl.className)) {
-            pending.set(id, "----");
-            hasClear = true;
-          }
-          continue;
-        }
+        if (v === "") continue;
         // Special / Consolation are drawn grids where a number never repeats,
         // so a value already shown in a sibling cell means the source page is
         // laid out one cell off and this write would slide the whole grid.
@@ -1293,13 +1289,18 @@ function applyCambodiaFeed(j: FastFeed): boolean {
   }
 }
 
-/** Live updates for the phone pager: East games + Perdana + HariHari. */
-async function syncEastHome() {
-  // Sabah 88 numbers use special_number_N / consolation_number_N ids, which the
-  // snapshot never publishes (it uses special-N / consolation-N), so this
-  // mirror is its only writer and its gaps must be mirrored too.
-  await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"], ["table-10"]);
-}
+/*
+ * The three East games are NOT mirrored from live4dresult.net any more.
+ *
+ * The server snapshot already fills them from each operator's own board -
+ * Sandakan from stc4d.com, Cash Sweep from cashsweep.com.my and Sabah 88 from
+ * sabah88.net - in the operator's own box order. The mirror page lays its last
+ * three specials out one box further right than the operator does (its cell 14
+ * carries what the operator prints in box 13), so copying it over the card put
+ * a number in the wrong box and, where our cell 14 was empty, printed the same
+ * number twice (reported 11 Oct 2026). Its card positions are simply not the
+ * operator's positions.
+ */
 async function updatePerdanaHome() {
   for (const [time, id] of [["19:30", "table-16-2026-09-06-1930"]]) {
     for (const off of [0, -1]) {
@@ -1371,13 +1372,11 @@ async function refreshOnce(full = true) {
         updateGdNineCards(),
         (async () => { await updateSGFeed(); await updateSGOfficial(); })(),
         updateCambodiaFeed(),
-        syncEastHome(),
         updatePerdanaHome(),
         hari,
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncFromServerFast();
-      if (full) await syncLiveTable("https://live4dresult.net/sabah-sarawak-4d-results/", ["table-8", "table-9", "table-10"]);
     } else if (path === "/singapore-4d-results") {
       await syncFromServerFast();
       if (full) {
