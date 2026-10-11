@@ -99,6 +99,13 @@ function clean(s: string): string {
   return s.replace(/<[^>]+>/g, " ").replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
 }
 
+/** An amount the operators print, as "RM 1,234.56"; null when there is none. */
+function moneyOf(v: unknown): string | null {
+  const n = Number(String(v ?? "").replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return "RM " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 /** { "table-1": { first_prize: "2609", ... } } from a results page. */
 function parseCards(html: string | null): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
@@ -737,6 +744,14 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
     };
     for (let i = 1; i <= 13; i++) out["special-" + i] = val(draw["s" + i]);
     for (let i = 1; i <= 10; i++) out["consolation-" + i] = val(draw["c" + i]);
+    /*
+     * The 4D Jackpot amounts sit in the same feed (draw.jp1 / draw.jp2), and
+     * the card shows them under the consolation grid the way Magnum does.
+     */
+    const jp1 = moneyOf(draw.jp1);
+    if (jp1) out.jackpot1_prize = jp1;
+    const jp2 = moneyOf(draw.jp2);
+    if (jp2) out.jackpot2_prize = jp2;
     // Nothing published yet - leave the mirror's copy alone.
     if (Object.values(out).every((v) => v === "----")) return null;
     return out;
@@ -763,7 +778,7 @@ async function cashSweepToday(iso: string): Promise<Record<string, string> | nul
       signal: AbortSignal.timeout(4000),
     });
     if (!res.ok) return null;
-    const j = (await res.json()) as { d?: string; n?: Record<string, number | string> };
+    const j = (await res.json()) as { d?: string; n?: Record<string, number | string>; j1v?: unknown; j2v?: unknown };
     if (String(j.d || "").slice(0, 10) !== iso) return null;   // never an older draw
     const n = j.n || {};
     const pad = (v: unknown): string => {
@@ -776,6 +791,11 @@ async function cashSweepToday(iso: string): Promise<Record<string, string> | nul
     };
     for (let i = 1; i <= 10; i++) out["special-" + i] = pad(n[String(8 + i)]);
     for (let i = 1; i <= 10; i++) out["consolation-" + i] = pad(n[String(18 + i)]);
+    // The same file carries the jackpot amounts (j1v / j2v).
+    const jp1 = moneyOf(j.j1v);
+    if (jp1) out.jackpot1_prize = jp1;
+    const jp2 = moneyOf(j.j2v);
+    if (jp2) out.jackpot2_prize = jp2;
     // Nothing published yet - leave the mirror's copy alone.
     if (out.first_prize === "----") return null;
     return out;

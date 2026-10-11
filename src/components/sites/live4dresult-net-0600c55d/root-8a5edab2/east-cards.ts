@@ -96,8 +96,47 @@ function cardFor(cls: string): LotteryCardData | null {
   };
 }
 
+/**
+ * The operator's jackpot board, under the consolation grid - the same place
+ * Magnum keeps its "4D Jackpot 1/2 Prize" rows.
+ *
+ * The captured Sabah 88 page predates the board, and Cash Sweep's and
+ * Sandakan's captures never had one, so the table is built here. Its two cells
+ * carry the ids the live snapshot writes ("jackpot1_prize" / "jackpot2_prize"),
+ * so the amounts stay current instead of freezing on whatever was captured.
+ */
+const JACKPOT_IDS: Record<string, string[]> = {
+  "table-8": ["jackpot1_prize", "jackpot2_prize"],
+  "table-9": ["jackpot1_prize", "jackpot2_prize"],
+  "table-10": ["jackpot1_prize", "jackpot2_prize"],
+};
+
+function jackpotTable(ids: string[]): CardTable {
+  const row = (label: string, id: string): CardRow => ({
+    cls: "",
+    cells: [
+      { tag: "td", cls: "lottery-prize-title text-center", attrs: { width: "45%" }, html: label },
+      { tag: "td", cls: "lottery-prize-number border text-center", attrs: { "data-id": id }, html: "----" },
+    ],
+  });
+  return {
+    cls: "my-1",
+    widthAttr: "100%",
+    rows: [
+      { cls: "", cells: [{ tag: "td", cls: "lottery-prize-title text-center", attrs: { colspan: "2" }, html: "4D Jackpot 积宝奖金" }] },
+      row("Jackpot 1", ids[0]),
+      row("Jackpot 2", ids[1]),
+    ],
+  };
+}
+
 export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
   .map(cardFor)
+  .map((c) => {
+    const cls = c ? (/^table-\d+/.exec(c.id) || [""])[0] : "";
+    const ids = JACKPOT_IDS[cls];
+    return c && ids ? { ...c, tables: [...c.tables, jackpotTable(ids)] } : c;
+  })
   .filter((c): c is LotteryCardData => Boolean(c));
 
 /** The card id each east page opens with. */
