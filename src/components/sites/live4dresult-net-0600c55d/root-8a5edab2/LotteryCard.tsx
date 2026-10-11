@@ -53,19 +53,34 @@ function Cell(props: { cell: CardCell; override?: string; frozen?: boolean; draw
   // Any override (including the official "----" placeholder) replaces the built-in value.
   const fresh = override !== undefined && override !== "";
   const plain = (cell.html || "").replace(/<[^>]+>/g, "").trim();
-  const isNumber = /lottery-prize-number|lottery-number/.test(cell.cls || "");
+  /*
+   * A cell that holds a drawn number.
+   *
+   * "jackpot_number" is in this list because the games whose numbers are two
+   * digits or a single digit - Magnum Life's winning numbers, the Toto 5D/6D
+   * rows, Magnum Jackpot Gold's digits - are all printed in those cells. They
+   * were not counted as numbers before, so a new draw's date arrived with the
+   * previous draw's numbers still sitting underneath it (reported 11 Oct 2026).
+   */
+  const isNumber = /lottery-prize-number|lottery-number|jackpot_number/.test(cell.cls || "");
   /**
    * The live date has moved past the draw this card was built with, so every
    * number still baked into it belongs to the PREVIOUS draw. Printing those
    * under the new date is what showed 16-09 numbers on a 19-09 card, so show
    * "----" for anything the snapshot has not published yet.
    */
-  const staleDraw = !frozen && !fresh && Boolean(drawMoved) && isNumber;
+  // A cell that only holds a separator ("+") is not a number, so a moved draw
+  // must not blank it.
+  const bakedNumber = /^\d{1,6}$/.test(plain);
+  const staleDraw = !frozen && !fresh && Boolean(drawMoved) && isNumber && bakedNumber;
   // Only hide values that could be a stale draw date / number; keep other
   // built-in text (like "----" or jackpot amounts) as it is.
   const legacyNumber = isNumber && /^\d{3,6}$/.test(plain);
   // A past-result card (mkt-past) shows printed history - never mask it.
-  const maskable = !frozen && !fresh && !staleDraw && (dataId === "date" || dataId === "draw_no" || /^\d{3,6}$/.test(plain) || legacyNumber);
+  // Only hide values that could be a stale draw date / number; a "+" separator
+  // or a jackpot amount stays as it is.
+  const knownNumber = isNumber && bakedNumber;
+  const maskable = !frozen && !fresh && !staleDraw && (dataId === "date" || dataId === "draw_no" || knownNumber || /^\d{3,6}$/.test(plain) || legacyNumber);
   const cls = [cell.cls, maskable ? "live-pending" : ""].filter(Boolean).join(" ");
   if (cls) attrs.className = cls;
   if (cell.attrs?.width) attrs.width = cell.attrs.width;

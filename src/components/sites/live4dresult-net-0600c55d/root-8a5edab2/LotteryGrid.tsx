@@ -2,6 +2,7 @@ import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import GamePager from "./GamePager";
 import GamePastFilter from "./GamePastFilter";
 import cardsRaw from "./cards-data.json";
+import { overridesFor, type Snap } from "./snapshot-values";
 
 const cardList = (cardsRaw as unknown as { cards: LotteryCardData[] }).cards;
 const byId = new Map<string, LotteryCardData>(cardList.map((c) => [c.id, c]));
@@ -31,7 +32,17 @@ const DESKTOP: ColItem[][] = [
   ],
 ];
 
-function DesktopGrid() {
+/**
+ * The desktop home grid.
+ *
+ * It has to be given the live snapshot, exactly like the phone pager is. Without
+ * it the cards fell back to the numbers baked into them on 06-09-2026, and
+ * because LotteryCard only knows a card has moved on when the snapshot's date
+ * differs from the card's own, those month-old numbers were printed under
+ * today's date - the "date is today, numbers are yesterday's" report of
+ * 11 Oct 2026. With the snapshot here the stale cells are blanked instead.
+ */
+function DesktopGrid({ snap }: { snap?: Snap }) {
   return (
     <section className="row d-none d-lg-flex" data-live="">
       {DESKTOP.map((items, ci) => (
@@ -39,7 +50,7 @@ function DesktopGrid() {
           {items.map((item, ii) => {
             if (item.type === "br") return <br key={ii} />;
             const card = byId.get(item.id);
-            return card ? <LotteryCard key={card.id} card={card} /> : null;
+            return card ? <LotteryCard key={card.id} card={card} {...overridesFor(snap || {}, card.id, card.cardCls)} /> : null;
           })}
         </div>
       ))}
@@ -69,7 +80,7 @@ export default function LotteryGrid({ snap, pastDates, myDates }: {
             />
           </div>
         ) : null}
-        <DesktopGrid />
+        <DesktopGrid snap={snap as Snap | undefined} />
       </div>
     </div>
   );
