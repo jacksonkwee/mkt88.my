@@ -263,6 +263,31 @@ body:not(.mkt-in-app) .card.outer-box.table-10 .lottery-prize-number {
 }
 
 /*
+ * The Home link on a red bar is a button, on the website too.
+ *
+ * In the app these links already sit on a dark rounded surface; on the website
+ * they were plain underlined-looking text on the red bar, so the tap target was
+ * invisible. This gives them the same shape outside the app.
+ */
+body:not(.mkt-in-app) .mkt-app-topbar > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
+}
+body:not(.mkt-in-app) .mkt-app-topbar > a:active {
+  background: rgba(0, 0, 0, 0.3);
+}
+body:not(.mkt-in-app) .mkt-app-topbar > a:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/*
  * ...except the three east cards.
  *
  * Sabah 88, Cash Sweep and Sandakan come from a captured page, and their result

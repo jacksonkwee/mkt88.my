@@ -61,9 +61,8 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
               <GamePastFilter slug={slug} name={OP_LABEL[slug]} kind="my" dates={myDates} tables={pastDates.myTables} />
             </div>
           </div>
-          {EAST_ROWS.map((id) => (
-            <GameColumns key={id} ids={[id]} snap={snapProp} />
-          ))}
+          {/* The three cards sit side by side, like the 4D Result page. */}
+          <GameColumns ids={EAST_ROWS} snap={snapProp} />
         </main>
       </div>
       <EastFilter />

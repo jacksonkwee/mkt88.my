@@ -37,7 +37,7 @@ const EAST_GAME = /^table-(8|9|10)\b/;
  * A 6D card always sits directly under its own 4D card, and the two-draw
  * games (Perdana / Lucky HariHari) put the draw we are waiting for on the left.
  */
-export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; snap?: unknown }) {
+export default function GameColumns({ ids, snap: serverSnap, wide }: { ids: string[]; snap?: unknown; wide?: boolean }) {
   const night = useDrawOrder();
   const ctxSnap = useSnap();
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
@@ -70,7 +70,7 @@ export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; 
   return (
     <div className="row">
       {cols.map((col) => (
-        <div key={col.key} className={"col-12 col-sm-12 col-md-6 mt-2 px-1 " + (EAST_GAME.test(col.key) ? "col-lg-8 mkt-east-col" : "col-lg-4")}>
+        <div key={col.key} className={"col-12 col-sm-12 col-md-6 mt-2 px-1 " + (wide && EAST_GAME.test(col.key) ? "col-lg-8 mkt-east-col" : "col-lg-4")}>
           {col.items.map((c, i) => (
             <div key={c.id} className={i > 0 ? "mt-3" : ""}>
               <LotteryCard card={c} {...overridesFor(snap, c.id, c.cardCls)} />

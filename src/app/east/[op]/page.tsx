@@ -59,7 +59,7 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
               <GamePastFilter slug={o.pager} name={o.name} kind="my" dates={pastDates.my} tables={pastDates.myTables} />
             </div>
           </div>
-          <GameColumns ids={[EAST_CARD_ID[o.pager]]} snap={snapProp} />
+          <GameColumns ids={[EAST_CARD_ID[o.pager]]} snap={snapProp} wide />
         </main>
       </div>
       <Footer />
