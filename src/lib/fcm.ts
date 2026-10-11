@@ -36,6 +36,39 @@ export function pushConfigured(): boolean {
   return serviceAccount() !== null;
 }
 
+/**
+ * What the running deployment can see about FIREBASE_SERVICE_ACCOUNT.
+ *
+ * Deliberately carries no secret - only whether a value is there at all, how
+ * long it is, whether it is JSON or base64, whether it parsed, and which
+ * project it belongs to. That is enough to tell "the variable never reached
+ * this deployment" apart from "the value was pasted wrong", which are the two
+ * ways the push stays switched off.
+ */
+export function pushDiagnostics(): { present: boolean; length?: number; kind?: string; parsed?: boolean; project?: string; error?: string } {
+  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT || "").trim();
+  if (!raw) return { present: false };
+  let error = "";
+  let parsed: ServiceAccount | null = null;
+  try {
+    const text = raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8");
+    const j = JSON.parse(text) as Partial<ServiceAccount>;
+    const missing = (["project_id", "client_email", "private_key"] as const).filter((k) => !j[k]);
+    if (missing.length) error = "missing " + missing.join(", ");
+    else parsed = { project_id: j.project_id!, client_email: j.client_email!, private_key: j.private_key! };
+  } catch (e) {
+    error = (e as Error).message.slice(0, 120);
+  }
+  return {
+    present: true,
+    length: raw.length,
+    kind: raw.startsWith("{") ? "json" : "base64",
+    parsed: !!parsed,
+    project: parsed?.project_id,
+    ...(error ? { error } : {}),
+  };
+}
+
 let cachedToken: { value: string; expires: number } | null = null;
 
 /** The OAuth2 access token a service account is worth. */

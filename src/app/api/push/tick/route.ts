@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkAndPush } from "../../../../lib/push-notify";
-import { pushConfigured } from "../../../../lib/fcm";
+import { pushConfigured, pushDiagnostics } from "../../../../lib/fcm";
 
 /**
  * Send the "result is out" pushes for any draw that has just finished.
@@ -21,7 +21,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, reason: "bad key" }, { status: 403 });
   }
   if (!pushConfigured()) {
-    return NextResponse.json({ ok: false, configured: false, note: "Set FIREBASE_SERVICE_ACCOUNT to switch push on." });
+    return NextResponse.json({
+      ok: false,
+      configured: false,
+      env: pushDiagnostics(),
+      note: "Set FIREBASE_SERVICE_ACCOUNT on Vercel (Production) and redeploy.",
+    });
   }
   const result = await checkAndPush({ force });
   return NextResponse.json({ ok: true, ...result });
