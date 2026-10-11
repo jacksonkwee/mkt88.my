@@ -27,9 +27,18 @@ export default function EastFilter() {
       (c as HTMLElement).style.display = "none";
     }
     // Match the same column size/location as the other single-game pages.
-    if (shown && shown.parentElement) {
-      const p = shown.parentElement;
-      p.className = "col-12 col-sm-12 col-md-8 col-lg-7 mx-auto mt-3 px-1";
+    if (shown) {
+      /*
+       * GameColumns wraps each card in a div of its own inside the result
+       * column, so the card's parent is that wrapper, not the column. Setting
+       * the class on the wrapper nested a column inside the col-lg-4 the card
+       * already sat in - the card came out a third of a third of the page wide
+       * and its number grids were crushed, while a zoomed-in window (where the
+       * three-across row does not apply) still looked right (reported 11 Oct
+       * 2026). Walk up to the column itself instead.
+       */
+      const col = shown.closest("div[class*='col-']");
+      if (col) col.className = "col-12 col-sm-12 col-md-8 col-lg-7 mx-auto mt-3 px-1";
     }
   }, []);
   return null;
