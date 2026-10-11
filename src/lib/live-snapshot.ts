@@ -773,7 +773,14 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
     const D3_IDS = ["first_d3_prize", "second_d3_prize", "third_d3_prize"];
     for (let i = 1; i <= 3; i++) out[D3_IDS[i - 1]] = num(draw["n1" + i], 3);
     const lotto = feed.lotto || {};
-    for (let i = 1; i <= 7; i++) out["lotto_number_" + i] = num(lotto["n" + i], 2);
+    /*
+     * The card prints six numbers, a red "+" and then the bonus, so the feed's
+     * seventh value belongs in the cell after the plus - writing it into the
+     * plus itself left a number where the sign goes and printed last week's
+     * bonus in the last cell (reported 11 Oct 2026).
+     */
+    for (let i = 1; i <= 6; i++) out["lotto_number_" + i] = num(lotto["n" + i], 2);
+    out.lotto_number_8 = num(lotto.n7, 2);
     const lj1 = moneyOf(lotto.jp1);
     if (lj1) out.lotto_first_jackpot_prize = lj1;
     const lj2 = moneyOf(lotto.jp2);

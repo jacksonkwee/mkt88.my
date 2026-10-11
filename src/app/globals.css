@@ -299,10 +299,25 @@ body:not(.mkt-in-app) .mkt-app-topbar > a:focus-visible {
  * pins them to their share. The note above does not apply: these tables hold
  * numbers only - no zodiac artwork to squash.
  */
-.card.outer-box.table-8 table,
-.card.outer-box.table-9 table,
-.card.outer-box.table-10 table {
+/* Only the five-across number grids need the pinned layout. The prize, 3D and
+   Lotto tables keep their own width attributes instead: their first row is a
+   single heading that spans the table, and under the pinned layout that
+   heading leaves the browser no per-column width to read, so every column came
+   out the same size and the Lotto prize amounts spilled out of their cells
+   (reported 11 Oct 2026). */
+.card.outer-box.table-8 table:has(td.lottery-number):not(.mkt-lotto),
+.card.outer-box.table-9 table:has(td.lottery-number):not(.mkt-lotto),
+.card.outer-box.table-10 table:has(td.lottery-number):not(.mkt-lotto) {
   table-layout: fixed;
+}
+
+/* The Lotto 5 and Lotto 6 boards end in the group's prize money. It is a long
+   "RM 1,234,567.89", so it is set smaller than the numbers beside it and kept
+   on one line, which holds it inside its own cell. */
+body:not(.mkt-in-app) .card.outer-box.table-10 .mkt-lotto-jp,
+.card.outer-box .mkt-lotto-jp {
+  font-size: 18px;
+  white-space: nowrap;
 }
 
 /* ------------------------------------------------------------------ *

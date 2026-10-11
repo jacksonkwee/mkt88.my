@@ -138,22 +138,31 @@ function jackpotTable(ids: string[]): CardTable {
  * table is built here. The ids match what the live snapshot writes.
  */
 function lottoBoard(title: string, group: "5" | "6", rows: number): CardTable {
-  const cells: CardRow[] = [
-    { cls: "", cells: [{ tag: "td", cls: "lottery-prize-title text-center", attrs: { colspan: "4" }, html: title }] },
-  ];
+  const cells: CardRow[] = [];
+  /*
+   * One red heading over the two boards, the way Sports Toto's 5D / 6D card
+   * heads its sections - only the first table gets it, the second carries on
+   * underneath it.
+   */
+  if (title) {
+    cells.push({
+      cls: "",
+      cells: [{ tag: "td", cls: "lottery-prize-title plus text-center", attrs: { colspan: "4" }, html: title }],
+    });
+  }
   for (let i = 1; i <= rows; i++) {
     const id = "sabahlotto" + group + "_";
     cells.push({
       cls: "",
       cells: [
         { tag: "td", cls: "lottery-prize-title text-center", attrs: { width: "16%" }, html: "Group " + i },
-        { tag: "td", cls: "border text-center lottery-number", attrs: { "data-id": id + "num_" + i }, html: "----" },
-        { tag: "td", cls: "border text-center lottery-number", attrs: { "data-id": id + "bonus_" + i }, html: "----" },
-        { tag: "td", cls: "lottery-prize-number border text-center", attrs: { "data-id": id + "jp_" + i }, html: "----" },
+        { tag: "td", cls: "border text-center lottery-number", attrs: { width: "26%", "data-id": id + "num_" + i }, html: "----" },
+        { tag: "td", cls: "border text-center lottery-number", attrs: { width: "13%", "data-id": id + "bonus_" + i }, html: "----" },
+        { tag: "td", cls: "lottery-prize-number border text-center mkt-lotto-jp", attrs: { width: "45%", "data-id": id + "jp_" + i }, html: "----" },
       ],
     });
   }
-  return { cls: "my-1", widthAttr: "100%", rows: cells };
+  return { cls: "my-1 mkt-lotto", widthAttr: "100%", rows: cells };
 }
 
 /**
@@ -193,7 +202,7 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     // Magnum's does; the operator's remaining boards follow it.
     const head = c.tables.slice(0, 3);   // 4D prizes, Special, Consolation
     const tail = c.tables.slice(3);      // 3D, Lotto 6/45
-    const lotto = cls === "table-10" ? [lottoBoard("Lotto 5", "5", 8), lottoBoard("Lotto 6", "6", 5)] : [];
+    const lotto = cls === "table-10" ? [lottoBoard("Sabah 88 Lotto 5, Lotto 6 六合彩", "5", 8), lottoBoard("", "6", 5)] : [];
     // Cash Sweep's own 3D board, directly under its jackpot rows.
     if (cls === "table-9") return { ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] };
     /*
@@ -205,8 +214,14 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
      */
     const tidy = tail.map((t) => {
       const title = plain(t.rows[0]?.cells[0]?.html || "");
-      if (title !== "3D" || !t.rows[0]?.cells[0]) return t;
-      const titleCell = t.rows[0].cells[0];
+      const titleCell = t.rows[0]?.cells[0];
+      if (!titleCell) return t;
+      // The operator's Lotto 6/45 board only differs by its heading; give it
+      // the same red band the Lotto 5 / 6 heading uses (reported 11 Oct 2026).
+      if (title === "Lotto 6/45") {
+        return { ...t, rows: t.rows.map((r, i) => (i === 0 ? { ...r, cells: [{ ...titleCell, cls: titleCell.cls + " plus" }] } : r)) };
+      }
+      if (title !== "3D") return t;
       const rows = t.rows.map((r, i) =>
         i === 0 ? { ...r, cells: [{ ...titleCell, attrs: { ...titleCell.attrs, colspan: "2" } }] } : r
       );
