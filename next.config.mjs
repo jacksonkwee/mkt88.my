@@ -96,6 +96,22 @@ const nextConfig = {
           { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.11.apk"' },
         ],
       },
+      {
+        source: "/mkt88-4d-v2.19.apk",
+        headers: [
+          { key: "Content-Type", value: "application/vnd.android.package-archive" },
+          { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.19.apk"' },
+        ],
+      },
+      {
+        // v2.21 is the build that carries the push plugin (server push for a
+        // closed app). It is what public/app-version.json points at.
+        source: "/mkt88-4d-v2.21.apk",
+        headers: [
+          { key: "Content-Type", value: "application/vnd.android.package-archive" },
+          { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.21.apk"' },
+        ],
+      },
       // Pages (and the phone app's WebView) must always revalidate, otherwise a
       // cached page shell can show an older draw for a long time.
       {

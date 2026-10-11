@@ -23,3 +23,5 @@ backups/
 .vercel
 .env*
 .tools/
+*-firebase-adminsdk-*.json
+firebase-service-account.json

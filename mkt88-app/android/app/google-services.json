@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "976545276087",
+    "project_id": "mkt88-4d",
+    "storage_bucket": "mkt88-4d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:976545276087:android:31f09f5c1f4ef49c1eed32",
+        "android_client_info": {
+          "package_name": "com.mkt88.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGaT_bpPzriTjEo-5bC5T2mdfK4heGbLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
