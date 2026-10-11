@@ -970,9 +970,18 @@ async function damacaiToday(iso: string): Promise<{ four: Record<string, string>
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
+  const [home, east, sgTotoPage, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
+    /*
+     * Singapore Toto lives on the mirror's Singapore page only - its home page
+     * has no Toto card. Without this the app's Toto card had no live values to
+     * render, so React kept painting the ones captured on 03-09-2026 while the
+     * browser-side mirror wrote the current draw into the same cells: the date
+     * and the numbers flipped back and forth between the two (reported 11 Oct
+     * 2026). With the card in the snapshot both writers agree.
+     */
+    get("https://live4dresult.net/singapore-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
     // 4s: this host answers our server in ~14s, so a full wait stalled every
@@ -999,7 +1008,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const liveCards = parseLiveFeed(feed);
   const homeCards = parseCards(home);
   const eastCards = parseCards(east);
-  const cards = { ...homeCards, ...eastCards, ...sgOfficial, ...liveCards };
+  const sgMirrorCards = parseCards(sgTotoPage);
+  const cards = { ...homeCards, ...eastCards, ...sgMirrorCards, ...sgOfficial, ...liveCards };
   // Magnum's own feed wins over the mirror when it has today's draw - but a
   // blank from it must never wipe a number the mirror already published.
   if (magnumToday) {

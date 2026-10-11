@@ -83,7 +83,9 @@ function sixSubs(values: Record<string, string>, subs?: Record<string, string>) 
 
 /** Values / prize set that should be rendered for one card. */
 export function overridesFor(snap: Snap, cardId: string, tableCls: string): { values?: Record<string, string>; prizeSet?: PrizeSet | null } {
-  const cls = (tableCls || "").replace("card outer-box ", "").replace(" six-jp", "").trim();
+  // "mkt-static" marks a card whose numbers are final (Singapore Toto) - it is
+  // not part of the snapshot's key, which is the table class alone.
+  const cls = (tableCls || "").replace("card outer-box ", "").replace(" mkt-static", "").replace(" six-jp", "").trim();
   const cleanCardId = cardId.replace(/-jp$/, "");
   const values: Record<string, string> = { ...((snap.cards && snap.cards[cls]) || {}) };
 
