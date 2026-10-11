@@ -106,7 +106,14 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
           <div className="lottery-logo">
             <img src={toLocal(h.logo.src)} alt={h.logo.alt} />
           </div>
-          <div className="lottery-name">{toSimplified(h.name)}</div>
+          {/*
+            The card header keeps the game's name on ONE line. At the site's
+            18px a long name - "Special CashSweep 砂拉越大万" is the longest -
+            wrapped and pushed "砂拉越大万" onto a second line, which reads as a
+            broken heading (reported 11 Oct 2026 for the east games). The long
+            ones are set a step smaller so the whole name still fits.
+          */}
+          <div className="lottery-name" style={(toSimplified(h.name) || "").length > 15 ? { fontSize: 15 } : undefined}>{toSimplified(h.name)}</div>
         </div>
         <div className="row mx-0 justify-content-between">
           <div className="date">
