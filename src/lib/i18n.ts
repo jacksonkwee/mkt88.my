@@ -122,7 +122,7 @@ export const STRINGS: Record<string, Row> = {
 
   // Number History page (/number-history).
   nhSearchTitle:   { en: "Search a 4D number", ms: "Cari nombor 4D", zh: "搜索 4D 号码" },
-  nhPlaceholder:   { en: "e.g. 1236", ms: "cth. 1236", zh: "例 1236" },
+  nhPlaceholderPrefix: { en: "e.g.", ms: "cth.", zh: "例" },
   nhSearchBtn:     { en: "Search", ms: "Cari", zh: "搜索" },
   nhView:          { en: "View ›", ms: "Lihat ›", zh: "查看 ›" },
   nhSingle:        { en: "Single", ms: "Tunggal", zh: "单一" },

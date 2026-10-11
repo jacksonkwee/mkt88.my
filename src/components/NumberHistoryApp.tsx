@@ -75,6 +75,17 @@ export default function NumberHistoryApp() {
   const [lang] = useLang();
   const initial = (params.get("num") || "").replace(/\D/g, "").slice(0, 4);
 
+  /**
+   * A different example number every time the screen opens, so the hint never
+   * looks like a fixed number. The first render keeps a fixed value so the
+   * server and the browser agree on the markup; the random one arrives a moment
+   * later.
+   */
+  const [example, setExample] = useState("1236");
+  useEffect(() => {
+    setExample(String(Math.floor(Math.random() * 10000)).padStart(4, "0"));
+  }, []);
+
   /** The 大伯公 API returns the chart kind in Chinese; show it in the reader's language. */
   const kindLabel = (k: string) =>
     k === "万字图" ? tr("dbgKind10k", lang) : k === "大伯公千字图" ? tr("dbgKind1k", lang) : k;
@@ -215,7 +226,7 @@ export default function NumberHistoryApp() {
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               onKeyDown={(e) => e.key === "Enter" && search()}
-              placeholder={tr("nhPlaceholder", lang)}
+              placeholder={tr("nhPlaceholderPrefix", lang) + " " + example}
               inputMode="numeric"
               style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
             <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>{tr("nhSearchBtn", lang)}</button>

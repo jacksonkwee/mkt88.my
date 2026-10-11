@@ -1,8 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "@phosphor-icons/react";
 import { useLang, tr } from "../lib/i18n";
 
 const RED = "#cc0000";
@@ -17,16 +15,16 @@ const LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4
  * Home link beside it.
  */
 export default function AppTopBar({ titleKey }: { titleKey: string }) {
-  const router = useRouter();
   const [lang] = useLang();
   const goHome = () => window.dispatchEvent(new Event("mkt-home"));
   return (
     <div style={{ position: "sticky", top: 0, zIndex: 50 }}>
-      <div className="mkt-app-topbar" style={{ background: RED, color: "#fff", display: "flex", alignItems: "center", gap: 6, padding: "10px 8px", boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
-        <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
-          style={{ background: "transparent", border: 0, color: "#fff", fontSize: 24, lineHeight: 1, cursor: "pointer", padding: "2px 8px" }} aria-label="Back"><ArrowLeft size={24} weight="bold" /></button>
-        <div style={{ flex: 1, textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tr(titleKey, lang)}</div>
-        <Link href="/" onClick={goHome} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</Link>
+      {/* No back button: the Home link is the way out, and the title is
+          absolutely centred so it sits in the middle of the bar whatever the
+          Home label measures. */}
+      <div className="mkt-app-topbar" style={{ position: "relative", background: RED, color: "#fff", display: "flex", alignItems: "center", padding: "10px 8px", minHeight: 48, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
+        <div style={{ position: "absolute", left: 0, right: 0, padding: "0 68px", textAlign: "center", fontWeight: 800, fontSize: 18, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", pointerEvents: "none" }}>{tr(titleKey, lang)}</div>
+        <Link href="/" onClick={goHome} style={{ color: "#fff", fontSize: 13, textDecoration: "none", padding: "6px 8px", marginLeft: "auto" }}>{tr("home", lang)}</Link>
       </div>
 
       {/* Brand logo, fixed with the bar. */}
