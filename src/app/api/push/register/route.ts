@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   if (!pushConfigured()) return NextResponse.json({ ok: false, reason: "push not configured" }, { status: 503 });
-  let body: { token?: string; lang?: string };
+  let body: { token?: string; lang?: string; alerts?: boolean };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -26,6 +26,9 @@ export async function POST(request: Request) {
   const ok = await firestorePut("devices/" + tokenKey(token), {
     token,
     lang,
+    // The App's own "result alerts" switch. "0" keeps this phone out of the
+    // pushes, so switching the reminder off in the app switches it off here too.
+    alerts: body.alerts === false ? "0" : "1",
     updated: new Date().toISOString(),
   });
   return NextResponse.json({ ok }, { status: ok ? 200 : 502 });

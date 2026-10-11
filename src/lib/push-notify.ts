@@ -91,7 +91,8 @@ export async function checkAndPush(opts: { force?: boolean } = {}): Promise<Push
   await firestorePut("state/live", { json: JSON.stringify(ready) });
   if (!fresh.length) return { sent: 0, games: [] };
 
-  const devices = await registeredDevices();
+  // Phones whose owner switched result alerts off in the app are skipped.
+  const devices = (await registeredDevices()).filter((d) => d.alerts !== "0");
   if (!devices.length) return { sent: 0, games: fresh.map(([k]) => k) };
 
   const byLang = new Map<string, { id: string; token: string }[]>();

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { useLang } from "../lib/i18n";
+import { RESULT_ALERT_KEY } from "./ResultAlerts";
 
 /**
  * Gives the server this phone's address so it can push to a closed app.
@@ -53,6 +54,22 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
   const on = enabled ?? isCapacitorApp();
   const [lang] = useLang();
   const [token, setToken] = useState("");
+  const [alertsOn, setAlertsOn] = useState(true);
+
+  /** The same switch the in-app reminder uses (Settings → 成绩出炉提醒). */
+  useEffect(() => {
+    const read = () => {
+      try { setAlertsOn(window.localStorage.getItem(RESULT_ALERT_KEY) !== "0"); } catch { setAlertsOn(true); }
+    };
+    read();
+    const onChange = () => read();
+    window.addEventListener("mkt-result-alerts", onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener("mkt-result-alerts", onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!on) return;
@@ -88,15 +105,16 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
     return () => { cancelled = true; detach?.(); };
   }, [on]);
 
-  // Register (and re-register when the language changes, so the push follows it).
+  // Register (and re-register when the language or the switch changes, so the
+  // server always knows where to push and in which language).
   useEffect(() => {
     if (!on || !token) return;
     void fetch("/api/push/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, lang }),
+      body: JSON.stringify({ token, lang, alerts: alertsOn }),
     }).catch(() => { /* the next app open tries again */ });
-  }, [on, token, lang]);
+  }, [on, token, lang, alertsOn]);
 
   return null;
 }

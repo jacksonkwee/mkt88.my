@@ -229,6 +229,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const setResultAlerts = (on: boolean) => {
     setAlertsOn(on);
     try { localStorage.setItem(RESULT_ALERT_KEY, on ? "1" : "0"); } catch { /* ignore */ }
+    // PushRegister listens for this so the server stops pushing when the user
+    // switches result alerts off (the two must not disagree).
+    try { window.dispatchEvent(new Event("mkt-result-alerts")); } catch { /* not in a browser */ }
   };
 
   useEffect(() => {

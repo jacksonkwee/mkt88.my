@@ -120,12 +120,12 @@ export async function firestoreDelete(path: string): Promise<void> {
 type FirestoreDoc = { name?: string; fields?: Record<string, { stringValue?: string }> };
 
 /** Every registered device: doc id, push token, and the language it chose. */
-export async function registeredDevices(): Promise<{ id: string; token: string; lang: string }[]> {
+export async function registeredDevices(): Promise<{ id: string; token: string; lang: string; alerts: string }[]> {
   const sa = serviceAccount();
   if (!sa) return [];
   const token = await accessToken(sa);
   if (!token) return [];
-  const out: { id: string; token: string; lang: string }[] = [];
+  const out: { id: string; token: string; lang: string; alerts: string }[] = [];
   let pageToken = "";
   for (let page = 0; page < 20; page++) {
     const url = `${db(sa)}/devices?pageSize=300${pageToken ? "&pageToken=" + encodeURIComponent(pageToken) : ""}`;
@@ -140,7 +140,16 @@ export async function registeredDevices(): Promise<{ id: string; token: string; 
     for (const d of json.documents || []) {
       const id = (d.name || "").split("/").pop() || "";
       const t = d.fields?.token?.stringValue || "";
-      if (id && t) out.push({ id, token: t, lang: d.fields?.lang?.stringValue || "en" });
+      if (id && t) {
+        out.push({
+          id,
+          token: t,
+          lang: d.fields?.lang?.stringValue || "en",
+          // Anything that is not an explicit "0" is treated as switched on, so
+          // phones registered before the switch existed keep receiving pushes.
+          alerts: d.fields?.alerts?.stringValue || "1",
+        });
+      }
     }
     if (!json.nextPageToken) break;
     pageToken = json.nextPageToken;
