@@ -227,6 +227,19 @@ html {
 }
 
 /*
+ * The logo in a card's header never grows past its own box.
+ *
+ * Some operators ship a wide logo - Sabah 88's is the one that showed it - and
+ * with no ceiling the image spilled out of the 20% logo column and painted the
+ * whole header as one solid band (reported 11 Oct 2026, web layout). Every other
+ * card's logo already fitted; this just makes that the rule for all of them.
+ */
+.card.outer-box .lottery-logo img {
+  max-width: 100%;
+  height: auto;
+}
+
+/*
  * ...except the three east cards.
  *
  * Sabah 88, Cash Sweep and Sandakan come from a captured page, and their result
