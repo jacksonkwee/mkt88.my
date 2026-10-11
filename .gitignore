@@ -19,3 +19,7 @@ cap-run.js
 backups/
 
 
+
+.vercel
+.env*
+.tools/
