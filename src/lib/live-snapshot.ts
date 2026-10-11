@@ -751,6 +751,8 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
       return new RegExp("^\\d{1," + width + "}$").test(s) ? s.padStart(width, "0") : "----";
     };
     const out: Record<string, string> = {
+      // The card is only fed this board when it is the draw the card shows.
+      date: weekdayOf(String(draw.dd || "")),
       first_prize: val(draw.n1), second_prize: val(draw.n2), third_prize: val(draw.n3),
     };
     for (let i = 1; i <= 13; i++) out["special-" + i] = val(draw["s" + i]);
@@ -802,7 +804,7 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
  * Values arrive without their leading zeros (375, 644, 148), so they are
  * padded back to four digits rather than shown short.
  */
-async function cashSweepToday(iso: string): Promise<Record<string, string> | null> {
+async function cashSweepToday(): Promise<Record<string, string> | null> {
   try {
     const res = await fetch("https://www.cashsweep.com.my/live.json", {
       headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*", Referer: "https://www.cashsweep.com.my/results" },
@@ -811,14 +813,16 @@ async function cashSweepToday(iso: string): Promise<Record<string, string> | nul
     });
     if (!res.ok) return null;
     const j = (await res.json()) as { d?: string; n?: Record<string, number | string>; j1v?: unknown; j2v?: unknown };
-    if (String(j.d || "").slice(0, 10) !== iso) return null;   // never an older draw
+    const fileIso = String(j.d || "").slice(0, 10);
+    // The draw the file carries; the card decides whether it is the one shown.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fileIso)) return null;
     const n = j.n || {};
     const pad = (v: unknown): string => {
       const s = v == null ? "" : String(v).replace(/[^0-9]/g, "");
       return s ? s.padStart(4, "0").slice(-4) : "----";
     };
     const out: Record<string, string> = {
-      date: weekdayOf(iso),
+      date: weekdayOf(fileIso),
       first_prize: pad(n["1"]), second_prize: pad(n["2"]), third_prize: pad(n["3"]),
     };
     for (let i = 1; i <= 10; i++) out["special-" + i] = pad(n[String(8 + i)]);
@@ -930,7 +934,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     live4dSgToday(today.iso),
     magnumLiveToday(today.iso),
     sabah88Today(),
-    cashSweepToday(today.iso),
+    cashSweepToday(),
     stc4dToday(),
     damacaiToday(today.iso),
   ]);
@@ -977,9 +981,16 @@ export async function buildSnapshot(): Promise<Snapshot> {
    */
   if (sabah88) {
     const base = (cards["table-10"] || {}) as Record<string, string>;
-    if ((base.date || "").trim() === weekdayOf(today.iso)) {
+    /*
+     * The operator's board is taken whenever it is the draw the card is
+     * showing - not only when that draw happens to be today. Requiring today
+     * meant a card sitting on yesterday's result refused the feed (and with it
+     * the jackpot, 3D and Lotto boards) until the next draw began (11 Oct 2026).
+     */
+    if ((base.date || "").trim() === weekdayOf(today.iso) || (sabah88.date && base.date === sabah88.date)) {
       const merged: Record<string, string> = { ...base };
       for (const [k, v] of Object.entries(sabah88)) {
+        if (k === "date") continue;
         const cur = merged[k];
         if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
         merged[k] = v;
@@ -994,13 +1005,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
    */
   if (cashSweep) {
     const base = (cards["table-9"] || {}) as Record<string, string>;
-    const merged: Record<string, string> = { ...base };
-    for (const [k, v] of Object.entries(cashSweep)) {
-      const cur = merged[k];
-      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
-      merged[k] = v;
+    // Same rule as Sabah 88: the file's own draw must be the one on the card.
+    if (!cashSweep.date || base.date === cashSweep.date) {
+      const merged: Record<string, string> = { ...base };
+      for (const [k, v] of Object.entries(cashSweep)) {
+        if (k === "date") continue;
+        const cur = merged[k];
+        if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
+        merged[k] = v;
+      }
+      cards["table-9"] = merged;
     }
-    cards["table-9"] = merged;
   }
   /*
    * Sandakan (STC 4D) and Da Ma Cai, straight from each operator. Both are
