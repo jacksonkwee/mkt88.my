@@ -9,7 +9,7 @@ import LiveSound from "../lib/LiveSound";
 import AppNotifications from "../components/AppNotifications";
 import LiveKnock from "../components/LiveKnock";
 import LiveHighlight from "../components/LiveHighlight";
-import { getSnapshot } from "../lib/live-snapshot";
+import { getSnapshotForRender } from "../lib/live-snapshot";
 import LiveSnapshotProvider, { type SnapValue } from "../components/LiveSnapshotProvider";
 import "./vendor/bootstrap.min.css";
 import "./vendor/font-awesome-subset.css";
@@ -52,6 +52,12 @@ export const viewport: Viewport = { themeColor: "#1633c7", width: "device-width"
  * someone is in the app is decided in the page itself - so one cached copy is
  * correct for everybody, and the app stops waiting 4-6 seconds for a cold
  * server (measured 4 Oct 2026).
+ *
+ * That caching only works if the render itself never waits on the network, so
+ * the snapshot comes from getSnapshotForRender() - see live-snapshot.ts. It had
+ * been getSnapshot(), which runs the operator sweep whenever the in-memory copy
+ * has lapsed; that made every request a cache MISS and put 1-5 seconds in front
+ * of the app's first byte (measured 11 Oct 2026).
  *
  * The numbers stay live: the page corrects itself from /api/home-live on its
  * first tick, and that endpoint is deliberately cached for about a second.
@@ -312,7 +318,7 @@ const BOOT_SCRIPT = `
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   let snapObj: SnapValue = { cards: {}, perdana: {}, hari: {} };
   try {
-    const snap = await getSnapshot();
+    const snap = await getSnapshotForRender();
     snapObj = {
       cards: snap.cards,
       perdana: snap.perdana as unknown as SnapValue["perdana"],

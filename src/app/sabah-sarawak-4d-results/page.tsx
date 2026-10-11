@@ -9,7 +9,7 @@ import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
 import GamePastFilter from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePastFilter";
 import { getPastDateLists } from "../../lib/past-dates";
-import { getSnapshot } from "../../lib/live-snapshot";
+import { getSnapshotForRender } from "../../lib/live-snapshot";
 
 /**
  * The three east games, each in a row of its own.
@@ -42,7 +42,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
   const slug = op || "east";
   const pastDates = await getPastDateLists();
   const myDates = pastDates.my;
-  const snap = await getSnapshot().catch(() => null);
+  // Same rule as the home page: a render never waits on the operator sweep, or
+  // the app sits on its splash for seconds before this page's first byte.
+  const snap = await getSnapshotForRender().catch(() => null);
   const snapProp = snap
     ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp }
     : undefined;

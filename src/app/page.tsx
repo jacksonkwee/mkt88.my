@@ -3,14 +3,20 @@ import RegionButtons from "../components/sites/live4dresult-net-0600c55d/root-8a
 import LotteryGrid from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LotteryGrid";
 import Footer from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 import LiveResults from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
-import { getSnapshot } from "../lib/live-snapshot";
+import { getSnapshotForRender } from "../lib/live-snapshot";
 import DirectTopAd from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/DirectTopAd";
 import GoogleAdsense from "../components/GoogleAdsense";
 import SeoText from "../components/SeoText";
 import { getPastDateLists } from "../lib/past-dates";
 
 export default async function Home() {
-  const snap = await getSnapshot().catch(() => null);
+  /*
+   * The app opens on this page, so it must not wait for the sweep of thirteen
+   * upstream pages before it can send its first byte - see
+   * getSnapshotForRender(). The numbers it cannot fill in here arrive from
+   * /api/home-live a moment later, behind the live-pending mask.
+   */
+  const snap = await getSnapshotForRender().catch(() => null);
   const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari } : undefined;
   const pastDates = await getPastDateLists();
   return (

@@ -1642,6 +1642,39 @@ export async function getSnapshot(opts: { wait?: boolean } = {}): Promise<Snapsh
   }
 }
 
+/** A snapshot with no numbers in it, for a render that has nothing cached yet. */
+function emptySnapshot(): Snapshot {
+  return { at: 0, cards: {}, perdana: {}, hari: {} } as Snapshot;
+}
+
+/**
+ * The copy a page render may use.
+ *
+ * It NEVER waits at runtime. A render that did wait had to run the whole sweep
+ * of ~13 upstream pages before it could send its first byte, so tapping the app
+ * icon sat on the splash for 1-5 seconds (measured 11 Oct 2026: 5.29s, 3.11s,
+ * 2.85s, 2.35s, 1.29s, 0.87s on six requests in a row, every one of them a
+ * cache MISS). Whatever is in memory goes into the HTML and the page corrects
+ * itself from /api/home-live a moment later - which is exactly what the boot
+ * script and the live-pending mask are for.
+ *
+ * The build is the one place that still waits: the pre-rendered HTML is what a
+ * search engine reads, so it has to carry the numbers.
+ */
+export async function getSnapshotForRender(): Promise<Snapshot> {
+  startWarmer();
+  const cached = cache;
+  if (cached && Object.keys(cached.cards || {}).length > 0) {
+    // Refresh behind the response once the copy is past its useful age.
+    if (Date.now() - cached.at >= FRESH_MS) void rebuildOnce().catch(() => {});
+    return cached;
+  }
+  if (process.env.NEXT_PHASE === "phase-production-build") return await rebuildOnce();
+  // Nothing cached: hand over an empty snapshot, build for the next request.
+  void rebuildOnce().catch(() => {});
+  return emptySnapshot();
+}
+
 export function startWarmer() {
   if (warmer) return;
   warmer = setInterval(() => { void rebuildOnce().catch(() => {}); }, SNAPSHOT_TTL);
