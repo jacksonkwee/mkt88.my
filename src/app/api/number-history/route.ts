@@ -304,10 +304,10 @@ export async function GET(req: NextRequest) {
   const regions = table((m) => m.region);
   const prizeNames = table((m) => m.prize);
   /* The date stays on the row: almost every draw has its own, so a table of
-   * them cost more than it saved. It is sent as dd-mm-yyyy - the weekday the
-   * long form carries is never shown in the list. */
+   * them cost more than it saved. The weekday travels with it - the list shows
+   * it beside the date. */
   const rows = matches.map((m) => ({
-    d: m.date.slice(0, 10),
+    d: m.date,
     g: games.keys.get(m.game) || "",
     l: m.logo,
     r: regions.keys.get(m.region) || "",

@@ -453,9 +453,11 @@ function chip(active: boolean): React.CSSProperties {
  * date and the prize name are shortened: "23-08-2025 (Sat)" -> "23/08/25" and
  * "Consolation" -> "Con". Without this the row wraps and stops being one line.
  */
+/** "23-08-2025 (Sat)" -> "23/08/25 (Sat)": the list keeps the weekday. */
 function shortDate(d: string): string {
-  const m = /(\d{2})[-/](\d{2})[-/](\d{4})/.exec(d || "");
-  return m ? `${m[1]}/${m[2]}/${m[3].slice(2)}` : (d || "");
+  const m = /(\d{2})[-/](\d{2})[-/](\d{4})(?:\s*\(([^)]+)\))?/.exec(d || "");
+  if (!m) return d || "";
+  return `${m[1]}/${m[2]}/${m[3].slice(2)}${m[4] ? " (" + m[4] + ")" : ""}`;
 }
 /** The prize badge is one small pill, so each language gets its own short name. */
 function prizeShort(p: string, lang: Lang): string {
