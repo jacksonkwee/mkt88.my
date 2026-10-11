@@ -130,12 +130,40 @@ function jackpotTable(ids: string[]): CardTable {
   };
 }
 
+/**
+ * Sabah 88's Lotto 5 and Lotto 6 boards.
+ *
+ * The operator prints one row per group - the number, the bonus and the group's
+ * jackpot - and the captured page does not carry these two boards at all, so the
+ * table is built here. The ids match what the live snapshot writes.
+ */
+function lottoBoard(title: string, group: "5" | "6", rows: number): CardTable {
+  const cells: CardRow[] = [
+    { cls: "", cells: [{ tag: "td", cls: "lottery-prize-title text-center", attrs: { colspan: "4" }, html: title }] },
+  ];
+  for (let i = 1; i <= rows; i++) {
+    const id = "sabahlotto" + group + "_";
+    cells.push({
+      cls: "",
+      cells: [
+        { tag: "td", cls: "lottery-prize-title text-center", attrs: { width: "16%" }, html: "Group " + i },
+        { tag: "td", cls: "border text-center lottery-number", attrs: { "data-id": id + "num_" + i }, html: "----" },
+        { tag: "td", cls: "border text-center lottery-number", attrs: { "data-id": id + "bonus_" + i }, html: "----" },
+        { tag: "td", cls: "lottery-prize-number border text-center", attrs: { "data-id": id + "jp_" + i }, html: "----" },
+      ],
+    });
+  }
+  return { cls: "my-1", widthAttr: "100%", rows: cells };
+}
+
 export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
   .map(cardFor)
   .map((c) => {
     const cls = c ? (/^table-\d+/.exec(c.id) || [""])[0] : "";
     const ids = JACKPOT_IDS[cls];
-    return c && ids ? { ...c, tables: [...c.tables, jackpotTable(ids)] } : c;
+    if (!c || !ids) return c;
+    const extra = cls === "table-10" ? [jackpotTable(ids), lottoBoard("Lotto 5", "5", 8), lottoBoard("Lotto 6", "6", 5)] : [jackpotTable(ids)];
+    return { ...c, tables: [...c.tables, ...extra] };
   })
   .filter((c): c is LotteryCardData => Boolean(c));
 

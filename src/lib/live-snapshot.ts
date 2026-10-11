@@ -733,11 +733,22 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
     const body = m[1];
     const cut = body.indexOf(";window.");
     const json = cut >= 0 ? body.slice(0, cut) : body.replace(/;\s*$/, "");
-    const draw = (JSON.parse(json) as { draw?: Record<string, unknown> }).draw;
+    const feed = JSON.parse(json) as {
+      draw?: Record<string, unknown>;
+      lotto?: Record<string, unknown>;
+      lotto5?: Record<string, unknown>[];
+      lotto6?: Record<string, unknown>[];
+    };
+    const draw = feed.draw;
     if (!draw) return null;
     const val = (v: unknown): string => {
       const s = v == null ? "" : String(v).trim();
       return /^\d{4}$/.test(s) ? s : "----";
+    };
+    /** A number the operator prints, padded to its own width. */
+    const num = (v: unknown, width: number): string => {
+      const s = v == null ? "" : String(v).trim();
+      return new RegExp("^\\d{1," + width + "}$").test(s) ? s.padStart(width, "0") : "----";
     };
     const out: Record<string, string> = {
       first_prize: val(draw.n1), second_prize: val(draw.n2), third_prize: val(draw.n3),
@@ -752,6 +763,27 @@ async function sabah88Today(): Promise<Record<string, string> | null> {
     if (jp1) out.jackpot1_prize = jp1;
     const jp2 = moneyOf(draw.jp2);
     if (jp2) out.jackpot2_prize = jp2;
+    /*
+     * The same feed carries the operator's other boards - Sabah 3D, Lotto 6/45,
+     * Lotto 5 and Lotto 6 - which the card shows underneath.
+     */
+    // These ids are the ones the card's 3D board already carries.
+    const D3_IDS = ["first_d3_prize", "second_d3_prize", "third_d3_prize"];
+    for (let i = 1; i <= 3; i++) out[D3_IDS[i - 1]] = num(draw["n1" + i], 3);
+    const lotto = feed.lotto || {};
+    for (let i = 1; i <= 7; i++) out["lotto_number_" + i] = num(lotto["n" + i], 2);
+    const lj1 = moneyOf(lotto.jp1);
+    if (lj1) out.lotto_first_jackpot_prize = lj1;
+    const lj2 = moneyOf(lotto.jp2);
+    if (lj2) out.lotto_second_jackpot_prize = lj2;
+    for (const [key, board, rows, width] of [["5", feed.lotto5, 8, 4], ["6", feed.lotto6, 5, 5]] as [string, Record<string, unknown>[] | undefined, number, number][]) {
+      (board || []).slice(0, rows).forEach((g, i) => {
+        out["sabahlotto" + key + "_num_" + (i + 1)] = num(g.number, width);
+        out["sabahlotto" + key + "_bonus_" + (i + 1)] = num(g.bonus, 2);
+        const jp = moneyOf(g.jackpot);
+        if (jp) out["sabahlotto" + key + "_jp_" + (i + 1)] = jp;
+      });
+    }
     // Nothing published yet - leave the mirror's copy alone.
     if (Object.values(out).every((v) => v === "----")) return null;
     return out;

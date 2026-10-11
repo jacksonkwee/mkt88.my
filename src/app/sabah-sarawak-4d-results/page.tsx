@@ -19,7 +19,8 @@ import { getSnapshot } from "../../lib/live-snapshot";
  * Each card now has its own row and takes the left column, the same width and
  * the same place as the card on that game's own page.
  */
-const EAST_ROWS = ["table-8-2026-09-06", "table-9-2026-09-06", "table-10-2026-09-06"];
+/** Left to right: Sabah 88, Cash Sweep, Sandakan. */
+const EAST_ROWS = ["table-10-2026-09-06", "table-9-2026-09-06", "table-8-2026-09-06"];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/sabah-sarawak-4d-results" },
