@@ -3,7 +3,7 @@ import { useLang, tr } from "../lib/i18n";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   ALL_SCOPES, FAV_EVENT, SCOPE_LABEL, SCOPE_LABEL_I18N, YELLOW, addFav, isNum, loadFavs, removeFav, saveFavs,
   type Fav, type Scope,
@@ -38,7 +38,6 @@ function scopeName(s: string, l: "en" | "ms" | "zh"): string {
 export default function FavouritesApp() {
   const [lang] = useLang();
   const params = useSearchParams();
-  const router = useRouter();
   const initial = (params.get("num") || "").replace(/\D/g, "").slice(0, 4);
 
   const [input, setInput] = useState(initial);
@@ -182,12 +181,8 @@ export default function FavouritesApp() {
           </label>
 
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <button onClick={add} style={{ flex: 2, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+            <button onClick={add} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
               {tr("favAddBtn", lang)}
-            </button>
-            <button onClick={() => (window.history.length > 1 ? router.back() : router.push("/"))}
-              style={{ flex: 1, background: "#fff", color: "#333", border: "1px solid #ccc", borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
-              {tr("favBack", lang)}
             </button>
           </div>
 

@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { PAST_DATES, formatDateWithDay } from "./past-data";
-import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 
 interface Props {
   current: string;
@@ -16,30 +14,12 @@ const CAL = ASSET + "/wp-content/themes/oldtheme-lottery-frontend/assets/images/
 export default function PastToolbar({ current, view }: Props) {
   const [open, setOpen] = useState(false);
   const idx = PAST_DATES.indexOf(current);
-  const prev = idx > 0 ? PAST_DATES[idx - 1] : null;
-  const next = idx >= 0 && idx < PAST_DATES.length - 1 ? PAST_DATES[idx + 1] : null;
 
   return (
     <>
       <div className="dark p-2 pl-3 mt-3 h5">Past Draw Result</div>
       <div className="text-center">
         <div className="btn-group btn-group-toggle">
-          {prev ? (
-            <Link href={"/past-results/" + prev} className="text-white btn btn-secondary d-flex align-items-center">
-              <ArrowLeft size={16} weight="bold" className="mr-2" /> Prev
-            </Link>
-          ) : (
-            <a
-              href="#"
-              className="text-white btn btn-secondary d-flex align-items-center"
-              onClick={(e) => {
-                e.preventDefault();
-                alert("There is no more result.");
-              }}
-            >
-              <ArrowLeft size={16} weight="bold" className="mr-2" /> Prev
-            </a>
-          )}
           <div style={{ position: "relative" }} className="d-inline-block">
             <label className="p-0 btn btn-primary d-flex align-items-center" style={{ marginBottom: 0, cursor: "pointer" }}>
               <input type="radio" name="options" autoComplete="off" readOnly />
@@ -67,22 +47,6 @@ export default function PastToolbar({ current, view }: Props) {
               </div>
             ) : null}
           </div>
-          {next ? (
-            <Link href={"/past-results/" + next} className="text-white btn btn-secondary d-flex align-items-center">
-              Next <ArrowRight size={16} weight="bold" className="ml-2" />
-            </Link>
-          ) : (
-            <a
-              href="#"
-              className="text-white btn btn-secondary d-flex align-items-center"
-              onClick={(e) => {
-                e.preventDefault();
-                alert("There is no more result.");
-              }}
-            >
-              Next <ArrowRight size={16} weight="bold" className="ml-2" />
-            </a>
-          )}
         </div>
       </div>
       <div className="text-center mt-2">

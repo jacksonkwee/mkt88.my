@@ -177,7 +177,6 @@ export const STRINGS: Record<string, Row> = {
   // Favourites page - the labels the first pass left in English.
   favPlaceholder:  { en: "4-digit number", ms: "Nombor 4 digit", zh: "4 位号码" },
   favAddBtn:       { en: "Add to favourites", ms: "Tambah ke kegemaran", zh: "添加到收藏" },
-  favBack:         { en: "Back", ms: "Kembali", zh: "返回" },
   favClearAll:     { en: "Clear all", ms: "Kosongkan semua", zh: "全部清除" },
   favRemove:       { en: "Remove", ms: "Buang", zh: "移除" },
   favInApp:        { en: "This device will show in-app alerts.", ms: "Peranti ini akan menunjukkan makluman dalam aplikasi.", zh: "这台手机会在应用内显示提醒。" },
