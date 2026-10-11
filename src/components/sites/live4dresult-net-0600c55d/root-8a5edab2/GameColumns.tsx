@@ -25,10 +25,10 @@ function slotOf(key: string): number {
  * The three east games take a wider column.
  *
  * Sabah 88, Cash Sweep and Sandakan carry the operator's extra boards, and in
- * the narrow third-of-a-page column their date and prize rows came out squeezed
- * together. They take half the page instead (11 Oct 2026), on their own pages
- * and on the East 4D page that lists all three - both render the same card, so
- * both are the same size.
+ * the narrow third-of-a-page column their numbers came out cramped. They take
+ * two thirds of the page instead (11 Oct 2026), on their own pages and on the
+ * East 4D page that lists all three - both render the same card, so both are
+ * the same size, and the number columns get the room they need.
  */
 const EAST_GAME = /^table-(8|9|10)\b/;
 
@@ -70,7 +70,7 @@ export default function GameColumns({ ids, snap: serverSnap }: { ids: string[]; 
   return (
     <div className="row">
       {cols.map((col) => (
-        <div key={col.key} className={"col-12 col-sm-12 col-md-6 mt-2 px-1 " + (EAST_GAME.test(col.key) ? "col-lg-6" : "col-lg-4")}>
+        <div key={col.key} className={"col-12 col-sm-12 col-md-6 mt-2 px-1 " + (EAST_GAME.test(col.key) ? "col-lg-8" : "col-lg-4")}>
           {col.items.map((c, i) => (
             <div key={c.id} className={i > 0 ? "mt-3" : ""}>
               <LotteryCard card={c} {...overridesFor(snap, c.id, c.cardCls)} />
