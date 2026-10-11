@@ -2,10 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
-import { rewriteHtml } from "./site-paths";
 import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
-import eastRaw from "./snapshots/sabah-sarawak-4d-results.content.json";
+import { EAST_CARDS } from "./east-cards";
 import { hariIds, perdanaIds } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
@@ -15,6 +14,7 @@ import GamePastFilter from "./GamePastFilter";
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
   ...((lottoRaw as unknown as { cards: LotteryCardData[] }).cards || []),
+  ...EAST_CARDS,
 ];
 const byId = new Map<string, LotteryCardData>(allCards.map((c) => [c.id, c]));
 
@@ -24,46 +24,15 @@ function dateScore(label?: string): number {
   return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
 }
 
-const eastHtml = (eastRaw as { colHtml: string }).colHtml || "";
-function extractEast(cls: string): string {
-  // Anchor directly on the real opening div tag.
-  const key = '<div class="card outer-box ' + cls + '"';
-  let start = eastHtml.indexOf(key);
-  if (start < 0) start = eastHtml.indexOf('class="card outer-box ' + cls + '"');
-  if (start < 0) return "";
-  if (!eastHtml.slice(start, start + 20).startsWith("<div")) {
-    const o = eastHtml.lastIndexOf("<div", start);
-    start = o >= 0 ? o : start;
-  }
-  let i = start, depth = 0;
-  while (i < eastHtml.length) {
-    const o2 = eastHtml.indexOf("<div", i);
-    const close = eastHtml.indexOf("</div>", i);
-    if (close === -1 || (o2 !== -1 && o2 < close)) { depth++; i = o2 + 4; }
-    else { depth--; i = close + 6; if (depth === 0) break; }
-  }
-  return rewriteHtml(eastHtml.slice(start, i));
-}
-
-type PageDef = { title: string; slug?: string; kh?: boolean; ids?: string[]; html?: string };
-
-/** Raw captured HTML is written once (React must not re-insert it on re-render,
- *  otherwise the freshly applied live values are wiped back to the capture). */
-function RawHtml({ html }: { html: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (ref.current && ref.current.innerHTML !== html) ref.current.innerHTML = html;
-  }, [html]);
-  return <div ref={ref} />;
-}
+type PageDef = { title: string; slug?: string; kh?: boolean; ids?: string[] };
 const PAGES: PageDef[] = [
   { title: "Magnum 4D", slug: "magnum", ids: ["table-1-2026-09-06", "table-3-2026-09-06", "table-2-2026-09-06"] },
   { title: "Da Ma Cai", slug: "damacai", ids: ["table-4-2026-09-06", "table-5-2026-09-06"] },
   { title: "Sports Toto", slug: "sportstoto", ids: ["table-6-2026-09-06", "table-7-2026-09-06"] },
   { title: "Singapore 4D", slug: "sg", ids: ["table-11-2026-09-06"] },
-  { title: "Sabah 88 沙巴88", slug: "sabah88", html: extractEast("table-10") },
-  { title: "Cash Sweep 沙捞越", slug: "cashsweep", html: extractEast("table-9") },
-  { title: "Sandakan 山打根", slug: "sandakan", html: extractEast("table-8") },
+  { title: "Sabah 88 沙巴88", slug: "sabah88", ids: ["table-10-2026-09-06"] },
+  { title: "Cash Sweep 沙捞越", slug: "cashsweep", ids: ["table-9-2026-09-06"] },
+  { title: "Sandakan 山打根", slug: "sandakan", ids: ["table-8-2026-09-06"] },
   { title: "Grand Dragon", slug: "grand-dragon", kh: true, ids: ["table-13-2026-09-06", "table-14-2026-09-06-6d"] },
   { title: "Nine Lotto", slug: "nine-lotto", kh: true, ids: ["table-17-2026-09-06", "table-18-2026-09-06-6d"] },
 ];
@@ -290,29 +259,25 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
               tables={pg.kh ? undefined : pastDates.myTables}
             />
           ) : null}
-          {pg.html ? (
-            <RawHtml html={pg.html} />
-          ) : (
-            (() => {
-              const items: LotteryCardData[] = [];
-              for (const id of pg.ids || []) {
-                const card = byId.get(id);
-                if (!card) continue;
-                const { result, jp } = splitSixCard(card);
-                items.push(result);
-                if (jp) items.push(jp);
-              }
-              return items.map((card) =>
-                / six-jp$/.test(card.cardCls) ? (
-                  <div key={card.id} className="mt-3">
-                    <LotteryCard card={card} {...overridesFor(snap, card.id, card.cardCls)} />
-                  </div>
-                ) : (
-                  <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} />
-                )
-              );
-            })()
-          )}
+          {(() => {
+            const items: LotteryCardData[] = [];
+            for (const id of pg.ids || []) {
+              const card = byId.get(id);
+              if (!card) continue;
+              const { result, jp } = splitSixCard(card);
+              items.push(result);
+              if (jp) items.push(jp);
+            }
+            return items.map((card) =>
+              / six-jp$/.test(card.cardCls) ? (
+                <div key={card.id} className="mt-3">
+                  <LotteryCard card={card} {...overridesFor(snap, card.id, card.cardCls)} />
+                </div>
+              ) : (
+                <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} />
+              )
+            );
+          })()}
           </>
           )}
         </div>

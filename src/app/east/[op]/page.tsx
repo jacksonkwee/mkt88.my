@@ -2,31 +2,19 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Header from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
 import RegionButtons from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import SnapshotPage from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/SnapshotPage";
 import Footer from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import raw from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/snapshots/sabah-sarawak-4d-results.content.json";
+import GamePager from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePager";
+import GameColumns from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GameColumns";
+import GamePastFilter from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePastFilter";
+import { EAST_CARD_ID } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/east-cards";
+import { getSnapshot } from "../../../lib/live-snapshot";
+import { getPastDateLists } from "../../../lib/past-dates";
 
-const OPS: Record<string, { cls: string; title: string; desc: string }> = {
-  stc: { cls: "table-8", title: "Sandakan 4D 山打根赛马会 Result", desc: "Sandakan 4D live results." },
-  sabah88: { cls: "table-10", title: "Sabah 88 4D 沙巴万字 Result", desc: "Sabah 88 4D live results." },
-  cashsweep: { cls: "table-9", title: "Special Cash Sweep 4D 砂拉越大万 Result", desc: "Special Cash Sweep 4D live results." },
+const OPS: Record<string, { title: string; desc: string; pager: string; name: string }> = {
+  stc: { title: "Sandakan 4D 山打根赛马会 Result", desc: "Sandakan 4D live results.", pager: "sandakan", name: "Sandakan 4D 山打根赛马会" },
+  sabah88: { title: "Sabah 88 4D 沙巴万字 Result", desc: "Sabah 88 4D live results.", pager: "sabah88", name: "Sabah 88 4D 沙巴万字" },
+  cashsweep: { title: "Special Cash Sweep 4D 砂拉越大万 Result", desc: "Special Cash Sweep 4D live results.", pager: "cashsweep", name: "Special Cash Sweep 4D 砂拉越大万" },
 };
-
-const html = (raw as { colHtml: string }).colHtml || "";
-
-function extractCard(prefix: string): string {
-  const key = "card outer-box " + prefix;
-  const s = html.indexOf(key);
-  if (s < 0) return "";
-  let i = s; let depth = 0;
-  while (i < html.length) {
-    const open = html.indexOf("<div", i);
-    const close = html.indexOf("</div>", i);
-    if (close === -1 || (open !== -1 && open < close)) { depth++; i = open + 4; }
-    else { depth--; i = close + 6; if (depth === 0) break; }
-  }
-  return html.slice(s, i);
-}
 
 export async function generateStaticParams() {
   return Object.keys(OPS).map((op) => ({ op }));
@@ -39,19 +27,43 @@ export async function generateMetadata({ params }: { params: Promise<{ op: strin
   return { title: o.title, description: o.desc, alternates: { canonical: "/east/" + op } };
 }
 
+/**
+ * One east game (Sabah 88, Cash Sweep, Sandakan).
+ *
+ * This page used to hand its card to SnapshotPage as the raw captured HTML,
+ * which gave it a different size and position from every other game - and on a
+ * desktop the ad-stripper removed it altogether, so the page showed no result at
+ * all (reported 11 Oct 2026). It now renders through the same GameColumns /
+ * GamePager pair as /result/[game], so the card is identical by construction.
+ */
 export default async function EastPage({ params }: { params: Promise<{ op: string }> }) {
   const { op } = await params;
   const o = OPS[op];
   if (!o) notFound();
-  const cardHtml = extractCard(o.cls);
-  const wrapped = '<div id="row"><div class="row"><div class="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">' + cardHtml + "</div></div></div>";
+  const snap = await getSnapshot().catch(() => null);
+  const snapProp = snap
+    ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp }
+    : undefined;
+  const pastDates = await getPastDateLists();
   return (
     <>
       <Header />
       <RegionButtons />
-      <SnapshotPage html={wrapped} />
+      <div className="d-lg-none">
+        <GamePager name={o.pager} snap={snapProp} pastDates={pastDates} showPast />
+      </div>
+      <div className="d-none d-lg-block mkt-past-scope">
+        <main className="container flex-shrink-0">
+          <div className="row">
+            <div className="col-12">
+              <h1 style={{ fontSize: 20, margin: "10px 0 4px" }}>{o.name} Result</h1>
+              <GamePastFilter slug={o.pager} name={o.name} kind="my" dates={pastDates.my} tables={pastDates.myTables} />
+            </div>
+          </div>
+          <GameColumns ids={[EAST_CARD_ID[o.pager]]} snap={snapProp} />
+        </main>
+      </div>
       <Footer />
     </>
   );
 }
-

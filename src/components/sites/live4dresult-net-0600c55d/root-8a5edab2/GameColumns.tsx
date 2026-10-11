@@ -3,6 +3,7 @@
 import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
+import { EAST_CARDS } from "./east-cards";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
@@ -10,6 +11,7 @@ import { splitSixCard } from "./six-split";
 const allCards = [
   ...((cardsRaw as unknown as { cards: LotteryCardData[] }).cards || []),
   ...((lottoRaw as unknown as { cards: LotteryCardData[] }).cards || []),
+  ...EAST_CARDS,
 ];
 const byId = new Map<string, LotteryCardData>(allCards.map((c) => [c.id, c]));
 
