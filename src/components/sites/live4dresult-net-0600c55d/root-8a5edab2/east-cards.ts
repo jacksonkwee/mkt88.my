@@ -89,10 +89,9 @@ function jackpotTable(ids: string[]): CardTable {
 function lottoBoard(title: string, group: "5" | "6", rows: number, separated = false): CardTable {
   const cells: CardRow[] = [];
   /*
-   * One heading over the two boards, the way Sports Toto's 5D / 6D card heads
-   * its sections - only the first table gets it, the second carries on
-   * underneath it. It wears the Sabah 88 blue, the same colour as that card's
-   * own header band (11 Oct 2026).
+   * Each board carries its own heading, the way Sports Toto's 5D / 6D card
+   * heads its sections, and wears the Sabah 88 blue - the same colour as that
+   * card's own header band (11 Oct 2026).
    */
   if (title) {
     cells.push({
@@ -154,7 +153,9 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     // Magnum's does; the operator's remaining boards follow it.
     const head = c.tables.slice(0, 3);   // 4D prizes, Special, Consolation
     const tail = c.tables.slice(3);      // 3D, Lotto 6/45
-    const lotto = cls === "table-10" ? [lottoBoard("Sabah 88 Lotto 5, Lotto 6 六合彩", "5", 8, true), lottoBoard("", "6", 5)] : [];
+    // Lotto 5 and Lotto 6 are separate blocks: each has its own heading and its
+    // own gap, so the two boards do not read as one long table.
+    const lotto = cls === "table-10" ? [lottoBoard("Lotto 5", "5", 8, true), lottoBoard("Lotto 6", "6", 5, true)] : [];
     // Cash Sweep's own 3D board, directly under its jackpot rows.
     if (cls === "table-9") return { ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] };
     /*
