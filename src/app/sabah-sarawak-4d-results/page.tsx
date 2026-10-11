@@ -1,15 +1,25 @@
 import type { Metadata } from "next";
 import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
 import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import SnapshotPage from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/SnapshotPage";
 import GamePager from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePager";
+import GameColumns from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GameColumns";
 import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import raw from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/snapshots/sabah-sarawak-4d-results.content.json";
 import EastFilter from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/EastFilter";
 import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
 import GamePastFilter from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePastFilter";
 import { getPastDateLists } from "../../lib/past-dates";
+import { getSnapshot } from "../../lib/live-snapshot";
+
+/**
+ * The three east games, each in a row of its own.
+ *
+ * They used to be printed as one three-column row, so Sandakan sat on the left,
+ * Cash Sweep in the middle and Sabah 88 on the right (reported 11 Oct 2026).
+ * Each card now has its own row and takes the left column, the same width and
+ * the same place as the card on that game's own page.
+ */
+const EAST_ROWS = ["table-8-2026-09-06", "table-9-2026-09-06", "table-10-2026-09-06"];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/sabah-sarawak-4d-results" },
@@ -26,12 +36,15 @@ const OP_LABEL: Record<string, string> = {
 };
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ op?: string }> }) {
-  const { colHtml } = raw as { colHtml: string };
   const sp = await searchParams;
   const op = sp && sp.op ? OP_NAMES[sp.op] : undefined;
   const slug = op || "east";
   const pastDates = await getPastDateLists();
   const myDates = pastDates.my;
+  const snap = await getSnapshot().catch(() => null);
+  const snapProp = snap
+    ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp }
+    : undefined;
   return (
     <>
       <Header />
@@ -42,14 +55,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
         </div>
       ) : null}
       <div className={"mkt-past-scope" + (op ? " d-none d-lg-block" : "")}>
-        <div className="container flex-shrink-0">
+        <main className="container flex-shrink-0">
           <div className="row">
             <div className="col-sm-12">
               <GamePastFilter slug={slug} name={OP_LABEL[slug]} kind="my" dates={myDates} tables={pastDates.myTables} />
             </div>
           </div>
-        </div>
-        <SnapshotPage html={colHtml} />
+          {EAST_ROWS.map((id) => (
+            <GameColumns key={id} ids={[id]} snap={snapProp} />
+          ))}
+        </main>
       </div>
       <EastFilter />
       <SeoText
