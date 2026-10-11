@@ -100,7 +100,7 @@ export const STRINGS: Record<string, Row> = {
   favMine:         { en: "My favourite numbers", ms: "Nombor kegemaran saya", zh: "我的收藏" },
 
   // 大伯公 page (/dabogong).
-  dabogongTitle:   { en: "DABOGONG Number Chart", ms: "DABOGONG Carta Nombor", zh: "大伯公 千字图万字图" },
+  dabogongTitle:   { en: "DABOGONG", ms: "DABOGONG", zh: "大伯公 千字图万字图" },
   dbgPlaceholder:  { en: "Number or word", ms: "Nombor atau perkataan", zh: "号码或词语" },
   dbgHint:         {
     en: "Type 3-4 digits or a word in Chinese, English or BM · e.g. 666 · okra · dog",
