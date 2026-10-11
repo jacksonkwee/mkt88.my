@@ -62,7 +62,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
             that render it as a plain <img> - one centred item, same size. */}
         <Link href="/" onClick={goHome} aria-label="MKT 88 4D home" style={{ display: "contents" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="MKT 发发" style={{ height: 30, width: "auto", maxWidth: "70%", display: "block" }} />
+          <img src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
         </Link>
       </div>
     </div>

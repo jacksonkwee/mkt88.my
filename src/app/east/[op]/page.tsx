@@ -56,7 +56,6 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
         <main className="container flex-shrink-0">
           <div className="row">
             <div className="col-12">
-              <h1 style={{ fontSize: 20, margin: "10px 0 4px" }}>{o.name} Result</h1>
               <GamePastFilter slug={o.pager} name={o.name} kind="my" dates={pastDates.my} tables={pastDates.myTables} />
             </div>
           </div>

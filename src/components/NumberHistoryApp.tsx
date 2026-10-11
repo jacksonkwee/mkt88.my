@@ -15,6 +15,27 @@ const YELLOW_SOFT = "#fff3d0";
 type ApiMatch = { date: string; game: string; logo: string; region: string; prize: string; num: string };
 type ApiResp = { nums: string[]; matches: ApiMatch[]; total: number; dbFrom?: string; dbTo?: string; perNum?: Record<string, number>; logos?: Record<string, string> };
 
+/**
+ * The answer sends each date, game, region and prize once, with a short key on
+ * every row. Put them back before the rows are used - everything below this
+ * point works with the full values.
+ */
+type ApiRow = { d: string; g: string; l: string; r: string; p: string; n: string };
+type ApiDict = { games: Record<string, string>; regions: Record<string, string>; prizes: Record<string, string> };
+function expandRows(j: any): ApiResp | null {
+  if (!j || j.error || !j.dict || !Array.isArray(j.rows)) return j;
+  const dict = j.dict as ApiDict;
+  const matches: ApiMatch[] = (j.rows as ApiRow[]).map((r) => ({
+    date: r.d,
+    game: dict.games[r.g] || "",
+    logo: r.l,
+    region: dict.regions[r.r] || "",
+    prize: dict.prizes[r.p] || "",
+    num: r.n,
+  }));
+  return { ...j, matches };
+}
+
 /*
  * The answer carries one copy of each game logo in `logos`, and each row
  * carries a short key. Repeating the ~90 character path on every row made a
@@ -86,6 +107,19 @@ export default function NumberHistoryApp() {
     setExample(String(Math.floor(Math.random() * 10000)).padStart(4, "0"));
   }, []);
 
+  /**
+   * Warm the archive as soon as the screen opens.
+   *
+   * A search has to read the whole offline archive and, on the first run of the
+   * day, pull the last few days from the upstream pages. That fetch is what made
+   * the first lookup feel slow, and it is cached for the day once it has been
+   * done. Asking for one number in the background pays that cost while the
+   * visitor is still typing; the answer itself is thrown away.
+   */
+  useEffect(() => {
+    fetch("/api/number-history?nums=0000").catch(() => {});
+  }, []);
+
   /** The 大伯公 API returns the chart kind in Chinese; show it in the reader's language. */
   const kindLabel = (k: string) =>
     k === "万字图" ? tr("dbgKind10k", lang) : k === "大伯公千字图" ? tr("dbgKind1k", lang) : k;
@@ -139,7 +173,7 @@ export default function NumberHistoryApp() {
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
         if (!mounted.current || id !== reqId.current) return;
-        setData(j);
+        setData(expandRows(j));
         setLoading(false);
       })
       .catch(() => {

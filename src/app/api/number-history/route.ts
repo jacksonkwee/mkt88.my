@@ -279,12 +279,48 @@ export async function GET(req: NextRequest) {
     const ib = b.date.slice(6, 10) + b.date.slice(3, 5) + b.date.slice(0, 2);
     return ib.localeCompare(ia) || a.num.localeCompare(b.num) || a.game.localeCompare(b.game);
   });
+  /*
+   * Every row repeats the same handful of values, so each one is sent once and
+   * the row carries a short key. A Pau search returns a couple of thousand rows
+   * that only use a few dates, games, regions and prizes; sending them in full
+   * measured 281 KB for 2373 rows, which is what made a search feel slow on a
+   * phone. With the tables it is about a third of that, and the client puts the
+   * values back before it renders.
+   */
+  const table = (pick: (m: ApiMatch) => string) => {
+    const keys = new Map<string, string>();
+    const values: Record<string, string> = {};
+    for (const m of matches) {
+      const v = pick(m);
+      if (!keys.has(v)) {
+        const k = String(keys.size + 1);
+        keys.set(v, k);
+        values[k] = v;
+      }
+    }
+    return { keys, values };
+  };
+  const games = table((m) => m.game);
+  const regions = table((m) => m.region);
+  const prizeNames = table((m) => m.prize);
+  /* The date stays on the row: almost every draw has its own, so a table of
+   * them cost more than it saved. It is sent as dd-mm-yyyy - the weekday the
+   * long form carries is never shown in the list. */
+  const rows = matches.map((m) => ({
+    d: m.date.slice(0, 10),
+    g: games.keys.get(m.game) || "",
+    l: m.logo,
+    r: regions.keys.get(m.region) || "",
+    p: prizeNames.keys.get(m.prize) || "",
+    n: m.num,
+  }));
   const perNum: Record<string, number> = {};
   for (const m of matches) perNum[m.num] = (perNum[m.num] || 0) + 1;
   const body: Record<string, unknown> = {
     nums,
     num: nums[0],
-    matches,
+    rows,
+    dict: { games: games.values, regions: regions.values, prizes: prizeNames.values },
     total: matches.length,
     perNum,
     dbDays: DB.meta.days,

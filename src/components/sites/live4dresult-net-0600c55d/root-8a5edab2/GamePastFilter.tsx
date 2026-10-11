@@ -155,7 +155,6 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
                 >
                   Latest 最新
                 </button>
-                <span className="mkt-past-filter-count" style={{ fontSize: 12, color: "#888" }}>{list.length} 天 dates</span>
               </>
             ) : null}
           </>
