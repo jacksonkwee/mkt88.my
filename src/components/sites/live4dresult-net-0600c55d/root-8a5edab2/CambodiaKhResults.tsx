@@ -194,8 +194,13 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
           }
           gdCol.push(sixCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, main: j.gd6.main, subs: j.gd6.subs }));
         }
+        // ONE game per row: the jackpot board belongs to Grand Dragon, so it sits
+        // on the same row as its 4D and 6D cards instead of taking a column of
+        // its own (that is what pushed Nine Lotto onto the first row).
+        if (want("gd") && gdExtras.length) {
+          gdCol.push(jpCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, extras: gdExtras }));
+        }
         if (want("gd") && gdCol.length) columns.push(gdCol);
-        if (want("gd") && gdExtras.length) columns.push([jpCard({ id: date + "-gd6", cardCls: "card outer-box table-14", bg: "granddragon-bg", logo: LOGO.gd, name: "Grand Dragon 6D 豪龙", date: d, extras: gdExtras })]);
 
         // Nine Lotto 4D then 6D (+ Super Jackpot)
         const nineCol: LotteryCardData[] = [];
@@ -212,8 +217,10 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
           }
           nineCol.push(sixCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, main: j.nine6.main, subs: j.nine6.subs }));
         }
+        if (want("nine") && nineExtras.length) {
+          nineCol.push(jpCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, extras: nineExtras }));
+        }
         if (want("nine") && nineCol.length) columns.push(nineCol);
-        if (want("nine") && nineExtras.length) columns.push([jpCard({ id: date + "-nine6", cardCls: "card outer-box table-18", bg: "nine lotto-bg", logo: LOGO.nine, name: "Nine Lotto 6D", date: d, extras: nineExtras })]);
 
         // Perdana 4D is published on one page that refuses our server and a
         // plain browser request, so ask the app itself for any draw the server
@@ -237,17 +244,23 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
             j.perdana = merged;
           }
         }
-        // Perdana 4D (two draws)
+        // Perdana 4D (two draws) - both draws share the game's one row.
         const p = j.perdana || {};
+        const perdanaRow: LotteryCardData[] = [];
         const perd = (t: string, id: string, nm: string, more: string) => {
           const s = p[t];
-          if (want("perdana") && s && s.prize && s.prize.length) columns.push([fourCard({ id, cardCls: "card outer-box table-16", bg: "perdana-bg", logo: LOGO.perdana, name: nm, date: s.date || d, set: s, more })]);
+          if (want("perdana") && s && s.prize && s.prize.length) {
+            perdanaRow.push(fourCard({ id, cardCls: "card outer-box table-16", bg: "perdana-bg", logo: LOGO.perdana, name: nm, date: s.date || d, set: s, more }));
+          }
         };
         perd("15:30", date + "-perd1530", "Perdana Lottery 4D (15:30)", "More Perdana 4D Result");
         perd("19:30", date + "-perd1930", "Perdana Lottery 4D (19:30)", "More Perdana 4D Result");
+        if (perdanaRow.length) columns.push(perdanaRow);
 
-        // Lucky HariHari 4D then 6D (+ jackpot) for both draws
+        // Lucky HariHari: 4D then 6D (+ jackpot) for both draws, all on the
+        // game's own row.
         const h = j.hari || {};
+        const hariRow: LotteryCardData[] = [];
         const hari = (t: string, id4: string, nm4: string) => {
           const slot = h[t];
           if (!slot) return;
@@ -270,10 +283,11 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
           if (extras.length) {
             col.push(jpCard({ id: id4 + "-6d", cardCls: "card outer-box table-19", bg: "luckyharihari-bg", logo: LOGO.hari, name: nm4.replace("4D", "6D"), date: d, extras }));
           }
-          if (want("hari") && col.length) columns.push(col);
+          if (want("hari") && col.length) hariRow.push(...col);
         };
         hari("15:30", date + "-hari330", "Lucky HariHari 天天好运 (3:30PM)");
         hari("19:30", date + "-hari730", "Lucky HariHari 天天好运 (7:30PM)");
+        if (hariRow.length) columns.push(hariRow);
 
         if (columns.length) setCols(columns);
         else setErr("No result is available for " + date + ".");
@@ -284,15 +298,26 @@ export default function CambodiaKhResults({ date, only }: { date: string; only?:
 
   if (err) return <div className="alert alert-warning mt-3 text-center">{err}</div>;
   if (!cols) return <div className="alert alert-info mt-3 text-center">Loading past result for {date} …</div>;
+  /*
+   * One game per row - Grand Dragon, then Nine Lotto, then Perdana, then Lucky
+   * HariHari - with that game's own cards side by side (three to a row on a
+   * desktop, one per line on a phone).
+   *
+   * The entries used to be three Bootstrap columns, so a game's cards stacked
+   * inside a third of the page and the eye read across different games on each
+   * row; Lucky HariHari's six cards were the worst of it (reported 12 Oct 2026).
+   */
   return (
     <div className="row">
       {cols.map((col, ci) => (
-        <div key={ci} className="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">
-          {col.map((c, ii) => (
-            <div key={c.id + "-" + ii} className={ii > 0 ? "mt-3" : ""}>
-              <LotteryCard card={c} />
-            </div>
-          ))}
+        <div key={ci} className="col-12 mt-3 px-1">
+          <div className="row mx-0">
+            {col.map((c, ii) => (
+              <div key={c.id + "-" + ii} className="col-12 col-md-6 col-lg-4 px-1 mb-3">
+                <LotteryCard card={c} />
+              </div>
+            ))}
+          </div>
         </div>
       ))}
     </div>
