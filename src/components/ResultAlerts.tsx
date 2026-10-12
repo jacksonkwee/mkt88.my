@@ -57,6 +57,76 @@ type Ready = { key: string; name: string };
 const DRAWN = /^\d{1,6}$/;
 
 /**
+ * Which days each game runs and the window its numbers are being published in,
+ * Malaysia time. Same table as the server-side reminder in lib/push-notify.ts.
+ *
+ * Without it a card that merely carried today's date was enough to fire, so on
+ * a Monday - when only the daily Cambodia games and Singapore Toto draw - the
+ * app still buzzed for Malaysia, Singapore and East Malaysia (reported 12 Oct
+ * 2026). Wednesday = 3, Sunday = 0.
+ */
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const WSS_DAYS = [0, 3, 6];   // Wednesday, Saturday, Sunday
+const TOTO_DAYS = [1, 4];     // Monday, Thursday
+const DRAW_WINDOW: Record<string, { days: number[]; from: number; to: number }> = {
+  "table-13": { days: ALL_DAYS, from: 19 * 60, to: 21 * 60 + 30 },
+  "table-17": { days: ALL_DAYS, from: 19 * 60, to: 21 * 60 + 30 },
+  "table-15": { days: ALL_DAYS, from: 15 * 60 + 20, to: 21 * 60 + 30 },
+  "table-16": { days: ALL_DAYS, from: 15 * 60 + 20, to: 21 * 60 + 30 },
+  "table-1": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-2": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-3": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-4": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-5": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-6": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-7": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-8": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-9": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-10": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-11": { days: WSS_DAYS, from: 18 * 60 + 10, to: 21 * 60 },
+  "table-12": { days: TOTO_DAYS, from: 18 * 60 + 10, to: 21 * 60 },
+};
+
+/** Today in Malaysia as "weekday index, minutes from midnight". */
+function myNow(): { day: number; mins: number } {
+  try {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Kuala_Lumpur", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    }).formatToParts(new Date()).map((x) => [x.type, x.value]));
+    const day = Math.max(0, ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(p.weekday || ""));
+    return { day, mins: Number(p.hour || 0) * 60 + Number(p.minute || 0) };
+  } catch {
+    const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    return { day: d.getUTCDay(), mins: d.getUTCHours() * 60 + d.getUTCMinutes() };
+  }
+}
+
+/**
+ * The game's own draw day and window. A card can only be on today's draw while
+ * that game is actually running, so a game outside its window never alerts.
+ */
+function inDrawWindow(gameClass: string, now = myNow()): boolean {
+  const win = DRAW_WINDOW[gameClass];
+  if (!win) return true;   // unknown game: fall back to the date check alone
+  return win.days.includes(now.day) && now.mins >= win.from && now.mins <= win.to;
+}
+
+/**
+ * The window one Perdana / HariHari slot runs in ("3:30PM" or "7:30PM").
+ *
+ * Those boards keep today's date for the rest of the day, so the whole
+ * 3:30PM-9:30PM span would still count as "live" at 8:45PM and buzz for a draw
+ * that finished hours earlier. Each slot is only live around its own time.
+ */
+function inSlotWindow(card: Element, now = myNow()): boolean {
+  const title = (card.querySelector(".lottery-name")?.textContent || card.textContent || "");
+  const slot = /3\s*:?\s*30/i.test(title) ? "15:30" : /7\s*:?\s*30/i.test(title) ? "19:30" : "";
+  if (slot === "15:30") return now.mins >= 15 * 60 + 20 && now.mins <= 16 * 60 + 45;
+  if (slot === "19:30") return now.mins >= 19 * 60 + 20 && now.mins <= 21 * 60 + 30;
+  return true;
+}
+
+/**
  * Every game on this page whose draw has STARTED.
  *
  * Waiting for the 1st/2nd/3rd prizes meant the reminder arrived at the END of a
@@ -66,7 +136,15 @@ const DRAWN = /^\d{1,6}$/;
  */
 function readyGames(): Ready[] {
   const out: Ready[] = [];
+  const now = myNow();
   for (const card of Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)"))) {
+    // "card outer-box table-13"; the schedule is keyed on the game's class.
+    const cls = (card.className.match(/table-\d+/) || [""])[0];
+    if (cls === "table-15" || cls === "table-16") {
+      if (!inSlotWindow(card, now)) continue;
+    } else if (!inDrawWindow(cls, now)) {
+      continue;
+    }
     // Cards with no prize rows (the 6D and jackpot boards) have nothing to wait for.
     if (!card.querySelector('[data-id="first_prize"]')) continue;
     const date = (card.querySelector('[data-id="date"]')?.textContent || "").trim();

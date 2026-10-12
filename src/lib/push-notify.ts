@@ -42,6 +42,70 @@ const BODY: Record<string, string> = {
   zh: "现场开彩进行中 · 点击查看最新成绩",
 };
 
+/**
+ * Which days each game runs and the window its numbers are being published in.
+ *
+ * A card only carries TODAY's date while that game's draw is actually under
+ * way, so the date check alone looked watertight. It was not: on a day one
+ * game draws, another game's card could still be showing today's date and the
+ * reminder fired for it too - so a Monday, when only the daily Cambodia games
+ * and Singapore Toto run, still buzzed for "Malaysia, Singapore and East
+ * Malaysia" (reported 12 Oct 2026). The reminder now also has to be inside the
+ * game's own draw window.
+ *
+ * Times are Malaysia time, minutes from midnight, matching the app's published
+ * draw schedule. A special draw an operator announces on another day would
+ * need its date added here, the same way the draw-schedule page lists it.
+ */
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+const WSS_DAYS = [0, 3, 6];   // Wednesday, Saturday, Sunday
+const TOTO_DAYS = [1, 4];     // Monday, Thursday
+const DRAW_WINDOW: Record<string, { days: number[]; from: number; to: number }> = {
+  // Daily Cambodia games.
+  "table-13": { days: ALL_DAYS, from: 19 * 60, to: 21 * 60 + 30 },
+  "table-17": { days: ALL_DAYS, from: 19 * 60, to: 21 * 60 + 30 },
+  "table-15": { days: ALL_DAYS, from: 15 * 60 + 20, to: 21 * 60 + 30 },
+  "table-16": { days: ALL_DAYS, from: 15 * 60 + 20, to: 21 * 60 + 30 },
+  // Wednesday, Saturday, Sunday. Wednesday is 3, Sunday is 0.
+  "table-1": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-2": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-3": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-4": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-5": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-6": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-7": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-8": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-9": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-10": { days: WSS_DAYS, from: 18 * 60 + 50, to: 21 * 60 },
+  "table-11": { days: WSS_DAYS, from: 18 * 60 + 10, to: 21 * 60 },
+  // Singapore Toto has its own days and is not on the 4D schedule.
+  "table-12": { days: TOTO_DAYS, from: 18 * 60 + 10, to: 21 * 60 },
+};
+
+/** Today in Malaysia as "weekday index, minutes from midnight". */
+function myNow(): { day: number; mins: number } {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Kuala_Lumpur", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date()).map((x) => [x.type, x.value]));
+  const names = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const day = Math.max(0, names.indexOf(p.weekday || ""));
+  const mins = Number(p.hour || 0) * 60 + Number(p.minute || 0);
+  return { day, mins };
+}
+
+/**
+ * The window one Perdana / HariHari slot runs in ("15:30" or "19:30").
+ *
+ * Those games keep today's date on their board for the rest of the day, so the
+ * game's whole 3:30PM-9:30PM span would still be "live" at 8:45PM and buzz for
+ * a draw that finished hours earlier. Each slot is only live around its own
+ * time.
+ */
+function inSlotWindow(slot: string, now = myNow()): boolean {
+  if (slot === "15:30") return now.mins >= 15 * 60 + 20 && now.mins <= 16 * 60 + 45;
+  return now.mins >= 19 * 60 + 20 && now.mins <= 21 * 60 + 30;
+}
+
 /** A value the operator has actually drawn (4D, 3+3D, 2-digit Life numbers...). */
 const isNum = (v?: string) => !!v && /^\d{1,6}$/.test(v.trim());
 
@@ -76,20 +140,32 @@ function drawnCells(c: Record<string, string>): string[] {
 export function readyNow(snap: Snapshot): Record<string, string> {
   const out: Record<string, string> = {};
   const today = myTodayLabel();
+  const now = myNow();
   for (const [cls, name] of Object.entries(GAME_NAMES)) {
     if (cls === "table-15" || cls === "table-16") continue;   // handled below
+    const win = DRAW_WINDOW[cls];
     const c = snap.cards ? snap.cards[cls] : undefined;
     if (!c || !name) continue;
     if (!/^\d{2}-\d{2}-\d{4}/.test((c.date || "").trim())) continue;
     if (today && (c.date || "").trim() !== today) continue;   // only today's draw
     if (!drawnCells(c).length) continue;                       // nothing out yet
+    /*
+     * The reminder may only fire on the game's own draw day and window.
+     *
+     * A card used to be trusted on its date alone, so on a Monday - when only
+     * the daily Cambodia games and Singapore Toto draw - a stale Malaysia or
+     * East Malaysia card stamped with today's date still buzzed (reported
+     * 12 Oct 2026).
+     */
+    if (win && !(win.days.includes(now.day) && now.mins >= win.from && now.mins <= win.to)) continue;
     out[cls] = c.date.trim();
   }
   // Perdana and HariHari both run 3:30PM and 7:30PM draws again.
   for (const t of ["15:30", "19:30"]) {
     const perdana = snap.perdana ? snap.perdana[t] : null;
     if (perdana && perdana.date && (!today || perdana.date.trim() === today) &&
-        [...(perdana.prize || []), ...(perdana.special || []), ...(perdana.cons || [])].some(isNum)) {
+        [...(perdana.prize || []), ...(perdana.special || []), ...(perdana.cons || [])].some(isNum) &&
+        inSlotWindow(t, now)) {
       out["table-16|" + t] = perdana.date;
     }
   }
@@ -97,7 +173,8 @@ export function readyNow(snap: Snapshot): Record<string, string> {
     const h = snap.hari ? snap.hari[t] : null;
     const set = h && h.set;
     if (set && set.date && (!today || set.date.trim() === today) &&
-        [...(set.prize || []), ...(set.special || []), ...(set.cons || [])].some(isNum)) {
+        [...(set.prize || []), ...(set.special || []), ...(set.cons || [])].some(isNum) &&
+        inSlotWindow(t, now)) {
       out["table-15|" + t] = set.date;
     }
   }
