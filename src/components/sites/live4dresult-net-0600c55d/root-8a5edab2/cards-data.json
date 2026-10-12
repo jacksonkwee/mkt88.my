@@ -1650,32 +1650,42 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_1\">6</span>"
+                  "attrs": {
+                    "data-id": "number_1"
+                  },
+                  "html": "6"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
@@ -1686,20 +1696,26 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_8\">0</span>"
+                  "attrs": {
+                    "data-id": "number_8"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_9\">0</span>"
+                  "attrs": {
+                    "data-id": "number_9"
+                  },
+                  "html": "0"
                 }
               ]
             },
@@ -1728,50 +1744,66 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_6\">2</span>"
+                  "attrs": {
+                    "data-id": "number_6"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_8\">0</span>"
+                  "attrs": {
+                    "data-id": "number_8"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_9\">0</span>"
+                  "attrs": {
+                    "data-id": "number_9"
+                  },
+                  "html": "0"
                 }
               ]
             },
@@ -1807,44 +1839,58 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_1\">6</span>"
+                  "attrs": {
+                    "data-id": "number_1"
+                  },
+                  "html": "6"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_6\">2</span>"
+                  "attrs": {
+                    "data-id": "number_6"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -1879,32 +1925,42 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_1\">6</span>"
+                  "attrs": {
+                    "data-id": "number_1"
+                  },
+                  "html": "6"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
@@ -1915,8 +1971,10 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -1957,38 +2015,50 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_6\">2</span>"
+                  "attrs": {
+                    "data-id": "number_6"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2023,26 +2093,34 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_1\">6</span>"
+                  "attrs": {
+                    "data-id": "number_1"
+                  },
+                  "html": "6"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
@@ -2059,8 +2137,10 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2107,32 +2187,42 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_6\">2</span>"
+                  "attrs": {
+                    "data-id": "number_6"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2167,20 +2257,26 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_1\">6</span>"
+                  "attrs": {
+                    "data-id": "number_1"
+                  },
+                  "html": "6"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
@@ -2203,8 +2299,10 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2257,26 +2355,34 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_6\">2</span>"
+                  "attrs": {
+                    "data-id": "number_6"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2311,14 +2417,18 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_1\">6</span>"
+                  "attrs": {
+                    "data-id": "number_1"
+                  },
+                  "html": "6"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_2\">3</span>"
+                  "attrs": {
+                    "data-id": "number_2"
+                  },
+                  "html": "3"
                 },
                 {
                   "tag": "td",
@@ -2347,8 +2457,10 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2395,14 +2507,18 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_3\">2</span>"
+                  "attrs": {
+                    "data-id": "number_3"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_4\">0</span>"
+                  "attrs": {
+                    "data-id": "number_4"
+                  },
+                  "html": "0"
                 },
                 {
                   "tag": "td",
@@ -2419,8 +2535,10 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2479,20 +2597,26 @@
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_5\">8</span>"
+                  "attrs": {
+                    "data-id": "number_5"
+                  },
+                  "html": "8"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_6\">2</span>"
+                  "attrs": {
+                    "data-id": "number_6"
+                  },
+                  "html": "2"
                 },
                 {
                   "tag": "td",
                   "cls": "border border-dark text-center jackpot_number plus",
-                  "attrs": {},
-                  "html": "<span data-id=\"number_7\">+</span>"
+                  "attrs": {
+                    "data-id": "number_7"
+                  },
+                  "html": "+"
                 },
                 {
                   "tag": "td",
@@ -2986,9 +3110,10 @@
                   "tag": "td",
                   "cls": "border text-center jackpot_prize",
                   "attrs": {
-                    "colspan": "5"
+                    "colspan": "5",
+                    "data-id": "star_toto_first_jackpot_prize"
                   },
-                  "html": "<span data-id=\"star_toto_first_jackpot_prize\">RM 1,377,463.64</span>\n                            <span data-id=\"star_toto_first_jackpot_status\" class=\"blink\"></span>"
+                  "html": "RM 1,377,463.64</span>\n                            <span data-id=\"star_toto_first_jackpot_status\" class=\"blink\">"
                 }
               ]
             },
@@ -3007,9 +3132,10 @@
                   "tag": "td",
                   "cls": "border text-center jackpot_prize",
                   "attrs": {
-                    "colspan": "5"
+                    "colspan": "5",
+                    "data-id": "star_toto_second_jackpot_prize"
                   },
-                  "html": "<span data-id=\"star_toto_second_jackpot_prize\">RM 107,083.41</span>\n                            <span data-id=\"star_toto_second_jackpot_status\" class=\"blink\"></span>"
+                  "html": "RM 107,083.41</span>\n                            <span data-id=\"star_toto_second_jackpot_status\" class=\"blink\">"
                 }
               ]
             }
@@ -3106,9 +3232,10 @@
                   "tag": "td",
                   "cls": "border text-center jackpot_prize",
                   "attrs": {
-                    "colspan": "4"
+                    "colspan": "4",
+                    "data-id": "power_toto_first_jackpot_prize"
                   },
-                  "html": "<span data-id=\"power_toto_first_jackpot_prize\">RM 15,255,370.26</span>\n                            <span data-id=\"power_toto_first_jackpot_status\" class=\"blink\">\n                                                            </span>"
+                  "html": "RM 15,255,370.26</span>\n                            <span data-id=\"power_toto_first_jackpot_status\" class=\"blink\">\n                                                            "
                 }
               ]
             }
@@ -3205,9 +3332,10 @@
                   "tag": "td",
                   "cls": "border text-center jackpot_prize",
                   "attrs": {
-                    "colspan": "4"
+                    "colspan": "4",
+                    "data-id": "supreme_toto_first_jackpot_prize"
                   },
-                  "html": "<span data-id=\"supreme_toto_first_jackpot_prize\">RM 10,241,508.57</span>\n                            <span data-id=\"supreme_toto_first_jackpot_status\" class=\"blink\">\n                                                            </span>"
+                  "html": "RM 10,241,508.57</span>\n                            <span data-id=\"supreme_toto_first_jackpot_status\" class=\"blink\">\n                                                            "
                 }
               ]
             }
@@ -4619,9 +4747,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_2a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_2a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----"
                 }
               ]
             },
@@ -4640,9 +4769,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_3a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_3a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----"
                 }
               ]
             },
@@ -4661,9 +4791,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_4a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_4a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----"
                 }
               ]
             },
@@ -4682,9 +4813,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_5a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_5a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----"
                 }
               ]
             },
@@ -4791,9 +4923,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_2a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_2a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----"
                 }
               ]
             },
@@ -4812,9 +4945,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_3a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_3a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----"
                 }
               ]
             },
@@ -4833,9 +4967,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_4a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_4a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----"
                 }
               ]
             },
@@ -4854,9 +4989,10 @@
                   "tag": "td",
                   "cls": "border text-center",
                   "attrs": {
-                    "width": "55%"
+                    "width": "55%",
+                    "data-id": "six_5a"
                   },
-                  "html": "<span class=\"lottery-number\" data-id=\"six_5a\">----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----</span>"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----"
                 }
               ]
             },
