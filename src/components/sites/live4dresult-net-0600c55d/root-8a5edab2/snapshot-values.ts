@@ -24,6 +24,46 @@ const timeOf = (id: string) => (id.includes("-1930") ? "19:30" : id.includes("-1
 const clean = (v?: string | null) => (v && !/^----+$/.test(v.trim()) ? v.trim() : undefined);
 const six6 = (v?: string) => (v && !/^----+$/.test(v.trim()) ? v : "----");
 
+/** Malaysia clock: today's card-date label, and minutes since midnight. */
+function myClock(): { label: string; minutes: number } {
+  try {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23", weekday: "short",
+    }).formatToParts(new Date());
+    const g = (t: string) => parts.find((p) => p.type === t)?.value || "";
+    return { label: `${g("day")}-${g("month")}-${g("year")} (${g("weekday")})`, minutes: Number(g("hour")) * 60 + Number(g("minute")) };
+  } catch {
+    return { label: "", minutes: -1 };
+  }
+}
+
+const SESSION_MINUTES: Record<string, number> = { "15:30": 15 * 60 + 30, "19:30": 19 * 60 + 30 };
+
+/*
+ * True when a draw session's time has come today but the operator has not
+ * published it yet.
+ *
+ * Lucky HariHari and Perdana run fixed sessions (3:30PM / 7:30PM). Until the
+ * operator opens the new draw, every source still hands back the previous one,
+ * so the card printed yesterday's date and numbers under a heading that says
+ * "3:30PM" - which reads as today's result (reported 12 Oct 2026). Once the
+ * session's time has passed the card shows today's date and an empty board
+ * until the numbers arrive.
+ */
+function awaitingToday(session: string, date?: string): boolean {
+  const at = SESSION_MINUTES[session];
+  if (!at || !date) return false;
+  const now = myClock();
+  if (!now.label || now.minutes < at) return false;
+  return date.trim() !== now.label;
+}
+
+/** An all-empty board, for a session that is due but not published yet. */
+function blankSet(): PrizeSet {
+  return { prize: ["----", "----", "----"], special: Array(15).fill("----"), cons: Array(10).fill("----") };
+}
+
 /** Write the 6D 2nd-5th rows as "<first half> or <second half>". */
 function sixSubs(values: Record<string, string>, subs?: Record<string, string>) {
   if (!subs) return;
@@ -69,11 +109,21 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
 
   if (cleanCardId.startsWith("table-16")) {
     const set = snap.perdana ? snap.perdana[t] : null;
+    if (set && awaitingToday(t, set.date)) return { values: { date: myClock().label }, prizeSet: blankSet() };
     if (set) { values.date = clean(set.date) || values.date; values.draw_no = clean(set.drawNo) || values.draw_no; return { values, prizeSet: set }; }
   }
   if (cleanCardId.startsWith("table-15")) {
     const h = snap.hari ? snap.hari[t] : null;
     if (h) {
+      if (awaitingToday(t, h.set?.date)) {
+        const today: Record<string, string> = { date: myClock().label };
+        if (cleanCardId.endsWith("-6d")) {
+          today.six_main = "----";
+          for (const n of [2, 3, 4, 5]) today["six_" + n] = "----";
+          return { values: today };
+        }
+        return { values: today, prizeSet: blankSet() };
+      }
       if (h.set) { values.date = clean(h.set.date) || values.date; values.draw_no = clean(h.set.drawNo) || values.draw_no; }
       if (h.six && cleanCardId.endsWith("-6d")) {
         if (clean(h.six.main)) values.six_main = h.six.main;
