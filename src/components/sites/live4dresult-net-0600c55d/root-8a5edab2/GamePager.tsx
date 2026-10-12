@@ -50,7 +50,7 @@ function pagesFor(night: boolean): PageDef[] {
   const loss = PAGES.filter((p) => p.title !== "Perdana 4D" && !p.title.startsWith("Lucky HariHari"));
   return [
     ...loss,
-    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds() },
+    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds(night) },
     { title: "Lucky HariHari 天天好运", slug: "lucky-harihari", kh: true, ids: hariIds(night) },
   ];
 }

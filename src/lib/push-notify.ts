@@ -85,11 +85,13 @@ export function readyNow(snap: Snapshot): Record<string, string> {
     if (!drawnCells(c).length) continue;                       // nothing out yet
     out[cls] = c.date.trim();
   }
-  // Perdana (one 7:30PM draw) and HariHari (3:30PM and 7:30PM).
-  const perdana = snap.perdana ? snap.perdana["19:30"] : null;
-  if (perdana && perdana.date && (!today || perdana.date.trim() === today) &&
-      [...(perdana.prize || []), ...(perdana.special || []), ...(perdana.cons || [])].some(isNum)) {
-    out["table-16|19:30"] = perdana.date;
+  // Perdana and HariHari both run 3:30PM and 7:30PM draws again.
+  for (const t of ["15:30", "19:30"]) {
+    const perdana = snap.perdana ? snap.perdana[t] : null;
+    if (perdana && perdana.date && (!today || perdana.date.trim() === today) &&
+        [...(perdana.prize || []), ...(perdana.special || []), ...(perdana.cons || [])].some(isNum)) {
+      out["table-16|" + t] = perdana.date;
+    }
   }
   for (const t of ["15:30", "19:30"]) {
     const h = snap.hari ? snap.hari[t] : null;

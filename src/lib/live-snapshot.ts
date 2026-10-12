@@ -1314,11 +1314,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
    */
   if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
 
-  const perdana: Record<string, PrizeSet | null> = { "19:30": null };
+  const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {
     if (!html) continue;
     const sets = parsePerdana(html, d.iso);
-    for (const time of ["19:30"]) {
+    for (const time of ["15:30", "19:30"]) {
       const s = sets[time];
       if (hasAnyNumber(s) && !perdana[time]) perdana[time] = s;
     }
@@ -1330,17 +1330,24 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // that wait on every build that still had an empty slot.
   const fileDays = (perdanaOfficial as unknown as { days?: Record<string, Record<string, PrizeSet>> }).days || {};
   for (const [time, set] of Object.entries(fileDays[today.iso] || {})) {
-    if (!(time in perdana)) continue;   // the operator dropped the 3:30PM draw on 1 Oct 2026
+    if (!(time in perdana)) continue;   // only the two live draw times
     if (!perdana[time] && set && set.prize.length && set.prize.some((v) => !isDash(v))) {
       perdana[time] = { ...set, date: weekdayOf(today.iso) };
     }
   }
   // Official page first, then the collected copy, then the reader, then the
   // shared live feed - so a draw is shown as soon as any of them has it.
-  if (!perdana["19:30"]) {
+  const missingPerdana = ["15:30", "19:30"].filter((t) => !perdana[t]);
+  if (missingPerdana.length) {
     const relayed = await perdanaFromRelay(today.iso);
-    if (relayed["19:30"]) perdana["19:30"] = relayed["19:30"];
+    for (const t of missingPerdana) if (relayed[t]) perdana[t] = relayed[t];
   }
+  /*
+   * The shared feed carries ONE Perdana draw a day with no time on it - it has
+   * always been the 7:30PM one, and its own date is always a day behind, so it
+   * still only fills 19:30. The 3:30PM draw comes from the operator's page and
+   * the collected copy above, both of which carry the time.
+   */
   const feedPerdana = perdanaFromFeed(feed);
   if (!perdana["19:30"] && feedPerdana["19:30"]) perdana["19:30"] = feedPerdana["19:30"];
 

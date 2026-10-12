@@ -68,11 +68,11 @@ export const GAME_DEFS: GameDef[] = [
     name: "Perdana 4D",
     zh: "Perdana",
     title: "Perdana Lottery 4D Result 开奖结果",
-    // The operator dropped the 3:30PM draw on 1 Oct 2026, so the live page
-    // carries the 7:30PM draw only. Past 3:30PM draws stay in the archive.
-    desc: "Perdana Lottery 4D (7:30PM) live results.",
+    // The operator dropped the 3:30PM draw on 1 Oct 2026 and resumed it on
+    // 12 Oct 2026, so the live page carries both draws again.
+    desc: "Perdana Lottery 4D (3:30PM & 7:30PM) live results.",
     logo: L("logo_perdana.jpg?v=1"),
-    cardIds: ["table-16-2026-09-06-1930"],
+    cardIds: ["table-16-2026-09-06-1530", "table-16-2026-09-06-1930"],
     mode: "lotto",
   },
   {
