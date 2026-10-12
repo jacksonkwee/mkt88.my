@@ -27,7 +27,7 @@ const GAMES = [
   ["cashsweep", "Cash Sweep 4D", "砂拉越大万", 10],
   ["sandakan", "Sandakan 4D", "山打根", 9],
   ["granddragon", "Grand Dragon 4D", "豪龙", 0],
-  ["ninelotto", "Nine Lotto 4D", "九宫格", 14],
+  ["ninelotto", "Nine Lotto 4D", "九彩票", 14],
   ["perdana", "Perdana 4D", "Perdana", 1],
   ["lucky", "Lucky HariHari 4D", "天天好运", 2],
 ];
