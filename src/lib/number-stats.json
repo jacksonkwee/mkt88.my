@@ -1,14 +1,14 @@
 {
- "generated": "2026-10-11",
+ "generated": "2026-10-12",
  "games": [
   {
    "key": "magnum",
    "name": "Magnum 4D",
    "zh": "万能",
-   "draws": 6826,
+   "draws": 6827,
    "from": "1985-04-25",
-   "to": "2026-10-10",
-   "totalAppearances": 156921,
+   "to": "2026-10-11",
+   "totalAppearances": 156944,
    "hot": [
     {
      "num": "1024",
@@ -136,10 +136,10 @@
    "key": "damacai",
    "name": "Da Ma Cai 1+3D",
    "zh": "大马彩",
-   "draws": 5737,
+   "draws": 5738,
    "from": "1992-01-01",
-   "to": "2026-10-10",
-   "totalAppearances": 131860,
+   "to": "2026-10-11",
+   "totalAppearances": 131883,
    "hot": [
     {
      "num": "9655",
@@ -267,10 +267,10 @@
    "key": "sportstoto",
    "name": "Sports Toto 4D",
    "zh": "多多",
-   "draws": 5697,
+   "draws": 5698,
    "from": "1992-05-06",
-   "to": "2026-10-10",
-   "totalAppearances": 130991,
+   "to": "2026-10-11",
+   "totalAppearances": 131014,
    "hot": [
     {
      "num": "6495",
@@ -398,10 +398,10 @@
    "key": "singapore",
    "name": "Singapore 4D",
    "zh": "新加坡",
-   "draws": 2927,
+   "draws": 2928,
    "from": "2007-10-06",
-   "to": "2026-10-10",
-   "totalAppearances": 67291,
+   "to": "2026-10-11",
+   "totalAppearances": 67314,
    "hot": [
     {
      "num": "7539",
@@ -529,10 +529,10 @@
    "key": "sabah88",
    "name": "Sabah 88 4D",
    "zh": "沙巴88",
-   "draws": 4131,
+   "draws": 4132,
    "from": "2001-12-15",
-   "to": "2026-10-10",
-   "totalAppearances": 94979,
+   "to": "2026-10-11",
+   "totalAppearances": 95002,
    "hot": [
     {
      "num": "2104",
@@ -660,10 +660,10 @@
    "key": "cashsweep",
    "name": "Cash Sweep 4D",
    "zh": "砂拉越大万",
-   "draws": 5068,
+   "draws": 5069,
    "from": "1996-01-03",
-   "to": "2026-10-10",
-   "totalAppearances": 114519,
+   "to": "2026-10-11",
+   "totalAppearances": 114542,
    "hot": [
     {
      "num": "2095",
@@ -791,10 +791,10 @@
    "key": "sandakan",
    "name": "Sandakan 4D",
    "zh": "山打根",
-   "draws": 5199,
+   "draws": 5200,
    "from": "1995-03-29",
-   "to": "2026-10-10",
-   "totalAppearances": 117032,
+   "to": "2026-10-11",
+   "totalAppearances": 117055,
    "hot": [
     {
      "num": "2570",
@@ -922,10 +922,10 @@
    "key": "granddragon",
    "name": "Grand Dragon 4D",
    "zh": "豪龙",
-   "draws": 1643,
+   "draws": 1644,
    "from": "2020-06-12",
-   "to": "2026-10-10",
-   "totalAppearances": 37768,
+   "to": "2026-10-11",
+   "totalAppearances": 37791,
    "hot": [
     {
      "num": "2814",
@@ -1053,10 +1053,10 @@
    "key": "ninelotto",
    "name": "Nine Lotto 4D",
    "zh": "九宫格",
-   "draws": 1379,
+   "draws": 1380,
    "from": "2023-01-01",
-   "to": "2026-10-10",
-   "totalAppearances": 31708,
+   "to": "2026-10-11",
+   "totalAppearances": 31731,
    "hot": [
     {
      "num": "9976",
@@ -1184,10 +1184,10 @@
    "key": "perdana",
    "name": "Perdana 4D",
    "zh": "Perdana",
-   "draws": 1872,
+   "draws": 1874,
    "from": "2021-09-14",
-   "to": "2026-10-09",
-   "totalAppearances": 43038,
+   "to": "2026-10-11",
+   "totalAppearances": 43084,
    "hot": [
     {
      "num": "9675",
@@ -1238,6 +1238,12 @@
      "last": "2026-05-05"
     },
     {
+     "num": "6757",
+     "count": 13,
+     "first": 0,
+     "last": "2026-10-11"
+    },
+    {
      "num": "6910",
      "count": 13,
      "first": 0,
@@ -1286,12 +1292,6 @@
      "last": "2026-09-21"
     },
     {
-     "num": "6757",
-     "count": 12,
-     "first": 0,
-     "last": "2026-02-10"
-    },
-    {
      "num": "8504",
      "count": 12,
      "first": 2,
@@ -1315,10 +1315,10 @@
    "key": "lucky",
    "name": "Lucky HariHari 4D",
    "zh": "天天好运",
-   "draws": 2238,
+   "draws": 2257,
    "from": "2021-09-14",
-   "to": "2026-10-09",
-   "totalAppearances": 51484,
+   "to": "2026-10-11",
+   "totalAppearances": 51920,
    "hot": [
     {
      "num": "3601",

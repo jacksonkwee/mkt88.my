@@ -35,10 +35,16 @@ number-history:
     - if: $CI_PIPELINE_SOURCE == "web"
   script:
     - node scripts/refresh-number-history.mjs
+    # Lucky HariHari and Grand Dragon/Nine Lotto past draws live in bundled
+    # copies that only the PC's daily task used to extend - it stopped on
+    # 28-09-2026, which left the hot-numbers page showing HariHari only up to
+    # 09-10-2026 (reported 12 Oct 2026). They are refreshed here too now.
+    - node scripts/build-gd-nine-past.mjs --days 3
+    - node scripts/build-hari-past.mjs --days 3
     - node scripts/build-number-stats.mjs
     - git config user.name "mkt88-results-bot"
     - git config user.email "ci@mkt88.my"
-    - git add -- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json src/lib/number-stats.json
+    - git add -- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json src/lib/number-stats.json src/lib/gd-nine-past.json src/lib/hari-past.json
     - |
       if git diff --cached --quiet; then
         echo "nothing new today"
