@@ -41,6 +41,17 @@ function logoForGame(game: string): string {
   for (const [re, path] of LOGO_BY_NAME) if (re.test(game || "")) return path;
   return "";
 }
+
+/**
+ * Names that differ only in how a source spells the game.
+ *
+ * The history archive files Nine Lotto's 4D board as "Nine Lotto 4D" while
+ * the live page prints "Nine Lotto"; both name the same draw, so the dedupe
+ * key put today's Nine Lotto result on two rows - one under each spelling
+ * (reported 12 Oct 2026). The 6D board is a different draw and is filed as
+ * "Nine Lotto 6D", so only the bare 4D spelling is folded in.
+ */
+const GAME_ALIASES: Record<string, string> = { "Nine Lotto 4D": "Nine Lotto" };
 const MAX_NUMS = 60;
 
 /** Ten minutes: one upstream fetch per date, reused by every lookup. */
@@ -219,6 +230,10 @@ export async function GET(req: NextRequest) {
     const ascii = (name || "").replace(/[^\x20-\x7e]/g, "").replace(/\s+/g, " ").trim();
     return ascii || (name || "").trim();
   };
+  const canonicalGame = (name: string): string => {
+    const key = gameKey(name);
+    return GAME_ALIASES[key] || key;
+  };
   const add = (h: RawHit) => {
     const date = fmtIso(h.date);
     /*
@@ -231,7 +246,7 @@ export async function GET(req: NextRequest) {
      * rows (reported 11 Oct 2026). Two draws of the SAME date and prize for
      * different games still stay apart, because their Latin names differ.
      */
-    const key = date + "|" + gameKey(h.game) + "|" + h.prize + "|" + h.num;
+    const key = date + "|" + canonicalGame(h.game) + "|" + h.prize + "|" + h.num;
     if (map.has(key)) return;
     // A saved path wins; otherwise fall back to the game's own mark.
     let logo = h.logo || logoForGame(h.game);
