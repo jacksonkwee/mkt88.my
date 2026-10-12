@@ -14,8 +14,10 @@ import { CHANNEL_ID, localNotifications } from "./AppNotifications";
  * 1st/2nd/3rd prizes are all published a notification goes out for that game
  * ("Magnum 4D 万能 - 成绩已出炉"). One per game per draw, never repeated.
  *
- * Only while the app is running: a phone that has the app fully closed needs a
- * server-side push (Firebase) to be woken, which is a separate job.
+ * This is the half that runs inside the app. A phone whose app is fully closed
+ * is woken by the server-side push in lib/push-notify.ts instead - together the
+ * two cover every case, which is why the Settings text no longer says "while
+ * the app is running".
  *
  * The switch lives in the app's Settings page ("成绩出炉提醒"); the first pass
  * after opening only records what is already finished, so opening the app in
