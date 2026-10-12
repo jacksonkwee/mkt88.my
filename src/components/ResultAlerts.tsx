@@ -53,7 +53,17 @@ function saveSent(sent: Set<string>): void {
 
 type Ready = { key: string; name: string };
 
-/** Every game on this page whose 1st, 2nd and 3rd prizes are all published. */
+/** The cells that show a drawn number, as printed by the operator. */
+const DRAWN = /^\d{1,6}$/;
+
+/**
+ * Every game on this page whose draw has STARTED.
+ *
+ * Waiting for the 1st/2nd/3rd prizes meant the reminder arrived at the END of a
+ * draw - a 3:30PM Lucky draw was announced at 4:08PM (reported 12 Oct 2026).
+ * The 4D games publish their special numbers first, so the first number to
+ * appear on the board is the moment to tell the user about.
+ */
 function readyGames(): Ready[] {
   const out: Ready[] = [];
   for (const card of Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)"))) {
@@ -61,8 +71,11 @@ function readyGames(): Ready[] {
     if (!card.querySelector('[data-id="first_prize"]')) continue;
     const date = (card.querySelector('[data-id="date"]')?.textContent || "").trim();
     if (!/^\d{2}-\d{2}-\d{4}/.test(date)) continue;
-    const all = PRIZES.every((id) => /^\d{3,6}$/.test((card.querySelector('[data-id="' + id + '"]')?.textContent || "").trim()));
-    if (!all) continue;
+    const ids = [...PRIZES];
+    for (let i = 1; i <= 15; i++) ids.push("special-" + i);
+    for (let i = 1; i <= 10; i++) ids.push("consolation-" + i);
+    const started = ids.some((id) => DRAWN.test((card.querySelector('[data-id="' + id + '"]')?.textContent || "").trim()));
+    if (!started) continue;
     const name = (card.querySelector(".lottery-name")?.textContent || "").replace(/\s+/g, " ").trim();
     if (!name) continue;
     out.push({ key: (card.id || name) + "|" + date, name });
@@ -116,8 +129,8 @@ export default function ResultAlerts({ enabled }: { enabled?: boolean }) {
                   notifications: [{
                     id: 4000 + ((Date.now() + seq++ * 13) % 2000000),
                     title: g.name,
-                    body: tr("resultReady", lang),
-                    largeBody: g.name + "\n" + tr("resultReady", lang),
+                    body: tr("resultLive", lang),
+                    largeBody: g.name + "\n" + tr("resultLive", lang),
                     channelId: CHANNEL_ID,
                     autoCancel: true,
                     schedule: { at: new Date(Date.now() + 400) },

@@ -37,31 +37,67 @@ const GAME_NAMES: Record<string, string> = {
 };
 
 const BODY: Record<string, string> = {
-  en: "Result ready · tap to open",
-  ms: "Keputusan siap · ketik untuk buka",
-  zh: "成绩已出炉 · 点击打开",
+  en: "Live draw in progress · tap to see the latest results",
+  ms: "Cabutan langsung sedang berjalan · ketik untuk keputusan terkini",
+  zh: "现场开彩进行中 · 点击查看最新成绩",
 };
 
-const isNum = (v?: string) => !!v && /^\d{3,6}$/.test(v.trim());
+/** A value the operator has actually drawn (4D, 3+3D, 2-digit Life numbers...). */
+const isNum = (v?: string) => !!v && /^\d{1,6}$/.test(v.trim());
 
-/** Every game whose draw is finished, as "<key>": "<draw date>". */
+/** Today in Malaysia, in the label the cards print ("12-10-2026 (Mon)"). */
+function myTodayLabel(): string {
+  try {
+    const p = Object.fromEntries(new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit", weekday: "short",
+    }).formatToParts(new Date()).map((x) => [x.type, x.value]));
+    return `${p.day}-${p.month}-${p.year} (${p.weekday})`;
+  } catch {
+    return "";
+  }
+}
+
+/** The cells that show a drawn number on a 4D-style card. */
+function drawnCells(c: Record<string, string>): string[] {
+  const ids = ["first_prize", "second_prize", "third_prize"];
+  for (let i = 1; i <= 15; i++) ids.push("special-" + i);
+  for (let i = 1; i <= 10; i++) ids.push("consolation-" + i);
+  return ids.map((id) => c[id]).filter((v) => isNum(v));
+}
+
+/**
+ * Every game whose draw has STARTED, as "<key>": "<draw date>".
+ *
+ * This used to wait for the 1st, 2nd and 3rd prizes, which are the last things
+ * a draw publishes - so a 3:30PM Lucky draw was announced at 4:08PM (reported
+ * 12 Oct 2026). The 4D games reveal their specials first, so "the board has
+ * begun filling in" is what the reminder is for.
+ */
 export function readyNow(snap: Snapshot): Record<string, string> {
   const out: Record<string, string> = {};
+  const today = myTodayLabel();
   for (const [cls, name] of Object.entries(GAME_NAMES)) {
     if (cls === "table-15" || cls === "table-16") continue;   // handled below
     const c = snap.cards ? snap.cards[cls] : undefined;
     if (!c || !name) continue;
     if (!/^\d{2}-\d{2}-\d{4}/.test((c.date || "").trim())) continue;
-    if (!isNum(c.first_prize) || !isNum(c.second_prize) || !isNum(c.third_prize)) continue;
+    if (today && (c.date || "").trim() !== today) continue;   // only today's draw
+    if (!drawnCells(c).length) continue;                       // nothing out yet
     out[cls] = c.date.trim();
   }
   // Perdana (one 7:30PM draw) and HariHari (3:30PM and 7:30PM).
   const perdana = snap.perdana ? snap.perdana["19:30"] : null;
-  if (perdana && perdana.date && perdana.prize?.slice(0, 3).every(isNum)) out["table-16|19:30"] = perdana.date;
+  if (perdana && perdana.date && (!today || perdana.date.trim() === today) &&
+      [...(perdana.prize || []), ...(perdana.special || []), ...(perdana.cons || [])].some(isNum)) {
+    out["table-16|19:30"] = perdana.date;
+  }
   for (const t of ["15:30", "19:30"]) {
     const h = snap.hari ? snap.hari[t] : null;
     const set = h && h.set;
-    if (set && set.date && set.prize?.slice(0, 3).every(isNum)) out["table-15|" + t] = set.date;
+    if (set && set.date && (!today || set.date.trim() === today) &&
+        [...(set.prize || []), ...(set.special || []), ...(set.cons || [])].some(isNum)) {
+      out["table-15|" + t] = set.date;
+    }
   }
   return out;
 }

@@ -205,7 +205,7 @@ export const STRINGS: Record<string, Row> = {
   // Result-ready reminder (one per game, with the game's name).
   resultAlerts:     { en: "Result alerts", ms: "Makluman keputusan", zh: "成绩出炉提醒" },
   resultAlertsHelp: { en: "A reminder with the game's name the moment its result is out.", ms: "Peringatan dengan nama permainan sebaik keputusan keluar.", zh: "每个游戏成绩一出炉，就用游戏名称提醒你。" },
-  resultReady:      { en: "Result ready · tap to open", ms: "Keputusan siap · ketik untuk buka", zh: "成绩已出炉 · 点击打开" },
+  resultLive:       { en: "Live draw in progress · tap to see the latest results", ms: "Cabutan langsung sedang berjalan · ketik untuk keputusan terkini", zh: "现场开彩进行中 · 点击查看最新成绩" },
 };
 
 /** Look a key up in one language; an unknown key is returned unchanged. */
