@@ -323,12 +323,20 @@ function isoFromDateLabel(s: string): string | null {
  * feed is the one every other game already uses and it carries Perdana under
  * its P entry.
  *
- * It holds ONE draw per day with no time. Perdana's only draw is 7:30PM, so the
- * value is always filed there, and the card always carries the feed's own date,
- * never a date borrowed from somewhere else.
+ * It holds ONE draw with no time on it, and the card always carries the feed's
+ * own date, never a date borrowed from somewhere else.
+ *
+ * Which session it belongs to is worked out from the clock: before 7:30PM the
+ * newest draw the feed can be carrying is that day's 3:30PM one, after 7:30PM it
+ * is the 7:30PM one. Filing every value under 7:30PM - which was right while the
+ * 3:30PM draw was suspended - put today's 3:30PM result on the 7:30PM card and
+ * pre-announced tonight's 7:30PM reminder (12 Oct 2026).
  */
 function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
-  const out: Record<string, PrizeSet | null> = { "19:30": null };
+  const my = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const mins = my.getUTCHours() * 60 + my.getUTCMinutes();
+  const slot = mins >= 19 * 60 + 30 ? "19:30" : "15:30";
+  const out: Record<string, PrizeSet | null> = { [slot]: null };
   const p = (feed as { P?: Record<string, unknown> } | null)?.P;
   if (!p) return out;
   const val = (v: unknown): string => {
@@ -341,7 +349,7 @@ function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
   const cons = Array.from({ length: 10 }, (_, i) => val(p["C" + (i + 1)]));
   const dd = typeof p.DD === "string" ? p.DD : "";
   const iso = isoFromDateLabel(dd);
-  out["19:30"] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
+  out[slot] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
   return out;
 }
 /**
@@ -1342,14 +1350,12 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const relayed = await perdanaFromRelay(today.iso);
     for (const t of missingPerdana) if (relayed[t]) perdana[t] = relayed[t];
   }
-  /*
-   * The shared feed carries ONE Perdana draw a day with no time on it - it has
-   * always been the 7:30PM one, and its own date is always a day behind, so it
-   * still only fills 19:30. The 3:30PM draw comes from the operator's page and
-   * the collected copy above, both of which carry the time.
-   */
+  /* The shared feed carries one Perdana draw with no time on it; perdanaFromFeed
+     decides which session that is from the clock. */
   const feedPerdana = perdanaFromFeed(feed);
-  if (!perdana["19:30"] && feedPerdana["19:30"]) perdana["19:30"] = feedPerdana["19:30"];
+  for (const t of ["15:30", "19:30"]) {
+    if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
+  }
 
   // A source that drops out for one round must not wipe the cards we already
   // had: blank cards were being served until the next successful rebuild.
