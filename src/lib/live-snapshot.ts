@@ -1356,6 +1356,31 @@ export async function buildSnapshot(): Promise<Snapshot> {
   for (const t of ["15:30", "19:30"]) {
     if (!perdana[t] && feedPerdana[t]) perdana[t] = feedPerdana[t];
   }
+  /*
+   * A session that is due today but not published yet shows today's date and
+   * an empty board, never yesterday's result.
+   *
+   * The operator opens the new Perdana draw late, and until it does every
+   * source still returns the previous draw - so the 3:30PM card kept showing
+   * yesterday's numbers under yesterday's date right through the new slot, and
+   * the page read as "no live result" once the new draw was due (reported
+   * 13 Oct 2026). Lucky HariHari already behaves this way on the card; Perdana
+   * gets the same rule here so the page's inline writer and React agree.
+   */
+  const slotMinutes: Record<string, number> = { "15:30": 15 * 60 + 30, "19:30": 19 * 60 + 30 };
+  const myNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  const nowMins = myNow.getUTCHours() * 60 + myNow.getUTCMinutes();
+  const dash = (n: number) => Array(n).fill("----");
+  for (const t of ["15:30", "19:30"]) {
+    const s = perdana[t];
+    if (!s || !s.date) continue;
+    if (!s.prize.some((v) => !!v && !/^----+$/.test(v))) continue;   // a real draw is on the board
+    if (nowMins < slotMinutes[t]) continue;            // this session has not started
+    const sm = /(\d{2})-(\d{2})-(\d{4})/.exec(s.date);
+    if (!sm) continue;
+    if (`${sm[3]}-${sm[2]}-${sm[1]}` === today.iso) continue;   // already today
+    perdana[t] = { prize: dash(3), special: dash(13), cons: dash(10), date: weekdayOf(today.iso) };
+  }
 
   // A source that drops out for one round must not wipe the cards we already
   // had: blank cards were being served until the next successful rebuild.

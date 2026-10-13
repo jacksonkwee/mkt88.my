@@ -43,6 +43,37 @@ function keepNewest(prev: Snap, next: Snap): Snap {
     if (a && b && a < b) cards[cls] = before;
   }
   merged.cards = cards;
+  /*
+   * Perdana and HariHari merge slot by slot too.
+   *
+   * The server snapshot embedded in the page can carry empty slots while the
+   * live data has already arrived, and `{ ...prev, ...next }` let that empty
+   * copy overwrite the good one. The card then kept its stale Perdana board -
+   * yesterday's numbers under yesterday's date - even after today's 3:30PM
+   * result was on the live snapshot (reported 13 Oct 2026). Each slot keeps
+   * whichever side holds the newer draw, and never drops one for an empty copy.
+   */
+  const pickSlot = <T extends { date?: string } | null | undefined>(p?: T, n?: T): T | undefined => {
+    if (!n) return p;
+    if (!p) return n;
+    const a = dayScore(n.date || undefined), b = dayScore(p.date || undefined);
+    return a && b && a < b ? p : n;
+  };
+  const perdana: Record<string, unknown> = { ...(prev.perdana || {}) };
+  for (const t of ["15:30", "19:30"]) {
+    perdana[t] = pickSlot(prev.perdana ? prev.perdana[t] : null, next.perdana ? next.perdana[t] : null);
+  }
+  merged.perdana = perdana as Snap["perdana"];
+  const hari: Record<string, unknown> = { ...(prev.hari || {}) };
+  for (const t of ["15:30", "19:30"]) {
+    const p = prev.hari ? prev.hari[t] : null;
+    const n = next.hari ? next.hari[t] : null;
+    if (!n) { hari[t] = p; continue; }
+    if (!p) { hari[t] = n; continue; }
+    const a = dayScore((n.set && n.set.date) || undefined), b = dayScore((p.set && p.set.date) || undefined);
+    hari[t] = a && b && a < b ? p : { set: n.set || p.set, six: n.six || p.six, jp: n.jp || p.jp };
+  }
+  merged.hari = hari as Snap["hari"];
   return merged;
 }
 
