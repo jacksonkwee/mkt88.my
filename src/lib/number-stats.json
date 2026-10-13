@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-12",
+ "generated": "2026-10-13",
  "games": [
   {
    "key": "magnum",
@@ -922,10 +922,10 @@
    "key": "granddragon",
    "name": "Grand Dragon 4D",
    "zh": "豪龙",
-   "draws": 1644,
+   "draws": 1645,
    "from": "2020-06-12",
-   "to": "2026-10-11",
-   "totalAppearances": 37791,
+   "to": "2026-10-12",
+   "totalAppearances": 37814,
    "hot": [
     {
      "num": "2814",
@@ -1053,10 +1053,10 @@
    "key": "ninelotto",
    "name": "Nine Lotto 4D",
    "zh": "九彩票",
-   "draws": 1380,
+   "draws": 1381,
    "from": "2023-01-01",
-   "to": "2026-10-11",
-   "totalAppearances": 31731,
+   "to": "2026-10-12",
+   "totalAppearances": 31754,
    "hot": [
     {
      "num": "9976",
