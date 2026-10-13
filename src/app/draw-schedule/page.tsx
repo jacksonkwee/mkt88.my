@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
 import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
 import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
+import { SPECIAL_DRAW_DATES } from "../../lib/special-draws";
 
 export const metadata: Metadata = {
   title: "4D Draw Schedule 开彩时间表 - Draw Days & Times | mkt88.my",
@@ -51,7 +52,6 @@ const SCHEDULE: Row[] = [
   { game: "Sandakan 4D", zh: "山打根", days: WSS, time: "19:00", note: TUE },
 ];
 
-const SPECIAL_2026 = ["2026-10-27", "2026-12-29"];
 const SPECIAL_GAMES = "Magnum 4D, Da Ma Cai, Sports Toto, Sabah 88, Cash Sweep, Sandakan";
 
 const pretty = (iso: string) => {
@@ -152,7 +152,7 @@ export default function DrawSchedulePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {SPECIAL_2026.map((iso) => (
+                  {SPECIAL_DRAW_DATES.map((iso) => (
                     <tr key={iso}>
                       <td>
                         <strong>{pretty(iso)}</strong>

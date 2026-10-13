@@ -1,5 +1,6 @@
 import { getSnapshot, type Snapshot } from "./live-snapshot";
 import { firestoreDelete, firestoreGet, firestorePutIfUnchanged, pushConfigured, registeredDevices, sendToTokens } from "./fcm";
+import { SPECIAL_DRAW_DATES, SPECIAL_DRAW_TABLES } from "./special-draws";
 
 /**
  * "This game's result is out" push notifications.
@@ -121,11 +122,28 @@ function myTodayLabel(): string {
   }
 }
 
+/** Today in Malaysia as YYYY-MM-DD, for matching the announced special dates. */
+function myTodayIso(): string {
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+  } catch {
+    return new Date().toISOString().slice(0, 10);
+  }
+}
+
 /** The cells that show a drawn number on a 4D-style card. */
 function drawnCells(c: Record<string, string>): string[] {
   const ids = ["first_prize", "second_prize", "third_prize"];
   for (let i = 1; i <= 15; i++) ids.push("special-" + i);
   for (let i = 1; i <= 10; i++) ids.push("consolation-" + i);
+  /*
+   * Singapore Toto carries its six winning numbers and the additional number as
+   * number_1..number_8 (the "+" sits in number_7), not the 4D grid, so it needs
+   * its own ids to count as "a number is out" (asked for 13 Oct 2026).
+   */
+  for (let i = 1; i <= 8; i++) ids.push("number_" + i);
   return ids.map((id) => c[id]).filter((v) => isNum(v));
 }
 
@@ -140,6 +158,7 @@ function drawnCells(c: Record<string, string>): string[] {
 export function readyNow(snap: Snapshot): Record<string, string> {
   const out: Record<string, string> = {};
   const today = myTodayLabel();
+  const todayIso = myTodayIso();
   const now = myNow();
   for (const [cls, name] of Object.entries(GAME_NAMES)) {
     if (cls === "table-15" || cls === "table-16") continue;   // handled below
@@ -156,8 +175,14 @@ export function readyNow(snap: Snapshot): Record<string, string> {
      * the daily Cambodia games and Singapore Toto draw - a stale Malaysia or
      * East Malaysia card stamped with today's date still buzzed (reported
      * 12 Oct 2026).
+     *
+     * Extra draws the operators announce - a Tuesday, for example - are
+     * announced too: when the date is on the published list the weekday test is
+     * skipped for those games, and the usual evening window still applies.
+     * See /draw-schedule.
      */
-    if (win && !(win.days.includes(now.day) && now.mins >= win.from && now.mins <= win.to)) continue;
+    const special = SPECIAL_DRAW_DATES.includes(todayIso) && SPECIAL_DRAW_TABLES.includes(cls);
+    if (win && !((win.days.includes(now.day) || special) && now.mins >= win.from && now.mins <= win.to)) continue;
     out[cls] = c.date.trim();
   }
   /*
