@@ -5,9 +5,9 @@ import { firestoreDelete, firestoreGet, firestorePutIfUnchanged, pushConfigured,
  * "This game's result is out" push notifications.
  *
  * Every snapshot build is checked here, and the phones that registered are
- * woken with the game's name. A game is announced ONCE a day, at the first
- * number of its first draw: no reminder per drawn number, and none for a later
- * draw of a game that has already been announced today.
+ * woken with the game's name. Each DRAW is announced once, at its first number:
+ * no reminder per drawn number, and nothing repeated for the rest of that draw.
+ * A game that runs two draw times (Perdana, Lucky HariHari) announces each.
  *
  * The check rides along with /api/home-live, which is edge-cached for a second
  * and polled by every open app (and by the PC's keep-warm job), so it costs no
@@ -161,30 +161,27 @@ export function readyNow(snap: Snapshot): Record<string, string> {
     out[cls] = c.date.trim();
   }
   /*
-   * Perdana and HariHari each run a 3:30PM and a 7:30PM draw, but a game sends
-   * ONE reminder a day - at the first number of its first draw - and then stays
-   * quiet for the rest of the day (reported 13 Oct 2026). The key is the game,
-   * not the draw time, so once the 3:30PM draw has announced, the 7:30PM one
-   * cannot announce again. If the earlier draw never publishes, the later one
-   * announces instead.
+   * Perdana and HariHari each run a 3:30PM and a 7:30PM draw, and EACH of those
+   * draws sends a reminder of its own - at the first number it publishes - like
+   * every single-draw game does. What is never sent is a reminder per drawn
+   * number: the key is the draw, so once a draw has announced, the rest of its
+   * numbers stay quiet for the whole of that draw.
    */
   for (const t of ["15:30", "19:30"]) {
-    if (out["table-16"]) break;
     const perdana = snap.perdana ? snap.perdana[t] : null;
     if (perdana && perdana.date && (!today || perdana.date.trim() === today) &&
         [...(perdana.prize || []), ...(perdana.special || []), ...(perdana.cons || [])].some(isNum) &&
         inSlotWindow(t, now)) {
-      out["table-16"] = perdana.date.trim();
+      out["table-16|" + t] = perdana.date.trim();
     }
   }
   for (const t of ["15:30", "19:30"]) {
-    if (out["table-15"]) break;
     const h = snap.hari ? snap.hari[t] : null;
     const set = h && h.set;
     if (set && set.date && (!today || set.date.trim() === today) &&
         [...(set.prize || []), ...(set.special || []), ...(set.cons || [])].some(isNum) &&
         inSlotWindow(t, now)) {
-      out["table-15"] = set.date.trim();
+      out["table-15|" + t] = set.date.trim();
     }
   }
   return out;
@@ -212,13 +209,16 @@ export async function checkAndPush(opts: { force?: boolean } = {}): Promise<Push
   try { prev = JSON.parse(prevDoc?.fields?.json?.stringValue || "{}") as Record<string, string>; } catch { prev = {}; }
 
   /*
-   * A game already announced today stays announced. The Perdana / HariHari
-   * keys used to carry the draw time ("table-16|19:30"); a state written by
-   * that older code still counts, so moving to the one-reminder-a-day key does
-   * not send a second reminder for a draw the phones have already had.
+   * A draw that has already been announced stays announced. The bare game key
+   * ("table-16"), written by the one-reminder-a-day build that ran briefly on
+   * 13 Oct 2026, also counts, so going back to a reminder per draw does not
+   * fire a second one for a draw the phones have already had.
    */
-  const announced = (k: string, v: string) =>
-    prev[k] === v || prev[k + "|15:30"] === v || prev[k + "|19:30"] === v;
+  const announced = (k: string, v: string) => {
+    if (prev[k] === v) return true;
+    const base = k.split("|")[0];
+    return base !== k && prev[base] === v;
+  };
   const fresh = Object.entries(ready).filter(([k, v]) => !announced(k, v));
   /*
    * Keep every game we have already announced for its draw.
