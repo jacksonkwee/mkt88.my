@@ -28,8 +28,9 @@ export default function MultiDrawResults({ snap: serverSnap }: { snap?: unknown 
     for (const id of ids) {
       const card = getCard(id);
       if (!card) continue;
-      const { result, jp } = splitSixCard(card);
+      const { result, jp, sixPlus } = splitSixCard(card);
       out.push(result);
+      if (sixPlus) out.push(sixPlus);
       if (jp) out.push(jp);
     }
     return out;

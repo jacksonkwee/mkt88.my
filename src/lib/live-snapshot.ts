@@ -545,7 +545,7 @@ function nineCell(html: string, id: string): string {
 }
 
 /** Parse one dated official 9lotto page. Never relabel another date's draw. */
-function ninePage(html: string, iso: string): { four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null } | null {
+function ninePage(html: string, iso: string): { four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null; six61: { number: string; prize: string } | null } | null {
   const pageDate = /id="inputDate"[^>]*placeholder="(\d{4}-\d{2}-\d{2})"/i.exec(html);
   if (pageDate && pageDate[1] !== iso) return null;
   const drawNoM = /class="result-date-label"[^>]*>\s*DRAW NO:\s*<\/span>\s*<span>([^<]+)<\/span>/i.exec(html);
@@ -582,13 +582,28 @@ function ninePage(html: string, iso: string): { four: Record<string, string> | n
     const vals = [...block.matchAll(/class="result-sjp-prize"[^>]*>([^<]+)</g)].map((x) => x[1].trim());
     if (lbl && vals.length >= 3) jp["n9_sj_" + lbl[1].trim().replace(/\s*prize$/i, "").trim().toLowerCase()] = vals.join(" + ");
   }
-  return { four, six, jp: Object.keys(jp).length ? jp : null };
+  /*
+   * Nine Lotto 6+1D: the seven bonus digits (r701..r707) and the flat prize
+   * printed beside them. They sit in their own block on the same official page.
+   */
+  const bonus = ["1", "2", "3", "4", "5", "6", "7"]
+    .map((n) => {
+      const m = new RegExp('id="r70' + n + '"[^>]*>\\s*([^<]*?)\\s*<').exec(html);
+      return m ? m[1].trim() : "";
+    })
+    .join("");
+  const bonusPrize = /class="result-price-lg"[^>]*>\s*([^<]*USD[^<]*?)\s*</.exec(html);
+  const six61 = /^\d{7}$/.test(bonus)
+    ? { number: bonus, prize: bonusPrize ? bonusPrize[1].replace(/\s+/g, " ").trim() : "" }
+    : null;
+
+  return { four, six, jp: Object.keys(jp).length ? jp : null, six61 };
 }
 
 /** Nine Lotto 4D + 6D (+ Super Jackpot). If today's dated page is still
  *  yesterday's draw, use yesterday's dated page so specials and main prizes
  *  always come from the same official draw. */
-async function nineOfficialToday(iso: string): Promise<{ four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null }> {
+async function nineOfficialToday(iso: string): Promise<{ four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null; six61: { number: string; prize: string } | null }> {
   const [y, m, d] = iso.split("-").map(Number);
   const prev = new Date(Date.UTC(y, m - 1, d));
   prev.setUTCDate(prev.getUTCDate() - 1);
@@ -597,7 +612,7 @@ async function nineOfficialToday(iso: string): Promise<{ four: Record<string, st
     get("https://9lotto.com/result/" + y + "-" + m + "-" + d),
     (() => { const [py, pm, pd] = yIso.split("-").map(Number); return get("https://9lotto.com/result/" + py + "-" + pm + "-" + pd); })(),
   ]);
-  return (todayHtml && ninePage(todayHtml, iso)) || (yesterdayHtml && ninePage(yesterdayHtml, yIso)) || { four: null, six: null, jp: null };
+  return (todayHtml && ninePage(todayHtml, iso)) || (yesterdayHtml && ninePage(yesterdayHtml, yIso)) || { four: null, six: null, jp: null, six61: null };
 }/** Fast Live4D.sg Singapore feed. This publishes the current draw before the
  *  official archive and the general live feed update. */
 function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
@@ -1357,6 +1372,18 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * is never second-guessed.
    */
   if (nineOfficial.four) cards["table-17"] = { ...(cards["table-17"] || {}), ...nineOfficial.four };
+  /*
+   * Nine Lotto 6+1D rides on the 6D card's class so the inline writer fills it
+   * too; only the 6+1D card carries cells with these data-ids.
+   */
+  if (nineOfficial.six61) {
+    cards["table-18"] = {
+      ...(cards["table-18"] || {}),
+      ...(nineOfficial.four && nineOfficial.four.date ? { date: nineOfficial.four.date } : {}),
+      n9_61_result: nineOfficial.six61.number,
+      n9_61_prize: nineOfficial.six61.prize || "----",
+    };
+  }
 
   const perdana: Record<string, PrizeSet | null> = { "15:30": null, "19:30": null };
   for (const [html, d] of [[perToday, today], [perYest, yest]] as [string | null, { iso: string; noPad: string }][]) {

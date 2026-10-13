@@ -46,7 +46,7 @@ export default function GameColumns({ ids, snap: serverSnap, wide }: { ids: stri
   for (const id of ids) {
     const stored = byId.get(id);
     if (!stored) continue;
-    const { result, jp } = splitSixCard(stored);
+    const { result, jp, sixPlus } = splitSixCard(stored);
     const base = id.replace(/-6d$/, "");
     // The draw's jackpot card belongs in the same column as the draw itself.
     // Giving it a column of its own put Perdana / Lucky HariHari into four
@@ -58,6 +58,8 @@ export default function GameColumns({ ids, snap: serverSnap, wide }: { ids: stri
       cols.push(col);
     }
     col.items.push(result);
+    // Nine Lotto 6+1D sits directly under the 6D result, above the 6D JP card.
+    if (sixPlus) col.items.push(sixPlus);
     if (jp) col.items.push(jp);
   }
 

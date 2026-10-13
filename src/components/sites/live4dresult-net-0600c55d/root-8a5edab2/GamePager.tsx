@@ -268,12 +268,15 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
             for (const id of pg.ids || []) {
               const card = byId.get(id);
               if (!card) continue;
-              const { result, jp } = splitSixCard(card);
+              const { result, jp, sixPlus } = splitSixCard(card);
               items.push(result);
+              // The Nine Lotto 6+1D board reads directly under its 6D result,
+              // above the 6D JP (Super Jackpot) card.
+              if (sixPlus) items.push(sixPlus);
               if (jp) items.push(jp);
             }
             return items.map((card) =>
-              / six-jp$/.test(card.cardCls) ? (
+              / six-jp$| six-one$/.test(card.cardCls) ? (
                 <div key={card.id} className="mt-3">
                   <LotteryCard card={card} {...overridesFor(snap, card.id, card.cardCls)} />
                 </div>

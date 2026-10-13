@@ -32,7 +32,7 @@ function tagSixRow(row: CardRow): CardRow {
 }
 
 /** Split a 6D / SportsToto jackpot card into result and JP columns. */
-export function splitSixCard(original: LotteryCardData): { result: LotteryCardData; jp?: LotteryCardData } {
+export function splitSixCard(original: LotteryCardData): { result: LotteryCardData; jp?: LotteryCardData; sixPlus?: LotteryCardData } {
   let card = original;
   if (card.id.startsWith("table-15-") && card.id.endsWith("-6d")) {
     const first = card.tables[0];
@@ -51,6 +51,7 @@ export function splitSixCard(original: LotteryCardData): { result: LotteryCardDa
 
   const resultTables: CardTable[] = [];
   const jpTables: CardTable[] = [];
+  const sixOneTables: CardTable[] = [];
 
   for (const table of card.tables) {
     const text = tableText(table);
@@ -61,17 +62,40 @@ export function splitSixCard(original: LotteryCardData): { result: LotteryCardDa
 
     const resultRows: CardRow[] = [];
     const jpRows: CardRow[] = [];
+    const sixOneRows: CardRow[] = [];
     for (const row of table.rows) {
+      /*
+       * Nine Lotto's own 6+1D board is its own card, not part of the 6D result
+       * or the Super Jackpot. Its rows are the only ones tagged n9_61_*.
+       */
+      if (row.cells.some((c) => /^n9_61_/.test((c.attrs || {})["data-id"] || ""))) {
+        sixOneRows.push(row);
+        continue;
+      }
       const value = rowText(row);
       if (isJpRow(value)) jpRows.push(row);
       else resultRows.push(tagSixRow(row));
     }
     if (resultRows.length) resultTables.push({ ...table, rows: resultRows });
     if (jpRows.length) jpTables.push({ ...table, rows: jpRows });
+    if (sixOneRows.length) sixOneTables.push({ ...table, rows: sixOneRows });
   }
 
   const result = resultTables.length ? { ...card, tables: resultTables } : card;
-  if (!jpTables.length) return { result };
+  /*
+   * "Nine Lotto 6+1D" - its own card, shown between the 6D result and the
+   * Super Jackpot card (reported 13 Oct 2026).
+   */
+  const sixPlus: LotteryCardData | undefined = sixOneTables.length
+    ? {
+        ...card,
+        id: card.id + "-61d",
+        cardCls: card.cardCls + " six-one",
+        header: { ...card.header, name: card.header.name.replace(/6D/, "6+1D") },
+        tables: sixOneTables,
+      }
+    : undefined;
+  if (!jpTables.length) return { result, sixPlus };
 
   const isSports = card.id.startsWith("table-7-");
   const jpName = isSports ? "SportsToto Jackpot 多多积宝" : card.header.name.replace(/6D/, "6D JP");
@@ -82,5 +106,5 @@ export function splitSixCard(original: LotteryCardData): { result: LotteryCardDa
     header: { ...card.header, name: jpName },
     tables: jpTables,
   };
-  return { result, jp };
+  return { result, jp, sixPlus };
 }
