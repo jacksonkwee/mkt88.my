@@ -98,7 +98,13 @@ export function splitSixCard(original: LotteryCardData): { result: LotteryCardDa
   if (!jpTables.length) return { result, sixPlus };
 
   const isSports = card.id.startsWith("table-7-");
-  const jpName = isSports ? "SportsToto Jackpot 多多积宝" : card.header.name.replace(/6D/, "6D JP");
+  // Nine Lotto's jackpot card is its Super Jackpot, not a "6D JP".
+  const isNine = card.id.startsWith("table-18-");
+  const jpName = isSports
+    ? "SportsToto Jackpot 多多积宝"
+    : isNine
+      ? "Nine Lotto Super Jackpot"
+      : card.header.name.replace(/6D/, "6D JP");
   const jp: LotteryCardData = {
     ...card,
     id: card.id + "-jp",

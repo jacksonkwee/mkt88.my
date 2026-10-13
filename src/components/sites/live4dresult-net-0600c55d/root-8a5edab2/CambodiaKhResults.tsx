@@ -129,7 +129,14 @@ function jpCard(o: { id: string; cardCls: string; bg: string; logo: string; name
   return {
     id: o.id + "-jp",
     cardCls: o.cardCls + " six-jp mkt-past",
-    header: { bgCls: o.bg, logo: { src: o.logo, alt: "logo" }, name: o.name.replace(/6D/, "6D JP"), date: o.date, drawNo: null },
+    header: {
+      bgCls: o.bg,
+      logo: { src: o.logo, alt: "logo" },
+      // Nine Lotto's jackpot card is its Super Jackpot, not a "6D JP".
+      name: /^nine lotto/i.test(o.name) ? "Nine Lotto Super Jackpot" : o.name.replace(/6D/, "6D JP"),
+      date: o.date,
+      drawNo: null,
+    },
     tables: [prizeTable(o.extras)],
   };
 }
