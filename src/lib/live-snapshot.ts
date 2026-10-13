@@ -380,6 +380,42 @@ async function perdanaFromRelay(iso: string): Promise<Record<string, PrizeSet>> 
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 
+/**
+ * Perdana Mega Jackpot - the pool, its position letter and the units that won.
+ *
+ * The Perdana 4D results page carries no jackpot field at all (checked
+ * 13 Oct 2026): the only place those figures exist is the operator's jackpot
+ * page, which perdana4d.com links straight to. That page reports ONE current
+ * set rather than a figure per draw, which is what the card shows on both of
+ * its draw times. Throttled and cached - the page barely moves and the
+ * snapshot rebuilds constantly.
+ */
+const PERDANA_JP_URL = "https://pda8888.com/en/jackpot";
+let perdanaJpAt = 0;
+let perdanaJpCache: Record<string, string> = {};
+async function perdanaJackpotValues(): Promise<Record<string, string>> {
+  if (Date.now() - perdanaJpAt < 10 * 60 * 1000) return perdanaJpCache;
+  perdanaJpAt = Date.now();
+  const html = await get(PERDANA_JP_URL, false, 6000, 1);
+  if (!html) return perdanaJpCache;
+  const flat = html
+    .replace(/<script[\s\S]*?<\/script>/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ");
+  const out: Record<string, string> = {};
+  const pool = /USD\s?([\d,]+\.\d{2})/.exec(flat);
+  if (pool) out.jp4_pool = "USD " + pool[1];
+  // "A : 2620 @ USD 0.00 / 0" - position A, its number, and the units that won.
+  const draw = /A\s*:\s*\d{4}\s*@\s*USD\s[\d.]+\s*\/\s*(\d+)/.exec(flat);
+  if (draw) {
+    out.jp4_letter = "A";
+    out.jp4_units = draw[1];
+  }
+  if (Object.keys(out).length) perdanaJpCache = out;
+  return perdanaJpCache;
+}
+
 function hariSet(j: any, iso: string): PrizeSet | null {
   if (!j || !j.prize1) return null;
   // The feed tells us the real draw date - trust it over our assumption.
@@ -1380,6 +1416,18 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (!sm) continue;
     if (`${sm[3]}-${sm[2]}-${sm[1]}` === today.iso) continue;   // already today
     perdana[t] = { prize: dash(3), special: dash(13), cons: dash(10), date: weekdayOf(today.iso) };
+  }
+
+  /*
+   * Perdana's jackpot rows live on their own card values, not in the draw
+   * slots: the operator publishes one current pool / letter / units set, shown
+   * the same on both draw times. The fetch is kicked off rather than awaited so
+   * a slow jackpot page never holds a snapshot build; the build after it lands
+   * picks the values up from the cache.
+   */
+  void perdanaJackpotValues();
+  if (Object.keys(perdanaJpCache).length) {
+    cards["table-16"] = { ...(cards["table-16"] || {}), ...perdanaJpCache };
   }
 
   // A source that drops out for one round must not wipe the cards we already

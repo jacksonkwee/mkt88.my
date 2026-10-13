@@ -109,7 +109,9 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
 
   if (cleanCardId.startsWith("table-16")) {
     const set = snap.perdana ? snap.perdana[t] : null;
-    if (set && awaitingToday(t, set.date)) return { values: { date: myClock().label }, prizeSet: blankSet() };
+    // Keep the jackpot rows (they belong to the card, not to one draw) while the
+    // awaited draw's board is still blank.
+    if (set && awaitingToday(t, set.date)) return { values: { ...values, date: myClock().label }, prizeSet: blankSet() };
     if (set) { values.date = clean(set.date) || values.date; values.draw_no = clean(set.drawNo) || values.draw_no; return { values, prizeSet: set }; }
   }
   if (cleanCardId.startsWith("table-15")) {
