@@ -140,6 +140,48 @@ export async function firestorePut(path: string, fields: Record<string, string>)
   }
 }
 
+/**
+ * Write the document only if nothing else has written it since `updateTime`.
+ *
+ * Vercel runs several instances and every open app polls, so two of them can
+ * notice the same new draw in the same second and both send its reminder. This
+ * compare-and-set means exactly one wins the write; the loser gets a
+ * failed-precondition answer and stays quiet. Pass null for updateTime when the
+ * document does not exist yet.
+ */
+export async function firestorePutIfUnchanged(
+  path: string,
+  fields: Record<string, string>,
+  updateTime: string | null
+): Promise<boolean> {
+  const sa = serviceAccount();
+  if (!sa) return false;
+  const token = await accessToken(sa);
+  if (!token) return false;
+  const name = `projects/${sa.project_id}/databases/(default)/documents/${path}`;
+  const body = {
+    writes: [{
+      update: {
+        name,
+        fields: Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, { stringValue: v }])),
+      },
+      currentDocument: updateTime ? { updateTime } : { exists: false },
+    }],
+  };
+  try {
+    const res = await fetch(`${db(sa)}:commit`, {
+      method: "POST",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function firestoreDelete(path: string): Promise<void> {
   const sa = serviceAccount();
   if (!sa) return;

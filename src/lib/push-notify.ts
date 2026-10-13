@@ -1,5 +1,5 @@
 import { getSnapshot, type Snapshot } from "./live-snapshot";
-import { firestoreDelete, firestoreGet, firestorePut, pushConfigured, registeredDevices, sendToTokens } from "./fcm";
+import { firestoreDelete, firestoreGet, firestorePutIfUnchanged, pushConfigured, registeredDevices, sendToTokens } from "./fcm";
 
 /**
  * "This game's result is out" push notifications.
@@ -198,12 +198,32 @@ export async function checkAndPush(opts: { force?: boolean } = {}): Promise<Push
 
   // What has already been announced. One JSON string in one document keeps this
   // to a single read and a single write per check.
-  const prevDoc = await firestoreGet<{ fields?: { json?: { stringValue?: string } } }>("state/live");
+  const prevDoc = await firestoreGet<{ updateTime?: string; fields?: { json?: { stringValue?: string } } }>("state/live");
   let prev: Record<string, string> = {};
   try { prev = JSON.parse(prevDoc?.fields?.json?.stringValue || "{}") as Record<string, string>; } catch { prev = {}; }
 
   const fresh = Object.entries(ready).filter(([k, v]) => prev[k] !== v);
-  await firestorePut("state/live", { json: JSON.stringify(ready) });
+  /*
+   * Keep every game we have already announced for its draw.
+   *
+   * The stored state used to be replaced by whatever the snapshot said right
+   * now. When a board momentarily emptied - the gap between one draw being
+   * cleared and the next number landing - its game disappeared from the state,
+   * and the moment a number came back the SAME draw was announced a second
+   * time (reported 13 Oct 2026 for Perdana, which has two draw times a day).
+   * Merging instead of replacing means a game only re-announces when its draw
+   * date actually moves on.
+   */
+  const next: Record<string, string> = { ...prev };
+  for (const [k, v] of Object.entries(ready)) next[k] = v;
+  /*
+   * Claim the change before sending it. Vercel runs several instances and every
+   * open app polls, so two of them can notice the same new draw in the same
+   * second and both send the reminder. Whoever writes the state first owns it;
+   * the other sees the write fail and stays quiet.
+   */
+  const claimed = await firestorePutIfUnchanged("state/live", { json: JSON.stringify(next) }, prevDoc?.updateTime ?? null);
+  if (!claimed) return { sent: 0, games: [], skipped: "another instance announced it" };
   if (!fresh.length) return { sent: 0, games: [] };
 
   // Phones whose owner switched result alerts off in the app are skipped.

@@ -918,6 +918,23 @@ function liveJackpotLetter(cardId: string, jp4: Record<string, string>): Record<
   return { ...jp4, jp4_letter: "----" };
 }
 
+/**
+ * True when a special's own box is clear.
+ *
+ * When a number is drawn up into a 1st-3rd prize the operator leaves its
+ * special box blank, so an empty box is the board's own way of saying "this
+ * special became a prize". A letter whose box still holds a number cannot be
+ * this draw's letter, which is how a stale feed letter is told apart.
+ */
+function specialBoxBlank(card: Element, letter: string): boolean {
+  const i = LETTERS.indexOf(letter);
+  if (i < 0) return false;
+  const el = card.querySelector('[data-id="special-' + (i + 1) + '"]');
+  if (!el) return true;   // nothing to check against: keep the feed's letter
+  const v = (el.textContent || "").trim();
+  return v === "" || /^----+$/.test(v);
+}
+
 async function updateGdNineCards() {
   // Grand Dragon 6D + 4D jackpot + 6+1D jackpot (official gdlotto endpoint)
   try {
@@ -933,9 +950,18 @@ async function updateGdNineCards() {
           const cell = card.querySelector('[data-id="' + id + '"]');
           if (!cell) return;
           const num = (cell.textContent || "").trim();
-          // The official board publishes the letter before the number; showing
-          // it on its own looks like a result that is not there yet.
-          if (L && /^[A-M]$/.test(L) && /^\d{4}$/.test(num)) cell.setAttribute("data-letter", L);
+          /*
+           * The letter must belong to the draw that is on the card.
+           *
+           * The operator puts up which special each prize came from only at the
+           * end of the draw, so while it is running the feed still carries the
+           * PREVIOUS draw's letters - which is why the 1st-3rd rows showed a
+           * wrong letter and only corrected themselves once the draw finished
+           * (reported 13 Oct 2026). The board itself says which is right: the
+           * special a prize came from is left BLANK. A letter whose box still
+           * holds a number belongs to an older draw, so it is not shown.
+           */
+          if (L && /^[A-M]$/.test(L) && /^\d{4}$/.test(num) && specialBoxBlank(card, L)) cell.setAttribute("data-letter", L);
           else cell.removeAttribute("data-letter");
         });
       }

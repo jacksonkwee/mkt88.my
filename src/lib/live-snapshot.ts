@@ -259,12 +259,18 @@ function parsePerdana(html: string, iso: string): Record<string, PrizeSet> {
       if (!time) continue;
       const val = (re: RegExp): string => { const m = re.exec(block); return m && m[1] ? m[1] : "----"; };
       const cell = (cls: string) => val(new RegExp('class="[^"]*' + cls + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})'));
+      // The operator prints which special each prize came from: "(E) 9530".
+      const cellLetter = (cls: string) => {
+        const m = new RegExp('class="[^"]*' + cls + '"[^>]*>\\s*\\(([A-Z])\\)').exec(block);
+        return m ? m[1] : "";
+      };
       const byPos = (letters: string) =>
         [...letters].map((L) => val(new RegExp('fourDPosition="[^"]*' + L + '"[^>]*>\\s*(?:\\([A-Z]\\)\\s*)?(----|\\d{4})')));
       const set: PrizeSet = {
         prize: [cell("4dFirst"), cell("4dSecond"), cell("4dThird")],
         special: byPos("ABCDEFGHIJKLM"),
         cons: byPos("NOPQRSTUVW"),
+        from: [cellLetter("4dFirst"), cellLetter("4dSecond"), cellLetter("4dThird")],
         date: weekdayOf(iso),
       };
       if (hasAnyNumber(set) && !out[time]) out[time] = set;
@@ -297,13 +303,32 @@ function parsePerdana(html: string, iso: string): Record<string, PrizeSet> {
       }
       return vals;
     };
-    const prize = pIdx >= 0 && sIdx > pIdx ? grab(pIdx + 1, sIdx, 3) : [];
-    while (prize.length < 3) prize.push("----");
+    // The operator prints which special each prize came from, on its own line
+    // ("(E)") or joined to the number ("(E) 9530").
+    const prize: string[] = [];
+    const from: string[] = [];
+    if (pIdx >= 0 && sIdx > pIdx) {
+      for (let i = pIdx + 1; i < sIdx && prize.length < 3; i++) {
+        const l = block[i];
+        if (!l) continue;
+        const cmb = /^\(([A-Z])\)\s*(----|\d{4})$/.exec(l);
+        if (cmb) { from.push(cmb[1]); prize.push(cmb[2]); continue; }
+        if (/^----$/.test(l)) { from.push(""); prize.push(l); continue; }
+        const letterOnly = /^\(([A-Z])\)$/.exec(l);
+        if (letterOnly && i + 1 < sIdx && /^(----|\d{4})$/.test(block[i + 1])) {
+          from.push(letterOnly[1]);
+          prize.push(block[i + 1]);
+          i++;
+        }
+      }
+    }
+    while (prize.length < 3) { prize.push("----"); from.push(""); }
+    while (from.length < 3) from.push("");
     const special = sIdx >= 0 ? grab(sIdx + 1, cIdx > sIdx ? cIdx : block.length, 13) : [];
     while (special.length < 13) special.push("----");
     const cons = cIdx >= 0 ? grab(cIdx + 1, block.length, 10) : [];
     while (cons.length < 10) cons.push("----");
-    const set: PrizeSet = { prize, special, cons, date: weekdayOf(drawIso) };
+    const set: PrizeSet = { prize, special, cons, from, date: weekdayOf(drawIso) };
     if (hasAnyNumber(set) && !out[time]) out[time] = set;
   }
   return out;

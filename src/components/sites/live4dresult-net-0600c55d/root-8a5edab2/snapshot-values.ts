@@ -7,7 +7,7 @@
  * client module, and a server component cannot call into one.
  */
 
-export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string };
+export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string; from?: string[] };
 export type HariEntry = { set?: PrizeSet | null; six?: { main: string; subs: Record<string, string> } | null; jp?: Record<string, string> | null } | null;
 export type SixEntry = { main: string; subs: Record<string, string>; date?: string } | null;
 export type Snap = {
