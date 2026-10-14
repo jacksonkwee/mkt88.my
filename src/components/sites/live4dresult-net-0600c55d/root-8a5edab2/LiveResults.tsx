@@ -181,7 +181,51 @@ const DIRECT_HOSTS = ["api.hari4d.com"];
 /** Read through the app itself: these refuse every browser and our server. */
 const NATIVE_HOSTS = ["www.perdana4d.com", "perdana4d.com"];
 
+/**
+ * Don't pay twice for the same page inside one sweep.
+ *
+ * A single sweep asks for the same operator page more than once - measured on
+ * the home page: perdana4d.com fetched three times about 650ms apart,
+ * api.hari4d.com twice for each of its four calls, and the live4d2u feed twice
+ * in the same millisecond - because every game that needs it runs on its own
+ * clock. A second caller now joins a request that is already running, and a
+ * copy fetched a moment ago is reused, so those duplicate requests are gone and
+ * the operator sites get fewer hits per sweep. Two seconds is far shorter than
+ * any cycle that asks for these pages (the sweep runs at most once every 45s),
+ * so nothing shows staler than the sweep already was. A failure is neither
+ * shared nor remembered: a caller still retries exactly as it does today.
+ */
+const FETCH_REUSE_MS = 2000;
+const recentText = new Map<string, { at: number; text: string }>();
+const inFlightText = new Map<string, Promise<string | null>>();
+
 async function fetchText(url: string): Promise<string | null> {
+  const hit = recentText.get(url);
+  if (hit && Date.now() - hit.at < FETCH_REUSE_MS) return hit.text;
+
+  const running = inFlightText.get(url);
+  if (running) {
+    const shared = await running;
+    if (shared !== null) return shared;
+  }
+
+  const p = fetchTextOnce(url);
+  inFlightText.set(url, p);
+  let text: string | null = null;
+  try {
+    text = await p;
+  } finally {
+    inFlightText.delete(url);
+  }
+  if (text !== null) {
+    const now = Date.now();
+    for (const [k, v] of recentText) if (now - v.at >= FETCH_REUSE_MS) recentText.delete(k);
+    recentText.set(url, { at: now, text });
+  }
+  return text;
+}
+
+async function fetchTextOnce(url: string): Promise<string | null> {
   try {
     if (NATIVE_HOSTS.includes(new URL(url).hostname)) {
       const viaApp = await nativeHttpGet(url);
