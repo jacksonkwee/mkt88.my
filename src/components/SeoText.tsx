@@ -19,7 +19,10 @@ export default function SeoText({
 }) {
   return (
     <section style={{ maxWidth: 900, margin: "18px auto 30px", padding: "0 14px", color: "#333", lineHeight: 1.65 }}>
-      <h2 style={{ fontSize: 20, margin: "10px 0 8px" }}>{heading}</h2>
+      {/* The page's main heading. It is an h1 rather than an h2 because on every
+          page that uses this block it IS the page's title - and a page with no
+          h1 gives Google nothing to hang the page on (measured 14 Oct 2026). */}
+      <h1 style={{ fontSize: 20, margin: "10px 0 8px" }}>{heading}</h1>
       {paragraphs.map((p, i) => (
         <p key={i} style={{ fontSize: 14, margin: "6px 0" }}>{p}</p>
       ))}

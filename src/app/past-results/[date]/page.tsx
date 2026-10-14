@@ -20,6 +20,9 @@ export default async function PastDatePage({ params }: { params: Promise<{ date:
   return (
     <>
       <Header />
+      {/* The date pages show a toolbar and the captured tables, with no heading
+          of their own (measured 14 Oct 2026). */}
+      <h1 className="sr-only">Past 4D Results {date} 过去开彩记录</h1>
       <RegionButtons />
       <PastResultsView date={date} />
       <Footer />

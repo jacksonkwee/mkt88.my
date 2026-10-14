@@ -48,6 +48,9 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
   return (
     <>
       <Header />
+      {/* Same as /result/[game]: no visible page title, so the name lives here
+          for Google and for a screen reader (see .sr-only). */}
+      <h1 className="sr-only">{o.title}</h1>
       <RegionButtons />
       <div className="d-lg-none">
         <GamePager name={o.pager} snap={snapProp} pastDates={pastDates} showPast />

@@ -20,6 +20,8 @@ export default async function CambodiaPastDatePage({ params }: { params: Promise
   return (
     <>
       <Header />
+      {/* Same as the Malaysian date pages: no heading of its own. */}
+      <h1 className="sr-only">Cambodia 4D Past Results {date} 柬埔寨开彩记录</h1>
       <RegionButtons />
       <PastResultsView date={date} view="kh" />
       <Footer />

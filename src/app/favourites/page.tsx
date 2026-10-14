@@ -13,6 +13,9 @@ export const metadata: Metadata = {
 export default function FavouritesPage() {
   return (
     <>
+    {/* The screen's name is drawn by the red bar as a plain div, so the page
+        carried no h1 at all. */}
+    <h1 className="sr-only">Favourite Numbers 收藏号码 - MKT 88 4D</h1>
     <Suspense fallback={<div style={{ padding: 40, textAlign: "center", fontFamily: "sans-serif" }}>Loading…</div>}>
       <FavouritesApp />
     </Suspense>

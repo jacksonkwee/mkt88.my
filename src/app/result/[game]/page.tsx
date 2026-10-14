@@ -36,6 +36,10 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   return (
     <>
       <Header />
+      {/* The card never carried a heading of its own, so the page had none at
+          all; this names it for Google and for a screen reader without
+          drawing anything (see .sr-only). */}
+      <h1 className="sr-only">{def.title}</h1>
       <RegionButtons />
       <div className="d-lg-none">
         <GamePager name={game} snap={snapProp} pastDates={pastDates} showPast />

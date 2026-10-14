@@ -16,6 +16,9 @@ export default function Lotto4d() {
   return (
     <>
       <Header />
+      {/* No visible page title on this route, so the name is here for Google
+          and for a screen reader without drawing anything (see .sr-only). */}
+      <h1 className="sr-only">Lotto 4D, 豪龙 4D Dragon, 9 Lotto, Perdana, Lucky HariHari 开彩成绩</h1>
       <RegionButtons />
       <Lotto4DPage />
       <Footer />
