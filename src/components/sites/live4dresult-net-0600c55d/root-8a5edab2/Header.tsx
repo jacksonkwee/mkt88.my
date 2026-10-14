@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
+import { tr, useLang } from "../../../../lib/i18n";
 
 const logo = ASSET_BASE + "/logo-mkt88.webp?v=4";
 
@@ -22,12 +23,17 @@ const MENU = [
 ];
 
 export default function Header() {
+  const [lang] = useLang();
   return (
     <header className="sticky-top navbar-inverse">
       <nav className="navbar navbar-expand-lg navbar-light p-lg-0 py-1" style={{ position: "relative", zIndex: 2 }}>
         <div className="container">
           <a
             href="/"
+            /* The logo is the link's only content and is decorative, so the
+               link needs its own name - without one a screen reader announced
+               "link" and nothing else (measured 14 Oct 2026). */
+            aria-label={"MKT 88 4D · " + tr("home", lang)}
             style={{ textDecoration: "none" }}
             onClick={(e) => {
               // Inside the app the logo means "first page" - the tile screen -

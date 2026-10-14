@@ -33,6 +33,13 @@ export function rewriteHtml(html: string): string {
   h = h.replace(/(this\.src=')(\/[^']*)/g, (_m, p: string, path2: string) =>
     p + (path2.startsWith("/sites/") ? path2 : ASSET_BASE + path2)
   );
+  /*
+   * Captured markup carries images with no alt at all - the SportsToto zodiac
+   * animal was the one left (measured 14 Oct 2026). They sit beside their own
+   * text label, so an empty alt is the right treatment: it keeps them out of
+   * the screen reader's way without hiding anything a reader needs.
+   */
+  h = h.replace(/<img\b(?![^>]*\salt=)/gi, '<img alt=""');
   return toSimplified(h);
 }
 
