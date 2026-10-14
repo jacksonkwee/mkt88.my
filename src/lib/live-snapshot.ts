@@ -227,6 +227,48 @@ function weekdayOf(iso: string): string {
 
 const isDash = (v: string) => /^----+$/.test((v || "").trim()) || (v || "").trim() === "";
 
+/** "dd-mm-yyyy (Wed)" -> a comparable number, or 0 when there is no date. */
+function drawDay(v?: string): number {
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(String(v || "").trim());
+  return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+}
+
+/** Could this payload be the draw the card shows, or a newer one? */
+function drawNotOlder(valsDate: string | undefined, baseDate: string | undefined): boolean {
+  const v = drawDay(valsDate);
+  const b = drawDay(baseDate);
+  return !v || !b || v >= b;
+}
+
+/**
+ * Merge an operator's payload onto a card.
+ *
+ * "A blank never replaces a known number" is what stops a source that drops out
+ * mid-evening from emptying a card, and it is right - within one draw.
+ *
+ * It must not survive a DRAW CHANGE. When the payload is for a newer draw its
+ * blanks mean "not drawn yet", and holding the old numbers in those slots is
+ * exactly what put yesterday's result under today's date - reported 14 Oct 2026
+ * for Sabah 88, which read 14-10-2026 across numbers drawn on 13-10.
+ *
+ * So: same draw (or nothing to compare) -> keep what is already known; a newer
+ * draw -> take the payload as it stands, blanks and all, and let its date move
+ * the card on.
+ */
+function mergeCardPayload(base: Record<string, string>, vals: Record<string, string>): Record<string, string> {
+  const baseDay = drawDay(base.date);
+  const valsDay = drawDay(vals.date);
+  const drawChanged = !!valsDay && (!baseDay || valsDay > baseDay);
+  const merged: Record<string, string> = { ...base };
+  for (const [k, v] of Object.entries(vals)) {
+    if (v === undefined || v === null) continue;
+    const cur = merged[k];
+    if (!drawChanged && /^----+$/.test(String(v)) && cur && !/^----+$/.test(cur)) continue;
+    merged[k] = v;
+  }
+  return merged;
+}
+
 /**
  * A draw can be published number by number. As long as ANY number is out we
  * show that draw (with "----" for the rest) instead of falling back to the
@@ -1098,20 +1140,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // blank from it must never wipe a number the mirror already published.
   if (magnumToday) {
     const base = (cards["table-1"] || {}) as Record<string, string>;
-    const merged: Record<string, string> = { ...base };
-    for (const [k, v] of Object.entries(magnumToday)) {
-      /*
-       * The three prizes are taken exactly as the operator publishes them,
-       * blanks included. They stay blank until the end of the draw, and the
-       * "never blank" rule below otherwise keeps a wrong value on the card for
-       * the rest of the evening - which is how S01 sat on the 1st, 2nd and 3rd
-       * lines long after the operator's board had them empty (7 Oct 2026).
-       */
-      if (k === "first_prize" || k === "second_prize" || k === "third_prize") { merged[k] = v; continue; }
-      if (k.startsWith("gold_jp")) continue;   // these belong to the Jackpot Gold card
-      const cur = merged[k];
-      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
-      merged[k] = v;
+    // The gold amounts belong to the Jackpot Gold card, not this one.
+    const payload: Record<string, string> = {};
+    for (const [k, v] of Object.entries(magnumToday)) if (!k.startsWith("gold_jp")) payload[k] = v;
+    const merged = mergeCardPayload(base, payload);
+    /*
+     * The three prizes are taken exactly as the operator publishes them, blanks
+     * included. They stay blank until the end of the draw, and the "never
+     * blank" rule would otherwise keep a wrong value on the card for the rest
+     * of the evening - which is how S01 sat on the 1st, 2nd and 3rd lines long
+     * after the operator's board had them empty (7 Oct 2026).
+     */
+    for (const k of ["first_prize", "second_prize", "third_prize"]) {
+      if (k in payload) merged[k] = payload[k];
     }
     cards["table-1"] = merged;
     // The Jackpot Gold amounts go on table-2, and the operator's own figure
@@ -1122,48 +1163,29 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (Object.keys(gold).length) cards["table-2"] = { ...(cards["table-2"] || {}), ...gold };
   }
   /*
-   * Sabah 88 straight from the operator - but ONLY onto a card that already
-   * shows TODAY's date. If the card is still on an older draw the official
-   * numbers are ignored, so a parser slip can never put yesterday's draw under
-   * today's heading. Never blank a value the mirror already published either.
+   * Sabah 88 straight from the operator. Taken whenever the operator is on this
+   * card's draw or a newer one - never when it is older, which would put
+   * yesterday's draw under today's heading. Requiring today's draw once meant a
+   * card sitting on yesterday's result refused the feed (and with it the
+   * jackpot, 3D and Lotto boards) until the next draw began (11 Oct 2026).
+   *
+   * When the draw changes, mergeCardPayload takes the operator's board as it
+   * stands - blanks included - so the new draw starts clean instead of keeping
+   * the previous draw's numbers in the boxes the operator has not reached yet.
    */
   if (sabah88) {
     const base = (cards["table-10"] || {}) as Record<string, string>;
-    /*
-     * The operator's board is taken whenever it is the draw the card is
-     * showing - not only when that draw happens to be today. Requiring today
-     * meant a card sitting on yesterday's result refused the feed (and with it
-     * the jackpot, 3D and Lotto boards) until the next draw began (11 Oct 2026).
-     */
-    if ((base.date || "").trim() === weekdayOf(today.iso) || (sabah88.date && base.date === sabah88.date)) {
-      const merged: Record<string, string> = { ...base };
-      for (const [k, v] of Object.entries(sabah88)) {
-        if (k === "date") continue;
-        const cur = merged[k];
-        if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
-        merged[k] = v;
-      }
-      cards["table-10"] = merged;
-    }
+    if (drawNotOlder(sabah88.date, base.date)) cards["table-10"] = mergeCardPayload(base, sabah88);
   }
   /*
    * Special Cash Sweep from the operator's own feed. This one carries its draw
-   * date, so it is only used when that date IS today - an older draw can never
-   * land under today's heading. A blank still never overwrites a known number.
+   * date, so an older draw can never land under today's heading.
    */
   if (cashSweep) {
+    // Same rule as Sabah 88: taken for this card's draw or a newer one, and a
+    // new draw is taken as it stands so the old numbers cannot linger.
     const base = (cards["table-9"] || {}) as Record<string, string>;
-    // Same rule as Sabah 88: the file's own draw must be the one on the card.
-    if (!cashSweep.date || base.date === cashSweep.date) {
-      const merged: Record<string, string> = { ...base };
-      for (const [k, v] of Object.entries(cashSweep)) {
-        if (k === "date") continue;
-        const cur = merged[k];
-        if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
-        merged[k] = v;
-      }
-      cards["table-9"] = merged;
-    }
+    if (drawNotOlder(cashSweep.date, base.date)) cards["table-9"] = mergeCardPayload(base, cashSweep);
   }
   /*
    * Sandakan (STC 4D) from the operator's own board.
@@ -1206,13 +1228,9 @@ export async function buildSnapshot(): Promise<Snapshot> {
       k !== "date" && k !== "draw_no" && !!v && !/^----+$/.test(String(v)));
     if (!hasOwnResult) continue;
     const base = (cards[cls] || {}) as Record<string, string>;
-    const merged: Record<string, string> = { ...base };
-    for (const [k, v] of Object.entries(vals)) {
-      const cur = merged[k];
-      if (/^----+$/.test(v) && cur && !/^----+$/.test(cur)) continue;
-      merged[k] = v;
-    }
-    cards[cls] = merged;
+    // A newer draw is taken as it stands, so its empty slots cannot keep the
+    // previous draw's numbers (see mergeCardPayload).
+    if (drawNotOlder(vals.date, base.date)) cards[cls] = mergeCardPayload(base, vals);
   }
   /*
    * Grand Dragon and Nine Lotto publish THIRTEEN special numbers (A-M), but
