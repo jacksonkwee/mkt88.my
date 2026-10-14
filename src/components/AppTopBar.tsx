@@ -44,7 +44,9 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
 
   return (
     <>
-    <div ref={box} style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, background: RED, paddingTop: "env(safe-area-inset-top)" }}>
+    {/* Sits below the announcement strip when there is one, so the strip is not
+        hidden behind the bar and no empty band is left above the first card. */}
+    <div ref={box} style={{ position: "fixed", top: "var(--mkt-notice-h, 0px)", left: 0, right: 0, zIndex: 50, background: RED, paddingTop: "env(safe-area-inset-top)" }}>
       {/* No back button: the Home link is the way out, and the title is
           absolutely centred so it sits in the middle of the bar whatever the
           Home label measures. */}

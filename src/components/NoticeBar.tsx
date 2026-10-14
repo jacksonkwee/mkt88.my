@@ -27,6 +27,7 @@ function fxClass(fx: string) {
 export default function NoticeBar() {
   const [n, setN] = useState<Notice | null>(null);
   const track = useRef<HTMLDivElement | null>(null);
+  const bar = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     fetch("/api/site-content")
       .then((r) => (r.ok ? r.json() : null))
@@ -54,12 +55,38 @@ export default function NoticeBar() {
     return () => window.removeEventListener("resize", fit);
   }, [n]);
 
+  /*
+   * Publish the strip's own height as a CSS variable.
+   *
+   * The app's red bar and logo are pinned to the very top of the screen, so
+   * while this strip sat in the page flow it went UNDER them and only pushed the
+   * page down by its own height - which left a band of empty space between the
+   * logo and the first card on the 大伯公 / 收藏号码 / 开彩记录 / 热门号码 pages
+   * (reported 14 Oct 2026). The pinned bar now starts below the strip instead.
+   */
+  useEffect(() => {
+    const el = bar.current;
+    const setVar = () => {
+      const h = el ? Math.round(el.getBoundingClientRect().height) : 0;
+      document.documentElement.style.setProperty("--mkt-notice-h", h + "px");
+    };
+    setVar();
+    const ro = el && typeof ResizeObserver !== "undefined" ? new ResizeObserver(setVar) : null;
+    if (el) ro?.observe(el);
+    window.addEventListener("resize", setVar);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", setVar);
+      document.documentElement.style.setProperty("--mkt-notice-h", "0px");
+    };
+  }, [n]);
+
   if (!n || !n.enabled || !n.text) return null;
 
   const style = { background: n.bg, color: n.color, padding: "8px 0", fontSize: 15, fontWeight: 600 };
   if (n.fx === "marquee") {
     return (
-      <div className="fx-marquee" style={style} aria-label={n.text}>
+      <div ref={bar} className="fx-marquee" style={style} aria-label={n.text}>
         <div className="fx-marquee-track" ref={track}>
           <span>{n.text}</span>
           <span aria-hidden="true">{n.text}</span>
@@ -67,5 +94,5 @@ export default function NoticeBar() {
       </div>
     );
   }
-  return <div className={fxClass(n.fx)} style={{ ...style, padding: "8px 12px", textAlign: "center" }}>{n.text}</div>;
+  return <div ref={bar} className={fxClass(n.fx)} style={{ ...style, padding: "8px 12px", textAlign: "center" }}>{n.text}</div>;
 }
