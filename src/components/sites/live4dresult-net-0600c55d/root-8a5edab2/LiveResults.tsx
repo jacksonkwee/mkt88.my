@@ -100,46 +100,6 @@ function collectSnapshot(): void {
   } catch { /* ignore */ }
 }
 
-/**
- * Copy what the cards are showing back into the live snapshot.
- *
- * window.__MKT_SNAP__ is what React renders the cards from and what the inline
- * boot script re-applies to the DOM. Both run again on their own triggers - the
- * boot script half a second after ANY change to the page, React whenever the
- * pager re-renders - and until now they re-applied a copy that could be several
- * seconds old, so a number a live source had just published was wiped back to
- * "----" and only came back on the next sweep. Publishing the values the cards
- * are actually showing means every later pass re-applies those instead.
- *
- * A blank never replaces a number, and a card is skipped while the snapshot is
- * the newer draw - that is the one case where the snapshot must move the card
- * on rather than the other way round.
- */
-function publishLiveValues(): void {
-  try {
-    const snap = (window as unknown as { __MKT_SNAP__?: { cards?: Record<string, Record<string, string>> } }).__MKT_SNAP__;
-    if (!snap || !snap.cards) return;
-    let changed = false;
-    for (const card of Array.from(document.querySelectorAll(".card.outer-box[id]:not(.mkt-past)"))) {
-      const m = /(?:^|\s)(table-\d+)(?:\s|$)/.exec(card.className || "");
-      if (!m) continue;
-      const cls = m[1];
-      const vals: Record<string, string> = { ...(snap.cards[cls] || {}) };
-      const dateEl = card.querySelector('[data-id="date"]');
-      const cardDay = dateScore(dateEl ? (dateEl.textContent || "") : "");
-      if (dateScore(vals.date) > cardDay) continue;
-      for (const el of Array.from(card.querySelectorAll("[data-id]"))) {
-        const id = el.getAttribute("data-id") || "";
-        const v = (el.textContent || "").trim();
-        if (!id || !v || v === "…") continue;   // "…" is the "still fetching" marker
-        if (vals[id] !== v) { vals[id] = v; changed = true; }
-      }
-      snap.cards[cls] = vals;
-    }
-    if (changed) window.dispatchEvent(new Event("mkt-snap"));
-  } catch { /* ignore */ }
-}
-
 /** Restore the last shown values before the network answers. */
 function applySnapshot(): boolean {
   try {
@@ -1317,16 +1277,14 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
         // flash) on every single refresh.
         if (!v || v === "-") continue;
         /*
-         * Magnum used to be an exception here, taking the snapshot's blanks as
-         * well. That is the one thing that can wipe a live number: the snapshot
-         * is a few seconds old, so a Magnum number a live source had just
-         * published was blanked again on the very next pass - the "numbers
-         * appear and disappear" report of 14 Oct 2026. The two leftovers that
-         * exception was added for - a prize number left sitting in the special
-         * row, and the mirror's spare 14th slot - are cleared by the passes at
-         * the end of this function instead.
+         * Magnum is taken exactly as the snapshot has it, blanks included. It
+         * is the only game with no second writer on the phone - the operator's
+         * feed and both mirrors are already merged into that one snapshot
+         * server-side - so refusing its blanks only ever kept a value the
+         * snapshot had deliberately cleared: a prize number left in the special
+         * row, or the mirror's spare 14th slot, stayed on the card for good.
          */
-        if (/^----+$/.test(v) && !newDraw) continue;   // keep good numbers unless the draw changed
+        if (/^----+$/.test(v) && !newDraw && cls !== "table-1") continue;   // keep good numbers unless the draw changed
         setText(cellFor(card, id), v);
       }
       /*
@@ -1670,9 +1628,7 @@ export default function LiveResults() {
         ]);
         if (wantFull) lastFull = Date.now();
         firstCycle = false;
-        // Publish what the sweep just wrote before the cache snapshots it, so
-        // React and the boot script re-apply the live values from here on.
-        if (alive) { publishLiveValues(); collectSnapshot(); }
+        if (alive) collectSnapshot();
       } finally {
         busy = false;
       }
