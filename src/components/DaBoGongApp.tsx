@@ -108,6 +108,7 @@ export default function DaBoGongApp() {
             onChange={(e) => setText(e.target.value.slice(0, 24))}
             onKeyDown={(e) => e.key === "Enter" && look(text)}
             placeholder={tr("dbgPlaceholder", lang)}
+            aria-label={tr("dbgSearchLabel", lang)}
             autoFocus
             style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 800 }}
           />

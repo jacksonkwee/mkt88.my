@@ -261,6 +261,9 @@ export default function NumberHistoryApp() {
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
               onKeyDown={(e) => e.key === "Enter" && search()}
               placeholder={tr("nhPlaceholderPrefix", lang) + " " + example}
+              /* The heading above says what this is; name the box with it so a
+                 screen reader announces the same thing. */
+              aria-label={tr("nhSearchTitle", lang)}
               inputMode="numeric"
               style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
             <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>{tr("nhSearchBtn", lang)}</button>

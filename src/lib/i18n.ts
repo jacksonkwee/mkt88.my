@@ -102,6 +102,9 @@ export const STRINGS: Record<string, Row> = {
   // 大伯公 page (/dabogong).
   dabogongTitle:   { en: "DABOGONG", ms: "DABOGONG", zh: "大伯公 千字图万字图" },
   dbgPlaceholder:  { en: "Number or word", ms: "Nombor atau perkataan", zh: "号码或词语" },
+  /* Screen-reader name for that box. A placeholder is not a label: it is gone
+     the moment the user types, and many screen readers never announce it. */
+  dbgSearchLabel:  { en: "Search the Dabogong number chart", ms: "Cari carta nombor Dabogong", zh: "查询大伯公千字图号码" },
   dbgHint:         {
     en: "Type 3-4 digits or a word in Chinese, English or BM · e.g. 666 · okra · dog",
     ms: "Taip 3-4 digit atau perkataan dalam Cina, Inggeris atau BM · cth. 666 · okra · bendi · anjing",
