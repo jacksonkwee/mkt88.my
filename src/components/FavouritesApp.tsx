@@ -217,7 +217,7 @@ export default function FavouritesApp() {
                       <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 2, borderRadius: 12, padding: "4px 10px" }}>{f.num}</span>
                     </Link>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, color: "#777", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div style={{ fontSize: 13, color: "#666", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {f.scopes.map((s) => scopeName(s, lang)).join(" · ")}
                       </div>
                       <Link href={"/number-history?num=" + f.num} style={{ fontSize: 13, color: RED, textDecoration: "none" }}>{tr("history", lang)} <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
@@ -237,7 +237,7 @@ export default function FavouritesApp() {
                           style={{
                             padding: "4px 10px", borderRadius: 12, fontSize: 13, cursor: "pointer",
                             border: on ? "1.5px solid " + RED : "1px solid #ddd",
-                            background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#888",
+                            background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#666",
                           }}>
                           {scopeName(s, lang)}
                         </button>
@@ -248,13 +248,13 @@ export default function FavouritesApp() {
               ))}
             </div>
           ) : (
-            <div style={{ marginTop: 10, fontSize: 13, color: "#888" }}>
+            <div style={{ marginTop: 10, fontSize: 13, color: "#666" }}>
               {tr("favEmpty1", lang)}<b>{tr("favAddBtn", lang)}</b>{tr("favEmpty2", lang)}
             </div>
           )}
         </div>
 
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 14 }}>
+        <div style={{ textAlign: "center", color: "#666", fontSize: 13, marginTop: 14 }}>
           {tr("favNote1", lang)}<span style={{ background: YELLOW, padding: "0 4px" }}>{tr("favNoteYellow", lang)}</span>{tr("favNote2", lang)}
         </div>
       </div>

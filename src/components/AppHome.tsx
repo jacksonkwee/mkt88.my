@@ -424,7 +424,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                   </button>
                 ))}
               </div>
-              <div style={{ fontSize: 12, color: "#999", marginTop: 6 }}>{tr("languageHelp", lang)}</div>
+              <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>{tr("languageHelp", lang)}</div>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
@@ -442,7 +442,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: keepOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("keepScreenHelp", lang)}</div>
+            <div style={{ fontSize: 13, color: "#666", marginTop: 10 }}>{tr("keepScreenHelp", lang)}</div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
               <div>
@@ -459,7 +459,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: soundOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("drawSoundHelp", lang)}</div>
+            <div style={{ fontSize: 13, color: "#666", marginTop: 10 }}>{tr("drawSoundHelp", lang)}</div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
               <div>
@@ -476,7 +476,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: alertsOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "#999", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
+            <div style={{ fontSize: 13, color: "#666", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>{tr("done", lang)}</button>
           </div>
         </div>
@@ -489,7 +489,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 26px", textAlign: "center", maxWidth: 320, width: "88%" }}>
             <div style={{ fontSize: 22, fontWeight: 800, color: ACCENT }}>Special Draw Today 今天特别彩</div>
-            <div style={{ fontSize: 14, color: "#888", marginTop: 8 }}>记得查看今天的特别开彩成绩</div>
+            <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>记得查看今天的特别开彩成绩</div>
             <button type="button" onClick={() => setSpecialDraw(false)} style={{ marginTop: 18, padding: "11px 22px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, fontWeight: 800, cursor: "pointer" }}>OK 好的</button>
           </div>
         </div>
@@ -502,7 +502,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
             <div style={{ fontSize: 24, fontWeight: 800, color: ACCENT }}>恭喜发财</div>
-            <div style={{ fontSize: 15, color: "#888", marginTop: 4 }}>{tr("luckyTitle", lang)}</div>
+            <div style={{ fontSize: 15, color: "#666", marginTop: 4 }}>{tr("luckyTitle", lang)}</div>
             {/* Tap the number to see its full record in Number History. */}
             <Link
               href={"/number-history?num=" + lucky}

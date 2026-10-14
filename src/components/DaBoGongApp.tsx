@@ -86,7 +86,7 @@ export default function DaBoGongApp() {
       return (
         <div style={{ width: size, height: size, borderRadius: 12, border: "1px solid #eee", background: "#fff7e6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <div style={{ fontSize: size > 60 ? 18 : 13, fontWeight: 800, color: "#cc0000", letterSpacing: 1 }}>{e.num}</div>
-          <div style={{ fontSize: 13, color: "#888" }}>{tr("dbgImage", lang)}</div>
+          <div style={{ fontSize: 13, color: "#666" }}>{tr("dbgImage", lang)}</div>
         </div>
       );
     }
@@ -111,7 +111,7 @@ export default function DaBoGongApp() {
             autoFocus
             style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 800 }}
           />
-          <div style={{ fontSize: 13, color: "#888", textAlign: "center", marginTop: 6 }}>
+          <div style={{ fontSize: 13, color: "#666", textAlign: "center", marginTop: 6 }}>
             {tr("dbgHint", lang)}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -120,14 +120,14 @@ export default function DaBoGongApp() {
           </div>
         </div>
 
-        {loading ? <div style={{ textAlign: "center", color: "#777", padding: 24 }}>{tr("loading", lang)}</div> : null}
+        {loading ? <div style={{ textAlign: "center", color: "#666", padding: 24 }}>{tr("loading", lang)}</div> : null}
         {errKey && !loading ? <div style={{ textAlign: "center", color: RED, padding: 20 }}>{tr(errKey, lang)}</div> : null}
 
         {/* Single number result */}
         {data && !loading ? (
           <div style={{ background: "#fff", borderRadius: 12, marginTop: 12, padding: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", textAlign: "center" }}>
             <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 6, color: RED }}>{data.num}</div>
-            <div style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>{kindLabel(data.kind)}</div>
+            <div style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>{kindLabel(data.kind)}</div>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <Picture e={data} size={260} />
             </div>
@@ -149,11 +149,11 @@ export default function DaBoGongApp() {
         {/* Keyword results */}
         {results && !loading ? (
           <div style={{ background: "#fff", borderRadius: 12, marginTop: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
-            <div style={{ padding: "10px 12px", borderBottom: "1px solid #eee", fontSize: 13, color: "#777" }}>
+            <div style={{ padding: "10px 12px", borderBottom: "1px solid #eee", fontSize: 13, color: "#666" }}>
               {results.length} {results.length === 1 ? tr("dbgResultOne", lang) : tr("dbgResultMany", lang)} “{text.trim()}” · {tr("dbgTapHistory", lang)}
             </div>
             {results.length === 0 ? (
-              <div style={{ padding: 24, textAlign: "center", color: "#888" }}>{tr("dbgNoMatch", lang)}</div>
+              <div style={{ padding: 24, textAlign: "center", color: "#666" }}>{tr("dbgNoMatch", lang)}</div>
             ) : results.map((r) => {
               const href = historyHref(r.num);
               const inner = (

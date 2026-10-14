@@ -100,7 +100,7 @@ export default function AdminDashboard() {
             <img src={c.settings.logo.src} alt="custom logo" style={{ height: 60, background: "#eee", borderRadius: 6, padding: 4 }} />
             <button onClick={() => logo({ src: "" })} style={{ marginLeft: 10 }}>Use default logo</button>
           </div>
-        ) : <p style={{ color: "#999" }}>Using default logo (mkt88 logo).</p>}
+        ) : <p style={{ color: "#666" }}>Using default logo (mkt88 logo).</p>}
         <label style={label as any}>Upload logo image
           <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "logo")} />
         </label>
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
             <img src={c.settings.banner.src} alt="banner" style={{ maxWidth: "100%", maxHeight: 90, background: "#eee", borderRadius: 6 }} />
             <button onClick={() => banner({ src: "" })} style={{ marginLeft: 10 }}>Remove</button>
           </div>
-        ) : <p style={{ color: "#999" }}>No banner uploaded.</p>}
+        ) : <p style={{ color: "#666" }}>No banner uploaded.</p>}
         <label style={label as any}>Upload banner image
           <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "banner")} />
         </label>
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
             <img src={c.ads.direct.top.image} alt="ad" style={{ maxWidth: "100%", maxHeight: 90, background: "#eee", borderRadius: 6 }} />
             <button onClick={() => directTop({ image: "" })} style={{ marginLeft: 10 }}>Remove image</button>
           </div>
-        ) : <p style={{ color: "#999" }}>No banner uploaded.</p>}
+        ) : <p style={{ color: "#666" }}>No banner uploaded.</p>}
         <label style={label as any}>Banner image (.png/.jpg/.jpeg)
           <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "topAd")} />
         </label>

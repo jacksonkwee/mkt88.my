@@ -343,17 +343,17 @@ export default function NumberHistoryApp() {
                     const on = companies.includes(c.key);
                     return (
                       <button key={c.key} onClick={() => toggleChip(companies, setCompanies, c.key)} style={chip(on)}>
-                        {on ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{c.label} <span style={{ color: "#999" }}>{companyCounts.get(c.key)}</span>
+                        {on ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{c.label} <span style={{ color: "#666" }}>{companyCounts.get(c.key)}</span>
                       </button>
                     );
                   })}
                   {companyCounts.has("other") ? (
                     <button onClick={() => toggleChip(companies, setCompanies, "other")} style={chip(companies.includes("other"))}>
-                      {companies.includes("other") ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{tr("nhOther", lang)} <span style={{ color: "#999" }}>{companyCounts.get("other")}</span>
+                      {companies.includes("other") ? <Check size={13} weight="bold" style={{ verticalAlign: "-2px", marginRight: 3 }} /> : null}{tr("nhOther", lang)} <span style={{ color: "#666" }}>{companyCounts.get("other")}</span>
                     </button>
                   ) : null}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 13, color: "#999" }}>
+                <div style={{ marginTop: 6, fontSize: 13, color: "#666" }}>
                   {tr("nhCompanyHelp", lang)}
                 </div>
               </div>
@@ -365,18 +365,18 @@ export default function NumberHistoryApp() {
         {selected.length ? (
           <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
             {loading ? (
-              <div style={{ padding: 30, textAlign: "center", color: "#777" }}>{tr("nhSearching", lang)}</div>
+              <div style={{ padding: 30, textAlign: "center", color: "#666" }}>{tr("nhSearching", lang)}</div>
             ) : errKey ? (
               <div style={{ padding: 30, textAlign: "center", color: RED }}>{tr(errKey, lang)}</div>
             ) : filtered.length === 0 ? (
-              <div style={{ padding: 30, textAlign: "center", color: "#777" }}>
+              <div style={{ padding: 30, textAlign: "center", color: "#666" }}>
                 {tr("nhNoDraw", lang)}
-                <div style={{ fontSize: 13, marginTop: 6, color: "#aaa" }}>{tr("nhNoDrawHint", lang)}</div>
+                <div style={{ fontSize: 13, marginTop: 6, color: "#666" }}>{tr("nhNoDrawHint", lang)}</div>
               </div>
             ) : (
               <div>
                 {/* Count on the left, Favourite on the same line on the right. */}
-                <div style={{ padding: "8px 10px", borderBottom: "1px solid #eee", fontSize: 13, color: "#777", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ padding: "8px 10px", borderBottom: "1px solid #eee", fontSize: 13, color: "#666", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     {tr("nhShowing", lang)} {Math.min(filtered.length, MAX_ROWS)} {tr("nhOf", lang)} {filtered.length} {filtered.length === 1 ? tr("nhResultOne", lang) : tr("nhResultMany", lang)}
                     {regions.length ? " · " + regions.map((r) => tr(REGION_KEY[r] || "", lang)).join(" + ") : ""}
@@ -395,10 +395,10 @@ export default function NumberHistoryApp() {
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 10px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff", whiteSpace: "nowrap" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
-                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 12, color: "#999" }}>4D</span>}
+                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 12, color: "#666" }}>4D</span>}
                       </div>
                       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{toSimplified(m.game)}</span>
-                      <span style={{ fontSize: 12, color: "#888", flexShrink: 0 }}>{shortDate(m.date)}</span>
+                      <span style={{ fontSize: 12, color: "#666", flexShrink: 0 }}>{shortDate(m.date)}</span>
                       <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{prizeShort(m.prize, lang)}</span>
                     </div>
@@ -408,12 +408,12 @@ export default function NumberHistoryApp() {
             )}
           </div>
         ) : (
-          <div style={{ background: "#fff", borderRadius: 12, padding: 30, textAlign: "center", color: "#888", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+          <div style={{ background: "#fff", borderRadius: 12, padding: 30, textAlign: "center", color: "#666", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
             {tr("nhEmpty", lang)}
           </div>
         )}
 
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 16 }}>
+        <div style={{ textAlign: "center", color: "#666", fontSize: 13, marginTop: 16 }}>
           {tr("nhNotePerm", lang)}
           <div style={{ marginTop: 4 }}>
             {tr("nhNoteRecords", lang)}

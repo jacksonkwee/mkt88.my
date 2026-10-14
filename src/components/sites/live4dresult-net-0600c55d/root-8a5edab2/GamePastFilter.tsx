@@ -159,7 +159,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             ) : null}
           </>
         ) : (
-          <span style={{ color: "#777", fontSize: 13 }}>No past results yet.</span>
+          <span style={{ color: "#666", fontSize: 13 }}>No past results yet.</span>
         )}
       </div>
 
