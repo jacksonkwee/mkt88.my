@@ -104,6 +104,52 @@ public class MainActivity extends BridgeActivity {
   }
 
   /**
+   * Where the page says it is, for the back key.
+   *
+   * "home"  - the app's own first screen is open, so back may leave the app.
+   * "page"  - a results page is open, so back should show the first screen.
+   * "none"  - the page does not carry the hooks (an older cached copy), in which
+   *           case the key keeps its old behaviour instead of doing nothing.
+   */
+  private static final String JS_BACK_STATE =
+      "(function(){try{"
+      + "if(!window.__mktAtHome||!window.__mktGoHome)return 'none';"
+      + "return window.__mktAtHome()?'home':'page';"
+      + "}catch(e){return 'none';}})()";
+  private static final String JS_GO_HOME =
+      "(function(){try{window.__mktGoHome&&window.__mktGoHome();}catch(e){}})()";
+
+  /**
+   * The phone's back key always lands on the app's own first screen.
+   *
+   * Capacitor has no back handling of its own here, so the key used to close the
+   * app from whatever page was open. The page reports which screen it is on: on
+   * the first screen the key leaves the app, and anywhere else it asks the page
+   * to show that screen first (asked for 14 Oct 2026).
+   */
+  @Override
+  public void onBackPressed() {
+    WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) {
+      super.onBackPressed();
+      return;
+    }
+    try {
+      webView.evaluateJavascript(JS_BACK_STATE, value -> {
+        String state = value == null ? "" : value;
+        if (state.contains("page")) {
+          webView.evaluateJavascript(JS_GO_HOME, null);
+        } else {
+          // On the first screen, or a page that cannot answer: leave the app.
+          finish();
+        }
+      });
+    } catch (Exception ignored) {
+      finish();
+    }
+  }
+
+  /**
    * Fill behind the transparent WebView after the launch screen goes away.
    *
    * This used to be R.drawable.splash_screen, which draws the same logo as the

@@ -255,6 +255,24 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     return () => window.removeEventListener("mkt-home", onHome);
   }, []);
 
+  /*
+   * Hooks the phone's back key uses.
+   *
+   * MainActivity handles that key natively: it asks the page whether the app's
+   * own screen is already open, and when it is not it tells the page to show it.
+   * So back lands on the home screen from any page, and only leaves the app when
+   * there is nowhere left to go back to.
+   */
+  useEffect(() => {
+    const w = window as unknown as { __mktAtHome?: () => boolean; __mktGoHome?: () => void };
+    w.__mktAtHome = () => document.body.classList.contains(HOME_OPEN_CLASS);
+    w.__mktGoHome = () => window.dispatchEvent(new Event("mkt-home"));
+    return () => {
+      delete w.__mktAtHome;
+      delete w.__mktGoHome;
+    };
+  }, []);
+
   /**
    * Hide the whole site while the first page is open. It is an overlay, and on
    * phones where the ad banner pads the WebView the fixed layer does not cover
