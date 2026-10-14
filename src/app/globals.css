@@ -903,7 +903,9 @@ body.mkt-in-app .card td > a:has(> .anchor) {
  * three languages in the HTML and let CSS hide the two that are not wanted.
  * Keeping them static is what keeps them fast.
  *
- * With no data-lang (the very first paint) nothing is hidden.
+ * The boot script in layout.tsx sets data-lang before the first paint, so the
+ * page never shows all three languages at once. If it is ever missing, nothing
+ * is hidden - the page falls back to showing every language.
  */
 html[data-lang="en"] .L-ms, html[data-lang="en"] .L-zh { display: none !important; }
 html[data-lang="ms"] .L-en, html[data-lang="ms"] .L-zh { display: none !important; }

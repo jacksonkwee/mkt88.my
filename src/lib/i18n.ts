@@ -38,7 +38,10 @@ export function detectLang(): Lang {
 export function setLang(l: Lang): void {
   try { window.localStorage.setItem(KEY, l); } catch { /* private mode */ }
   try {
+    // data-lang picks which of the three languages the CSS shows; lang tells the
+    // browser, the screen reader and Google what the page is written in.
     document.documentElement.setAttribute("data-lang", l);
+    document.documentElement.lang = l;
     window.dispatchEvent(new Event(EVT));
   } catch { /* no document */ }
 }
@@ -50,7 +53,10 @@ export function useLang(): [Lang, (l: Lang) => void] {
     const apply = () => {
       const l = detectLang();
       set(l);
-      try { document.documentElement.setAttribute("data-lang", l); } catch { /* ignore */ }
+      try {
+        document.documentElement.setAttribute("data-lang", l);
+        document.documentElement.lang = l;
+      } catch { /* ignore */ }
     };
     apply();
     window.addEventListener(EVT, apply);

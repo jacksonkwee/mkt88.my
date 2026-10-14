@@ -75,6 +75,25 @@ export const revalidate = 5;
 const BOOT_SCRIPT = `
 (function(){
   var __mktPath = location.pathname || '';
+  // Which of the three languages in the markup to show - and what to tell the
+  // browser and Google this page is written in.
+  //
+  // <html lang> was hard-coded to "zh" while the page is mostly English, which
+  // mispronounces the page in a screen reader and mislabels it for search. And
+  // because data-lang was only set once React had hydrated, every page showed
+  // all three languages at once for the first moment. Both are settled here,
+  // before the first paint. The rule matches detectLang() in src/lib/i18n.ts:
+  // the reader's own pick, else the phone's language, else English.
+  try {
+    var __mktLang = '';
+    try { __mktLang = window.localStorage.getItem('mkt_lang') || ''; } catch (e) {}
+    if (__mktLang !== 'en' && __mktLang !== 'ms' && __mktLang !== 'zh') {
+      var __mktN = String(navigator.language || '').toLowerCase();
+      __mktLang = __mktN.indexOf('zh') === 0 ? 'zh' : __mktN.indexOf('ms') === 0 ? 'ms' : 'en';
+    }
+    document.documentElement.setAttribute('data-lang', __mktLang);
+    document.documentElement.lang = __mktLang;
+  } catch (e) {}
   // The installed app needs these on <body> before the first paint, so its main
   // screen is up and the results page never shows first. It is done here rather
   // than on the server so that one cached copy of the page suits everybody.
@@ -337,7 +356,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   // AppHome keeps it in step. Reading the request user agent here was what
   // forced every page to be rendered per request, and so impossible to cache.
   return (
-    <html lang="zh">
+    /* "en" is the language of the page as served: the headings, the copy and
+       the titles lead in English, and that is what a search engine sees. The
+       boot script above replaces it with the reader's own language (and the
+       matching data-lang) before the first paint. */
+    <html lang="en">
       <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
