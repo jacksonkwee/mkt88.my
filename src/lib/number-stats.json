@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-13",
+ "generated": "2026-10-14",
  "games": [
   {
    "key": "magnum",
@@ -922,10 +922,10 @@
    "key": "granddragon",
    "name": "Grand Dragon 4D",
    "zh": "豪龙",
-   "draws": 1645,
+   "draws": 1646,
    "from": "2020-06-12",
-   "to": "2026-10-12",
-   "totalAppearances": 37814,
+   "to": "2026-10-13",
+   "totalAppearances": 37837,
    "hot": [
     {
      "num": "2814",
@@ -1053,10 +1053,10 @@
    "key": "ninelotto",
    "name": "Nine Lotto 4D",
    "zh": "九彩票",
-   "draws": 1381,
+   "draws": 1382,
    "from": "2023-01-01",
-   "to": "2026-10-12",
-   "totalAppearances": 31754,
+   "to": "2026-10-13",
+   "totalAppearances": 31777,
    "hot": [
     {
      "num": "9976",
@@ -1075,6 +1075,12 @@
      "count": 11,
      "first": 0,
      "last": "2026-09-02"
+    },
+    {
+     "num": "0295",
+     "count": 10,
+     "first": 1,
+     "last": "2026-10-13"
     },
     {
      "num": "1123",
@@ -1135,12 +1141,6 @@
      "count": 10,
      "first": 0,
      "last": "2026-09-22"
-    },
-    {
-     "num": "0295",
-     "count": 9,
-     "first": 1,
-     "last": "2026-09-27"
     },
     {
      "num": "0633",
@@ -1315,10 +1315,10 @@
    "key": "lucky",
    "name": "Lucky HariHari 4D",
    "zh": "天天好运",
-   "draws": 2257,
+   "draws": 2259,
    "from": "2021-09-14",
-   "to": "2026-10-11",
-   "totalAppearances": 51920,
+   "to": "2026-10-12",
+   "totalAppearances": 51966,
    "hot": [
     {
      "num": "3601",
