@@ -8,6 +8,7 @@ import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { GearSix } from "@phosphor-icons/react";
 import { useLang, tr, LANG_LABEL } from "../lib/i18n";
 import { RESULT_ALERT_KEY } from "./ResultAlerts";
+import NoticeBar from "./NoticeBar";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
@@ -306,6 +307,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
 
   return (
     <div className="mkt-app-home" style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        {/* Announcement strip: the first thing on the app's own screen, same as
+            on the website. */}
+        <NoticeBar />
         <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px" }}>
         {/* Brand logo, top of the first page. */}
         <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>

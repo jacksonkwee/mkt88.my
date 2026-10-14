@@ -43,9 +43,12 @@ body {
 .fx-blink { animation: blinker 1s linear infinite; }
 .fx-pulse { animation: fxpulse 1.6s ease-in-out infinite; }
 @keyframes fxpulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+/* Two copies of the line, moved by half the track, so it loops seamlessly. */
 .fx-marquee { overflow: hidden; white-space: nowrap; }
-.fx-marquee span { display: inline-block; padding-left: 100%; animation: fxscroll 10s linear infinite; }
-@keyframes fxscroll { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+.fx-marquee-track { display: inline-flex; animation: fxscroll 18s linear infinite; }
+.fx-marquee-track span { padding-right: 3rem; }
+@keyframes fxscroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .fx-marquee-track { animation: none; } }
 
 /* 恭喜发财 motion effect */
 .fx-gongxi {
