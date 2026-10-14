@@ -137,7 +137,9 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
               onTouchStart={openFull}
               onFocus={openFull}
               onChange={(e) => setDate(e.target.value)}
-              style={{ padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
+              /* minHeight 44: a native select comes out about 35px tall, which
+                 is short for a finger (measured 14 Oct 2026, website). */
+              style={{ padding: "6px 10px", minHeight: 44, borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
               {groups.flatMap((g) => g.items).map((d) => (
@@ -151,7 +153,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
                   type="button"
                   className="mkt-past-filter-latest"
                   onClick={() => setDate(latest)}
-                  style={{ padding: "6px 12px", borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                  style={{ padding: "6px 12px", minHeight: 44, borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
                 >
                   Latest 最新
                 </button>

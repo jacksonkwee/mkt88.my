@@ -26,6 +26,9 @@ export default function Footer() {
               target="_blank"
               rel="noreferrer"
               aria-label="Get the MKT 88 4D app on Google Play"
+              /* 40px tall as it stood; the badge artwork already carries clear
+                 space, so only the link box needs to grow (14 Oct 2026). */
+              style={{ display: "inline-flex", alignItems: "center", minHeight: 44 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -39,7 +42,7 @@ export default function Footer() {
               target="_blank"
               rel="noreferrer"
               aria-label="Follow MKT 88 4D on Facebook"
-              style={{ display: "inline-flex" }}
+              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 44, minHeight: 44 }}
             >
               <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true">
                 <path

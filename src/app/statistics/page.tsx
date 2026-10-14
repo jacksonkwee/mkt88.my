@@ -109,8 +109,8 @@ export default function StatisticsPage() {
                         {g.hot.slice(0, 10).map((h, i) => (
                           <tr key={h.num}>
                             <td>{i + 1}</td>
-                            <td>
-                              <a href={"/number-history?num=" + h.num}>
+                            <td className="mkt-hot-cell">
+                              <a className="mkt-hot-num" href={"/number-history?num=" + h.num}>
                                 <strong>{h.num}</strong>
                               </a>
                             </td>

@@ -346,6 +346,10 @@ body:not(.mkt-in-app) .mkt-app-topbar > a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* 34px tall with this padding; the app itself already forces 44 (see the
+     .mkt-in-app rule above), so the website matches it (14 Oct 2026). */
+  min-width: 44px;
+  min-height: 44px;
   padding: 6px 14px;
   border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.16);
@@ -465,6 +469,20 @@ body.mkt-in-app button {
   cursor: pointer;
   transition: transform 90ms ease, filter 90ms ease, background-color 120ms ease,
     border-color 120ms ease, box-shadow 120ms ease;
+}
+
+/*
+ * The same floor on the website.
+ *
+ * The app's own screens (大伯公 / 收藏号码 / 开彩记录) are also served to phone
+ * browsers, where the rule above does not apply - the little Clear all /
+ * Enable pills and the bell and cross beside each favourite measured 28-30px
+ * (14 Oct 2026). Min-width stays unforced on elements that set their own
+ * (the scope buttons carry an inline minWidth so they can still share a row).
+ */
+.mkt-app-screen button {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* Dashed placeholder buttons that must not look tappable. */
@@ -878,3 +896,41 @@ body.mkt-in-app .card td > a:has(> .anchor) {
 html[data-lang="en"] .L-ms, html[data-lang="en"] .L-zh { display: none !important; }
 html[data-lang="ms"] .L-en, html[data-lang="ms"] .L-zh { display: none !important; }
 html[data-lang="zh"] .L-en, html[data-lang="zh"] .L-ms { display: none !important; }
+
+/* ------------------------------------------------------------------ *
+ * Touch targets                                                       *
+ * ------------------------------------------------------------------ *
+ * The phone guideline is 44 x 44 for anything a finger has to hit. The
+ * two below were measured smaller than that on a 390px-wide phone on
+ * 14 Oct 2026. Everything else that the same sweep flagged is either a
+ * dead link ("More <game> Result", href="#") or a link inside a
+ * sentence, which the guideline exempts.
+ */
+
+/*
+ * The footer menu is one line of links separated by "|". Padding on an
+ * inline-block grows the box without moving the text off the baseline, so
+ * each link stays level with its separator and the row simply gets taller.
+ */
+.footer-menu a {
+  display: inline-block;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 12px 6px;
+}
+
+/*
+ * /statistics: the number is a link to that number's history. It measured
+ * 36 x 18 inside a 35px row. The cell gives up its own padding so the link
+ * can fill a 44px-tall target without moving the column.
+ */
+.mkt-hot-cell {
+  padding: 0 !important;
+}
+.mkt-hot-num {
+  display: flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+}
