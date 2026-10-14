@@ -23,6 +23,22 @@ body {
 }
 
 /*
+ * Links.
+ *
+ * Bootstrap's default blue (#007bff) is 3.98:1 on white, under the 4.5 the rest
+ * of the site now meets - it was the only link colour that failed (measured
+ * 14 Oct 2026: 121 links, on /statistics, /draw-schedule, /about and /terms).
+ * #0069d9 is the same blue one shade deeper: 5.2:1 on white and 4.7:1 on the
+ * striped table row, so it still reads as a link.
+ *
+ * Only the inherited default changes. Anything that sets its own colour - the
+ * red links, the buttons, the white footer links, :hover - keeps it.
+ */
+a {
+  color: #0069d9;
+}
+
+/*
  * Keyboard focus ring.
  *
  * The theme's own stylesheet switches outlines off for every ":focus", so a
