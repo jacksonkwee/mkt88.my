@@ -425,9 +425,21 @@ body.mkt-in-app {
     "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Result numbers use tabular figures, so the 4-digit columns line up instead of
-   wobbling as the digits change and a draw number reads at a glance. */
-.card.outer-box .card-body {
+/*
+ * Numbers use equal-width (tabular) figures.
+ *
+ * "1" is narrower than "8" in the fonts a phone uses, so a column of 4D numbers
+ * came out ragged - 1111 visibly shorter than 8888, the digits not sitting under
+ * each other. Equal-width figures line them up, which is what a results table
+ * is read for.
+ *
+ * The result cards had this on their own at first; it now covers everything,
+ * because the hot-number tables, the number-history and favourite lists and the
+ * draw schedule are columns of numbers as well. On a Windows desktop the system
+ * font's digits are already equal-width at these weights, so the difference
+ * shows on a phone.
+ */
+body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
