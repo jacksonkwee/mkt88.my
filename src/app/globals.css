@@ -44,6 +44,22 @@ summary:focus-visible,
   outline-offset: 2px;
 }
 
+/*
+ * In the app the announcement strip is pinned together with the red title bar.
+ *
+ * It used to sit in the page flow, so scrolling pushed it away and the bar
+ * below it - which IS pinned - was left with a band of empty page above its
+ * title (reported 14 Oct 2026 with a screen recording). The strip now stays at
+ * the top, and it carries the status-bar inset, which is why the red bar no
+ * longer needs a red band above its title.
+ */
+body.mkt-in-app .mkt-notice {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  padding-top: env(safe-area-inset-top);
+}
+
 .header-btn-group {
   position: sticky;
   top: 99px !important;

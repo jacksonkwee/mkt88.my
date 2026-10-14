@@ -86,7 +86,7 @@ export default function NoticeBar() {
   const style = { background: n.bg, color: n.color, padding: "8px 0", fontSize: 15, fontWeight: 600 };
   if (n.fx === "marquee") {
     return (
-      <div ref={bar} className="fx-marquee" style={style} aria-label={n.text}>
+      <div ref={bar} className="mkt-notice fx-marquee" style={style} aria-label={n.text}>
         <div className="fx-marquee-track" ref={track}>
           <span>{n.text}</span>
           <span aria-hidden="true">{n.text}</span>
@@ -94,5 +94,5 @@ export default function NoticeBar() {
       </div>
     );
   }
-  return <div ref={bar} className={fxClass(n.fx)} style={{ ...style, padding: "8px 12px", textAlign: "center" }}>{n.text}</div>;
+  return <div ref={bar} className={["mkt-notice", fxClass(n.fx)].filter(Boolean).join(" ")} style={{ ...style, padding: "8px 12px", textAlign: "center" }}>{n.text}</div>;
 }
