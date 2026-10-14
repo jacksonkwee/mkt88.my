@@ -48,7 +48,6 @@ body {
 .fx-marquee-track { display: inline-flex; animation: fxscroll 18s linear infinite; }
 .fx-marquee-track span { padding-right: 3rem; }
 @keyframes fxscroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .fx-marquee-track { animation: none; } }
 
 /* 恭喜发财 motion effect */
 .fx-gongxi {
