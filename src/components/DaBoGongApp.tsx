@@ -86,7 +86,7 @@ export default function DaBoGongApp() {
       return (
         <div style={{ width: size, height: size, borderRadius: 12, border: "1px solid #eee", background: "#fff7e6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <div style={{ fontSize: size > 60 ? 18 : 13, fontWeight: 800, color: "#cc0000", letterSpacing: 1 }}>{e.num}</div>
-          <div style={{ fontSize: 11, color: "#888" }}>{tr("dbgImage", lang)}</div>
+          <div style={{ fontSize: 13, color: "#888" }}>{tr("dbgImage", lang)}</div>
         </div>
       );
     }
@@ -111,7 +111,7 @@ export default function DaBoGongApp() {
             autoFocus
             style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 800 }}
           />
-          <div style={{ fontSize: 11, color: "#888", textAlign: "center", marginTop: 6 }}>
+          <div style={{ fontSize: 13, color: "#888", textAlign: "center", marginTop: 6 }}>
             {tr("dbgHint", lang)}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -162,7 +162,7 @@ export default function DaBoGongApp() {
                   <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                     <div style={{ fontWeight: 800, fontSize: 15 }}>{r.keyword}</div>
                     <div style={{ fontSize: 13, color: "#666" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
-                    {href ? <div style={{ fontSize: 11, color: RED, fontWeight: 700, marginTop: 2 }}>{tr("history", lang)} <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
+                    {href ? <div style={{ fontSize: 12, color: RED, fontWeight: 700, marginTop: 2 }}>{tr("history", lang)} <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
                   </div>
                   <div style={{ fontWeight: 900, fontSize: 18, color: RED, letterSpacing: 2 }}>{r.num}</div>
                 </>

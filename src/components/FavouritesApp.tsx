@@ -254,7 +254,7 @@ export default function FavouritesApp() {
           )}
         </div>
 
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 14 }}>
+        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 14 }}>
           {tr("favNote1", lang)}<span style={{ background: YELLOW, padding: "0 4px" }}>{tr("favNoteYellow", lang)}</span>{tr("favNote2", lang)}
         </div>
       </div>

@@ -53,7 +53,7 @@ const ICON_BOX: React.CSSProperties = {
 };
 
 const NAME: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: INK, lineHeight: 1.15 };
-const SUB: React.CSSProperties = { fontSize: 11, color: INK_MUTED, lineHeight: 1.15 };
+const SUB: React.CSSProperties = { fontSize: 12, color: INK_MUTED, lineHeight: 1.15 };
 
 /**
  * Runs before the browser paints on the client and does nothing on the server.

@@ -18,7 +18,9 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
   const m = /^(.*?)\s+4D$/.exec(name);
   const brand = m ? m[1] : name;
   const suffix = m ? "4D" : null;
-  const labelStyle = { fontSize: 10, fontWeight: active ? 800 : 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "normal" as const };
+  // 12px is the floor for anything a person has to read; these labels used to be
+  // 10px (English) and 9px (Chinese), which is unreadable on a phone.
+  const labelStyle = { fontSize: 12, fontWeight: active ? 800 : 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "normal" as const };
   return (
     <a
       ref={aRef}
@@ -67,7 +69,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
       </span>
       <span style={labelStyle}>{brand}</span>
       {suffix ? <span style={labelStyle}>{suffix}</span> : null}
-      {zh ? <span style={{ fontSize: 9, color: "#666", textAlign: "center" }}>{zh}</span> : null}
+      {zh ? <span style={{ fontSize: 12, color: "#666", textAlign: "center" }}>{zh}</span> : null}
     </a>
   );
 }

@@ -273,12 +273,12 @@ export default function NumberHistoryApp() {
               <img src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
                 style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 12, background: "#fff", border: "1px solid #eee" }} />
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: 11, color: "#8a6d00", fontWeight: 700 }}>{tr("dabogong", lang)} {kindLabel(dabo.kind)}</div>
+                <div style={{ fontSize: 12, color: "#8a6d00", fontWeight: 700 }}>{tr("dabogong", lang)} {kindLabel(dabo.kind)}</div>
                 <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {dabo.keyword || primary}{dabo.meaning ? <span style={{ fontWeight: 500, color: "#555" }}> · {dabo.meaning}</span> : null}
                 </div>
               </div>
-              <div style={{ marginLeft: "auto", fontSize: 11, color: "#8a6d00" }}>{tr("nhView", lang)}</div>
+              <div style={{ marginLeft: "auto", fontSize: 12, color: "#8a6d00" }}>{tr("nhView", lang)}</div>
             </Link>
           ) : null}
 
@@ -353,7 +353,7 @@ export default function NumberHistoryApp() {
                     </button>
                   ) : null}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 11, color: "#999" }}>
+                <div style={{ marginTop: 6, fontSize: 13, color: "#999" }}>
                   {tr("nhCompanyHelp", lang)}
                 </div>
               </div>
@@ -395,12 +395,12 @@ export default function NumberHistoryApp() {
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 10px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff", whiteSpace: "nowrap" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
-                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 10, color: "#999" }}>4D</span>}
+                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 12, color: "#999" }}>4D</span>}
                       </div>
                       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{toSimplified(m.game)}</span>
                       <span style={{ fontSize: 12, color: "#888", flexShrink: 0 }}>{shortDate(m.date)}</span>
                       <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
-                      <span style={{ fontSize: 10.5, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{prizeShort(m.prize, lang)}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{prizeShort(m.prize, lang)}</span>
                     </div>
                   );
                 })}
@@ -413,7 +413,7 @@ export default function NumberHistoryApp() {
           </div>
         )}
 
-        <div style={{ textAlign: "center", color: "#aaa", fontSize: 11, marginTop: 16 }}>
+        <div style={{ textAlign: "center", color: "#aaa", fontSize: 13, marginTop: 16 }}>
           {tr("nhNotePerm", lang)}
           <div style={{ marginTop: 4 }}>
             {tr("nhNoteRecords", lang)}

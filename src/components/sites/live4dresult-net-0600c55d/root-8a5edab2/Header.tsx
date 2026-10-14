@@ -65,7 +65,7 @@ export default function Header() {
                   style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", padding: "5px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, color: "#333333", textDecoration: "none", whiteSpace: "nowrap", lineHeight: 1.15 }}
                 >
                   {m.en}
-                  <span style={{ background: "#cc0000", color: "#ffffff", borderRadius: 6, padding: "1px 6px", marginTop: 3, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" }}>{m.zh}</span>
+                  <span style={{ background: "var(--brand)", color: "#ffffff", borderRadius: 6, padding: "1px 6px", marginTop: 3, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{m.zh}</span>
                 </Link>
               ))}
             </div>
