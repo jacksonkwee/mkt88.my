@@ -132,7 +132,24 @@ const BOOT_SCRIPT = `
       var nodes = document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)");
       for (var i = 0; i < nodes.length; i++){
         if(isOlderSet(nodes[i], vals)) continue;
-        Object.keys(vals).forEach(function(id){ var v = vals[id]; if(v === undefined || v === null || v === "" || v === "-") return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
+        /*
+         * A blank in the snapshot only ever means "this draw has not published
+         * that slot yet" - never "erase what is on the card". Writing it over a
+         * number a live source had just put there is what made result numbers
+         * blink: they appeared, vanished a moment later, and only came back on
+         * the next sweep (reported 14 Oct 2026). A blank is therefore only
+         * allowed once the card has moved on to a NEWER draw, which is exactly
+         * when the previous draw's numbers must go.
+         */
+        var __dEl = nodes[i].querySelector('[data-id="date"]');
+        var __curD = dayOf(__dEl ? (__dEl.textContent || "").trim() : "");
+        var __newDraw = !!(inD && __curD && inD > __curD);
+        Object.keys(vals).forEach(function(id){
+          var v = vals[id];
+          if(v === undefined || v === null || v === "" || v === "-") return;
+          if(!__newDraw && /^----+$/.test(String(v).trim())) return;
+          txt(nodes[i].querySelector('[data-id="' + id + '"]'), v);
+        });
       }
     });
   }
@@ -296,6 +313,34 @@ const BOOT_SCRIPT = `
     var next = {};
     Object.keys(snap || {}).forEach(function(k){ next[k] = snap[k]; });
     Object.keys(j).forEach(function(k){ next[k] = j[k]; });
+    /*
+     * The card values merge per class instead of being replaced.
+     *
+     * A fresh copy of /api/home-live can be a few seconds behind what the card
+     * is already showing, and its "----" then replaced a number a live source
+     * had just published - which is why result numbers blinked. A blank only
+     * wins once the copy is for a NEWER draw; otherwise the number we have
+     * stays. React renders from this same object, so it is kept truthful too.
+     */
+    if(j.cards && snap && snap.cards){
+      var cardsMerged = {};
+      Object.keys(snap.cards).forEach(function(cls){ cardsMerged[cls] = snap.cards[cls]; });
+      Object.keys(j.cards).forEach(function(cls){
+        var cur = cardsMerged[cls] || {};
+        var add = j.cards[cls] || {};
+        var curD = dayOf(cur.date), addD = dayOf(add.date);
+        var moved = !!(addD && curD && addD > curD);
+        var out = {};
+        Object.keys(cur).forEach(function(id){ out[id] = cur[id]; });
+        Object.keys(add).forEach(function(id){
+          var v = add[id];
+          if(!moved && /^----+$/.test(String(v === undefined || v === null ? "" : v).trim()) && cur[id] && !/^----+$/.test(String(cur[id]).trim())) return;
+          out[id] = v;
+        });
+        cardsMerged[cls] = out;
+      });
+      next.cards = cardsMerged;
+    }
     // Merge the two-draw games per draw time: a feed that carries only the
     // "set" must not drop the 6D numbers / jackpot we already have.
     if(j.hari && snap && snap.hari){
