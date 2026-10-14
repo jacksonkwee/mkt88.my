@@ -57,7 +57,23 @@ body.mkt-in-app .mkt-notice {
   position: sticky;
   top: 0;
   z-index: 60;
-  padding-top: env(safe-area-inset-top);
+}
+
+/*
+ * The app's inner pages (大伯公 / 收藏号码 / 开彩记录 / 热门号码) put the strip in
+ * the page flow, and the page flow starts below the status-bar inset that the
+ * body carries as padding-top. A merely pinned strip therefore left that band
+ * blank above it (reported 14 Oct 2026 with a screen recording).
+ *
+ * Pull the strip up by exactly the inset and pad it by the same amount plus its
+ * own 8px: its background then covers the band and its height grows by exactly
+ * what the padding took away, so nothing below it moves. The app's first screen
+ * renders its own copy of this strip inside a fixed overlay that already starts
+ * at the very top, so this rule deliberately does not reach it.
+ */
+body.mkt-in-app #mkt-site .mkt-notice {
+  margin-top: calc(-1 * env(safe-area-inset-top));
+  padding-top: calc(8px + env(safe-area-inset-top)) !important;
 }
 
 .header-btn-group {
