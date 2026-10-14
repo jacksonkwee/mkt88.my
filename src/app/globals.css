@@ -1,3 +1,19 @@
+/*
+ * Design tokens.
+ *
+ * Every value below is exactly the literal it replaces - this only gathers them
+ * in one place, so a later step can change the type scale, the contrast or the
+ * touch targets without hunting through the file, and two screens cannot drift
+ * apart. The admin's own "primary colour" stays the source for brand red: it is
+ * set on <html> by SiteCustomizer, and --brand is its fallback.
+ */
+:root {
+  --brand: #cc0000;
+  --focus-ring: #cc0000;
+  --radius-sm: 4px;
+  --radius-md: 12px;
+}
+
 html,
 body {
   min-height: 100vh;
@@ -24,7 +40,7 @@ select:focus-visible,
 textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid var(--focus-ring, #cc0000);
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -59,7 +75,7 @@ summary:focus-visible,
    outline, which made all 11 game cards flash green continuously. Numbers still
    update on screen; only the flashing outline is gone. */
 .header-btn-group .btn {
-  background-color: var(--primary, #cc0000) !important;
+  background-color: var(--primary, var(--brand)) !important;
 }
 
 /* Admin-driven effects */
@@ -175,7 +191,7 @@ body.mkt-in-app .mkt-past-filter-title {
   padding: 8px 4px !important;
   border: 0 !important;
   background: transparent !important;
-  color: #cc0000 !important;
+  color: var(--brand) !important;
   font-size: 16px !important;
   font-weight: 800 !important;
   text-align: center;
@@ -299,7 +315,7 @@ body:not(.mkt-in-app) .mkt-app-topbar > a {
   align-items: center;
   justify-content: center;
   padding: 6px 14px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: rgba(0, 0, 0, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14);
@@ -409,7 +425,7 @@ body.mkt-in-app button {
      ones that set their size inline. Colours stay with each screen. */
   min-width: 44px !important;
   min-height: 44px !important;
-  border-radius: 12px !important;
+  border-radius: var(--radius-md) !important;
   font: inherit;
   line-height: 1.1;
   white-space: nowrap;
@@ -428,7 +444,7 @@ body.mkt-in-app button[aria-disabled="true"] {
 
 /* Keyboard focus is always visible on light screens. */
 body.mkt-in-app button:focus-visible {
-  outline: 3px solid #cc0000;
+  outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
@@ -440,7 +456,7 @@ body.mkt-in-app .mkt-app-topbar > a {
   align-items: center;
   justify-content: center;
   padding: 0 14px !important;
-  border-radius: 12px !important;
+  border-radius: var(--radius-md) !important;
   /* Darken, do not lighten: white text on a white-tinted red came out at
      4.4:1. On the darkened red it is 7.7:1, comfortably past AA. */
   background: rgba(0, 0, 0, 0.16) !important;
@@ -470,8 +486,8 @@ body.mkt-in-app .mkt-app-topbar > a:focus-visible {
 
 /* Reusable button colours for the screens that want them. */
 body.mkt-in-app .mkt-btn-primary {
-  background: #cc0000 !important;
-  border-color: #cc0000 !important;
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
   color: #ffffff !important;
 }
 body.mkt-in-app .mkt-btn-secondary {
@@ -592,9 +608,9 @@ body.mkt-in-app .card td > a:has(> .anchor) {
  * fades back on its own, so nothing snaps.
  */
 .mkt-new-number {
-  color: #cc0000 !important;
+  color: var(--brand) !important;
   transition: color 600ms ease-out;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   padding: 0 3px;
 }
 /* The red must sit on the number itself. Applied straight to the cell element
