@@ -1170,9 +1170,26 @@ async function updateSGFeed() {
     for (const card of cards) {
       const cur = card.querySelector('[data-id="date"]');
       const curScore = dateScore(cur ? (cur.textContent || "") : "");
-      if (s.DD && dateScore(String(s.DD)) < curScore) continue;
+      const feedScore = s.DD ? dateScore(String(s.DD)) : 0;
+      if (feedScore && feedScore < curScore) continue;
+      /*
+       * This feed publishes the whole board at once, at the end of the draw.
+       * While today's draw is still being revealed its empty cells therefore
+       * mean "not published HERE yet", not "this draw has no 1st prize" - and
+       * writing them cleared the numbers the live stream had already shown.
+       * That is why Singapore's 1st and 2nd prizes kept disappearing and coming
+       * back (reported 14 Oct 2026).
+       *
+       * A new draw is the exception: then the blanks are exactly what is
+       * wanted, so yesterday's numbers cannot sit under today's date.
+       */
+      const drawChanged = !!feedScore && feedScore !== curScore;
       const set = (id: string, v: string) => {
         const el = card.querySelector('[data-id="' + id + '"]');
+        if (el && v === "----" && !drawChanged) {
+          const now = (el.textContent || "").trim();
+          if (now && now !== "----") return;   // never blank a number we already have
+        }
         if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
       };
       if (s.DD) set("date", String(s.DD));
