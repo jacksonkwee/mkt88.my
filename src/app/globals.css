@@ -558,12 +558,18 @@ body.mkt-in-app .mkt-btn-secondary {
   color: #16181d !important;
 }
 /* ------------------------------------------------------------------ *
- * The "More <game> Result" bar under every result card is a dead link
- * (href="#") and pure clutter on a phone, so the app hides it.
+ * The "More <game> Result" bar under every result card.
+ *
+ * The captured markup points it at the original site's page, which the link
+ * rewriter turns into href="#" - so on our site it was a link that went
+ * nowhere, 15-20 of them on a single game page. The app has hidden it for a
+ * while; the website now hides it too rather than leave dead links in the
+ * page. ".anchor" is used for nothing else: all 28 occurrences in the captured
+ * markup are this bar.
  * ------------------------------------------------------------------ */
-body.mkt-in-app .card .anchor,
-body.mkt-in-app .card td:has(> a > .anchor),
-body.mkt-in-app .card td > a:has(> .anchor) {
+.card .anchor,
+.card td:has(> a > .anchor),
+.card td > a:has(> .anchor) {
   display: none !important;
 }
 /* ------------------------------------------------------------------ *
