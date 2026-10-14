@@ -5,6 +5,29 @@ body {
 body {
   margin: 0;
 }
+
+/*
+ * Keyboard focus ring.
+ *
+ * The theme's own stylesheet switches outlines off for every ":focus", so a
+ * keyboard or switch user had no way to see which link or button they were on
+ * (measured 14 Oct 2026: outline-style:none on the first link of every page).
+ * ":focus-visible" only matches keyboard navigation, so a mouse or a finger
+ * still sees nothing different. The app's red top bar already draws its own
+ * white ring, and being more specific it keeps doing so.
+ */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--focus-ring, #cc0000);
+  outline-offset: 2px;
+}
+
 .header-btn-group {
   position: sticky;
   top: 99px !important;
