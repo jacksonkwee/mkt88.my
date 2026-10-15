@@ -98,7 +98,9 @@ const BOOT_SCRIPT = `
   // screen is up and the results page never shows first. It is done here rather
   // than on the server so that one cached copy of the page suits everybody.
   if (/MKT88Android|Capacitor|Android.*; wv\\)/i.test(navigator.userAgent || '')) {
-    document.body.className += ' mkt-in-app mkt-home-open';
+    // The admin pages stay uncovered: the first page is an overlay, and on
+    // /admin/login it sat on top of the password box (reported 15 Oct 2026).
+    document.body.className += ' mkt-in-app' + (/^\/admin(\/|$)/.test(__mktPath) ? '' : ' mkt-home-open');
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;
