@@ -1198,6 +1198,19 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
   "table-14": { "6D": "six_main" },
 };
 
+/**
+ * What a fresh draw clears on each card.
+ *
+ * When the owner moves a card to a new date, the previous draw's board must not
+ * stay behind it: everything the card can hold is blanked first and only the
+ * boxes that were typed are written back (asked for 15 Oct 2026).
+ */
+const MANUAL_CLEAR: Record<string, string[]> = {
+  "table-6": MANUAL_FIELDS["table-6"],
+  "table-13": Object.values(MANUAL_KEYS["table-13"]),
+  "table-14": ["six_main", "six_5a", "six_5b", "six_4a", "six_4b", "six_3a", "six_3b", "six_2a", "six_2b"],
+};
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
@@ -1879,9 +1892,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const typedDay = entry.date ? dayScore(weekdayOf(entry.date)) : 0;
     const cardDay = dayScore((cards[cls] as Record<string, string> | undefined)?.date);
     if (typedDay && cardDay && typedDay < cardDay) continue;
-    const next: Record<string, string> = { ...(cards[cls] || {}), ...typed };
-    if (entry.date) next.date = weekdayOf(entry.date);
+    const next: Record<string, string> = { ...(cards[cls] || {}) };
+    if (entry.date) {
+      const label = weekdayOf(entry.date);
+      if (label !== (next.date || "")) for (const id of MANUAL_CLEAR[cls] || []) next[id] = "----";
+      next.date = label;
+    }
     if (entry.drawNo) next.draw_no = String(entry.drawNo).trim();
+    Object.assign(next, typed);
     if (cls === "table-14" && /^\d{6}$/.test(typed.six_main || "")) {
       const six = typed.six_main;
       for (const k of [5, 4, 3, 2]) {
