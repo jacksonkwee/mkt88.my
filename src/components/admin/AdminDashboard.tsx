@@ -8,6 +8,7 @@ type Any = Record<string, any>;
 const MANUAL_GAMES = [
   { cls: "table-6", name: "Sports Toto 4D 多多", hint: "（应为 23 个：3 个头奖 + 10 个特别奖 + 10 个安慰奖）" },
   { cls: "table-13", name: "Grand Dragon 4D 豪龙", hint: "（应为 26 个：3 个头奖 + 13 个特别奖 + 10 个安慰奖）" },
+  { cls: "table-14", name: "Grand Dragon 6D 豪龙 6D", hint: "（只贴 1 个：6 位数，例如 032993）" },
 ];
 
 /**

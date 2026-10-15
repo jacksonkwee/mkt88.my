@@ -1175,6 +1175,8 @@ const MANUAL_FIELDS: Record<string, string[]> = {
     ...Array.from({ length: 13 }, (_, i) => "special-" + (i + 1)),
     ...Array.from({ length: 10 }, (_, i) => "consolation-" + (i + 1)),
   ],
+  // Grand Dragon 6D is one six-digit number; its sub-prizes are its own slices.
+  "table-14": ["six_main"],
 };
 
 export async function buildSnapshot(): Promise<Snapshot> {
@@ -1846,8 +1848,25 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (entry.date) typed.date = weekdayOf(entry.date);
     if (entry.drawNo) typed.draw_no = String(entry.drawNo).trim();
     fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });
+    if (cls === "table-14" && /^\d{6}$/.test(nums[0])) {
+      const six = nums[0];
+      for (const k of [5, 4, 3, 2]) {
+        typed["six_" + k + "a"] = six.slice(0, k);
+        typed["six_" + k + "b"] = six.slice(-k);
+      }
+    }
     cards[cls] = typed;
     noteSource("manual:" + cls, "手动输入 " + cls, { ok: true });
+  }
+  /*
+   * Grand Dragon 6D has no source any of our machines can read: the operator's
+   * site is behind Cloudflare and refuses us, and no mirror carries this board
+   * (checked 15 Oct 2026 - live4dresult.net has no 6D card at all). Until the
+   * owner types one in, blank the card rather than leave the 6 September board
+   * the markup was built with sitting there under a stale date.
+   */
+  if (!/\d/.test(String(manual["table-14"]?.text || ""))) {
+    cards["table-14"] = { ...(cards["table-14"] || {}), date: "", six_main: "----" };
   }
 
   /*
