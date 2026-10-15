@@ -4,6 +4,18 @@ import { useEffect, useState } from "react";
 
 type Any = Record<string, any>;
 
+/**
+ * This device's push token, when the page is opened inside the app.
+ *
+ * Module scope on purpose: the dashboard returns early while it is still
+ * loading, so anything declared after that return is never initialised - and
+ * the effect above still calls it, which crashed the whole page with "a
+ * client-side exception has occurred" (reported 15 Oct 2026).
+ */
+function deviceToken(): string {
+  try { return window.localStorage.getItem("mkt_push_token") || ""; } catch { return ""; }
+}
+
 export default function AdminDashboard() {
   const [c, setC] = useState<Any | null>(null);
   const [health, setHealth] = useState<Any | null>(null);
@@ -87,10 +99,6 @@ export default function AdminDashboard() {
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/admin/login";
-  };
-
-  const deviceToken = () => {
-    try { return window.localStorage.getItem("mkt_push_token") || ""; } catch { return ""; }
   };
 
   const setOwnerAlert = async (on: boolean) => {

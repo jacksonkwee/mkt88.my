@@ -100,7 +100,10 @@ const BOOT_SCRIPT = `
   if (/MKT88Android|Capacitor|Android.*; wv\\)/i.test(navigator.userAgent || '')) {
     // The admin pages stay uncovered: the first page is an overlay, and on
     // /admin/login it sat on top of the password box (reported 15 Oct 2026).
-    document.body.className += ' mkt-in-app' + (/^\/admin(\/|$)/.test(__mktPath) ? '' : ' mkt-home-open');
+    // No regex here: this script lives inside a template literal, which eats
+    // the backslashes and leaves "Invalid regular expression flags" (this broke
+    // every page for a few hours on 15 Oct 2026).
+    document.body.className += ' mkt-in-app' + (__mktPath.indexOf('/admin') === 0 ? '' : ' mkt-home-open');
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;
