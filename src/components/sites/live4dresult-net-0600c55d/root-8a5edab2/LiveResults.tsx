@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { nativeHttpGet } from "../../../../lib/native-http";
 import { gameBySlug } from "./GameDefs";
 import { markLiveValue, copyMayWrite } from "./snapshot-values";
 
 /**
- * LiveResults - polls the original sources through the server proxy and
- * updates the rendered tables in place (no page reload):
- *  - live4dresult.net pages: synced cell-by-cell via data-id attributes
- *  - Perdana 4D: two draws/day from perdana4d.com
- *  - Lucky HariHari: two draws/day from api.hari4d.com
+ * LiveResults - updates the rendered tables in place, without a page reload.
+ *
+ * Almost every value comes from the server snapshot, which reads the operators
+ * itself (lib/live-snapshot.ts) and shape-checks each source. The phone only
+ * fetches for itself what the server cannot cover from there.
+ *
+ * Perdana 4D and Lucky HariHari used to be on that list, because their sites
+ * were thought to refuse our server. Measured on 15 Oct 2026 both answer it -
+ * api.hari4d.com returned 200 with the live draw, and perdana4d.com answered in
+ * about two seconds - so those two cards now have exactly one writer, the
+ * server, and the phone no longer reads them at all.
  */
 
 // Poll faster during evening draw windows (6pm-10pm Malaysia time) so live
@@ -174,27 +179,16 @@ function setHasAny(s: PrizeSet | null | undefined): s is PrizeSet {
 }
 
 /**
- * Hosts that refuse our Render server but answer browsers directly. HariHari's
- * API 403s every request from the server's IP, which stopped its results dead,
- * so ask the phone first and keep the server proxy as the fallback.
- */
-const DIRECT_HOSTS = ["api.hari4d.com"];
-/** Read through the app itself: these refuse every browser and our server. */
-const NATIVE_HOSTS = ["www.perdana4d.com", "perdana4d.com"];
-
-/**
  * Don't pay twice for the same page inside one sweep.
  *
- * A single sweep asks for the same operator page more than once - measured on
- * the home page: perdana4d.com fetched three times about 650ms apart,
- * api.hari4d.com twice for each of its four calls, and the live4d2u feed twice
- * in the same millisecond - because every game that needs it runs on its own
- * clock. A second caller now joins a request that is already running, and a
- * copy fetched a moment ago is reused, so those duplicate requests are gone and
- * the operator sites get fewer hits per sweep. Two seconds is far shorter than
- * any cycle that asks for these pages (the sweep runs at most once every 45s),
- * so nothing shows staler than the sweep already was. A failure is neither
- * shared nor remembered: a caller still retries exactly as it does today.
+ * Every game that needs a source runs on its own clock, so one sweep used to ask
+ * for the same operator page several times in the same second. A second caller
+ * now joins a request that is already running, and a copy fetched a moment ago
+ * is reused, so those duplicate requests are gone and the operator sites get
+ * fewer hits per sweep. Two seconds is far shorter than any cycle that asks for
+ * these pages (the sweep runs at most once every 45s), so nothing shows staler
+ * than the sweep already was. A failure is neither shared nor remembered: a
+ * caller still retries exactly as it does today.
  */
 const FETCH_REUSE_MS = 2000;
 const recentText = new Map<string, { at: number; text: string }>();
@@ -228,18 +222,6 @@ async function fetchText(url: string): Promise<string | null> {
 
 async function fetchTextOnce(url: string): Promise<string | null> {
   try {
-    if (NATIVE_HOSTS.includes(new URL(url).hostname)) {
-      const viaApp = await nativeHttpGet(url);
-      if (viaApp) return viaApp;
-    }
-  } catch { /* fall through to the usual routes */ }
-  try {
-    try {
-      if (DIRECT_HOSTS.includes(new URL(url).hostname)) {
-        const direct = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-        if (direct.ok) return await direct.text();
-      }
-    } catch { /* CORS or offline - fall back to the server proxy */ }
     // Never wait indefinitely on a source. gdlotto in particular can hang, and
     // an unbounded fetch here blocked the whole refresh loop - which stopped
     // every one of the 11 games updating, not just Grand Dragon.
@@ -565,82 +547,7 @@ function anyLiveCard(): boolean {
   return false;
 }
 
-/** Parse perdana4d.com innerText into { time -> set }. */
-function parsePerdana(doc: Document): Record<string, PrizeSet> {
-  const lines = (doc.body ? doc.body.innerText : "").split("\n").map((l) => l.trim());
-  const markers: number[] = [];
-  lines.forEach((l, i) => {
-    if (/^\d{8}4D$/.test(l) || /^\d{12}4D$/.test(l)) markers.push(i);
-  });
-  const out: Record<string, PrizeSet> = {};
-  for (let mi = 0; mi < markers.length; mi++) {
-    const start = markers[mi];
-    const end = mi + 1 < markers.length ? markers[mi + 1] : lines.length;
-    const block = lines.slice(start, end);
-    const dateM = /^(\d{4})(\d{2})(\d{2})/.exec(block[0] || "");
-    const iso = dateM ? `${dateM[1]}-${dateM[2]}-${dateM[3]}` : undefined;
-    const timeLine = block.slice(1, 8).find((l) => /^(\d{1,2}:\d{2})$/.test(l));
-    const time = timeLine || null;
-    if (!time) continue;
-    const pIdx = block.findIndex((l) => /^3rd Prize$/i.test(l));
-    const sIdx = block.findIndex((l) => l.toLowerCase() === "special");
-    const cIdx = block.findIndex((l) => l.toLowerCase() === "consolation");
-    const endIdx = block.findIndex((l) => /^(2D|3D|6D) Results$/i.test(l));
-    const prize: string[] = [];
-    if (pIdx >= 0 && sIdx > pIdx) {
-      for (let i = pIdx + 1; i < sIdx && prize.length < 3; i++) {
-        const l = block[i];
-        if (!l) continue;
-        const cmb = /^\([A-Z]\)\s*(----|\d{4})$/.exec(l);
-        if (cmb) { prize.push(cmb[1]); continue; }
-        if (/^----$/.test(l)) { prize.push(l); continue; }
-        const letterOnly = /^\([A-Z]\)$/.exec(l);
-        if (letterOnly && i + 1 < sIdx && /^(----|\d{4})$/.test(block[i + 1])) { prize.push(block[i + 1]); i++; }
-      }
-      while (prize.length < 3) prize.push("----");
-    }
-    const grab = (from: number, to: number): string[] => {
-      const vals: string[] = [];
-      for (let i = from; i < to; i++) {
-        const l = block[i];
-        if (!l) continue;
-        const cmb = /^\([A-Z]\)\s*(----|\d{4})$/.exec(l);
-        if (cmb) { vals.push(cmb[1]); continue; }
-        const letterOnly = /^\([A-Z]\)$/.exec(l);
-        if (letterOnly && i + 1 < to && /^(----|\d{4})$/.test(block[i + 1])) {
-          vals.push(block[i + 1]);
-          i++;
-        }
-      }
-      return vals;
-    };
-    const special = sIdx >= 0 ? grab(sIdx + 1, cIdx > sIdx ? cIdx : endIdx > sIdx ? endIdx : lines.length) : [];
-    const cons = cIdx >= 0 ? grab(cIdx + 1, endIdx > cIdx ? endIdx : lines.length) : [];
-    out[time] = { prize, special, cons, date: iso ? weekdayOf(iso) : undefined };
-  }
-  return out;
-}
-
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
-const CONS_LETTERS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
-
-/** Parse a hari4d.com JSON draw payload. */
-function hariSetFromJson(j: any): PrizeSet | null {
-  // A draw that exists but has published nothing yet still has to move the card\n  // on: requiring a 1st prize kept the previous draw on screen while the new one\n  // started (reported 6 Oct 2026). id 0 means there is no such draw yet.\n  if (!j || !(Number(j.id) > 0)) return null;
-  const special = LETTERS.map((L) => String(j["prize" + L] ?? "----"));
-  const cons = CONS_LETTERS.map((L) => String(j["prize" + L] ?? "----"));
-  const iso = typeof j.drawDate === "string" ? j.drawDate.slice(0, 10) : undefined;
-  return {
-    prize: [j.prize1, j.prize2, j.prize3].map((x) => String(x)),
-    special,
-    cons,
-    drawNo: j.id != null ? String(j.id) : undefined,
-    date: iso ? weekdayOf(iso) : undefined,
-    // The operator prints which special each prize came from: prize1From=H.
-    from: [j.prize1From, j.prize2From, j.prize3From].map((v) => String(v ?? "").trim()),
-  };
-}
-
 function dateStrNoPad(d: Date): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kuala_Lumpur",
@@ -698,18 +605,6 @@ function applyIdValues(cardId: string, vals: Record<string, string>, live = fals
     for (const c of pending) setText(c.el, c.v, live);
     flash(card);
   });
-}
-
-/** SixD values included in the same hari4d.com draw payload. */
-function sixFromHariJson(j: any): SixSet | null {
-  if (!j) return null;
-  const main = String(j.prize6D ?? "----");
-  const iso = typeof j.drawDate === "string" ? j.drawDate.slice(0, 10) : undefined;
-  const subs: Record<string, string> = {};
-  for (const k of ["2A", "2B", "3A", "3B", "4A", "4B", "5A", "5B"]) {
-    subs["six_" + k.toLowerCase()] = String(j["prize6D_" + k] ?? "----");
-  }
-  return { main, subs, date: iso ? weekdayOf(iso) : undefined };
 }
 
 /** Nine Lotto 6D is built from its 4D 1st/2nd/3rd prizes (official rule). */
@@ -1304,65 +1199,13 @@ function applyCambodiaFeed(j: FastFeed): boolean {
  * number twice (reported 11 Oct 2026). Its card positions are simply not the
  * operator's positions.
  */
-async function updatePerdanaHome() {
-  for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
-    for (const off of [0, -1]) {
-      const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
-      const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + d);
-      if (!pd) continue;
-      const st = parsePerdana(pd)[time];
-      const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-      // live = true: this is the phone's own read of the operator, so it is
-      // stamped and an older server copy cannot undo it.
-      if (setHasAny(st)) { for (const card of cards) applySet(card, st, true); break; }
-    }
-  }
-}
-async function updateHariHome() {
-  // The two draw times are independent and each is two round trips to the
-  // HariHari API, so run them side by side instead of one after the other.
-  await Promise.all([["15:30", "table-15-2026-09-06-1530"], ["19:30", "table-15-2026-09-06-1930"]].map(async ([time, id]) => {
-    for (const off of [0, -1]) {
-      const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
-      const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${d}T${time}:00`);
-      if (!txt) continue;
-      try {
-        const j = JSON.parse(txt);
-        const set = hariSetFromJson(j);
-        const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-        // Accept a started draw even with every cell still blank.
-        if (!set) continue;
-        for (const card of cards) applySet(card, set, true);
-        applySixValues(id + "-6d", sixFromHariJson(j), true);
-        try {
-          const jr = await fetchText(`https://api.hari4d.com/Jackpot/GetJackpot?date=${d}T${time}:00`);
-          if (jr) {
-            const jp = JSON.parse(jr);
-            if (jp && jp.jackpotAmount != null) {
-              const vals: Record<string, string> = { jp_pool: "USD " + Number(jp.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) };
-              const nums: string[] = [];
-              if (jp.number) nums.push(String(jp.number));
-              if (jp.number2) nums.push(String(jp.number2));
-              if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
-              showJackpotLetter(id, nums.join(" or "));
-              applyIdValues(id, vals, true);
-            }
-          }
-        } catch { /* ignore */ }
-        break;
-      } catch { /* ignore */ }
-    }
-  }));
-}
-
 async function refreshOnce(full = true) {
   const path = syncPath();
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
-      // The server snapshot is pre-warmed and cheap, so it always runs. It holds
-      // every card except HariHari (its API blocks our server) and Sabah 88
-      // (whose cell ids never match), and the first cycle covers those two.
-      const hari = full ? updateHariHome() : null;
+      // The server snapshot is pre-warmed and cheap, so it always runs, and it
+      // now holds every card on this page - Perdana 4D and Lucky HariHari
+      // included, which the server reads itself.
       await syncFromServerFast();
       if (full) await Promise.all([
         /*
@@ -1380,8 +1223,6 @@ async function refreshOnce(full = true) {
         updateGdNineCards(),
         updateSGOfficial(),
         updateCambodiaFeed(),
-        updatePerdanaHome(),
-        hari,
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncFromServerFast();
@@ -1400,54 +1241,6 @@ async function refreshOnce(full = true) {
       // column left. updateCambodiaFeed() below writes them correctly.
       await updateGdNineCards();
       await updateCambodiaFeed();
-      // Perdana 4D - 3:30PM and 7:30PM draws (latest completed date, fallback yesterday)
-      for (const [time, id] of [["15:30", "table-16-2026-09-06-1530"], ["19:30", "table-16-2026-09-06-1930"]]) {
-        for (const off of [0, -1]) {
-          const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
-          const pd = await fetchDoc("https://www.perdana4d.com/Results/4D?processDate=" + d);
-          if (!pd) continue;
-          const mp = parsePerdana(pd);
-          const st = mp[time];
-          const card = document.getElementById(id);
-          if (card && setHasAny(st)) { applySet(card, st); break; }
-        }
-      }
-      // Lucky HariHari - two draws a day (JSON API, fallback yesterday)
-      for (const [time, id] of [["15:30", "table-15-2026-09-06-1530"], ["19:30", "table-15-2026-09-06-1930"]]) {
-        for (const off of [0, -1]) {
-          const d = dateStrNoPad(new Date(Date.now() + off * 86400000));
-          const txt = await fetchText(`https://api.hari4d.com/DrawResultL/GetDrawResult?date=${d}T${time}:00`);
-          if (!txt) continue;
-          try {
-            const j = JSON.parse(txt);
-            const set = hariSetFromJson(j);
-            const card = document.getElementById(id);
-            if (card && setHasAny(set)) {
-              applySet(card, set);
-              applySixValues(id + "-6d", sixFromHariJson(j));
-              // Lucky HariHari Bonus Jackpot pool (official API, same draw slot)
-              try {
-                const jr = await fetchText(`https://api.hari4d.com/Jackpot/GetJackpot?date=${d}T${time}:00`);
-                if (jr) {
-                  const jp = JSON.parse(jr);
-                  if (jp && jp.jackpotAmount != null) {
-                    const vals: Record<string, string> = {
-                      jp_pool: "USD " + Number(jp.jackpotAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                    };
-                    const nums: string[] = [];
-                    if (jp.number) nums.push(String(jp.number));
-                    if (jp.number2) nums.push(String(jp.number2));
-                    if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
-              showJackpotLetter(id, nums.join(" or "));
-                    applyIdValues(id, vals);
-                  }
-                }
-              } catch { /* ignore */ }
-              break;
-            }
-          } catch { /* ignore */ }
-        }
-      }
     }
   } catch {
     // ignore transient failures
@@ -1517,23 +1310,8 @@ export default function LiveResults() {
       finally { fastBusy = false; }
     };
     lastFast = Date.now();
-    /*
-     * HariHari's draw carries its 1st/2nd/3rd prize letters inside the same
-     * payload as the numbers - but only the phone can fetch it (the operator's
-     * API refuses our server) and it used to run on the slow sweep alone. So the
-     * number arrived first and its letter up to a minute later, or not at all if
-     * that sweep was cut short. It now rides the fast lane, throttled, and only
-     * while a draw is actually being published.
-     */
-    let lastHari = 0;
-    const hariPoll = async () => {
-      if (!alive || !inDrawWindow()) return;
-      if (Date.now() - lastHari < 15000) return;
-      lastHari = Date.now();
-      try { await updateHariHome(); } catch { /* picked up on the next tick */ }
-    };
     const fastTimer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && alive) { void fastPoll(); void hariPoll(); }
+      if (document.visibilityState === "visible" && alive) void fastPoll();
     }, 1000);
     const tick = async () => {
       if (busy) return;

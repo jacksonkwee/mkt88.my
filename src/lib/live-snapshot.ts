@@ -472,31 +472,6 @@ function perdanaFromFeed(feed: unknown): Record<string, PrizeSet | null> {
   out[slot] = { prize, special, cons, date: iso ? weekdayOf(iso) : dd };
   return out;
 }
-/**
- * The official Perdana page through a text reader.
- *
- * perdana4d.com times out from this host and refuses cross-origin reads from
- * the phone, so the official page is read through a public reader instead.
- * Throttled: the snapshot rebuilds constantly and this is a shared service.
- */
-const PERDANA_RELAY = "https://r.jina.ai/";
-let perdanaRelayAt = 0;
-async function perdanaFromRelay(iso: string): Promise<Record<string, PrizeSet>> {
-  if (Date.now() - perdanaRelayAt < 5 * 60 * 1000) return {};
-  perdanaRelayAt = Date.now();
-  // Its own request: a reader round trip is slower than the 12s the shared
-  // helper allows, and that limit is why this came back empty.
-  try {
-    const res = await fetch(PERDANA_RELAY + "https://www.perdana4d.com/Results/4D?processDate=" + iso, {
-      headers: { "User-Agent": UA, Accept: "text/plain,*/*" },
-      cache: "no-store",
-      signal: AbortSignal.timeout(35000),
-    });
-    if (!res.ok) return {};
-    const text = await res.text();
-    return text ? parsePerdana(text, iso) : {};
-  } catch { return {}; }
-}
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M"];
 const CONS = ["N", "O", "P", "Q", "R", "S", "T", "U", "V", "W"];
 
@@ -1180,10 +1155,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
-    // 4s: this host answers our server in ~14s, so a full wait stalled every
-    // build. The file copy and the live feed below already carry Perdana.
-    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 2500, 0),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 2500, 0),
+    /*
+     * Perdana's own page, asked directly. Measured on 15 Oct 2026 the server
+     * gets it in about two seconds, so the old 2.5s cap - set when this host was
+     * believed to take 14s - is gone: it threw away slow but perfectly good
+     * answers, and with them the draw.
+     */
+    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 6000, 1),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 6000, 1),
     hariFor("15:30", today.iso, today.noPad),
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
@@ -1579,13 +1558,10 @@ export async function buildSnapshot(): Promise<Snapshot> {
       perdana[time] = { ...set, date: weekdayOf(today.iso) };
     }
   }
-  // Official page first, then the collected copy, then the reader, then the
-  // shared live feed - so a draw is shown as soon as any of them has it.
-  const missingPerdana = ["15:30", "19:30"].filter((t) => !perdana[t]);
-  if (missingPerdana.length) {
-    const relayed = await perdanaFromRelay(today.iso);
-    for (const t of missingPerdana) if (relayed[t]) perdana[t] = relayed[t];
-  }
+  // Official page first, then the collected copy, then the shared live feed - so
+  // a draw is shown as soon as any of them has it. The public text reader that
+  // used to sit between them is gone: the server answers perdana4d.com itself
+  // (measured 15 Oct 2026).
   /* The shared feed carries one Perdana draw with no time on it; perdanaFromFeed
      decides which session that is from the clock. */
   const feedPerdana = perdanaFromFeed(feed);
