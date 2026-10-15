@@ -1874,6 +1874,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
         const id = keys[m[1].toUpperCase()];
         if (id) typed[id] = m[2];
       }
+      /*
+       * The 6D board is a single number, so typing it bare is the natural thing
+       * to do: accept "117749" exactly as readily as "6D=117749" (the owner
+       * typed the bare number first, 15 Oct 2026, and nothing appeared).
+       */
+      if (!Object.keys(typed).length && cls === "table-14") {
+        const bare = text.match(/\d{6,7}/);
+        if (bare) typed.six_main = bare[0].slice(0, 6);
+      }
     } else if (fields) {
       const nums = text.split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
       fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });

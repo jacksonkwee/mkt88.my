@@ -8,7 +8,7 @@ type Any = Record<string, any>;
 const MANUAL_GAMES = [
   { cls: "table-6", name: "Sports Toto 4D 多多", hint: "照顺序贴：3 个头奖、10 个特别奖、10 个安慰奖（共 23 个）" },
   { cls: "table-13", name: "Grand Dragon 4D 豪龙", hint: "一行一个，例如 I=1912 或 1st=1234；只填你要改的格子，其余保持不动" },
-  { cls: "table-14", name: "Grand Dragon 6D 豪龙 6D", hint: "例如 6D=117749；下面的小奖会自动算出来" },
+  { cls: "table-14", name: "Grand Dragon 6D 豪龙 6D", hint: "直接打 6 位数（例如 117749）就可以，小奖会自动算；也可以写 6D=117749" },
 ];
 
 /**
