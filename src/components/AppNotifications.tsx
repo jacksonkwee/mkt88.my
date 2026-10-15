@@ -106,8 +106,33 @@ const SPECIAL_DATES = [
   { date: "2026-12-29", id: 1710 },
 ];
 const SPECIAL_TIMES: [number, number][] = [[12, 0], [15, 0], [18, 10]];
-const specialIds = () => SPECIAL_DATES.flatMap((d) => SPECIAL_TIMES.map((_, i) => d.id + i));
-const ALL_IDS = [...specialIds(), NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830];
+export type SpecialAlarm = { id: number; date: string; hour: number; minute: number };
+
+/**
+ * The special-draw alarms that have not happened yet.
+ *
+ * A one-off alarm whose time has gone does not disappear quietly: Android fires
+ * it the moment it is laid down, and the plan below is laid down again on the
+ * first open of every new day - so a date left in the list rang every day for
+ * ever after it had passed (asked to stop 15 Oct 2026). New special draws go
+ * into SPECIAL_DATES above; nothing else has to change.
+ *
+ * Malaysia is UTC+8 all year, so an alarm at 18:10 local is 10:10 UTC.
+ */
+export function upcomingSpecialAlarms(now = Date.now()): SpecialAlarm[] {
+  const out: SpecialAlarm[] = [];
+  for (const d of SPECIAL_DATES) {
+    const [y, mo, day] = d.date.split("-").map(Number);
+    SPECIAL_TIMES.forEach(([hour, minute], i) => {
+      if (Date.UTC(y, mo - 1, day, hour - 8, minute) > now) out.push({ id: d.id + i, date: d.date, hour, minute });
+    });
+  }
+  return out;
+}
+const ALL_IDS = () => [
+  ...upcomingSpecialAlarms().map((a) => a.id),
+  NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830,
+];
 
 type CapacitorGlobal = {
   Plugins?: { LocalNotifications?: LocalNotificationsPlugin };
@@ -212,7 +237,7 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
             for (const n of got?.notifications || []) pending.add(Number(n.id));
           } catch { /* no list - rebuild below */ }
 
-          if (remembered === plan && ALL_IDS.every((id) => pending.has(id))) return;
+          if (remembered === plan && ALL_IDS().every((id) => pending.has(id))) return;
 
           // Clear our own ids, including any left behind by an older plan.
           await ln.cancel?.({
@@ -264,18 +289,19 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
                 extra: { lucky: secondLucky },
                 schedule: { on: { hour: 18, minute: 30 }, repeats: true, allowWhileIdle: true },
               },
-              // One-off special draws: 12pm, 3pm and 6:10pm on the date.
-              ...SPECIAL_DATES.flatMap((d) => {
-                const [y, mo, day] = d.date.split("-").map(Number);
-                return SPECIAL_TIMES.map(([h, mi], i) => ({
-                  id: d.id + i,
+              // One-off special draws: 12pm, 3pm and 6:10pm on the date - and
+              // only the times still ahead of us.
+              ...upcomingSpecialAlarms().map((a) => {
+                const [y, mo, day] = a.date.split("-").map(Number);
+                return {
+                  id: a.id,
                   title: "Special Draw Today 今天特别彩",
                   body: "Special Draw Today 今天特别彩",
                   largeBody: "Special Draw Today 今天特别彩",
                   channelId: CHANNEL_ID,
                   autoCancel: true,
-                  schedule: { on: { year: y, month: mo, day, hour: h, minute: mi }, allowWhileIdle: true },
-                }));
+                  schedule: { on: { year: y, month: mo, day, hour: a.hour, minute: a.minute }, allowWhileIdle: true },
+                };
               }),
             ],
           });
