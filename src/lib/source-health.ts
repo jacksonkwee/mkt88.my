@@ -1,4 +1,5 @@
 import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
+import { notifyOwner } from "./owner-alerts";
 
 /**
  * Which live sources are behaving today, and which ones changed shape.
@@ -31,6 +32,8 @@ export interface SourceState {
 const DOC = "config/source-health";
 const memory = new Map<string, SourceState>();
 let dirty = false;
+/** State changes since the last flush - what the owner gets pushed about. */
+const pending: { name: string; ok: boolean; why?: string }[] = [];
 
 /**
  * Record the outcome of one source.
@@ -53,6 +56,7 @@ export function noteSource(key: string, name: string, result: { ok: boolean; why
     at: now,
     okAt: result.ok ? now : prev?.okAt,
   });
+  pending.push({ name, ok: result.ok, why: result.ok ? undefined : (result.why || "shape changed") });
   dirty = true;
 }
 
@@ -60,10 +64,30 @@ export function noteSource(key: string, name: string, result: { ok: boolean; why
 export async function flushSourceHealth(): Promise<void> {
   if (!dirty) return;
   dirty = false;
+  const changed = pending.splice(0, pending.length);
   if (!pushConfigured()) return;
   try {
     await firestorePut(DOC, { json: JSON.stringify([...memory.values()]) });
   } catch { /* the snapshot must not fail because a note could not be stored */ }
+  /*
+   * Tell the owner, on their own phone, and only them (see owner-alerts.ts).
+   * One push per change, never per rebuild - a source flipping state is once in
+   * a long while, and an evening of pings would just get muted.
+   */
+  if (!changed.length) return;
+  const broke = changed.filter((c) => !c.ok);
+  const fixed = changed.filter((c) => c.ok);
+  try {
+    if (broke.length) {
+      await notifyOwner(
+        "⚠️ MKT88 开彩来源有问题",
+        broke.map((c) => c.name + "：" + (c.why || "形状变了")).join("\n") +
+          "\n（画面会保留上一次正确的成绩，不会显示错的号码）"
+      );
+    } else if (fixed.length) {
+      await notifyOwner("✅ MKT88 来源已恢复", fixed.map((c) => c.name).join("、") + " 已恢复正常。");
+    }
+  } catch { /* a push that fails must not break the snapshot */ }
 }
 
 /** Every source we have heard from, worst first. */

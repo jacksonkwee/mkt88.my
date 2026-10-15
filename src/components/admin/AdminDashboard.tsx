@@ -7,6 +7,8 @@ type Any = Record<string, any>;
 export default function AdminDashboard() {
   const [c, setC] = useState<Any | null>(null);
   const [health, setHealth] = useState<Any | null>(null);
+  const [ownerDevice, setOwnerDevice] = useState<Any | null>(null);
+  const [ownerMsg, setOwnerMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -27,6 +29,12 @@ export default function AdminDashboard() {
     fetch("/api/source-health")
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => j && setHealth(j))
+      .catch(() => {});
+    // Which phones get the "a live source broke" push (owner-alerts.ts). The
+    // token is only present inside the app, so this says so plainly on a PC.
+    fetch("/api/admin/owner-device?token=" + encodeURIComponent(deviceToken()))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setOwnerDevice(j))
       .catch(() => {});
   }, []);
 
@@ -81,6 +89,24 @@ export default function AdminDashboard() {
     window.location.href = "/admin/login";
   };
 
+  const deviceToken = () => {
+    try { return window.localStorage.getItem("mkt_push_token") || ""; } catch { return ""; }
+  };
+
+  const setOwnerAlert = async (on: boolean) => {
+    setOwnerMsg("");
+    try {
+      const res = await fetch("/api/admin/owner-device", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ token: deviceToken(), on }),
+      });
+      const j = await res.json();
+      if (res.ok) { setOwnerDevice(j); setOwnerMsg(on ? "已开启 ✅ 这台手机会收到来源警报" : "已关闭"); }
+      else setOwnerMsg(String(j.error || "失败"));
+    } catch { setOwnerMsg("失败"); }
+  };
+
   const box: React.CSSProperties = { border: "1px solid #ddd", borderRadius: 8, padding: 16, marginTop: 12, background: "#fff" };
   const label: React.CSSProperties = { display: "block", margin: "8px 0 4px", fontWeight: 600 };
   const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: 8 };
@@ -109,6 +135,26 @@ export default function AdminDashboard() {
           </ul>
         </section>
       ) : null}
+
+      <section style={box}>
+        <h2 style={{ fontSize: 17, marginTop: 0 }}>📱 My phone alerts</h2>
+        {deviceToken() ? (
+          <>
+            <p style={{ color: "#666", fontSize: 13, marginTop: 0 }}>
+              来源出问题时，用推播通知这台手机（只有你的装置，不会发给用户）。
+            </p>
+            <button onClick={() => setOwnerAlert(!(ownerDevice && ownerDevice.thisDevice))} style={{ padding: "8px 16px" }}>
+              {ownerDevice && ownerDevice.thisDevice ? "关闭这台手机的管理员通知" : "让这台手机收管理员通知"}
+            </button>
+          </>
+        ) : (
+          <p style={{ color: "#cc0000", fontSize: 13, marginTop: 0 }}>
+            这台装置没有 App 推播。请在 <strong>手机 App 里</strong>打开 mkt88.my/admin 并登入，再按这里。
+          </p>
+        )}
+        {ownerDevice ? <p style={{ fontSize: 13, color: "#666" }}>目前在名单上：{ownerDevice.devices} 台装置</p> : null}
+        {ownerMsg ? <p style={{ fontSize: 13 }}>{ownerMsg}</p> : null}
+      </section>
 
       <section style={box}>
         <h2 style={{ fontSize: 17, marginTop: 0 }}>🎨 Design / General</h2>

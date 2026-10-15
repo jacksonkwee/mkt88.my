@@ -90,7 +90,12 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
           if (after?.receive !== "granted") return;
           const handle = plugin.addListener?.("registration", (data) => {
             const value = String(data?.value || "").trim();
-            if (value) setToken(value);
+            if (value) {
+              setToken(value);
+              // Kept for /admin inside the app, which is where the owner turns
+              // their own admin alerts on (see owner-alerts.ts).
+              try { window.localStorage.setItem("mkt_push_token", value); } catch { /* private mode */ }
+            }
           });
           detach = () => { try { handle?.remove?.(); } catch { /* nothing to clean up */ } };
           await plugin.register?.();
