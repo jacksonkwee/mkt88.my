@@ -1482,17 +1482,20 @@ async function refreshOnce(full = true) {
       const hari = full ? updateHariHome() : null;
       await syncFromServerFast();
       if (full) await Promise.all([
-        // table-13 (Grand Dragon) is deliberately NOT mirrored from
-        // live4dresult.net. That page's Special grid has blank cells where ours
-        // holds numbers, and a blank source cell is skipped - so every later
-        // number was written one column too early and the same number showed in
-        // two cells (K and L). The card is kept current by the server snapshot
-        // plus updateCambodiaFeed(), and both match the official board exactly.
-        syncLiveTable("https://live4dresult.net/", [
-          "table-1", "table-6", "table-4", "table-3", "table-2", "table-7", "table-5",
-        ]),
+        /*
+         * The phone no longer mirrors the aggregator's pages (decided 15 Oct
+         * 2026, steps 3+4 of the "stop patching all night" plan).
+         *
+         * This was the biggest of the phone's writers, and it wrote the same
+         * cards the server snapshot already carries from the operators - so two
+         * copies of the same board were racing, which is what made numbers
+         * appear, vanish and come back. Those cards now have exactly one writer:
+         * the server. The data itself is unchanged - the server reads the same
+         * pages while it builds the snapshot, and every source it uses is shape
+         * checked (see lib/source-health.ts).
+         */
         updateGdNineCards(),
-        (async () => { await updateSGFeed(); await updateSGOfficial(); })(),
+        updateSGOfficial(),
         updateCambodiaFeed(),
         updatePerdanaHome(),
         hari,
@@ -1502,8 +1505,8 @@ async function refreshOnce(full = true) {
     } else if (path === "/singapore-4d-results") {
       await syncFromServerFast();
       if (full) {
-        await syncLiveTable("https://live4dresult.net/singapore-4d-results/", ["table-12"]);
-        await updateSGFeed();
+        // Same rule as the home page: the Singapore Toto card comes from the
+        // server snapshot, not from a second copy fetched by the phone.
         await updateSGOfficial();
       }
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
