@@ -6,10 +6,34 @@ type Any = Record<string, any>;
 
 /** The cards the owner can type in - see MANUAL_FIELDS in lib/live-snapshot.ts. */
 const MANUAL_GAMES = [
-  { cls: "table-6", name: "Sports Toto 4D 多多", hint: "照顺序贴：3 个头奖、10 个特别奖、10 个安慰奖（共 23 个）" },
-  { cls: "table-13", name: "Grand Dragon 4D 豪龙", hint: "一行一个，例如 I=1912 或 1st=1234；只填你要改的格子，其余保持不动" },
-  { cls: "table-14", name: "Grand Dragon 6D 豪龙 6D", hint: "直接打 6 位数（例如 117749）就可以，小奖会自动算；也可以写 6D=117749" },
+  { cls: "table-6", name: "Sports Toto 4D 多多", mode: "paste", fields: [] as string[], hint: "照顺序贴：3 个头奖、10 个特别奖、10 个安慰奖（共 23 个）" },
+  {
+    cls: "table-13", name: "Grand Dragon 4D 豪龙", mode: "grid",
+    fields: ["1st", "2nd", "3rd", ...[..."ABCDEFGHIJKLM"], ...[..."NOPQRSTUVW"]],
+    hint: "在号码出现的那一格直接填号码；没填的格子保持原样",
+  },
+  { cls: "table-14", name: "Grand Dragon 6D 豪龙 6D", mode: "grid", fields: ["6D"], hint: "直接填 6 位数，下面的小奖会自动算" },
 ];
+
+/** "I=1912" lines and the grid of boxes are two views of the same thing. */
+function parseManualText(text: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const alias: Record<string, string> = { "1ST": "1st", "2ND": "2nd", "3RD": "3rd" };
+  for (const m of String(text || "").matchAll(/([A-Za-z0-9]{1,3})\s*[:=]\s*(\d{1,6})/g)) {
+    const k = m[1].toUpperCase();
+    out[alias[k] || k] = m[2];
+  }
+  if (!Object.keys(out).length) {
+    const bare = String(text || "").match(/\d{6,7}/);
+    if (bare) out["6D"] = bare[0].slice(0, 6);
+  }
+  return out;
+}
+const buildManualText = (vals: Record<string, string>): string =>
+  Object.entries(vals)
+    .filter(([, v]) => String(v || "").trim())
+    .map(([k, v]) => k + "=" + String(v).trim())
+    .join("\n");
 
 /**
  * This device's push token, when the page is opened inside the app.
@@ -240,7 +264,8 @@ export default function AdminDashboard() {
         </p>
         {MANUAL_GAMES.map((g) => {
           const e = manualFor(g.cls);
-          const count = String(e.text || "").split(/[^0-9]+/).filter(Boolean).length;
+          const vals = parseManualText(e.text);
+          const count = Object.keys(vals).length;
           return (
             <div key={g.cls} style={{ borderTop: "1px solid #eee", marginTop: 12, paddingTop: 10 }}>
               <strong>{g.name}</strong>
@@ -254,9 +279,29 @@ export default function AdminDashboard() {
                   <input value={e.drawNo} onChange={(ev) => setManual(g.cls, { drawNo: ev.target.value })} style={{ padding: 6, marginLeft: 6, width: 110 }} />
                 </label>
               </div>
-              <textarea rows={3} style={input} placeholder={g.hint} value={e.text} onChange={(ev) => setManual(g.cls, { text: ev.target.value })} />
+              {g.mode === "grid" ? (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 6 }}>
+                  {g.fields.map((f) => (
+                    <label key={f} style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                      <span style={{ minWidth: 28, fontWeight: 600 }}>{f}:</span>
+                      <input
+                        value={vals[f] || ""}
+                        onChange={(ev) => {
+                          const next = { ...vals };
+                          next[f] = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
+                          setManual(g.cls, { text: buildManualText(next) });
+                        }}
+                        style={{ width: 70, padding: 6, boxSizing: "border-box" }}
+                      />
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <textarea rows={3} style={input} placeholder={g.hint} value={e.text} onChange={(ev) => setManual(g.cls, { text: ev.target.value })} />
+              )}
               <p style={{ fontSize: 12, margin: "4px 0 0", color: count ? "#1b5e20" : "#666" }}>
-                已读入 {count} 个号码{g.hint}
+                {g.hint}
+                {count ? "　已填 " + count + " 格（记得按 Save changes）" : ""}
               </p>
             </div>
           );
