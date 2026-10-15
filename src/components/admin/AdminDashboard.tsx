@@ -313,34 +313,6 @@ export default function AdminDashboard() {
       </section>
 
       <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>🎨 Design / General</h2>
-        <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-          <label style={label as any}>Primary colour
-            <input type="color" value={c.settings.primary} onChange={(e) => settings({ primary: e.target.value })} />
-          </label>
-          <label style={label as any}>Base font size ({c.settings.fontSize}px)
-            <input type="range" min={12} max={20} value={c.settings.fontSize} onChange={(e) => settings({ fontSize: Number(e.target.value) })} />
-          </label>
-        </div>
-      </section>
-
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>🖼 Logo</h2>
-        <label style={label as any}>Logo size: {c.settings.logo.size}px
-          <input type="range" min={30} max={140} value={c.settings.logo.size} onChange={(e) => logo({ size: Number(e.target.value) })} style={{ width: "100%" }} />
-        </label>
-        {c.settings.logo.src ? (
-          <div style={{ margin: "8px 0" }}>
-            <img src={c.settings.logo.src} alt="custom logo" style={{ height: 60, background: "#eee", borderRadius: 6, padding: 4 }} />
-            <button onClick={() => logo({ src: "" })} style={{ marginLeft: 10 }}>Use default logo</button>
-          </div>
-        ) : <p style={{ color: "#666" }}>Using default logo (mkt88 logo).</p>}
-        <label style={label as any}>Upload logo image
-          <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "logo")} />
-        </label>
-      </section>
-
-      <section style={box}>
         <h2 style={{ fontSize: 17, marginTop: 0 }}>📷 Top banner image</h2>
         <label style={{ display: "block", margin: "6px 0" }}>
           <input type="checkbox" checked={c.settings.banner.enabled} onChange={(e) => banner({ enabled: e.target.checked })} /> Show banner
@@ -404,11 +376,6 @@ export default function AdminDashboard() {
         <label style={label as any}>Contact link (optional)
           <input style={input} value={c.ads.direct.placeholder.link} onChange={(e) => placeholder({ link: e.target.value })} placeholder="mailto:you@example.com" />
         </label>
-      </section>
-
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>© Footer copyright</h2>
-        <input style={input} value={c.copyright} onChange={(e) => set({ copyright: e.target.value })} />
       </section>
 
       <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
