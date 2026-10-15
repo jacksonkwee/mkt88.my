@@ -33,7 +33,7 @@ const DOC = "config/source-health";
 const memory = new Map<string, SourceState>();
 let dirty = false;
 /** State changes since the last flush - what the owner gets pushed about. */
-const pending: { name: string; ok: boolean; why?: string }[] = [];
+const pending = new Map<string, { name: string; ok: boolean; why?: string }>();
 
 /**
  * Record the outcome of one source.
@@ -56,7 +56,7 @@ export function noteSource(key: string, name: string, result: { ok: boolean; why
     at: now,
     okAt: result.ok ? now : prev?.okAt,
   });
-  pending.push({ name, ok: result.ok, why: result.ok ? undefined : (result.why || "shape changed") });
+  pending.set(key, { name, ok: result.ok, why: result.ok ? undefined : (result.why || "shape changed") });
   dirty = true;
 }
 
@@ -64,15 +64,36 @@ export function noteSource(key: string, name: string, result: { ok: boolean; why
 export async function flushSourceHealth(): Promise<void> {
   if (!dirty) return;
   dirty = false;
-  const changed = pending.splice(0, pending.length);
-  if (!pushConfigured()) return;
+  const seen = [...pending.entries()];
+  pending.clear();
+  if (!pushConfigured() || !seen.length) return;
+  /*
+   * What the last instance wrote.
+   *
+   * The map above lives in ONE serverless instance, so a cold start - every
+   * deploy, and every idle wake - remembers nothing and every source reads as
+   * "just changed". The owner was therefore pushed "来源已恢复" once for every
+   * instance that started: several an hour, all day, with nothing wrong
+   * (reported 15 Oct 2026). The stored copy is the memory that spans instances,
+   * so only a difference against IT is worth a push.
+   */
+  const was = await storedStates();
+  const changed = was
+    ? seen
+        .filter(([key, now]) => {
+          const before = was.get(key);
+          return !before || before.ok !== now.ok || (before.why || "") !== (now.why || "");
+        })
+        .map(([, v]) => v)
+    : [];
   try {
     await firestorePut(DOC, { json: JSON.stringify([...memory.values()]) });
   } catch { /* the snapshot must not fail because a note could not be stored */ }
   /*
    * Tell the owner, on their own phone, and only them (see owner-alerts.ts).
-   * One push per change, never per rebuild - a source flipping state is once in
-   * a long while, and an evening of pings would just get muted.
+   * One push per REAL change, never per rebuild - a source flipping state is
+   * once in a long while, and an evening of pings would just get muted. With
+   * nothing stored to compare against, stay quiet rather than repeat the lot.
    */
   if (!changed.length) return;
   const broke = changed.filter((c) => !c.ok);
@@ -90,17 +111,27 @@ export async function flushSourceHealth(): Promise<void> {
   } catch { /* a push that fails must not break the snapshot */ }
 }
 
+/**
+ * The states whichever instance wrote last, or null when there is no copy to
+ * compare with (nothing stored yet, or the store could not be read).
+ */
+async function storedStates(): Promise<Map<string, SourceState> | null> {
+  try {
+    const doc = await firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(DOC);
+    const raw = doc?.fields?.json?.stringValue;
+    if (!raw) return null;
+    return new Map((JSON.parse(raw) as SourceState[]).map((s) => [s.key, s]));
+  } catch {
+    return null;
+  }
+}
+
 /** Every source we have heard from, worst first. */
 export async function getSourceHealth(): Promise<SourceState[]> {
   if (memory.size) return sortHealth([...memory.values()]);
   if (!pushConfigured()) return [];
-  try {
-    const doc = await firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(DOC);
-    const raw = doc?.fields?.json?.stringValue;
-    return raw ? sortHealth(JSON.parse(raw) as SourceState[]) : [];
-  } catch {
-    return [];
-  }
+  const stored = await storedStates();
+  return stored ? sortHealth([...stored.values()]) : [];
 }
 
 const sortHealth = (list: SourceState[]) =>
