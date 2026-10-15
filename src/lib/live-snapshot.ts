@@ -1206,7 +1206,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    */
   const checkSource = (key: string, name: string, cls: string, vals: Record<string, string> | null | undefined): boolean => {
     if (!vals) return true;
-    const why = checkGrid(cls, vals, today.iso, yest.iso);
+    const why = checkGrid(cls, vals, today.iso);
     noteSource(key, name, why ? { ok: false, why } : { ok: true });
     return !why;
   };

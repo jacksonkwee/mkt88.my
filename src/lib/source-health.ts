@@ -169,6 +169,18 @@ export const GRID_SHAPES: Record<string, GridShape> = {
 };
 
 /**
+ * How old the draw on a card is allowed to be.
+ *
+ * Most games draw three times a week (Wednesday, Saturday and Sunday), so the
+ * newest draw on a Tuesday is Sunday's - two days old - and on a Wednesday
+ * morning it is three. A one-day rule flagged every one of those as a broken
+ * page, which would have woken the owner on the first Friday morning for a
+ * board that was perfectly correct. A date further back than this, or a date in
+ * the future, is still refused.
+ */
+const MAX_DRAW_AGE_DAYS = 4;
+
+/**
  * "No number here" as the operators actually print it.
  *
  * Dashes of any length are the usual one; Sports Toto prints "****" while a
@@ -185,9 +197,9 @@ const isNumberish = (v: string) => /^[0-9]+$/.test(String(v || "").trim());
  *
  * A board still being revealed is fine - empty cells are expected. What is not
  * fine is the wrong number of cells, a number of the wrong width, a repeat
- * inside the same grid, or a date that is not today or yesterday.
+ * inside the same grid, or a date that is impossible (see MAX_DRAW_AGE_DAYS).
  */
-export function checkGrid(cls: string, vals: Record<string, string>, todayIso: string, yestIso: string): string | null {
+export function checkGrid(cls: string, vals: Record<string, string>, todayIso: string): string | null {
   const g = GRID_SHAPES[cls];
   if (!g) return null;
   const prizes = ["first_prize", "second_prize", "third_prize"].map((k) => vals[k]).filter((v) => v !== undefined);
@@ -216,7 +228,11 @@ export function checkGrid(cls: string, vals: Record<string, string>, todayIso: s
   const m = /(\d{2})-(\d{2})-(\d{4})/.exec(date);
   if (m) {
     const iso = m[3] + "-" + m[2] + "-" + m[1];
-    if (iso !== todayIso && iso !== yestIso) return "卡片日期是 " + date + "（既不是今天也不是昨天）";
+    const ageDays = Math.round((Date.parse(todayIso + "T00:00:00Z") - Date.parse(iso + "T00:00:00Z")) / 86400000);
+    if (!Number.isFinite(ageDays)) return "卡片日期看不懂（" + date + "）";
+    if (ageDays < 0 || ageDays > MAX_DRAW_AGE_DAYS) {
+      return "卡片日期是 " + date + "（今天是 " + todayIso + "，差了 " + ageDays + " 天）";
+    }
   }
   return null;
 }
