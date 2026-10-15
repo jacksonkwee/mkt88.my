@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [ownerMsg, setOwnerMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [newDate, setNewDate] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/content")
@@ -175,6 +176,46 @@ export default function AdminDashboard() {
         )}
         {ownerDevice ? <p style={{ fontSize: 13, color: "#666" }}>目前在名单上：{ownerDevice.devices} 台装置</p> : null}
         {ownerMsg ? <p style={{ fontSize: 13 }}>{ownerMsg}</p> : null}
+      </section>
+
+      <section style={box}>
+        <h2 style={{ fontSize: 17, marginTop: 0 }}>🎯 Special draw dates 特别彩日期</h2>
+        <p style={{ color: "#666", fontSize: 13, marginTop: 0 }}>
+          这里列出的日期，手机会在 12:00、15:00、18:10（马来西亚时间）收到特别开彩提醒；日期过了就自动停止，不用回来删。
+          加好或删好后，按最下面的 <strong>Save changes</strong> 才会生效。
+        </p>
+        {Array.isArray(c.specialDraws) && c.specialDraws.length ? (
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14 }}>
+            {c.specialDraws.map((d: string) => (
+              <li key={d} style={{ marginBottom: 4 }}>
+                <strong>{d}</strong>
+                <button
+                  onClick={() => set({ specialDraws: c.specialDraws.filter((x: string) => x !== d) })}
+                  style={{ marginLeft: 8, padding: "2px 10px" }}
+                >
+                  删除
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ color: "#666", fontSize: 13 }}>目前没有特别彩日期。</p>
+        )}
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+          <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={{ padding: 8 }} />
+          <button
+            onClick={() => {
+              if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) return;
+              const list: string[] = Array.isArray(c.specialDraws) ? c.specialDraws : [];
+              if (list.includes(newDate)) return;
+              set({ specialDraws: [...list, newDate].sort() });
+              setNewDate("");
+            }}
+            style={{ padding: "8px 16px" }}
+          >
+            添加日期
+          </button>
+        </div>
       </section>
 
       <section style={box}>

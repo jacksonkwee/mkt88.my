@@ -8,6 +8,8 @@ export interface DirectAds { top: AdUnit; placeholder: { enabled: boolean; text:
 export interface SiteContent {
   notice: { enabled: boolean; text: string; bg: string; color: string; fx: string };
   copyright: string;
+  /** The extra draw dates the operators announce, edited in /admin. */
+  specialDraws: string[];
   settings: {
     primary: string;
     fontSize: number;
@@ -43,6 +45,7 @@ const emptyUnit = (): AdUnit => ({ enabled: false, image: "", link: "" });
 export const DEFAULTS: SiteContent = {
   notice: { enabled: false, text: "", bg: "#fff3cd", color: "#664d03", fx: "none" },
   copyright: "Copyright © 2016 - 2026 mkt88.my. All Rights Reserved.",
+  specialDraws: ["2026-10-27", "2026-12-29"],
   settings: {
     primary: "#cc0000",
     fontSize: 16,

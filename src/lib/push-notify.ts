@@ -1,6 +1,6 @@
 import { getSnapshot, type Snapshot } from "./live-snapshot";
 import { firestoreDelete, firestoreGet, firestorePutIfUnchanged, pushConfigured, registeredDevices, sendToTokens } from "./fcm";
-import { SPECIAL_DRAW_DATES, SPECIAL_DRAW_TABLES } from "./special-draws";
+import { getSpecialDrawDates, SPECIAL_DRAW_TABLES } from "./special-draws";
 
 /**
  * "This game's result is out" push notifications.
@@ -155,7 +155,7 @@ function drawnCells(c: Record<string, string>): string[] {
  * 12 Oct 2026). The 4D games reveal their specials first, so "the board has
  * begun filling in" is what the reminder is for.
  */
-export function readyNow(snap: Snapshot): Record<string, string> {
+export function readyNow(snap: Snapshot, specialDates: string[] = []): Record<string, string> {
   const out: Record<string, string> = {};
   const today = myTodayLabel();
   const todayIso = myTodayIso();
@@ -181,7 +181,7 @@ export function readyNow(snap: Snapshot): Record<string, string> {
      * skipped for those games, and the usual evening window still applies.
      * See /draw-schedule.
      */
-    const special = SPECIAL_DRAW_DATES.includes(todayIso) && SPECIAL_DRAW_TABLES.includes(cls);
+    const special = specialDates.includes(todayIso) && SPECIAL_DRAW_TABLES.includes(cls);
     if (win && !((win.days.includes(now.day) || special) && now.mins >= win.from && now.mins <= win.to)) continue;
     out[cls] = c.date.trim();
   }
@@ -225,7 +225,9 @@ export async function checkAndPush(opts: { force?: boolean } = {}): Promise<Push
   lastCheck = now;
 
   const snap = await getSnapshot({ wait: true });
-  const ready = readyNow(snap);
+  // The dates are the ones the owner keeps in /admin, so a new special draw is
+  // announced without a code change.
+  const ready = readyNow(snap, await getSpecialDrawDates());
 
   // What has already been announced. One JSON string in one document keeps this
   // to a single read and a single write per check.

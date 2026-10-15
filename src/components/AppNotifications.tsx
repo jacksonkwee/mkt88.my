@@ -100,13 +100,39 @@ function dailyLuckyNumbers(seed: string): [string, string, string] {
  * are still cancelled below so a phone that installed the old plan clears
  * them.
  */
-/** Two one-off special draws to remind everyone about. */
-const SPECIAL_DATES = [
-  { date: "2026-10-27", id: 1700 },
-  { date: "2026-12-29", id: 1710 },
-];
 const SPECIAL_TIMES: [number, number][] = [[12, 0], [15, 0], [18, 10]];
+/**
+ * The ids a special draw may use: 1700..1999, three alarms per date.
+ *
+ * The whole range is cancelled whenever the plan is laid down again, so a date
+ * the owner removes in /admin cannot leave an alarm behind on any phone.
+ */
+const SPECIAL_ID_BASE = 1700;
+const SPECIAL_ID_RANGE = 300;
 export type SpecialAlarm = { id: number; date: string; hour: number; minute: number };
+
+/**
+ * The special draw dates, as the owner keeps them in /admin.
+ *
+ * Nothing is scheduled when this cannot be read: a phone must not be given a
+ * special-draw alarm for a date that has since been changed or removed. The
+ * plan is re-laid on the first open of every new day, so a failed read repairs
+ * itself tomorrow.
+ */
+async function fetchSpecialDrawDates(): Promise<string[]> {
+  try {
+    const res = await fetch("/api/site-content", { cache: "no-store" });
+    if (!res.ok) return [];
+    const j = (await res.json()) as { specialDraws?: unknown };
+    const list = Array.isArray(j.specialDraws) ? j.specialDraws : [];
+    return list
+      .map((d) => String(d || "").trim())
+      .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d))
+      .sort();
+  } catch {
+    return [];
+  }
+}
 
 /**
  * The special-draw alarms that have not happened yet.
@@ -114,23 +140,25 @@ export type SpecialAlarm = { id: number; date: string; hour: number; minute: num
  * A one-off alarm whose time has gone does not disappear quietly: Android fires
  * it the moment it is laid down, and the plan below is laid down again on the
  * first open of every new day - so a date left in the list rang every day for
- * ever after it had passed (asked to stop 15 Oct 2026). New special draws go
- * into SPECIAL_DATES above; nothing else has to change.
+ * ever after it had passed (asked to stop 15 Oct 2026). The dates come from
+ * /admin, so a new special draw is announced without a code change.
  *
  * Malaysia is UTC+8 all year, so an alarm at 18:10 local is 10:10 UTC.
  */
-export function upcomingSpecialAlarms(now = Date.now()): SpecialAlarm[] {
+export function upcomingSpecialAlarms(now = Date.now(), dates: string[] = []): SpecialAlarm[] {
   const out: SpecialAlarm[] = [];
-  for (const d of SPECIAL_DATES) {
-    const [y, mo, day] = d.date.split("-").map(Number);
-    SPECIAL_TIMES.forEach(([hour, minute], i) => {
-      if (Date.UTC(y, mo - 1, day, hour - 8, minute) > now) out.push({ id: d.id + i, date: d.date, hour, minute });
+  dates.forEach((date, index) => {
+    const [y, mo, day] = date.split("-").map(Number);
+    SPECIAL_TIMES.forEach(([hour, minute], slot) => {
+      if (Date.UTC(y, mo - 1, day, hour - 8, minute) > now) {
+        out.push({ id: SPECIAL_ID_BASE + index * SPECIAL_TIMES.length + slot, date, hour, minute });
+      }
     });
-  }
+  });
   return out;
 }
-const ALL_IDS = () => [
-  ...upcomingSpecialAlarms().map((a) => a.id),
+const ALL_IDS = (dates: string[]) => [
+  ...upcomingSpecialAlarms(Date.now(), dates).map((a) => a.id),
   NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830,
 ];
 
@@ -225,9 +253,12 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
           // v4 removed the per-game live-result alarms. v5 puts the DATE in
           // the fingerprint: the lucky number is derived from the day, so the
           // first open on a new day lays the three reminders down again with
-          // that day's numbers instead of repeating yesterday for ever.
+          // that day's numbers instead of repeating yesterday for ever. v6
+          // carries the owner's special-draw list too, so adding or removing a
+          // date re-lays the alarms the next time the app is opened.
+          const specialDraws = await fetchSpecialDrawDates();
           const today = myToday();
-          const plan = "v5:" + today;
+          const plan = "v6:" + today + ":" + specialDraws.join(",");
           let remembered = "";
           try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
 
@@ -237,11 +268,12 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
             for (const n of got?.notifications || []) pending.add(Number(n.id));
           } catch { /* no list - rebuild below */ }
 
-          if (remembered === plan && ALL_IDS().every((id) => pending.has(id))) return;
+          if (remembered === plan && ALL_IDS(specialDraws).every((id) => pending.has(id))) return;
 
           // Clear our own ids, including any left behind by an older plan.
           await ln.cancel?.({
             notifications: [
+              ...Array.from({ length: SPECIAL_ID_RANGE }, (_, i) => SPECIAL_ID_BASE + i),
               ...Array.from({ length: 200 }, (_, i) => 3000 + i),
               NOTIFICATION_1600,
               NOTIFICATION_1800,
@@ -291,7 +323,7 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
               },
               // One-off special draws: 12pm, 3pm and 6:10pm on the date - and
               // only the times still ahead of us.
-              ...upcomingSpecialAlarms().map((a) => {
+              ...upcomingSpecialAlarms(Date.now(), specialDraws).map((a) => {
                 const [y, mo, day] = a.date.split("-").map(Number);
                 return {
                   id: a.id,

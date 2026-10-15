@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
 import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
 import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import { SPECIAL_DRAW_DATES } from "../../lib/special-draws";
+import { getSpecialDrawDates } from "../../lib/special-draws";
 
 export const metadata: Metadata = {
   title: "4D Draw Schedule 开彩时间表 - Draw Days & Times | mkt88.my",
@@ -60,7 +60,22 @@ const pretty = (iso: string) => {
   return Number(d) + " " + months[Number(m) - 1] + " " + y;
 };
 
-export default function DrawSchedulePage() {
+/** The weekday of a special draw, which is not always a Tuesday. */
+const DAY_NAMES = [
+  { en: "Sunday", ms: "Ahad", zh: "星期日" },
+  { en: "Monday", ms: "Isnin", zh: "星期一" },
+  { en: "Tuesday", ms: "Selasa", zh: "星期二" },
+  { en: "Wednesday", ms: "Rabu", zh: "星期三" },
+  { en: "Thursday", ms: "Khamis", zh: "星期四" },
+  { en: "Friday", ms: "Jumaat", zh: "星期五" },
+  { en: "Saturday", ms: "Sabtu", zh: "星期六" },
+];
+const dayName = (iso: string) => DAY_NAMES[new Date(iso + "T12:00:00").getDay()] || DAY_NAMES[2];
+
+export default async function DrawSchedulePage() {
+  // The dates the owner keeps in /admin, so a new special draw is listed here
+  // as soon as it is saved.
+  const specialDates = await getSpecialDrawDates();
   return (
     <>
       <Header />
@@ -152,17 +167,29 @@ export default function DrawSchedulePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {SPECIAL_DRAW_DATES.map((iso) => (
-                    <tr key={iso}>
-                      <td>
-                        <strong>{pretty(iso)}</strong>
+                  {specialDates.length ? (
+                    specialDates.map((iso) => (
+                      <tr key={iso}>
+                        <td>
+                          <strong>{pretty(iso)}</strong>
+                        </td>
+                        <td>
+                          <L en={dayName(iso).en} ms={dayName(iso).ms} zh={dayName(iso).zh} />
+                        </td>
+                        <td>{SPECIAL_GAMES}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3}>
+                        <L
+                          en="No special draw has been announced at the moment. This page is updated as soon as the operators publish the next one."
+                          ms="Tiada cabutan khas diumumkan buat masa ini. Halaman ini dikemas kini sebaik sahaja pengendali mengumumkan cabutan seterusnya."
+                          zh="目前还没有公布特别开彩。营运商一公布，这里就会更新。"
+                        />
                       </td>
-                      <td>
-                        <L en="Tuesday" ms="Selasa" zh="星期二" />
-                      </td>
-                      <td>{SPECIAL_GAMES}</td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
