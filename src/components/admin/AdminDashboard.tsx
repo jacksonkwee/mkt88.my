@@ -6,6 +6,7 @@ type Any = Record<string, any>;
 
 export default function AdminDashboard() {
   const [c, setC] = useState<Any | null>(null);
+  const [health, setHealth] = useState<Any | null>(null);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
 
@@ -16,6 +17,17 @@ export default function AdminDashboard() {
         setC(await r.json());
       })
       .catch(() => (window.location.href = "/admin/login"));
+    /*
+     * Whether the live sources still have the shape their game needs.
+     *
+     * A source that changed its page is refused before it reaches the cards (see
+     * lib/source-health.ts), so a card showing an older draw is the symptom -
+     * this is where the cause is named.
+     */
+    fetch("/api/source-health")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => j && setHealth(j))
+      .catch(() => {});
   }, []);
 
   if (!c) return <p className="text-center mt-4">Loading admin…</p>;
@@ -77,6 +89,26 @@ export default function AdminDashboard() {
     <div style={{ maxWidth: 760, margin: "24px auto", padding: "0 16px" }}>
       <h1 style={{ fontSize: 22 }}>Admin Panel</h1>
       <p style={{ color: "#666" }}>Logged in. Changes apply instantly across the whole site.</p>
+
+      {health ? (
+        <section style={{ ...box, borderColor: health.bad ? "#cc0000" : "#12b76a" }}>
+          <h2 style={{ fontSize: 17, marginTop: 0 }}>
+            📡 Live sources {health.bad ? "— " + health.bad + " needs attention" : "— all good"}
+          </h2>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+            {(health.sources || []).map((s: Any) => (
+              <li key={s.key} style={{ color: s.ok ? "#1b5e20" : "#cc0000", marginBottom: 2 }}>
+                <strong>{s.name}</strong>{" "}
+                {s.ok
+                  ? "OK"
+                  : (s.why || "shape changed") +
+                    (s.okAt ? " · last good " + new Date(s.okAt).toLocaleString() : "")}
+              </li>
+            ))}
+            {!(health.sources || []).length ? <li>No source has reported yet.</li> : null}
+          </ul>
+        </section>
+      ) : null}
 
       <section style={box}>
         <h2 style={{ fontSize: 17, marginTop: 0 }}>🎨 Design / General</h2>

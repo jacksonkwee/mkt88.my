@@ -1,0 +1,167 @@
+import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
+
+/**
+ * Which live sources are behaving today, and which ones changed shape.
+ *
+ * Every result we publish is parsed out of somebody else's page or API. When one
+ * of them changes its layout the parse does not crash - it quietly produces the
+ * wrong shape, and that wrong shape is what lands on the card. That is how an
+ * evening of "the numbers are wrong again" starts, and nobody finds out until a
+ * user looks at their phone (asked for 15 Oct 2026).
+ *
+ * So every source's result is checked against the shape its game must have. A
+ * source that fails is NOT written to the cards: the card keeps the last value
+ * that was right instead of showing a wrong one. The failure is recorded here,
+ * kept in Firestore so every server instance and the admin page see the same
+ * thing, and shown on /admin.
+ */
+export interface SourceState {
+  key: string;
+  /** What the reader would call it. */
+  name: string;
+  ok: boolean;
+  /** Why it failed, in plain words. */
+  why?: string;
+  /** When this state was last set (ms). */
+  at: number;
+  /** When this source last produced a good result (ms). */
+  okAt?: number;
+}
+
+const DOC = "config/source-health";
+const memory = new Map<string, SourceState>();
+let dirty = false;
+
+/**
+ * Record the outcome of one source.
+ *
+ * Firestore is only written when a source CHANGES state - the snapshot is
+ * rebuilt every few seconds and a write per rebuild would be absurd.
+ */
+export function noteSource(key: string, name: string, result: { ok: boolean; why?: string }): void {
+  const prev = memory.get(key);
+  const now = Date.now();
+  if (prev && prev.ok === result.ok && prev.why === result.why) {
+    prev.at = now;
+    if (result.ok) prev.okAt = now;
+    return;
+  }
+  memory.set(key, {
+    key, name,
+    ok: result.ok,
+    why: result.ok ? undefined : (result.why || "shape changed"),
+    at: now,
+    okAt: result.ok ? now : prev?.okAt,
+  });
+  dirty = true;
+}
+
+/** Push a changed state to Firestore (called once at the end of a snapshot build). */
+export async function flushSourceHealth(): Promise<void> {
+  if (!dirty) return;
+  dirty = false;
+  if (!pushConfigured()) return;
+  try {
+    await firestorePut(DOC, { json: JSON.stringify([...memory.values()]) });
+  } catch { /* the snapshot must not fail because a note could not be stored */ }
+}
+
+/** Every source we have heard from, worst first. */
+export async function getSourceHealth(): Promise<SourceState[]> {
+  if (memory.size) return sortHealth([...memory.values()]);
+  if (!pushConfigured()) return [];
+  try {
+    const doc = await firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(DOC);
+    const raw = doc?.fields?.json?.stringValue;
+    return raw ? sortHealth(JSON.parse(raw) as SourceState[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+const sortHealth = (list: SourceState[]) =>
+  list.sort((a, b) => Number(a.ok) - Number(b.ok) || a.name.localeCompare(b.name));
+
+/*
+ * The shape each game's grid must have.
+ *
+ * These are the operator's own board sizes, checked against the official sites:
+ * how many top prizes, how many special and consolation cells, and how many
+ * digits each number carries. A parser that suddenly produces a different
+ * COUNT, a wrong-width number, a repeat inside a grid, or a date that is not
+ * today or yesterday has met a changed page - not a result.
+ */
+export interface GridShape {
+  prizes: number;
+  special: number;
+  cons: number;
+  digits: number;
+  /** Some games print the 1st-3rd prizes as letters into the special grid. */
+  allowBlank?: boolean;
+}
+
+export const GRID_SHAPES: Record<string, GridShape> = {
+  "table-1": { prizes: 3, special: 13, cons: 10, digits: 4 },
+  "table-4": { prizes: 3, special: 10, cons: 10, digits: 4 },
+  "table-5": { prizes: 3, special: 6, cons: 6, digits: 6 },
+  "table-6": { prizes: 3, special: 13, cons: 10, digits: 4 },
+  "table-8": { prizes: 3, special: 13, cons: 10, digits: 4 },
+  "table-9": { prizes: 3, special: 10, cons: 10, digits: 4 },
+  "table-10": { prizes: 3, special: 13, cons: 10, digits: 4 },
+  "table-11": { prizes: 3, special: 10, cons: 10, digits: 4 },
+  "table-13": { prizes: 3, special: 13, cons: 10, digits: 4 },
+  "table-17": { prizes: 3, special: 13, cons: 10, digits: 4 },
+};
+
+/**
+ * "No number here" as the operators actually print it.
+ *
+ * Dashes of any length are the usual one; Sports Toto prints "****" while a
+ * draw is pending, and the mirror's east page leaves a bare "-". All of them
+ * mean empty, and treating them as a changed page would cry wolf every day
+ * (found 15 Oct 2026).
+ */
+const isDashVal = (v: string) => /^(-{1,}|\*{2,})$/.test(String(v || "").trim());
+const isNumberish = (v: string) => /^[0-9]+$/.test(String(v || "").trim());
+
+/**
+ * Check one game's parsed board. Returns a plain-language reason, or null when
+ * the shape is what it should be.
+ *
+ * A board still being revealed is fine - empty cells are expected. What is not
+ * fine is the wrong number of cells, a number of the wrong width, a repeat
+ * inside the same grid, or a date that is not today or yesterday.
+ */
+export function checkGrid(cls: string, vals: Record<string, string>, todayIso: string, yestIso: string): string | null {
+  const g = GRID_SHAPES[cls];
+  if (!g) return null;
+  const prizes = ["first_prize", "second_prize", "third_prize"].map((k) => vals[k]).filter((v) => v !== undefined);
+  const special = Array.from({ length: g.special }, (_, i) => vals["special-" + (i + 1)]).filter((v) => v !== undefined);
+  const cons = Array.from({ length: g.cons }, (_, i) => vals["consolation-" + (i + 1)]).filter((v) => v !== undefined);
+  if (prizes.length && prizes.length !== g.prizes) return "头奖格数不对（" + prizes.length + "，应该是 " + g.prizes + "）";
+  // Some feeds hand over the card's full fifteen special slots for a game that
+  // only publishes thirteen - the extras are spare cells and are normally
+  // blank. Too FEW cells is the changed-page signal; a NUMBER in a spare cell
+  // is the "same number printed twice" fault, and is caught below.
+  if (special.length && special.length < g.special) return "特别奖格数不足（" + special.length + "，应该是 " + g.special + "）";
+  if (cons.length && cons.length < g.cons) return "安慰奖格数不足（" + cons.length + "，应该是 " + g.cons + "）";
+  const spare = [...special.slice(g.special), ...cons.slice(g.cons)].filter((v) => v && !isDashVal(v));
+  if (spare.length) return "多出来的空格里出现了号码（" + spare[0] + "）";
+  const all = [...prizes, ...special, ...cons].map((v) => String(v).trim());
+  const bad = all.find((v) => v && !isDashVal(v) && !isNumberish(v));
+  if (bad) return "有号码不是数字（" + bad.slice(0, 12) + "）";
+  const wrongWidth = all.find((v) => v && !isDashVal(v) && isNumberish(v) && v.replace(/^0+(?=\d)/, "").length > g.digits);
+  if (wrongWidth) return "号码位数太多（" + wrongWidth + "）";
+  const drawn = (arr: string[]) => arr.filter((v) => v && !isDashVal(v));
+  for (const [label, arr] of [["特别奖", drawn(special)], ["安慰奖", drawn(cons)]] as [string, string[]][]) {
+    const dupes = arr.filter((v, i) => arr.indexOf(v) !== i);
+    if (dupes.length) return label + "里面有重复号码（" + dupes[0] + "）";
+  }
+  const date = String(vals.date || "").trim();
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(date);
+  if (m) {
+    const iso = m[3] + "-" + m[2] + "-" + m[1];
+    if (iso !== todayIso && iso !== yestIso) return "卡片日期是 " + date + "（既不是今天也不是昨天）";
+  }
+  return null;
+}

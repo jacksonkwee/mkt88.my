@@ -1,5 +1,6 @@
 import perdanaOfficial from "./perdana-official.json";
 import sgLiveCapture from "../../data/sg-live.json";
+import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -1135,10 +1136,40 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const homeCards = parseCards(home);
   const eastCards = parseCards(east);
   const sgMirrorCards = parseCards(sgTotoPage);
-  const cards = { ...homeCards, ...eastCards, ...sgMirrorCards, ...sgOfficial, ...liveCards };
+  /*
+   * Every source is checked against the shape its game must have before it is
+   * allowed onto a card.
+   *
+   * A source that changed shape is refused: the card keeps the last value that
+   * was right rather than showing a wrong one, and the failure is recorded and
+   * shown on /admin (see source-health.ts). "No data at all" is not a failure -
+   * plenty of games do not draw every day, and a source that is merely quiet
+   * must not raise an alarm.
+   */
+  const checkSource = (key: string, name: string, cls: string, vals: Record<string, string> | null | undefined): boolean => {
+    if (!vals) return true;
+    const why = checkGrid(cls, vals, today.iso, yest.iso);
+    noteSource(key, name, why ? { ok: false, why } : { ok: true });
+    return !why;
+  };
+  /** Drop the classes of a whole feed that no longer have the right shape. */
+  const checkedFeed = (inCards: Record<string, Record<string, string>>, label: string): Record<string, Record<string, string>> => {
+    const out: Record<string, Record<string, string>> = {};
+    for (const [cls, vals] of Object.entries(inCards || {})) {
+      if (checkSource(label + ":" + cls, label + " " + cls, cls, vals)) out[cls] = vals;
+    }
+    return out;
+  };
+  const cards = {
+    ...checkedFeed(homeCards, "镜像站首页"),
+    ...checkedFeed(eastCards, "镜像站东马页"),
+    ...checkedFeed(sgMirrorCards, "镜像站新加坡页"),
+    ...checkedFeed(sgOfficial, "Singapore Pools"),
+    ...checkedFeed(liveCards, "live4d2u"),
+  };
   // Magnum's own feed wins over the mirror when it has today's draw - but a
   // blank from it must never wipe a number the mirror already published.
-  if (magnumToday) {
+  if (magnumToday && checkSource("magnum", "Magnum 万能（官方）", "table-1", magnumToday)) {
     const base = (cards["table-1"] || {}) as Record<string, string>;
     // The gold amounts belong to the Jackpot Gold card, not this one.
     const payload: Record<string, string> = {};
@@ -1173,7 +1204,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * stands - blanks included - so the new draw starts clean instead of keeping
    * the previous draw's numbers in the boxes the operator has not reached yet.
    */
-  if (sabah88) {
+  if (sabah88 && checkSource("sabah88", "Sabah 88 沙巴（官方）", "table-10", sabah88)) {
     const base = (cards["table-10"] || {}) as Record<string, string>;
     if (drawNotOlder(sabah88.date, base.date)) cards["table-10"] = mergeCardPayload(base, sabah88);
   }
@@ -1181,7 +1212,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * Special Cash Sweep from the operator's own feed. This one carries its draw
    * date, so an older draw can never land under today's heading.
    */
-  if (cashSweep) {
+  if (cashSweep && checkSource("cashsweep", "Cash Sweep 砂拉越（官方）", "table-9", cashSweep)) {
     // Same rule as Sabah 88: taken for this card's draw or a newer one, and a
     // new draw is taken as it stands so the old numbers cannot linger.
     const base = (cards["table-9"] || {}) as Record<string, string>;
@@ -1198,7 +1229,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * numbers there instead, which is how a number the operator prints in box 11
    * came out in box 8 (reported 11 Oct 2026).
    */
-  if (stc4d) {
+  if (stc4d && checkSource("stc4d", "Sandakan 山打根（官方）", "table-8", stc4d)) {
     const base = (cards["table-8"] || {}) as Record<string, string>;
     if (!stc4d.date || stc4d.date === "----" || base.date === stc4d.date) {
       cards["table-8"] = { ...base, ...stc4d };
@@ -1227,6 +1258,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const hasOwnResult = Object.entries(vals).some(([k, v]) =>
       k !== "date" && k !== "draw_no" && !!v && !/^----+$/.test(String(v)));
     if (!hasOwnResult) continue;
+    if (!checkSource("damacai:" + cls, "Da Ma Cai 大马彩（官方） " + cls, cls, vals)) continue;
     const base = (cards[cls] || {}) as Record<string, string>;
     // A newer draw is taken as it stands, so its empty slots cannot keep the
     // previous draw's numbers (see mergeCardPayload).
@@ -1765,6 +1797,9 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hari,
     gd6: gdSix.six, gdjp7: gdSix.jp, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
   };
+  // Store any source that just changed state (one write per change, not one per
+  // rebuild - this runs every few seconds).
+  await flushSourceHealth();
   cache = snap;
   return snap;
 }
