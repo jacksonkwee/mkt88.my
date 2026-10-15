@@ -1190,6 +1190,11 @@ const MANUAL_FIELDS: Record<string, string[]> = {
 const GD_SPECIAL_LETTERS = "ABCDEFGHIJKLM";
 const GD_CONSOLATION_LETTERS = "NOPQRSTUVW";
 const MANUAL_KEYS: Record<string, Record<string, string>> = {
+  "table-6": {
+    "1ST": "first_prize", "2ND": "second_prize", "3RD": "third_prize",
+    ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["S" + (i + 1), "special-" + (i + 1)])),
+    ...Object.fromEntries(Array.from({ length: 10 }, (_, i) => ["C" + (i + 1), "consolation-" + (i + 1)])),
+  },
   "table-13": {
     ...Object.fromEntries([...GD_SPECIAL_LETTERS].map((L, i) => [L, "special-" + (i + 1)])),
     ...Object.fromEntries([...GD_CONSOLATION_LETTERS].map((L, i) => [L, "consolation-" + (i + 1)])),

@@ -6,7 +6,11 @@ type Any = Record<string, any>;
 
 /** The cards the owner can type in - see MANUAL_FIELDS in lib/live-snapshot.ts. */
 const MANUAL_GAMES = [
-  { cls: "table-6", name: "Sports Toto 4D 多多", mode: "paste", fields: [] as string[], hint: "照顺序贴：3 个头奖、10 个特别奖、10 个安慰奖（共 23 个）" },
+  {
+    cls: "table-6", name: "Sports Toto 4D 多多", mode: "grid",
+    fields: ["1st", "2nd", "3rd", ...Array.from({ length: 10 }, (_, i) => "S" + (i + 1)), ...Array.from({ length: 10 }, (_, i) => "C" + (i + 1))],
+    hint: "官方只列 10 个特别奖（S1–S10）和 10 个安慰奖（C1–C10），另外 3 格留空",
+  },
   {
     cls: "table-13", name: "Grand Dragon 4D 豪龙", mode: "grid",
     fields: ["1st", "2nd", "3rd", ...[..."ABCDEFGHIJKLM"], ...[..."NOPQRSTUVW"]],
