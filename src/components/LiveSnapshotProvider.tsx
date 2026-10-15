@@ -3,6 +3,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 export type SixValue = { main: string; subs: Record<string, string>; date?: string } | null;
 export type SnapValue = {
+  /** When the server built this copy (ms). */
+  at?: number;
   cards?: Record<string, Record<string, string>>;
   perdana?: Record<string, { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null>;
   hari?: Record<string, unknown>;

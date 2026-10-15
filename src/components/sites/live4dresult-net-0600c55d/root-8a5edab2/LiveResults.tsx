@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { nativeHttpGet } from "../../../../lib/native-http";
 import { gameBySlug } from "./GameDefs";
+import { markLiveValue, copyMayWrite } from "./snapshot-values";
 
 /**
  * LiveResults - polls the original sources through the server proxy and
@@ -273,7 +274,7 @@ function weekdayOf(iso: string): string {
   return `${parts[2]}-${parts[1]}-${parts[0]} (${wk})`;
 }
 
-function setText(el: Element | null, v: string) {
+function setText(el: Element | null, v: string, live = false) {
   if (!el) return;
   // A 6D sub-prize (2nd..5th) must never be blanked by a source that does not
   // carry it - otherwise the good value is wiped right after it appears.
@@ -281,6 +282,13 @@ function setText(el: Element | null, v: string) {
   if (/^six_/.test(id) && /^----+$/.test(v.trim())) return;
   if (el.textContent !== v) el.textContent = v;
   el.classList.remove("live-pending");
+  /*
+   * A phone-side write is stamped with the moment it happened, so a copy of the
+   * snapshot built before that moment may not put its older value back. Without
+   * the stamp the older copy wins every second and the number blinks (see
+   * markLiveValue in snapshot-values.ts).
+   */
+  if (live) markLiveValue(el, v);
 }
 
 /**
@@ -456,7 +464,7 @@ function flash(card: Element) {
  */
 const shownDrawNo = new WeakMap<Element, string>();
 
-function applySet(card: Element, s: PrizeSet) {
+function applySet(card: Element, s: PrizeSet, live = false, copyDate = "") {
   if (!s || !s.prize || s.prize.length === 0) return;
   const hasAny = (arr?: string[]) => !!arr && arr.some((v) => !isDash(v));
   const pending: { el: Element; v: string }[] = [];
@@ -494,6 +502,13 @@ function applySet(card: Element, s: PrizeSet) {
     const cur = (el.textContent || "").trim();
     if (cur === val) return;
     if (isDash(val) && !force && !newDraw) return;
+    /*
+     * A copy of the snapshot built before this cell was last written by a
+     * phone-side source carries older news: writing it back is what made a
+     * number blink. A cell nobody wrote has no stamp, so the operator's
+     * deliberate blanks are still taken exactly as they are today.
+     */
+    if (!copyMayWrite(el, s.date || copyDate, curDate)) return;
     pending.push({ el, v: val });
   };
   /*
@@ -535,16 +550,16 @@ function applySet(card: Element, s: PrizeSet) {
   s.cons.forEach((v, i) => stage(consCells[i], v, true));
   if (s.date) {
     const dt = card.querySelector('[data-id="date"]');
-    if (dt && dt.textContent !== s.date) pending.unshift({ el: dt, v: s.date });
+    if (dt && dt.textContent !== s.date && copyMayWrite(dt, s.date || copyDate, curDate)) pending.unshift({ el: dt, v: s.date });
   }
   if (s.drawNo) {
     const dn = card.querySelector('[data-id="draw_no"]');
-    if (dn && dn.textContent !== s.drawNo) pending.push({ el: dn, v: s.drawNo });
+    if (dn && dn.textContent !== s.drawNo && copyMayWrite(dn, s.date || copyDate, curDate)) pending.push({ el: dn, v: s.drawNo });
   }
   if (pending.length === 0) return;
   // Write the whole draw in one pass. The old reveal (90ms per cell) made a
   // full HariHari card take over two seconds to fill in, number by number.
-  for (const c of pending) setText(c.el, c.v);
+  for (const c of pending) setText(c.el, c.v, live);
   flash(card);
 }
 
@@ -714,15 +729,17 @@ function applyToCardsById(cardId: string, apply: (card: Element) => void) {
   for (const card of cards) apply(card);
 }
 
-function applySixValues(cardId: string, s: SixSet | null) {
+function applySixValues(cardId: string, s: SixSet | null, live = false, copyDate = "") {
   if (!s) return;
   applyToCardsById(cardId, (card) => {
+    const cardDate = (card.querySelector('[data-id="date"]')?.textContent || "").trim();
     const pending = new Map<string, string>();
     const stage = (id: string, v: string | undefined) => {
       if (v === undefined) return;
       const el = card.querySelector('[data-id="' + id + '"]');
       if (!el) return;
       if ((el.textContent || "").trim() === v.trim()) return;
+      if (!copyMayWrite(el, s.date || copyDate, cardDate)) return;   // the phone's own board stands
       pending.set(id, v.trim());
     };
     stage("six_main", s.main);
@@ -731,23 +748,25 @@ function applySixValues(cardId: string, s: SixSet | null) {
     if (s.subs) for (const [k, v] of Object.entries(s.subs)) { if (!isDash(v)) stage(k, v); }
     if (pending.size === 0) return;
     // Write the whole card in one pass; the old reveal was 140ms per field.
-    for (const [id, v] of pending) setText(card.querySelector('[data-id="' + id + '"]'), v);
+    for (const [id, v] of pending) setText(card.querySelector('[data-id="' + id + '"]'), v, live);
     flash(card);
   });
 }
 
-function applyIdValues(cardId: string, vals: Record<string, string>) {
+function applyIdValues(cardId: string, vals: Record<string, string>, live = false, copyDate = "") {
   applyToCardsById(cardId, (card) => {
+    const cardDate = (card.querySelector('[data-id="date"]')?.textContent || "").trim();
     const pending: { el: Element; v: string }[] = [];
     for (const [id, v] of Object.entries(vals)) {
       const el = card.querySelector('[data-id="' + id + '"]');
       if (!el) continue;
       if ((el.textContent || "").trim() === v.trim()) continue;
+      if (!copyMayWrite(el, vals.date || copyDate, cardDate)) continue;
       pending.push({ el, v: v.trim() });
     }
     if (pending.length === 0) return;
     // Write the whole card in one pass; the old reveal was 140ms per field.
-    for (const c of pending) setText(c.el, c.v);
+    for (const c of pending) setText(c.el, c.v, live);
     flash(card);
   });
 }
@@ -984,10 +1003,12 @@ async function updateGdNineCards() {
   try {
     const gd = await gdInfo();
     if (gd) {
-      applySixValues("table-14-2026-09-06-6d", gd.six);
+      // live = true on every write in here: this is the phone reading the
+      // operator itself, so what it learns is stamped (see markLiveValue).
+      applySixValues("table-14-2026-09-06-6d", gd.six, true);
       // The jackpot card is its own card - keep its date in step too.
-      if (gd.six.date) applyIdValues("table-14-2026-09-06-6d-jp", { date: gd.six.date });
-      applyIdValues("table-13-2026-09-06", liveJackpotLetter("table-13-2026-09-06", gd.jp4));
+      if (gd.six.date) applyIdValues("table-14-2026-09-06-6d-jp", { date: gd.six.date }, true);
+      applyIdValues("table-13-2026-09-06", liveJackpotLetter("table-13-2026-09-06", gd.jp4), true);
       for (const [key, id] of [["p1", "first_prize"], ["p2", "second_prize"], ["p3", "third_prize"]] as [string, string][]) {
         const L = gd.jp4[key];
         applyToCardsById("table-13-2026-09-06", (card) => {
@@ -1067,7 +1088,7 @@ async function updateGdNineCards() {
         const wantDay = dateScore(dateLbl);
         if (curDay && wantDay && wantDay < curDay) continue;
         if (dt && dt.textContent !== dateLbl) {
-          setText(dt, dateLbl);
+        setText(dt, dateLbl, true);
           // Only wipe the old numbers when the draw date actually changes.
           clearCardNumbers(nineCard);
         }
@@ -1075,17 +1096,17 @@ async function updateGdNineCards() {
       }
     }
     if (six && six.main && !isDash(six.main)) {
-      applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl });
-      applyIdValues("table-18-2026-09-06-6d-jp", { date: dateLbl });
+        applySixValues("table-18-2026-09-06-6d", { ...six, date: dateLbl }, true);
+        applyIdValues("table-18-2026-09-06-6d-jp", { date: dateLbl }, true);
     } else {
-      applySixValues("table-18-2026-09-06-6d", { main: "----", date: dateLbl });
-      applyIdValues("table-18-2026-09-06-6d-jp", { date: dateLbl });
+        applySixValues("table-18-2026-09-06-6d", { main: "----", date: dateLbl }, true);
+        applyIdValues("table-18-2026-09-06-6d-jp", { date: dateLbl }, true);
     }
     if (jp9) {
       const vals: Record<string, string> = {};
       if (jp9.pool) vals.n9_sj_pool = jp9.pool;
       if (jp9.rows) for (const [k, v] of Object.entries(jp9.rows)) if (v) vals[k] = v;
-      applyIdValues("table-18-2026-09-06-6d-jp", vals);
+        applyIdValues("table-18-2026-09-06-6d-jp", vals, true);
     }
   } catch {
     // ignore
@@ -1249,6 +1270,8 @@ async function updateCambodiaFeed() {
 
 type FastFeed = {
   date: string;
+  /** When the server built this copy (ms) - see writtenAfterCopy. */
+  at?: number;
   perdana: Record<string, PrizeSet | null>;
   hari: Record<string, { set: PrizeSet | null; six: SixSet | null; jp: Record<string, string> | null } | null>;
 };
@@ -1285,7 +1308,15 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
          * row, or the mirror's spare 14th slot, stayed on the card for good.
          */
         if (/^----+$/.test(v) && !newDraw && cls !== "table-1") continue;   // keep good numbers unless the draw changed
-        setText(cellFor(card, id), v);
+        const el = cellFor(card, id);
+        /*
+         * A cell a phone-side source has written holds the operator's own
+         * board; this copy is not allowed to undo it unless it is for a NEWER
+         * draw (see copyMayWrite). A cell nobody wrote has no stamp, so today's
+         * clearing still happens exactly as it did.
+         */
+        if (!copyMayWrite(el, vals.date, curDate)) continue;
+        setText(el, v);
       }
       /*
        * Grand Dragon and Nine Lotto publish only thirteen special numbers
@@ -1358,17 +1389,20 @@ async function syncFromServerFast(): Promise<boolean> {
 function applyCambodiaFeed(j: FastFeed): boolean {
   {
     let did = false;
+    // The draw this copy is for: a cell the phone wrote stands unless this copy
+    // is for a NEWER draw (see copyMayWrite).
+    const copyDate = j.date || "";
     for (const t of ["15:30", "19:30"]) {
       const st = j.perdana ? j.perdana[t] : null;
       if (setHasAny(st)) {
-        for (const card of Array.from(document.querySelectorAll('[id="' + PERDANA_ID[t] + '"]'))) { applySet(card, st); did = true; }
+        for (const card of Array.from(document.querySelectorAll('[id="' + PERDANA_ID[t] + '"]'))) { applySet(card, st, false, copyDate); did = true; }
       }
       const h = j.hari ? j.hari[t] : null;
       // A draw that has started but published nothing yet still moves the card on.
       if (h && h.set) {
-        for (const card of Array.from(document.querySelectorAll('[id="' + HARI_ID[t] + '"]'))) { applySet(card, h.set); did = true; }
-        if (h.six) applySixValues(HARI_ID[t] + "-6d", h.six);
-        if (h.jp) { applyIdValues(HARI_ID[t], h.jp); showJackpotLetter(HARI_ID[t], h.jp.jp_no || ""); }
+        for (const card of Array.from(document.querySelectorAll('[id="' + HARI_ID[t] + '"]'))) { applySet(card, h.set, false, copyDate); did = true; }
+        if (h.six) applySixValues(HARI_ID[t] + "-6d", h.six, false, copyDate);
+        if (h.jp) { applyIdValues(HARI_ID[t], h.jp, false, copyDate); showJackpotLetter(HARI_ID[t], h.jp.jp_no || ""); }
       }
     }
     return did;
@@ -1395,7 +1429,9 @@ async function updatePerdanaHome() {
       if (!pd) continue;
       const st = parsePerdana(pd)[time];
       const cards = [...document.querySelectorAll('[id="' + id + '"]')];
-      if (setHasAny(st)) { for (const card of cards) applySet(card, st); break; }
+      // live = true: this is the phone's own read of the operator, so it is
+      // stamped and an older server copy cannot undo it.
+      if (setHasAny(st)) { for (const card of cards) applySet(card, st, true); break; }
     }
   }
 }
@@ -1413,8 +1449,8 @@ async function updateHariHome() {
         const cards = [...document.querySelectorAll('[id="' + id + '"]')];
         // Accept a started draw even with every cell still blank.
         if (!set) continue;
-        for (const card of cards) applySet(card, set);
-        applySixValues(id + "-6d", sixFromHariJson(j));
+        for (const card of cards) applySet(card, set, true);
+        applySixValues(id + "-6d", sixFromHariJson(j), true);
         try {
           const jr = await fetchText(`https://api.hari4d.com/Jackpot/GetJackpot?date=${d}T${time}:00`);
           if (jr) {
@@ -1426,7 +1462,7 @@ async function updateHariHome() {
               if (jp.number2) nums.push(String(jp.number2));
               if (jp.jackpotShare != null) vals.jp_units = String(jp.jackpotShare);
               showJackpotLetter(id, nums.join(" or "));
-              applyIdValues(id, vals);
+              applyIdValues(id, vals, true);
             }
           }
         } catch { /* ignore */ }

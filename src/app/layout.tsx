@@ -132,7 +132,15 @@ const BOOT_SCRIPT = `
       var nodes = document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)");
       for (var i = 0; i < nodes.length; i++){
         if(isOlderSet(nodes[i], vals)) continue;
-        Object.keys(vals).forEach(function(id){ var v = vals[id]; if(v === undefined || v === null || v === "" || v === "-") return; txt(nodes[i].querySelector('[data-id="' + id + '"]'), v); });
+        var __dEl = nodes[i].querySelector('[data-id="date"]');
+        var __cardDate = __dEl ? (__dEl.textContent || "").trim() : "";
+        Object.keys(vals).forEach(function(id){
+          var v = vals[id];
+          if(v === undefined || v === null || v === "" || v === "-") return;
+          var el = nodes[i].querySelector('[data-id="' + id + '"]');
+          if(phoneOwnsCell(el, vals.date, __cardDate)) return;   // the phone's own board stands
+          txt(el, v);
+        });
       }
     });
   }
@@ -147,6 +155,24 @@ const BOOT_SCRIPT = `
       txt(card.querySelector('[data-id="six_' + n + '"]'), (ad ? "----" : a) + " or " + (bd ? "----" : b));
     }
   }
+  /*
+   * A cell a phone-side source has written holds the operator's own board - for
+   * HariHari the only reading there is, because its API blocks our server. Such
+   * a cell must not be undone by a copy of the snapshot, however fresh that copy
+   * is: measured 15 Oct 2026, the copy is rebuilt every second with yesterday's
+   * HariHari draw still in it, and it put that date and those numbers back over
+   * the live ones every time. A copy for a NEWER draw is the one exception - the
+   * previous draw's numbers then have to go. A cell nobody wrote has no mark, so
+   * the clearing the page does today still happens exactly as it did.
+   */
+  function phoneOwnsCell(el, copyDate, cardDate){
+    if(!el || !el.getAttribute) return false;
+    var at = Number(el.getAttribute("data-live-at") || 0);
+    if(!at) return false;
+    var copyDay = dayOf(copyDate), cardDay = dayOf(cardDate);
+    if(copyDay && cardDay && copyDay > cardDay) return false;
+    return true;
+  }
   function applySet(card, set){
     if(!card || !set || !set.prize) return;
     var dateEl = card.querySelector('[data-id="date"]');
@@ -156,6 +182,7 @@ const BOOT_SCRIPT = `
     function put(el, v){
       if(!el || v === undefined || v === null) return;
       if(dot(v) && !newDraw) return;          // an older draw never blanks a value
+      if(phoneOwnsCell(el, set.date, curDate)) return;   // the phone's own board stands
       txt(el, v === "" ? "----" : v);         // a new draw shows what is still pending as "----"
     }
     var tables = card.querySelectorAll("table");
@@ -282,7 +309,7 @@ const BOOT_SCRIPT = `
 
   function run(){
     changed = false;
-    if(snap && snap.cards) applyCards(snap.cards);
+    if(snap && snap.cards) applyCards(snap.cards, snap.at);
     applyCambodia(snap);
     watchSix();
     var sixCells = document.querySelectorAll(GUARDED);
@@ -341,6 +368,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   try {
     const snap = await getSnapshotForRender();
     snapObj = {
+      // When this copy was built. The page stamps every phone-side write with
+      // the moment it happens, and refuses a copy older than that write, so a
+      // live number cannot be blanked back by a copy from a few seconds ago.
+      at: snap.at,
       cards: snap.cards,
       perdana: snap.perdana as unknown as SnapValue["perdana"],
       hari: snap.hari as unknown as SnapValue["hari"],

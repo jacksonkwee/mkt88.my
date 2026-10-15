@@ -11,6 +11,8 @@ export type PrizeSet = { prize: string[]; special: string[]; cons: string[]; dat
 export type HariEntry = { set?: PrizeSet | null; six?: { main: string; subs: Record<string, string> } | null; jp?: Record<string, string> | null } | null;
 export type SixEntry = { main: string; subs: Record<string, string>; date?: string } | null;
 export type Snap = {
+  /** When the server built this copy (ms). Absent on the very first render. */
+  at?: number;
   cards?: Record<string, Record<string, string>>;
   perdana?: Record<string, PrizeSet | null>;
   hari?: Record<string, HariEntry>;
@@ -75,6 +77,147 @@ function sixSubs(values: Record<string, string>, subs?: Record<string, string>) 
   }
 }
 
+/*
+ * What a phone-side source has already put on a card, and when.
+ *
+ * The server copy a phone polls is a few seconds old. When a phone-side source
+ * has just published a number, that older copy still says "----" for the cell -
+ * and re-applying it made the number appear, vanish a moment later, and come
+ * back on the next sweep (reported 14 Oct 2026).
+ *
+ * "Not published yet" and "deliberately empty" are both "----", so the only way
+ * to tell them apart is WHEN each was written. Every phone-side writer stamps
+ * the cell it writes with the moment it wrote it; a copy built BEFORE that
+ * moment may not replace or blank that cell. A cell nobody has written - say a
+ * leftover from the captured page - carries no stamp, so the clearing the site
+ * does today still happens exactly as it does now.
+ *
+ * Only the four games the user asked for first are covered: Grand Dragon, Nine
+ * Lotto, Perdana and Lucky HariHari. Everything else keeps today's behaviour.
+ */
+export const LIVE_STAMPED_CLASSES = new Set([
+  "table-13", "table-14", "table-15", "table-16", "table-17", "table-18",
+]);
+
+export const LIVE_ATTR = "data-live-at";
+
+type LiveMark = { v: string; at: number; date: string };
+
+const liveCards = new Map<string, Map<string, LiveMark>>();
+/*
+ * The same writes again, keyed by where the cell sits (“table index:cell index”
+ * among that table's number cells).
+ *
+ * The prize and special cells of the two-draw games (Perdana, HariHari, and the
+ * 6D boards) carry no data-id - the writers fill them by position - so React's
+ * render path has nothing to key a live value on. Without this, a re-render put
+ * the snapshot's older board back over what the phone had just read.
+ */
+const liveCells = new Map<string, Map<string, LiveMark>>();
+
+function numberCellKey(el: Element): string {
+  const card = el.closest ? el.closest(".card.outer-box") : null;
+  const table = el.closest ? el.closest("table") : null;
+  if (!card || !table) return "";
+  const ti = Array.from(card.querySelectorAll("table")).indexOf(table);
+  const n = Array.from(table.querySelectorAll("td.lottery-prize-number, td.lottery-number")).indexOf(el);
+  return ti < 0 || n < 0 ? "" : ti + ":" + n;
+}
+
+/** The card class ("table-15") a cell belongs to, or "" when it has none. */
+export function cardClassOf(el: Element | null): string {
+  const card = el && el.closest ? el.closest(".card.outer-box") : null;
+  const m = /(?:^|\s)(table-\d+)(?:\s|$)/.exec(card ? String(card.className) : "");
+  return m ? m[1] : "";
+}
+
+/**
+ * Remember a value a phone-side source just wrote, and stamp the time on the
+ * cell itself so the inline boot script - which is plain JavaScript - can see
+ * it too.
+ */
+export function markLiveValue(el: Element | null, v: string): void {
+  if (!el || typeof el.setAttribute !== "function") return;
+  const cls = cardClassOf(el);
+  if (!cls || !LIVE_STAMPED_CLASSES.has(cls)) return;
+  const at = Date.now();
+  el.setAttribute(LIVE_ATTR, String(at));
+  const card = el.closest ? el.closest(".card.outer-box") : null;
+  const dateEl = card ? card.querySelector('[data-id="date"]') : null;
+  const mark: LiveMark = { v, at, date: dateEl ? (dateEl.textContent || "").trim() : "" };
+  const id = el.getAttribute("data-id");
+  if (id) {
+    const vals = liveCards.get(cls) || new Map<string, LiveMark>();
+    vals.set(id, mark);
+    liveCards.set(cls, vals);
+  }
+  const key = numberCellKey(el);
+  if (key) {
+    const cells = liveCells.get(cls) || new Map<string, LiveMark>();
+    cells.set(key, mark);
+    liveCells.set(cls, cells);
+  }
+}
+
+/**
+ * The value a phone-side source put in this cell of this card.
+ *
+ * It wins when it belongs to the same draw the copy is showing (the phone read
+ * the operator; the copy may not be able to) or when it was written after the
+ * copy was built. A copy for a newer draw wins, as it must.
+ */
+export function liveCellFor(cls: string, tableIndex: number, cellIndex: number, copyDate?: string, copyAt?: number): string | undefined {
+  if (!cls || !LIVE_STAMPED_CLASSES.has(cls)) return undefined;
+  const hit = liveCells.get(cls)?.get(tableIndex + ":" + cellIndex);
+  if (!hit) return undefined;
+  const markDay = dayValue(hit.date), copyDay = dayValue(copyDate);
+  if (markDay && copyDay && markDay < copyDay) return undefined;
+  if (markDay && copyDay) return hit.v;
+  return !copyAt || hit.at > copyAt ? hit.v : undefined;
+}
+
+/** "dd-mm-yyyy (Wed)" or "yyyy-mm-dd" -> a comparable number, else 0. */
+function dayValue(v?: string): number {
+  const s = String(v || "").trim();
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(s);
+  if (m) return Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  const iso = /(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  return iso ? Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3])) : 0;
+}
+
+/**
+ * May a copy of the snapshot write this cell?
+ *
+ * A stamped cell holds the operator's own board, read on the phone. For
+ * HariHari that is the ONLY reading there is - its API blocks our server - and
+ * for the others the phone reads the operator at least as early. So a stamped
+ * cell stands, even against a copy built a moment ago: measured 15 Oct 2026,
+ * the server copy is rebuilt every second or two with yesterday's HariHari
+ * draw still in it, and it put that date and those numbers back over the live
+ * ones every single time.
+ *
+ * The one exception is a copy for a NEWER draw - that is the previous draw's
+ * numbers having to go, and it is exactly when the card must move on.
+ */
+export function copyMayWrite(el: Element | null, copyDate?: string, cardDate?: string): boolean {
+  if (!el || typeof el.getAttribute !== "function") return true;
+  const at = Number(el.getAttribute(LIVE_ATTR) || 0);
+  if (!at) return true;                                       // nothing the phone wrote
+  const copyDay = dayValue(copyDate), cardDay = dayValue(cardDate);
+  if (copyDay && cardDay && copyDay > cardDay) return true;    // a new draw: take it
+  return false;
+}
+
+/** The values a phone-side source wrote since this copy was built. */
+export function liveValuesFor(cls: string, copyAt?: number): Record<string, string> {
+  if (!cls || !LIVE_STAMPED_CLASSES.has(cls) || !copyAt) return {};
+  const vals = liveCards.get(cls);
+  if (!vals) return {};
+  const out: Record<string, string> = {};
+  for (const [id, e] of vals) if (e.at > copyAt) out[id] = e.v;
+  return out;
+}
+
 /** Values / prize set that should be rendered for one card. */
 export function overridesFor(snap: Snap, cardId: string, tableCls: string): { values?: Record<string, string>; prizeSet?: PrizeSet | null } {
   // "mkt-static" marks a card whose numbers are final (Singapore Toto) - it is
@@ -82,6 +225,9 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
   const cls = (tableCls || "").replace("card outer-box ", "").replace(" mkt-static", "").replace(" six-jp", "").replace(" six-one", "").trim();
   const cleanCardId = cardId.replace(/-jp$/, "");
   const values: Record<string, string> = { ...((snap.cards && snap.cards[cls]) || {}) };
+  // Anything a phone-side source has written since this copy was built wins
+  // over it, so re-rendering the card cannot put the older copy back.
+  Object.assign(values, liveValuesFor(cls, snap.at));
 
   if (cleanCardId.startsWith("table-14")) {
     const g = snap.gd6;

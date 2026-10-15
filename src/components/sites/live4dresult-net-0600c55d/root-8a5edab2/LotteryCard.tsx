@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { rewriteHtml, toLocal } from "./site-paths";
 import { toSimplified } from "../../../../lib/zh-simplified";
+import { liveCellFor } from "./snapshot-values";
 
 export interface CardCellAttrs {
   width?: string;
@@ -109,6 +110,13 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
   const hasDraw = Boolean(values?.draw_no || prizeSet?.drawNo);
   const freshDate = hasDate;
   const freshDraw = hasDraw;
+  /*
+   * The draw this render is showing, and the card class - used to look up what a
+   * phone-side source has already read from the operator. Those values are put
+   * back below, so a re-render cannot show the older copy over them.
+   */
+  const liveCls = /(?:^|\s)(table-\d+)(?:\s|$)/.exec(card.cardCls || "")?.[1] || "";
+  const snapDate = values?.date || prizeSet?.date;
   const dateText = values?.date || prizeSet?.date || h.date;
   const drawText = values?.draw_no || prizeSet?.drawNo || h.drawNo;
   // A live date that differs from the one this card was built with means the
@@ -170,7 +178,9 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
                       const isNum = /lottery-prize-number|lottery-number/.test(c.cls || "");
                       if (isNum) {
                         const n = nth++;
-                        if (override === undefined && prizeSet) {
+                        const live = liveCellFor(liveCls, ti, n, snapDate);
+                        if (live !== undefined) override = live;
+                        else if (override === undefined && prizeSet) {
                           if (ti === 0) override = prizeSet.prize?.[n];
                           else if (ti === 1) override = prizeSet.special?.[n];
                           else if (ti === 2) override = prizeSet.cons?.[n];
