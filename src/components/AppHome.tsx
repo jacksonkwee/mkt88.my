@@ -478,6 +478,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
             </div>
             <div style={{ fontSize: 13, color: "#666", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>{tr("done", lang)}</button>
+            {/* The installed app has no address bar, so this is the only way to
+                reach the admin page from inside it - which is where the owner
+                turns their own "a live source broke" alerts on (see
+                lib/owner-alerts.ts). The page itself still needs the password. */}
+            <a href="/admin" style={{ display: "block", marginTop: 12, fontSize: 12, color: "#666", textAlign: "center", textDecoration: "none" }}>管理员登入 / Admin</a>
           </div>
         </div>
       ) : null}
