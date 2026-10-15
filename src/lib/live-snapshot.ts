@@ -1179,6 +1179,25 @@ const MANUAL_FIELDS: Record<string, string[]> = {
   "table-14": ["six_main"],
 };
 
+/**
+ * The same cards, addressed the way the owner thinks about them: "I=1912".
+ *
+ * Grand Dragon draws its specials first and puts each one into its own lettered
+ * box, so a position-by-position paste shifts everything the moment one box is
+ * empty. Typing the box instead touches exactly that box and leaves the rest of
+ * the board alone (asked for 15 Oct 2026).
+ */
+const GD_SPECIAL_LETTERS = "ABCDEFGHIJKLM";
+const GD_CONSOLATION_LETTERS = "NOPQRSTUVW";
+const MANUAL_KEYS: Record<string, Record<string, string>> = {
+  "table-13": {
+    ...Object.fromEntries([...GD_SPECIAL_LETTERS].map((L, i) => [L, "special-" + (i + 1)])),
+    ...Object.fromEntries([...GD_CONSOLATION_LETTERS].map((L, i) => [L, "consolation-" + (i + 1)])),
+    "1ST": "first_prize", "2ND": "second_prize", "3RD": "third_prize",
+  },
+  "table-14": { "6D": "six_main" },
+};
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
@@ -1829,8 +1848,24 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const manual = (await getSiteContent()).manual || {};
   for (const [cls, entry] of Object.entries(manual)) {
     const fields = MANUAL_FIELDS[cls];
-    const nums = String(entry?.text || "").split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
-    if (!fields || !nums.length) continue;
+    const text = String(entry?.text || "");
+    const keys = MANUAL_KEYS[cls];
+    /*
+     * "I=1912" targets one box, so a single cell can be corrected without
+     * touching the rest of the board. A plain list of numbers still fills a card
+     * in order, which is what Sports Toto's board wants.
+     */
+    const typed: Record<string, string> = {};
+    if (keys) {
+      for (const m of text.matchAll(/([A-Za-z0-9]{1,3})\s*[:=]\s*(\d{1,6})/g)) {
+        const id = keys[m[1].toUpperCase()];
+        if (id) typed[id] = m[2];
+      }
+    } else if (fields) {
+      const nums = text.split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
+      fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });
+    }
+    if (!Object.keys(typed).length) continue;
     /*
      * A typed board is only used while the card has not moved past it.
      *
@@ -1844,18 +1879,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const typedDay = entry.date ? dayScore(weekdayOf(entry.date)) : 0;
     const cardDay = dayScore((cards[cls] as Record<string, string> | undefined)?.date);
     if (typedDay && cardDay && typedDay < cardDay) continue;
-    const typed: Record<string, string> = { ...(cards[cls] || {}) };
-    if (entry.date) typed.date = weekdayOf(entry.date);
-    if (entry.drawNo) typed.draw_no = String(entry.drawNo).trim();
-    fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });
-    if (cls === "table-14" && /^\d{6}$/.test(nums[0])) {
-      const six = nums[0];
+    const next: Record<string, string> = { ...(cards[cls] || {}), ...typed };
+    if (entry.date) next.date = weekdayOf(entry.date);
+    if (entry.drawNo) next.draw_no = String(entry.drawNo).trim();
+    if (cls === "table-14" && /^\d{6}$/.test(typed.six_main || "")) {
+      const six = typed.six_main;
       for (const k of [5, 4, 3, 2]) {
-        typed["six_" + k + "a"] = six.slice(0, k);
-        typed["six_" + k + "b"] = six.slice(-k);
+        next["six_" + k + "a"] = six.slice(0, k);
+        next["six_" + k + "b"] = six.slice(-k);
       }
     }
-    cards[cls] = typed;
+    cards[cls] = next;
     noteSource("manual:" + cls, "手动输入 " + cls, { ok: true });
   }
   /*
