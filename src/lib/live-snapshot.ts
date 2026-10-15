@@ -1,6 +1,7 @@
 import perdanaOfficial from "./perdana-official.json";
 import sgLiveCapture from "../../data/sg-live.json";
 import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
+import { getSiteContent } from "./site-store";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -1153,6 +1154,29 @@ async function damacaiToday(iso: string): Promise<{ four: Record<string, string>
   } catch { return null; }
 }
 
+/**
+ * How a typed-in board maps onto a card, in the order the owner types it.
+ *
+ * Sports Toto 4D and Grand Dragon 4D are the two cards no machine of ours can
+ * read (bot protection, measured 15 Oct 2026). Both are typed as they appear on
+ * the operator's page: the three prizes, then the special numbers, then the
+ * consolations. Cells the operator leaves as holes - the three spare special
+ * boxes of a thirteen-box grid whose numbers went to the 1st, 2nd and 3rd
+ * prizes - simply stay empty, which is what the operator's own board shows.
+ */
+const MANUAL_FIELDS: Record<string, string[]> = {
+  "table-6": [
+    "first_prize", "second_prize", "third_prize",
+    ...Array.from({ length: 10 }, (_, i) => "special-" + (i + 1)),
+    ...Array.from({ length: 10 }, (_, i) => "consolation-" + (i + 1)),
+  ],
+  "table-13": [
+    "first_prize", "second_prize", "third_prize",
+    ...Array.from({ length: 13 }, (_, i) => "special-" + (i + 1)),
+    ...Array.from({ length: 10 }, (_, i) => "consolation-" + (i + 1)),
+  ],
+};
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
@@ -1791,6 +1815,26 @@ export async function buildSnapshot(): Promise<Snapshot> {
       const v = c["special-" + i];
       if (v && !/^----+$/.test(v) && prizes.includes(v)) c["special-" + i] = "----";
     }
+  }
+  /*
+   * The boards the owner typed in from the operator's own page.
+   *
+   * Applied last, so a typed board beats every automatic source for that card:
+   * it came off the operator's page, which is the best copy there is. The order
+   * the numbers are typed in is fixed per card (MANUAL_FIELDS) and shown in the
+   * admin panel next to the box.
+   */
+  const manual = (await getSiteContent()).manual || {};
+  for (const [cls, entry] of Object.entries(manual)) {
+    const fields = MANUAL_FIELDS[cls];
+    const nums = String(entry?.text || "").split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
+    if (!fields || !nums.length) continue;
+    const typed: Record<string, string> = { ...(cards[cls] || {}) };
+    if (entry.date) typed.date = weekdayOf(entry.date);
+    if (entry.drawNo) typed.draw_no = String(entry.drawNo).trim();
+    fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });
+    cards[cls] = typed;
+    noteSource("manual:" + cls, "手动输入 " + cls, { ok: true });
   }
 
   /*

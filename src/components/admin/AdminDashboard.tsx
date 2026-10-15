@@ -4,6 +4,12 @@ import { useEffect, useState } from "react";
 
 type Any = Record<string, any>;
 
+/** The cards the owner can type in - see MANUAL_FIELDS in lib/live-snapshot.ts. */
+const MANUAL_GAMES = [
+  { cls: "table-6", name: "Sports Toto 4D 多多", hint: "（应为 23 个：3 个头奖 + 10 个特别奖 + 10 个安慰奖）" },
+  { cls: "table-13", name: "Grand Dragon 4D 豪龙", hint: "（应为 26 个：3 个头奖 + 13 个特别奖 + 10 个安慰奖）" },
+];
+
 /**
  * This device's push token, when the page is opened inside the app.
  *
@@ -61,6 +67,12 @@ export default function AdminDashboard() {
   const ads = (p: Any) => setC({ ...c, ads: { ...c.ads, ...p } });
   const directTop = (p: Any) => ads({ direct: { ...c.ads.direct, top: { ...c.ads.direct.top, ...p } } });
   const placeholder = (p: Any) => ads({ direct: { ...c.ads.direct, placeholder: { ...c.ads.direct.placeholder, ...p } } });
+  const manualFor = (cls: string) => {
+    const m = (c.manual || {})[cls] as { date?: string; drawNo?: string; text?: string } | undefined;
+    return { date: m?.date || "", drawNo: m?.drawNo || "", text: m?.text || "" };
+  };
+  const setManual = (cls: string, patch: { date?: string; drawNo?: string; text?: string }) =>
+    set({ manual: { ...(c.manual || {}), [cls]: { ...manualFor(cls), ...patch } } });
 
   const upload = async (file: File, kind: "logo" | "banner" | "topAd") => {
     if (!file) return;
@@ -216,6 +228,38 @@ export default function AdminDashboard() {
             添加日期
           </button>
         </div>
+      </section>
+
+      <section style={box}>
+        <h2 style={{ fontSize: 17, marginTop: 0 }}>✍️ 手动输入成绩</h2>
+        <p style={{ color: "#666", fontSize: 13, marginTop: 0 }}>
+          Sports Toto 4D 和豪龙 4D 有机器人防护，程式抓不到。开彩时用你自己的浏览器打开官方成绩页，把号码照顺序贴进下面的框，再按最下面的 <strong>Save changes</strong>，网页和 App 马上就会显示你贴的号码。
+          <br />
+          贴的顺序：<strong>头奖、二奖、三奖</strong> → <strong>特别奖</strong> → <strong>安慰奖</strong>。号码之间用空格或换行分开都可以。
+        </p>
+        {MANUAL_GAMES.map((g) => {
+          const e = manualFor(g.cls);
+          const count = String(e.text || "").split(/[^0-9]+/).filter(Boolean).length;
+          return (
+            <div key={g.cls} style={{ borderTop: "1px solid #eee", marginTop: 12, paddingTop: 10 }}>
+              <strong>{g.name}</strong>
+              <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "6px 0", flexWrap: "wrap" }}>
+                <label style={{ fontSize: 13 }}>
+                  日期
+                  <input type="date" value={e.date} onChange={(ev) => setManual(g.cls, { date: ev.target.value })} style={{ padding: 6, marginLeft: 6 }} />
+                </label>
+                <label style={{ fontSize: 13 }}>
+                  期号（可留空）
+                  <input value={e.drawNo} onChange={(ev) => setManual(g.cls, { drawNo: ev.target.value })} style={{ padding: 6, marginLeft: 6, width: 110 }} />
+                </label>
+              </div>
+              <textarea rows={3} style={input} placeholder={g.hint} value={e.text} onChange={(ev) => setManual(g.cls, { text: ev.target.value })} />
+              <p style={{ fontSize: 12, margin: "4px 0 0", color: count ? "#1b5e20" : "#666" }}>
+                已读入 {count} 个号码{g.hint}
+              </p>
+            </div>
+          );
+        })}
       </section>
 
       <section style={box}>

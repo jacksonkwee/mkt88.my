@@ -10,6 +10,15 @@ export interface SiteContent {
   copyright: string;
   /** The extra draw dates the operators announce, edited in /admin. */
   specialDraws: string[];
+  /**
+   * Boards the owner typed in from an operator's own page, keyed by card class.
+   *
+   * Sports Toto and Grand Dragon are behind bot protection that refuses every
+   * machine we have (measured 15 Oct 2026), so the owner reads them in their own
+   * browser and types the numbers in /admin. See MANUAL_FIELDS in
+   * lib/live-snapshot.ts for the order they are typed in.
+   */
+  manual: Record<string, { date: string; drawNo?: string; text: string }>;
   settings: {
     primary: string;
     fontSize: number;
@@ -46,6 +55,7 @@ export const DEFAULTS: SiteContent = {
   notice: { enabled: false, text: "", bg: "#fff3cd", color: "#664d03", fx: "none" },
   copyright: "Copyright © 2016 - 2026 mkt88.my. All Rights Reserved.",
   specialDraws: ["2026-10-27", "2026-12-29"],
+  manual: {},
   settings: {
     primary: "#cc0000",
     fontSize: 16,
@@ -72,6 +82,7 @@ function merge(base: Partial<SiteContent>, patch: Partial<SiteContent>): SiteCon
   return {
     ...d, ...base, ...patch,
     copyright: patch.copyright ?? base.copyright ?? d.copyright,
+    manual: { ...(base.manual || {}), ...(patch.manual || {}) },
     notice: { ...d.notice, ...(base.notice || {}), ...(patch.notice || {}) },
     settings: {
       ...d.settings, ...(base.settings || {}), ...(patch.settings || {}),
