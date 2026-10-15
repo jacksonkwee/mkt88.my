@@ -1829,6 +1829,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const fields = MANUAL_FIELDS[cls];
     const nums = String(entry?.text || "").split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
     if (!fields || !nums.length) continue;
+    /*
+     * A typed board is only used while the card has not moved past it.
+     *
+     * Without this, one evening's entry would sit on the card for ever: the
+     * automatic source has the newer draw but the typed copy was applied last,
+     * so the card would keep showing last night's numbers under last night's
+     * date (found 15 Oct 2026, before the owner had typed anything). Once the
+     * card has a newer draw the typed copy is simply ignored - paste again and
+     * it takes over once more.
+     */
+    const typedDay = entry.date ? dayScore(weekdayOf(entry.date)) : 0;
+    const cardDay = dayScore((cards[cls] as Record<string, string> | undefined)?.date);
+    if (typedDay && cardDay && typedDay < cardDay) continue;
     const typed: Record<string, string> = { ...(cards[cls] || {}) };
     if (entry.date) typed.date = weekdayOf(entry.date);
     if (entry.drawNo) typed.draw_no = String(entry.drawNo).trim();
