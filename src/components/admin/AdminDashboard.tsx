@@ -146,6 +146,19 @@ export default function AdminDashboard() {
             <button onClick={() => setOwnerAlert(!(ownerDevice && ownerDevice.thisDevice))} style={{ padding: "8px 16px" }}>
               {ownerDevice && ownerDevice.thisDevice ? "关闭这台手机的管理员通知" : "让这台手机收管理员通知"}
             </button>
+            {ownerDevice && ownerDevice.thisDevice ? (
+              <button
+                onClick={async () => {
+                  setOwnerMsg("发送中…");
+                  try {
+                    const r = await fetch("/api/admin/owner-device", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ test: true }) });
+                    const j = await r.json();
+                    setOwnerMsg(j.sent ? "测试通知已发出 ✅ 看看这台手机有没有收到" : "已发出，但没有任何装置收到（先确认 App 的通知权限）");
+                  } catch { setOwnerMsg("发送失败"); }
+                }}
+                style={{ marginLeft: 8, padding: "8px 16px" }}
+              >发送测试通知</button>
+            ) : null}
           </>
         ) : (
           <p style={{ color: "#cc0000", fontSize: 13, marginTop: 0 }}>
