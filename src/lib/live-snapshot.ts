@@ -878,6 +878,24 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
     };
     S.forEach((v, i) => { out["special-" + (i + 1)] = moved.has(i) ? "----" : v; });
     C.forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
+    /*
+     * Magnum Life rides in the same file as the 4D draw.
+     *
+     * The Life card was filled from the mirror for no better reason than that
+     * nobody looked in this payload. It carries LifeNum1-8 and the two bonus
+     * numbers, and on 14 Oct 2026 they matched the mirror's card exactly. They
+     * travel under life_* so the card-1 merge skips them; the caller puts them
+     * on table-3.
+     */
+    const two = (v: unknown): string => {
+      const s = v == null ? "" : String(v).replace(/[^0-9]/g, "");
+      return s ? s.padStart(2, "0").slice(-2) : "----";
+    };
+    for (let i = 1; i <= 8; i++) out["life_number_" + i] = two(r["LifeNum" + i]);
+    out.life_bonus_1 = two(r.LifeBonusNum1);
+    out.life_bonus_2 = two(r.LifeBonusNum2);
+    out.life_date = weekdayOf(drawIso);
+    out.life_draw_no = String(r.DrawID || "").trim() || "----";
     // Nothing worth showing yet - leave the mirror's copy in place.
     if (p1.num === "----" && S.every((v) => /^----+$/.test(v))) return null;
     return out;
@@ -1232,7 +1250,10 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const base = (cards["table-1"] || {}) as Record<string, string>;
     // The gold amounts belong to the Jackpot Gold card, not this one.
     const payload: Record<string, string> = {};
-    for (const [k, v] of Object.entries(magnumToday)) if (!k.startsWith("gold_jp")) payload[k] = v;
+    for (const [k, v] of Object.entries(magnumToday)) {
+      if (k.startsWith("gold_jp") || k.startsWith("life_")) continue;
+      payload[k] = v;
+    }
     const merged = mergeCardPayload(base, payload);
     /*
      * The three prizes are taken exactly as the operator publishes them, blanks
@@ -1251,6 +1272,24 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (magnumToday.gold_jp1) gold.first_jackpot_prize = magnumToday.gold_jp1;
     if (magnumToday.gold_jp2) gold.second_jackpot_prize = magnumToday.gold_jp2;
     if (Object.keys(gold).length) cards["table-2"] = { ...(cards["table-2"] || {}), ...gold };
+    /*
+     * Magnum Life, from the same file, on that card's own ids.
+     *
+     * The operator's Life numbers and the mirror's agreed number for number on
+     * 14 Oct 2026, so this card no longer needs the mirror at all. It is only
+     * taken once the operator has the whole board; until then the card keeps
+     * what it already had.
+     */
+    const life: Record<string, string> = {};
+    for (let i = 1; i <= 8; i++) life["winning_number_" + i] = magnumToday["life_number_" + i] || "----";
+    life.bonus_number_1 = magnumToday.life_bonus_1 || "----";
+    life.bonus_number_2 = magnumToday.life_bonus_2 || "----";
+    life.date = magnumToday.life_date || "";
+    life.draw_no = magnumToday.life_draw_no || "";
+    if (life.winning_number_1 !== "----") {
+      noteSource("magnum-life", "Magnum Life 万能天天彩（官方）", { ok: true });
+      cards["table-3"] = { ...(cards["table-3"] || {}), ...life };
+    }
   }
   /*
    * Sabah 88 straight from the operator. Taken whenever the operator is on this
@@ -1705,8 +1744,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * real result - not a mistake. Rewriting an official board would hide a number
    * the player can see on the operator's own page, which is worse than the
    * duplicate. Only mirror-sourced cards are sanity-checked, because the
-   * mid-reveal glitches come from there: Magnum Life, Magnum Jackpot Gold and
-   * the two Sports Toto cards.
+   * mid-reveal glitches come from there: Magnum Jackpot Gold and the two Sports
+   * Toto cards.
    */
   /*
    * Grand Dragon 4D (table-13) belongs here too: its 4D card is fed by the
@@ -1714,7 +1753,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * it the stale value in cell 13 that copies cell 12 is never cleared, which is
    * exactly what was reported on 04-10-2026.
    */
-  const MIRROR_ONLY = ["table-2", "table-3", "table-6", "table-7", "table-13"];
+  const MIRROR_ONLY = ["table-2", "table-6", "table-7", "table-13"];
   /*
    * A mirror card must not wear a new date while it is still showing the old
    * draw's numbers.
