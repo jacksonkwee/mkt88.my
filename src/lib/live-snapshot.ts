@@ -182,6 +182,58 @@ function parseSingapore(html: string | null): Record<string, Record<string, stri
   grabTable("tbodyConsolationPrizes").slice(0, 10).forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
   return Object.keys(out).length > 3 ? { "table-11": out } : {};
 }
+/**
+ * Singapore Pools' own Toto file -> { "table-12": { dataId: value } }.
+ *
+ * The Toto card was filled from the mirror's Singapore page because the
+ * operator was thought to publish no Toto file of its own. It does: the same
+ * archive that carries the 4D draw carries the Toto draw, in the same markup
+ * family, so the card can read the operator like every other game does.
+ *
+ * The operator prints seven prize groups and the card has six rows, so groups
+ * 1-6 are mapped and group 7 has nowhere to go - exactly as the mirror did.
+ */
+function parseSingaporeToto(html: string | null): Record<string, Record<string, string>> {
+  if (!html) return {};
+  const liIdx = html.indexOf("<li");
+  const li = liIdx >= 0 ? html.slice(liIdx, html.indexOf("</li>", liIdx) > 0 ? html.indexOf("</li>", liIdx) : html.length) : "";
+  if (!li) return {};
+  const monthNum: Record<string, string> = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
+  const cell = (cls: string): string => {
+    const m = new RegExp("class=['\"]" + cls + "['\"][^>]*>([\\s\\S]*?)<\\/", "i").exec(li);
+    return m ? clean(m[1]) : "";
+  };
+  const out: Record<string, string> = {};
+  const dm = /([A-Za-z]{3}),\s*(\d{1,2})\s+([A-Za-z]{3}),?\s+(\d{4})/.exec(cell("drawDate"));
+  if (dm) {
+    const mo = monthNum[dm[3]];
+    if (mo) out.date = weekdayOf(`${dm[4]}-${mo}-${dm[2].padStart(2, "0")}`);
+  }
+  const dn = /Draw No\.?\s*([0-9]+)/.exec(cell("drawNumber"));
+  if (dn) out.draw_no = dn[1];
+  // The six winning numbers, then the "+" the card prints before the additional
+  // number, then the additional number itself.
+  for (let i = 1; i <= 6; i++) out["number_" + i] = cell("win" + i);
+  out.number_7 = "+";
+  out.number_8 = cell("additional");
+  let groups = 0;
+  for (const row of li.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+    const td = [...row[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((x) => clean(x[1]));
+    const g = /^Group\s+([1-6])$/.exec(td[0] || "");
+    if (!g || td.length < 3) continue;
+    out["group_amount_" + g[1]] = td[1] || "-";
+    out["group_share_" + g[1]] = td[2] || "-";
+    groups++;
+  }
+  /*
+   * This file always carries its last draw, so one that came back without a
+   * whole board is a changed page - refused here, and the mirror's copy of the
+   * card is left standing (see the caller).
+   */
+  const drawn = [1, 2, 3, 4, 5, 6, 8].filter((i) => /^[0-9]+$/.test(out["number_" + i]));
+  if (!out.date || !out.draw_no || drawn.length < 7 || groups < 6) return {};
+  return { "table-12": out };
+}
 /** live4d2u live feed -> the primary 4D cards. Explicit "----" placeholders
  *  replace stale values when a new draw is being revealed one number at a time. */
 function parseLiveFeed(feed: any): Record<string, Record<string, string>> {
@@ -1097,19 +1149,24 @@ async function damacaiToday(iso: string): Promise<{ four: Record<string, string>
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sgTotoPage, sg, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
+  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     /*
-     * Singapore Toto lives on the mirror's Singapore page only - its home page
-     * has no Toto card. Without this the app's Toto card had no live values to
-     * render, so React kept painting the ones captured on 03-09-2026 while the
-     * browser-side mirror wrote the current draw into the same cells: the date
-     * and the numbers flipped back and forth between the two (reported 11 Oct
-     * 2026). With the card in the snapshot both writers agree.
+     * Singapore Toto. Its card used to be read from the mirror's Singapore page
+     * - its home page has no Toto card. Without this the app's Toto card had no
+     * live values to render, so React kept painting the ones captured on
+     * 03-09-2026 while the browser-side mirror wrote the current draw into the
+     * same cells: the date and the numbers flipped back and forth between the
+     * two (reported 11 Oct 2026). With the card in the snapshot both writers
+     * agree.
+     *
+     * The mirror is still read, but only as the fallback for the hours the
+     * operator's own file is behind the draw - see where the two are compared.
      */
     get("https://live4dresult.net/singapore-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
+    get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
     // 4s: this host answers our server in ~14s, so a full wait stalled every
     // build. The file copy and the live feed below already carry Perdana.
@@ -1132,6 +1189,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Prefer direct/current feeds over the cloned home page.
   // The home page can publish Nine Lotto specials before its main prizes.
   const sgOfficial = parseSingapore(sg);
+  const sgTotoOfficial = parseSingaporeToto(sgToto);
   const liveCards = parseLiveFeed(feed);
   const homeCards = parseCards(home);
   const eastCards = parseCards(east);
@@ -1167,6 +1225,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
     ...checkedFeed(sgOfficial, "Singapore Pools"),
     ...checkedFeed(liveCards, "live4d2u"),
   };
+  /*
+   * Singapore Toto: the operator's own file, with the mirror kept only while
+   * the operator is behind it.
+   *
+   * The mirror used to be the only writer of this card. The operator's archive
+   * can lag the draw by a while, and a file that has not caught up yet must
+   * never pull the card back to the previous draw - so the older of the two is
+   * simply dropped, and a file that no longer parses is refused rather than
+   * pasted onto the card.
+   */
+  const officialToto = sgTotoOfficial["table-12"];
+  if (sgToto) noteSource("sg-toto", "Singapore Pools Toto 新加坡多多", officialToto ? { ok: true } : { ok: false, why: "官方 Toto 档案格式变了（卡片保留镜像站的成绩）" });
+  if (officialToto && drawDay(officialToto.date) >= drawDay(cards["table-12"]?.date)) cards["table-12"] = officialToto;
   // Magnum's own feed wins over the mirror when it has today's draw - but a
   // blank from it must never wipe a number the mirror already published.
   if (magnumToday && checkSource("magnum", "Magnum 万能（官方）", "table-1", magnumToday)) {
