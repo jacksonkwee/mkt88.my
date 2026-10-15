@@ -377,77 +377,6 @@ function clearIfNoDraw(target: Element) {
   for (const el of numEls) if (el.textContent && el.textContent.trim() !== "") el.textContent = "";
 }
 
-/**
- * `clearGaps` lists the card classes this mirror is the ONLY writer of. Their
- * source gaps mean "not published yet", so they must be cleared - otherwise a
- * draw rollover leaves the previous draw's numbers sitting in them. Every other
- * card is also filled by the snapshot, and blanking its gaps made the two
- * writers fight, which slid the numbers around.
- */
-async function syncLiveTable(url: string, tableClasses: string[]) {
-  const doc = await fetchDoc(url);
-  if (!doc) return;
-  for (const cls of tableClasses) {
-    const srcCard = doc.querySelector(".card.outer-box." + cls + ":not(.mkt-past)");
-    const targets = [...document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)")];
-    if (!srcCard || targets.length === 0) continue;
-    for (const target of targets) {
-      // Mirror the source exactly (both directions). When the official draw is
-      // cleared for the new draw date the numbers are wiped to "----" first;
-      // when the draw is released the numbers are revealed one by one.
-      const pending = new Map<string, string>();
-      let hasClear = false;
-      const els = [...target.querySelectorAll("[data-id]")];
-      for (const tgtEl of els) {
-        const id = tgtEl.getAttribute("data-id") || "";
-        if (!id) continue;
-        const srcEl = srcCard.querySelector('[data-id="' + id + '"]');
-        if (!srcEl) continue;
-        const v = (srcEl.textContent || "").trim();
-        const cur = (tgtEl.textContent || "").trim();
-        if (v === cur) continue;
-        // An empty cell on the source page carries no information - the source
-        // leaves gaps that the snapshot fills by data-id. Mirroring those gaps
-        // blanked good numbers and made the snapshot write them back, which is
-        // what slid the Special numbers back and forth roughly once a second.
-        if (v === "") continue;
-        // Special / Consolation are drawn grids where a number never repeats,
-        // so a value already shown in a sibling cell means the source page is
-        // laid out one cell off and this write would slide the whole grid.
-        // Only those two grids may be checked this way. Every other cell must
-        // be written as-is - the jackpot cards hold single DIGITS
-        // (8 7 8 1 1 5 + 1 0), which repeat by nature, and skipping a repeated
-        // digit corrupts the jackpot number.
-        if (/^(special|consolation)-/.test(id) && !isDash(v)
-            && els.some((o) => o !== tgtEl && (o.textContent || "").trim() === v)) continue;
-        pending.set(id, v);
-        if (isDash(v) && !isDash(cur)) hasClear = true;
-      }
-      if (pending.size === 0) continue;
-      if (hasClear) {
-        for (const [id, v] of pending) {
-          const el = target.querySelector('[data-id="' + id + '"]');
-          setText(el, v);
-        }
-        flash(target);
-        clearIfNoDraw(target);
-        continue;
-      }
-      const changed: { el: Element; v: string }[] = [];
-      for (const tgtEl of els) {
-        const id = tgtEl.getAttribute("data-id") || "";
-        if (!id || !pending.has(id)) continue;
-        changed.push({ el: tgtEl, v: pending.get(id)! });
-      }
-      changed.forEach((c, i) => {
-        window.setTimeout(() => setText(c.el, c.v), 140 * i);
-      });
-      window.setTimeout(() => flash(target), 140 * changed.length);
-      clearIfNoDraw(target);
-    }
-  }
-}
-
 function flash(card: Element) {
   card.classList.add("live-flash");
   setTimeout(() => card.classList.remove("live-flash"), 900);
@@ -1177,52 +1106,6 @@ async function updateSGOfficial() {
   } catch { /* ignore */ }
 }
 
-/** Fast Singapore result feed. The official archive can lag by several hours,
- *  while this feed publishes the current draw as soon as it is complete. */
-async function updateSGFeed() {
-  try {
-    const u = "https://www.live4d2u.net/liveosx.json?ts=" + Date.now();
-    const txt = await fetchText(u);
-    if (!txt) return;
-    const j = JSON.parse(txt);
-    const s = j && j.S;
-    if (!s) return;
-    const cards = [...document.querySelectorAll(".card.outer-box.table-11:not(.mkt-past)")];
-    for (const card of cards) {
-      const cur = card.querySelector('[data-id="date"]');
-      const curScore = dateScore(cur ? (cur.textContent || "") : "");
-      const feedScore = s.DD ? dateScore(String(s.DD)) : 0;
-      if (feedScore && feedScore < curScore) continue;
-      /*
-       * This feed publishes the whole board at once, at the end of the draw.
-       * While today's draw is still being revealed its empty cells therefore
-       * mean "not published HERE yet", not "this draw has no 1st prize" - and
-       * writing them cleared the numbers the live stream had already shown.
-       * That is why Singapore's 1st and 2nd prizes kept disappearing and coming
-       * back (reported 14 Oct 2026).
-       *
-       * A new draw is the exception: then the blanks are exactly what is
-       * wanted, so yesterday's numbers cannot sit under today's date.
-       */
-      const drawChanged = !!feedScore && feedScore !== curScore;
-      const set = (id: string, v: string) => {
-        const el = card.querySelector('[data-id="' + id + '"]');
-        if (el && v === "----" && !drawChanged) {
-          const now = (el.textContent || "").trim();
-          if (now && now !== "----") return;   // never blank a number we already have
-        }
-        if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
-      };
-      if (s.DD) set("date", String(s.DD));
-      if (s.DN) set("draw_no", String(s.DN));
-      (["first_prize", "second_prize", "third_prize"]).forEach((id, i) => set(id, feedDig(s["P" + (i + 1)])));
-      for (let i = 1; i <= 10; i++) set("special-" + i, feedDig(s["S" + i]));
-      set("special-11", "");
-      for (let i = 1; i <= 10; i++) set("consolation-" + i, feedDig(s["C" + i]));
-      flash(card);
-    }
-  } catch { /* ignore */ }
-}
 function feedDig(v: string | undefined): string {
   return v && /^\d{4}$/.test(v) ? v : "----";
 }
