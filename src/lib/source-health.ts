@@ -94,20 +94,22 @@ export async function flushSourceHealth(): Promise<void> {
    * One push per REAL change, never per rebuild - a source flipping state is
    * once in a long while, and an evening of pings would just get muted. With
    * nothing stored to compare against, stay quiet rather than repeat the lot.
+   *
+   * Only a BREAK is pushed. Recovery is news the owner asked not to have
+   * (15 Oct 2026): the card is right again by the time it happens, and the
+   * message that came with it was the one filling their phone. The stored state
+   * still moves back to ok, so if that source breaks again later it is
+   * announced once more.
    */
   if (!changed.length) return;
   const broke = changed.filter((c) => !c.ok);
-  const fixed = changed.filter((c) => c.ok);
+  if (!broke.length) return;
   try {
-    if (broke.length) {
-      await notifyOwner(
-        "⚠️ MKT88 开彩来源有问题",
-        broke.map((c) => c.name + "：" + (c.why || "形状变了")).join("\n") +
-          "\n（画面会保留上一次正确的成绩，不会显示错的号码）"
-      );
-    } else if (fixed.length) {
-      await notifyOwner("✅ MKT88 来源已恢复", fixed.map((c) => c.name).join("、") + " 已恢复正常。");
-    }
+    await notifyOwner(
+      "⚠️ MKT88 开彩来源有问题",
+      broke.map((c) => c.name + "：" + (c.why || "形状变了")).join("\n") +
+        "\n（画面会保留上一次正确的成绩，不会显示错的号码）"
+    );
   } catch { /* a push that fails must not break the snapshot */ }
 }
 
