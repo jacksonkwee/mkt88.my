@@ -1149,22 +1149,16 @@ async function damacaiToday(iso: string): Promise<{ four: Record<string, string>
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
+  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
     get("https://live4dresult.net/"),
-    get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     /*
-     * Singapore Toto. Its card used to be read from the mirror's Singapore page
-     * - its home page has no Toto card. Without this the app's Toto card had no
-     * live values to render, so React kept painting the ones captured on
-     * 03-09-2026 while the browser-side mirror wrote the current draw into the
-     * same cells: the date and the numbers flipped back and forth between the
-     * two (reported 11 Oct 2026). With the card in the snapshot both writers
-     * agree.
-     *
-     * The mirror is still read, but only as the fallback for the hours the
-     * operator's own file is behind the draw - see where the two are compared.
+     * The mirror's East Malaysia and Singapore pages used to be read here as
+     * well. Both are gone: Sabah 88, Sandakan, Cash Sweep, Singapore 4D and
+     * Singapore Toto all have an operator source of their own now, and a mirror
+     * copy of the same card was only ever a second writer of it (asked for
+     * 15 Oct 2026). A source that drops out for a round cannot empty a card -
+     * the last good snapshot is kept (see the cache pass further down).
      */
-    get("https://live4dresult.net/singapore-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
@@ -1192,8 +1186,6 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const sgTotoOfficial = parseSingaporeToto(sgToto);
   const liveCards = parseLiveFeed(feed);
   const homeCards = parseCards(home);
-  const eastCards = parseCards(east);
-  const sgMirrorCards = parseCards(sgTotoPage);
   /*
    * Every source is checked against the shape its game must have before it is
    * allowed onto a card.
@@ -1220,24 +1212,20 @@ export async function buildSnapshot(): Promise<Snapshot> {
   };
   const cards = {
     ...checkedFeed(homeCards, "镜像站首页"),
-    ...checkedFeed(eastCards, "镜像站东马页"),
-    ...checkedFeed(sgMirrorCards, "镜像站新加坡页"),
     ...checkedFeed(sgOfficial, "Singapore Pools"),
     ...checkedFeed(liveCards, "live4d2u"),
   };
   /*
-   * Singapore Toto: the operator's own file, with the mirror kept only while
-   * the operator is behind it.
+   * Singapore Toto straight from Singapore Pools.
    *
-   * The mirror used to be the only writer of this card. The operator's archive
-   * can lag the draw by a while, and a file that has not caught up yet must
-   * never pull the card back to the previous draw - so the older of the two is
-   * simply dropped, and a file that no longer parses is refused rather than
-   * pasted onto the card.
+   * The mirror's Singapore page used to be the only writer of this card; it is
+   * not read any more. A file that does not parse is refused rather than pasted
+   * onto the card, and the card keeps the last good draw until the operator's
+   * own copy moves on.
    */
   const officialToto = sgTotoOfficial["table-12"];
-  if (sgToto) noteSource("sg-toto", "Singapore Pools Toto 新加坡多多", officialToto ? { ok: true } : { ok: false, why: "官方 Toto 档案格式变了（卡片保留镜像站的成绩）" });
-  if (officialToto && drawDay(officialToto.date) >= drawDay(cards["table-12"]?.date)) cards["table-12"] = officialToto;
+  if (sgToto) noteSource("sg-toto", "Singapore Pools Toto 新加坡多多", officialToto ? { ok: true } : { ok: false, why: "官方 Toto 档案格式变了" });
+  if (officialToto) cards["table-12"] = officialToto;
   // Magnum's own feed wins over the mirror when it has today's draw - but a
   // blank from it must never wipe a number the mirror already published.
   if (magnumToday && checkSource("magnum", "Magnum 万能（官方）", "table-1", magnumToday)) {
