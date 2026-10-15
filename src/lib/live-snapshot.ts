@@ -849,7 +849,21 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
       date: weekdayOf(drawIso),
       draw_no: String(r.DrawID || "").trim() || "----",
       first_prize: p1.num, second_prize: p2.num, third_prize: p3.num,
-      gold_jp1: money(goldJp.GoldJackpot1), gold_jp2: money(goldJp.GoldJackpot2),
+      /*
+       * Jackpot Gold, worked out the way Magnum's own page works it out.
+       *
+       * Their bindGold() builds the six group digits from the last two digits of
+       * the 1st, 2nd and 3rd prizes, and the golden number from the first two
+       * digits of the 1st prize with the leading digit clamped to 0 or 1.
+       * Checked against their own page on 15 Oct 2026: 3872 / 3175 / 1274 gives
+       * 727574+08. The prize figures are the operator's own actual amounts.
+       */
+      gold_group: /^\d{4}$/.test(p1.num) && /^\d{4}$/.test(p2.num) && /^\d{4}$/.test(p3.num)
+        ? p1.num.slice(2) + p2.num.slice(2) + p3.num.slice(2)
+        : "",
+      gold_digits: /^\d{4}$/.test(p1.num) ? (Number(p1.num[0]) > 4 ? "1" : "0") + p1.num[1] : "",
+      gold_jp1: money(goldJp.ActGoldJackpot1 || goldJp.GoldJackpot1),
+      gold_jp2: money(goldJp.ActGoldJackpot2 || goldJp.GoldJackpot2),
     };
     S.forEach((v, i) => { out["special-" + (i + 1)] = moved.has(i) ? "----" : v; });
     C.forEach((v, i) => { out["consolation-" + (i + 1)] = v; });
@@ -1230,7 +1244,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     // The gold amounts belong to the Jackpot Gold card, not this one.
     const payload: Record<string, string> = {};
     for (const [k, v] of Object.entries(magnumToday)) {
-      if (k.startsWith("gold_jp") || k.startsWith("life_")) continue;
+      if (k.startsWith("gold_") || k.startsWith("life_")) continue;
       payload[k] = v;
     }
     const merged = mergeCardPayload(base, payload);
@@ -1245,12 +1259,29 @@ export async function buildSnapshot(): Promise<Snapshot> {
       if (k in payload) merged[k] = payload[k];
     }
     cards["table-1"] = merged;
-    // The Jackpot Gold amounts go on table-2, and the operator's own figure
-    // replaces the mirror's one - that is the number its website shows.
-    const gold: Record<string, string> = {};
-    if (magnumToday.gold_jp1) gold.first_jackpot_prize = magnumToday.gold_jp1;
-    if (magnumToday.gold_jp2) gold.second_jackpot_prize = magnumToday.gold_jp2;
-    if (Object.keys(gold).length) cards["table-2"] = { ...(cards["table-2"] || {}), ...gold };
+    /*
+     * Magnum Jackpot Gold, straight from the operator - board and both prizes.
+     *
+     * The card now shows what the operator's own page shows: one board and the
+     * two prize figures, and no status text (their page has none either). The
+     * board is derived from the official draw, so this card no longer needs the
+     * mirror at all.
+     */
+    const group = magnumToday.gold_group || "";
+    const digits = magnumToday.gold_digits || "";
+    if (/^\d{6}$/.test(group) && /^\d{2}$/.test(digits)) {
+      const gold: Record<string, string> = { date: magnumToday.date, draw_no: magnumToday.draw_no };
+      for (let i = 0; i < 6; i++) gold["number_" + (i + 1)] = group[i];
+      gold["number_7"] = "+";
+      gold["number_8"] = digits[0];
+      gold["number_9"] = digits[1];
+      gold.first_jackpot_prize = magnumToday.gold_jp1 || "----";
+      gold.second_jackpot_prize = magnumToday.gold_jp2 || "----";
+      gold.first_jackpot_status = "";
+      gold.second_jackpot_status = "";
+      noteSource("magnum-gold", "Magnum Jackpot Gold 万能黄金万字积宝（官方）", { ok: true });
+      cards["table-2"] = { ...(cards["table-2"] || {}), ...gold };
+    }
     /*
      * Magnum Life, from the same file, on that card's own ids.
      *
@@ -1729,7 +1760,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * it the stale value in cell 13 that copies cell 12 is never cleared, which is
    * exactly what was reported on 04-10-2026.
    */
-  const MIRROR_ONLY = ["table-2", "table-6", "table-7", "table-13"];
+  const MIRROR_ONLY = ["table-6", "table-7", "table-13"];
   /*
    * A mirror card must not wear a new date while it is still showing the old
    * draw's numbers.
