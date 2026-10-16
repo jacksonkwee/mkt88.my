@@ -411,7 +411,7 @@ export default function NumberHistoryApp() {
             )}
           </div>
         ) : (
-          <div style={{ background: "#fff", borderRadius: 12, padding: 30, textAlign: "center", color: "var(--muted)", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
+          <div style={{ background: "#fff", borderRadius: 12, padding: 30, textAlign: "center", color: "var(--muted)", fontSize: 15, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
             {tr("nhEmpty", lang)}
           </div>
         )}

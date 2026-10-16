@@ -381,6 +381,7 @@ button:focus {
 
 .singapore-title {
   color: #fff;
+  font-size: 15px;
   background-color: var(--tint-singapore);
 }
 
