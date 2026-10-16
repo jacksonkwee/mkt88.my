@@ -112,24 +112,28 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
           alignItems: "center", justifyContent: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
         }}
       >
-        {inApp ? (
-          <button
-            type="button"
-            className="mkt-past-filter-title"
-            onClick={() => setAppOpen((v) => !v)}
-            style={{ color: "#cc0000", fontSize: 15, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer" }}
-            aria-expanded={appOpen}
-          >
-            {name} Past Result 过去开彩
-          </button>
-        ) : (
-          <strong className="mkt-past-filter-title" style={{ color: "#cc0000", fontSize: 14, whiteSpace: "nowrap" }}>
-            {name} Past Result 过去开彩
-          </strong>
-        )}
+        {/*
+         * The date list is behind this button on the website too, not only in
+         * the app.
+         *
+         * It used to be laid out on the page: a 41-option select, one per card,
+         * sitting above every board - on the desktop home that was eleven of
+         * them, all of it above the numbers a player came for (design review,
+         * 16 Oct 2026). The control is unchanged; it simply appears when asked
+         * for. A player who never opens it never pays for it.
+         */}
+        <button
+          type="button"
+          className="mkt-past-filter-title"
+          onClick={() => setAppOpen((v) => !v)}
+          style={{ color: "#cc0000", fontSize: inApp ? 15 : 14, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer", whiteSpace: "nowrap" }}
+          aria-expanded={appOpen}
+        >
+          {name} Past Result 过去开彩
+        </button>
         {hasPast ? (
           <>
-            {(!inApp || appOpen) ? <select
+            {appOpen ? <select
               className="mkt-past-filter-select"
               aria-label={"Past result date for " + name}
               value={date}
