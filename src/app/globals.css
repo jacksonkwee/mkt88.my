@@ -83,9 +83,15 @@ header.sticky-top {
   border-color: var(--j-border) !important;
 }
 
-#menu-top-menu a {
-  color: var(--j-ink) !important;
-}
+/*
+ * No colour override on the menu's items or on the pressables inside the
+ * header. Both were forced to J's ink here, and that was a mistake: those
+ * elements sit on the red bar and on tints, not on white, so near-black text on
+ * them took the site from 3 contrast failures to 67 (measured 16 Oct 2026,
+ * caught by the detector before it reached a reader). The J surface colours on
+ * the menu pill and the amber accents stay; only the forced text colour is
+ * gone.
+ */
 
 /*
  * J step 3 - the game tile row.
@@ -103,7 +109,6 @@ header.sticky-top {
    sticky header. */
 header.sticky-top .mkt-press {
   border-color: var(--j-border) !important;
-  color: var(--j-ink) !important;
 }
 
 header.sticky-top .mkt-press[aria-current="page"] {
