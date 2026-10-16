@@ -36,6 +36,19 @@
   }
 }
 
+/*
+ * The jackpot status line ("Partially Won") on the Magnum card.
+ *
+ * Its red arrives with the baked markup, so the colour cannot be corrected at
+ * the source the way the two card tints were. Measured 16 Oct 2026: #ff0000 on
+ * the #ccc cell is 2.5:1, the worst remaining pair on the site. #991b1b keeps
+ * it reading as an alert and brings it to 5.2:1.
+ */
+.card.outer-box [data-id="first_jackpot_status"],
+.card.outer-box [data-id="second_jackpot_status"] {
+  color: #991b1b !important;
+}
+
 html,
 body {
   min-height: 100vh;
@@ -619,7 +632,17 @@ body.mkt-in-app .mkt-btn-secondary {
  * cut off. Everything is allowed to shrink and wrap here, and the 4-digit
  * numbers keep to a single line (they may not split across two lines).
  * ------------------------------------------------------------------ */
-@media (max-width: 380px) {
+/*
+ * The narrow-phone rules start at 430px, not 380.
+ *
+ * 390px is the design width, and this block is what makes a card fit one: the
+ * 1px cell padding, the 17px numbers and the card's own overflow clip. It used
+ * to fire 10px BELOW the width it exists for, so at 390px a Sabah-style card
+ * measured 376px of table inside a 350px content box and widened the whole page
+ * to 404-414px, with no clipping ancestor to stop it (measured 16 Oct 2026,
+ * intermittent - it needs a Special row carrying its full complement).
+ */
+@media (max-width: 430px) {
   .card.outer-box {
     max-width: 100% !important;
     overflow: hidden !important;
