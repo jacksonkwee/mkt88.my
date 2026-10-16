@@ -37,7 +37,14 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
   const suffix = m ? "4D" : null;
   // 12px is the floor for anything a person has to read; these labels used to be
   // 10px (English) and 9px (Chinese), which is unreadable on a phone.
-  const labelStyle = { fontSize: 12, fontWeight: active ? 800 : 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "nowrap" as const };
+  /*
+   * One bold weight, not two: the tile label used 800 when it was the active
+   * game and 700 otherwise, which made "selected" read as a heavier typeface on
+   * top of the amber underline it already wears. The whole product now has three
+   * weights - 400 body, 600 label, 700 title - and this is the last 800
+   * (measured 16 Oct 2026).
+   */
+  const labelStyle = { fontSize: 12, fontWeight: 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "nowrap" as const };
   return (
     <a
       ref={aRef}
