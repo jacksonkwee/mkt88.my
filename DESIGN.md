@@ -133,6 +133,40 @@ must keep native CJK rendering and must not add a blocking webfont.
 - **Label** (600, 12px): "1st Prize", "Date", "Draw No", the Special /
   Consolation headings. Small on purpose: they are reference, not content.
 
+### Where the pages actually stand (measured 16 Oct 2026)
+
+The four roles above were the intent; the pages had drifted to eleven sizes - 12,
+13, 14, 15, 16, 17, 18, 20, 22, 28 and 30px - and a reader could not tell which
+of two sizes was the deliberate one.
+
+Brought back onto the scale: the live status strip (13 to 12), the jackpot status
+"Partially Won" (14 to 12), the past-result title and its "Latest" button (14 and
+16 to 15), the information block's copy and links (14 to 15), the footer menu (14
+to 15), the jackpot digit cells (18 to 17), the prize prose (16 to 15), the
+jackpot figure (16 to 17), the Singapore title band (16 to 15) and the app's top
+bar (18 to 17, its link 13 to 12) and empty state (16 to 15). The page heading
+kept its 20px but took the title weight: 500 appeared nowhere else in the product.
+
+Measured on eight public pages at 390px, before and after: the home page and
+/result/magnum read 12, 15, 17, 20 and 22 now, /lotto-4d reads 12, 15, 17 and 22,
+and no page scrolls sideways.
+
+Two number sizes beyond the default 17 are deliberate and named here so they are
+not "corrected" later:
+
+- **22px on the six-digit boards** (`--mkt-cambodia-number`): Grand Dragon 6D,
+  Nine Lotto 6D and the Cambodia boards hold six digits in a cell, and the same
+  variable sizes those boards so a row stays on one line.
+- **28px / 30px on the East Malaysia single pages, web only** (`body:not(.mkt-in-app)`):
+  the owner asked for larger figures there so the column reads better on a
+  desktop. The app is explicitly excluded from that rule.
+
+Still outside the four, and recorded rather than silently left: the two
+Bootstrap-built inner pages (/statistics and /draw-schedule) keep Bootstrap's own
+heading and table sizes - 24, 20, 16 and its 12.8px caption - and a handful of
+13px hints survive inside the app's inner screens (开彩记录, 收藏号码, 大伯公).
+Both are follow-ups.
+
 ### Named Rules
 **The Tabular Rule.** Every numeral in the product uses equal-width figures
 (`font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1`), set once
