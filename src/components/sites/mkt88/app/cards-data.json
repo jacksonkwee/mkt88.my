@@ -3775,7 +3775,7 @@
                     "width": "55%",
                     "data-id": "six_2a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----"
                 }
               ]
             },
@@ -3797,7 +3797,7 @@
                     "width": "55%",
                     "data-id": "six_3a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----"
                 }
               ]
             },
@@ -3819,7 +3819,7 @@
                     "width": "55%",
                     "data-id": "six_4a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----"
                 }
               ]
             },
@@ -3841,7 +3841,7 @@
                     "width": "55%",
                     "data-id": "six_5a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----"
                 }
               ]
             },
@@ -3951,7 +3951,7 @@
                     "width": "55%",
                     "data-id": "six_2a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_2b\">----"
                 }
               ]
             },
@@ -3973,7 +3973,7 @@
                     "width": "55%",
                     "data-id": "six_3a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_3b\">----"
                 }
               ]
             },
@@ -3995,7 +3995,7 @@
                     "width": "55%",
                     "data-id": "six_4a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_4b\">----"
                 }
               ]
             },
@@ -4017,7 +4017,7 @@
                     "width": "55%",
                     "data-id": "six_5a"
                   },
-                  "html": "----</span> <span class=\"lottery-number\" style=\"color:#999\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----"
+                  "html": "----</span> <span class=\"lottery-number\" style=\"color:var(--muted)\">or</span> <span class=\"lottery-number\" data-id=\"six_5b\">----"
                 }
               ]
             },

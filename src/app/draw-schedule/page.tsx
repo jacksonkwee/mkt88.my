@@ -54,10 +54,16 @@ const SCHEDULE: Row[] = [
 
 const SPECIAL_GAMES = "Magnum 4D, Da Ma Cai, Sports Toto, Sabah 88, Cash Sweep, Sandakan";
 
+/*
+ * The result cards write their draw date as "14-10-2026 (Wed)", and this page
+ * wrote its special draws as "27 Oct 2026" - two formats for the same thing,
+ * one of them on a page a player reads right after the cards (design review,
+ * 16 Oct 2026). The day is spelled out in the column beside this one, so the
+ * date column drops the weekday and matches the cards.
+ */
 const pretty = (iso: string) => {
   const [y, m, d] = iso.split("-");
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  return Number(d) + " " + months[Number(m) - 1] + " " + y;
+  return d + "-" + m + "-" + y;
 };
 
 /** The weekday of a special draw, which is not always a Tuesday. */
