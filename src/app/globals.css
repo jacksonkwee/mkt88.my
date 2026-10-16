@@ -14,6 +14,32 @@
   --radius-md: 12px;
 }
 
+/*
+ * The tokens the rules below already read.
+ *
+ * --link and the nine --tint-* values were introduced while the rules that use
+ * them were being written, and the definitions did not land with them (the
+ * script that was meant to add them anchored on a line ending the file does not
+ * use, and it wrote the file unchanged while reporting success). An undefined
+ * custom property makes the whole declaration invalid, so the link colour fell
+ * back to inherited and all nine card-header tints went transparent on the live
+ * site - caught by reading the computed styles, fixed in the same session
+ * (16 Oct 2026). Values are exactly what each rule carried.
+ */
+:root {
+  --link: #0069d9;
+  --muted: #666;
+  --tint-magnum: #ff0;
+  --tint-damacai: navy;
+  --tint-sportstoto: #ad0006;
+  --tint-sandakan: #f8c100;
+  --tint-cashsweep: green;
+  --tint-sabah88: #3333ff;
+  --tint-singapore: #0378bb;
+  --tint-granddragon: #e81409;
+  --tint-nine: #b35200;
+}
+
 /* ------------------------------------------------------------------ *
  * Direction J - the site's own palette, instead of the inherited one.
  *
