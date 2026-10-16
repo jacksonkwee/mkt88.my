@@ -537,7 +537,7 @@ body.mkt-in-app .mkt-past-filter-title {
   background: transparent !important;
   color: var(--brand) !important;
   font-size: 15px !important;
-  font-weight: 800 !important;
+  font-weight: 700 !important;
   text-align: center;
   cursor: pointer;
   touch-action: manipulation;
@@ -844,7 +844,7 @@ body.mkt-in-app .mkt-app-topbar > button {
 }
 body.mkt-in-app .mkt-app-topbar > a {
   font-size: 15px !important;
-  font-weight: 800;
+  font-weight: 700;
   text-decoration: none;
   line-height: 1 !important;
 }

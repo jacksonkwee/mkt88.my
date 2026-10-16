@@ -53,7 +53,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
           absolutely centred so it sits in the middle of the bar whatever the
           Home label measures. */}
       <div className="mkt-app-topbar" style={{ position: "relative", background: RED, color: "#fff", display: "flex", alignItems: "center", padding: "10px 8px", minHeight: 48, boxShadow: "0 2px 6px rgba(0,0,0,0.25)" }}>
-        <div style={{ position: "absolute", left: 0, right: 0, padding: "0 68px", textAlign: "center", fontWeight: 800, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", pointerEvents: "none" }}>{tr(titleKey, lang)}</div>
+        <div style={{ position: "absolute", left: 0, right: 0, padding: "0 68px", textAlign: "center", fontWeight: 700, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", pointerEvents: "none" }}>{tr(titleKey, lang)}</div>
         <Link href="/" onClick={goHome} style={{ color: "#fff", fontSize: 12, textDecoration: "none", padding: "6px 8px", marginLeft: "auto" }}>{tr("home", lang)}</Link>
       </div>
 

@@ -149,8 +149,8 @@ export default function AppTools() {
         borderLeft: "8px solid " + YELLOW, borderRadius: 12, padding: "10px 14px", boxShadow: "0 6px 20px rgba(0,0,0,0.25)",
         cursor: "pointer", maxWidth: 280, fontFamily: "sans-serif",
       }}>
-      <div style={{ fontSize: 12, color: RED, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}><Star size={13} weight="fill" />FAVOURITE NUMBER APPEARED</div>
-      <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 3, margin: "2px 0" }}>{toast.num}</div>
+      <div style={{ fontSize: 12, color: RED, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}><Star size={13} weight="fill" />FAVOURITE NUMBER APPEARED</div>
+      <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: 3, margin: "2px 0" }}>{toast.num}</div>
       <div style={{ fontSize: 12, color: "#555" }}>{toast.game}</div>
       <div style={{ fontSize: 12, color: "var(--muted)" }}>{toast.prize} · tap to see history</div>
     </div>

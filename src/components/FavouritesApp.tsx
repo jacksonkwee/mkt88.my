@@ -130,7 +130,7 @@ export default function FavouritesApp() {
       <AppTopBar titleKey="favTitle" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
-          <div style={{ fontWeight: 800, fontSize: 15, color: "#111" }}>{tr("favAdd", lang)}</div>
+          <div style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>{tr("favAdd", lang)}</div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <input value={input}
               onChange={(e) => setInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
@@ -139,7 +139,7 @@ export default function FavouritesApp() {
                  screen reader announces the same thing. */
               aria-label={tr("favAdd", lang)}
               inputMode="numeric"
-              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid var(--j-border)", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid var(--j-border)", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 700 }} />
           </div>
 
           {perms.length ? (
@@ -184,7 +184,7 @@ export default function FavouritesApp() {
           </label>
 
           <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-            <button onClick={add} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>
+            <button onClick={add} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
               {tr("favAddBtn", lang)}
             </button>
           </div>
@@ -194,7 +194,7 @@ export default function FavouritesApp() {
 
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontWeight: 800, fontSize: 15 }}>{tr("favMine", lang)} ({favs.length})</div>
+            <div style={{ fontWeight: 700, fontSize: 15 }}>{tr("favMine", lang)} ({favs.length})</div>
             {favs.length ? (
               <button onClick={() => { saveFavs([]); setFavs([]); }} style={mini(RED)}>{tr("favClearAll", lang)}</button>
             ) : null}
@@ -217,7 +217,7 @@ export default function FavouritesApp() {
                 <div key={f.num} style={{ borderTop: "1px solid #f0f0f0", padding: "10px 0" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Link href={"/number-history?num=" + f.num} style={{ textDecoration: "none" }}>
-                      <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 2, borderRadius: 12, padding: "4px 10px" }}>{f.num}</span>
+                      <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 700, fontSize: 18, letterSpacing: 2, borderRadius: 12, padding: "4px 10px" }}>{f.num}</span>
                     </Link>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

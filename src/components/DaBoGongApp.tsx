@@ -85,7 +85,7 @@ export default function DaBoGongApp() {
     if (!src) {
       return (
         <div style={{ width: size, height: size, borderRadius: 12, border: "1px solid var(--j-border)", background: "#fff7e6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <div style={{ fontSize: size > 60 ? 18 : 13, fontWeight: 800, color: "#cc0000", letterSpacing: 1 }}>{e.num}</div>
+          <div style={{ fontSize: size > 60 ? 18 : 13, fontWeight: 700, color: "#cc0000", letterSpacing: 1 }}>{e.num}</div>
           <div style={{ fontSize: 12, color: "var(--muted)" }}>{tr("dbgImage", lang)}</div>
         </div>
       );
@@ -110,13 +110,13 @@ export default function DaBoGongApp() {
             placeholder={tr("dbgPlaceholder", lang)}
             aria-label={tr("dbgSearchLabel", lang)}
             autoFocus
-            style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 800 }}
+            style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 700 }}
           />
           <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>
             {tr("dbgHint", lang)}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <button onClick={() => look(text)} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 800, fontSize: 15, cursor: "pointer" }}>{tr("dbgSearch", lang)}</button>
+            <button onClick={() => look(text)} style={{ flex: 1, background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{tr("dbgSearch", lang)}</button>
             <button onClick={() => { setText(""); setData(null); setResults(null); }} style={{ flex: 1, background: "#fff", color: "var(--j-ink)", border: "1px solid var(--j-border)", borderRadius: 12, padding: "12px 0", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>{tr("dbgClear", lang)}</button>
           </div>
         </div>
@@ -134,13 +134,13 @@ export default function DaBoGongApp() {
             </div>
             {data.keyword ? (
               <div style={{ marginTop: 10 }}>
-                <div style={{ fontSize: 24, fontWeight: 800 }}>{data.keyword}</div>
+                <div style={{ fontSize: 24, fontWeight: 700 }}>{data.keyword}</div>
                 {data.meaning ? <div style={{ fontSize: 15, color: "var(--muted)", marginTop: 2 }}>{data.meaning}</div> : null}
                 {data.malay ? <div style={{ fontSize: 12, color: "var(--muted)" }}>{data.malay}</div> : null}
               </div>
             ) : null}
             {historyHref(data.num) ? (
-              <Link href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 12, padding: "10px 18px", fontWeight: 800, textDecoration: "none" }}>
+              <Link href={historyHref(data.num)!} style={{ display: "inline-block", marginTop: 12, background: RED, color: "#fff", borderRadius: 12, padding: "10px 18px", fontWeight: 700, textDecoration: "none" }}>
                 {tr("history", lang)} <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} />
               </Link>
             ) : null}
@@ -161,7 +161,7 @@ export default function DaBoGongApp() {
                 <>
                   <Picture e={r} size={54} />
                   <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                    <div style={{ fontWeight: 800, fontSize: 15 }}>{r.keyword}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15 }}>{r.keyword}</div>
                     <div style={{ fontSize: 12, color: "var(--muted)" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
                     {href ? <div style={{ fontSize: 12, color: RED, fontWeight: 700, marginTop: 2 }}>{tr("history", lang)} <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
                   </div>

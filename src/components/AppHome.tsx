@@ -362,7 +362,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           type="button"
           className="mkt-press"
           onClick={() => setOpen(false)}
-          style={{ width: "100%", margin: "8px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, letterSpacing: 0.2, cursor: "pointer" }}
+          style={{ width: "100%", margin: "8px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 700, letterSpacing: 0.2, cursor: "pointer" }}
         >
           {tr("seeLive", lang)}
         </button>
@@ -408,7 +408,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           target="_blank"
           rel="noreferrer"
           className="mkt-press"
-          style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 0", borderRadius: RADIUS, background: "#1877F2", color: "#fff", fontSize: 15, fontWeight: 800, textDecoration: "none" }}
+          style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "11px 0", borderRadius: RADIUS, background: "#1877F2", color: "#fff", fontSize: 15, fontWeight: 700, textDecoration: "none" }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="#fff" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
@@ -423,7 +423,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "20px 20px 16px", width: "88%", maxWidth: 340 }}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: ACCENT, marginBottom: 14 }}>{tr("settings", lang)}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: ACCENT, marginBottom: 14 }}>{tr("settings", lang)}</div>
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: 15, fontWeight: 700 }}>{tr("language", lang)}</div>
               <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
@@ -489,7 +489,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
               </button>
             </div>
             <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
-            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>{tr("done", lang)}</button>
+            <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer" }}>{tr("done", lang)}</button>
             {/* The installed app has no address bar, so this is the only way to
                 reach the admin page from inside it - which is where the owner
                 turns their own "a live source broke" alerts on (see
@@ -505,9 +505,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 26px", textAlign: "center", maxWidth: 320, width: "88%" }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: ACCENT }}>Special Draw Today 今天特别彩</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: ACCENT }}>Special Draw Today 今天特别彩</div>
             <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8 }}>记得查看今天的特别开彩成绩</div>
-            <button type="button" onClick={() => setSpecialDraw(false)} style={{ marginTop: 18, padding: "11px 22px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, fontWeight: 800, cursor: "pointer" }}>OK 好的</button>
+            <button type="button" onClick={() => setSpecialDraw(false)} style={{ marginTop: 18, padding: "11px 22px", background: ACCENT, color: "#fff", border: 0, borderRadius: RADIUS, fontWeight: 700, cursor: "pointer" }}>OK 好的</button>
           </div>
         </div>
       ) : null}
@@ -518,7 +518,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           style={{ position: "fixed", inset: 0, zIndex: 100060, background: "rgba(0,0,0,0.72)", display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: RADIUS, padding: "28px 32px", textAlign: "center", maxWidth: 320, width: "88%" }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: ACCENT }}>恭喜发财</div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: ACCENT }}>恭喜发财</div>
             <div style={{ fontSize: 15, color: "var(--muted)", marginTop: 4 }}>{tr("luckyTitle", lang)}</div>
             {/* Tap the number to see its full record in Number History. */}
             <Link

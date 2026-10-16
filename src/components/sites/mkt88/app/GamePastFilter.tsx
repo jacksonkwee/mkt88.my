@@ -126,7 +126,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
           type="button"
           className="mkt-past-filter-title"
           onClick={() => setAppOpen((v) => !v)}
-          style={{ color: "#cc0000", fontSize: 15, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer", whiteSpace: "nowrap" }}
+          style={{ color: "#cc0000", fontSize: 15, fontWeight: 700, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer", whiteSpace: "nowrap" }}
           aria-expanded={appOpen}
         >
           {name} Past Result 过去开彩

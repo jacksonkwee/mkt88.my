@@ -265,7 +265,7 @@ export default function NumberHistoryApp() {
                  screen reader announces the same thing. */
               aria-label={tr("nhSearchTitle", lang)}
               inputMode="numeric"
-              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid var(--j-border)", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid var(--j-border)", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 700 }} />
             <button onClick={search} style={{ background: RED, color: "#fff", border: 0, borderRadius: 12, padding: "0 18px", fontSize: 15, cursor: "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>{tr("nhSearchBtn", lang)}</button>
           </div>
 
@@ -277,7 +277,7 @@ export default function NumberHistoryApp() {
                 style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 12, background: "#fff", border: "1px solid var(--j-border)" }} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, color: "#8a6d00", fontWeight: 700 }}>{tr("dabogong", lang)} {kindLabel(dabo.kind)}</div>
-                <div style={{ fontSize: 15, fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {dabo.keyword || primary}{dabo.meaning ? <span style={{ fontWeight: 500, color: "#555" }}> · {dabo.meaning}</span> : null}
                 </div>
               </div>
@@ -402,7 +402,7 @@ export default function NumberHistoryApp() {
                       </div>
                       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{toSimplified(m.game)}</span>
                       <span style={{ fontSize: 12, color: "var(--muted)", flexShrink: 0 }}>{shortDate(m.date)}</span>
-                      <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
+                      <span style={{ fontWeight: 700, fontSize: 15, letterSpacing: 1, flexShrink: 0 }}>{m.num}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: PRIZE_COLORS[m.prize] || "#777", borderRadius: 10, padding: "2px 6px", flexShrink: 0 }}>{prizeShort(m.prize, lang)}</span>
                     </div>
                   );
