@@ -1,4 +1,4 @@
-import { rewriteHtml, stripAdHtml } from "./site-paths";
+import { rewriteHtml, splitLottoCards, stripAdHtml } from "./site-paths";
 import LiveResults from "./LiveResults";
 import DirectTopAd from "./DirectTopAd";
 
@@ -12,7 +12,9 @@ export default function SnapshotPage({ html }: { html: string }) {
   let content = rowStart >= 0 ? safe.slice(rowStart) : safe;
   const descIdx = content.indexOf('<div class="description">');
   if (descIdx >= 0) content = content.slice(0, descIdx);
-  content = stripAdHtml(content);
+  // The Sabah 88 card carries four boards in one block; splitLottoCards gives
+  // the three Lotto ones cards of their own. Every other page is unaffected.
+  content = splitLottoCards(stripAdHtml(content));
   return (
     <main className="container flex-shrink-0">
       <div className="row">

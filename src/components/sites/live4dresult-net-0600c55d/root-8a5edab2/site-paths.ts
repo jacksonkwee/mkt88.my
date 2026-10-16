@@ -63,6 +63,42 @@ export function parseInlineStyle(style: string): React.CSSProperties | undefined
 
 
 
+/**
+ * Give Sabah 88's Lotto boards cards of their own.
+ *
+ * The source hands one card over carrying four boards - 4D, Lotto 6/45, Lotto 5
+ * and Lotto 6 - stacked inside the same block, which is why they read as one
+ * very long card. The owner asked for them as separate cards (16 Oct 2026, the
+ * A treatment: amber top edge, rounded corner), which they get for free once
+ * each board sits in its own `.card.outer-box`.
+ *
+ * The boundaries are inserted rather than the HTML being rebuilt, and they are
+ * siblings, not nested: the Lotto card's opening tags are placed before each
+ * board's first table and the block's own closing tags close the last one. So
+ * the four cards end up level with each other, and no card sits inside a card.
+ *
+ * The new wrapper deliberately does not reuse `table-10`. The phone's writers
+ * and the source shape-checks both select `.card.outer-box.table-10`, and a
+ * second card carrying that class would be handed 4D numbers.
+ */
+export function splitLottoCards(html: string): string {
+  // Only the Sabah 88 card carries these boards; every other page is returned
+  // untouched.
+  if (!html || html.indexOf("Lotto 6/45") < 0) return html;
+  const open = '</div></div><div class="card outer-box table-10-lotto"><div class="card-body p-2">';
+  // "Lotto 6" must not match the "6" of "Lotto 6/45", hence the lookaheads.
+  const labels = [/Lotto 6\/45/, /Lotto 5(?!\d)/, /Lotto 6(?![\d/])/];
+  let out = html;
+  for (const label of labels) {
+    const hit = label.exec(out);
+    if (!hit) continue;
+    const table = out.lastIndexOf("<table", hit.index);
+    if (table < 0) continue;
+    out = out.slice(0, table) + open + out.slice(table);
+  }
+  return out;
+}
+
 /** Remove Advanced-Ads placeholder blocks (e.g. the 'Advertisements' label boxes). */
 export function stripAdHtml(html: string): string {
   let h = html.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");

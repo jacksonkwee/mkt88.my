@@ -1,4 +1,4 @@
-import { rewriteHtml, stripAdHtml } from "./site-paths";
+import { rewriteHtml, splitLottoCards, stripAdHtml } from "./site-paths";
 import { getPastEntry, getViewHtml, splitParts } from "./past-data";
 import PastToolbar from "./PastToolbar";
 import CambodiaKhResults from "./CambodiaKhResults";
@@ -17,7 +17,7 @@ export default function PastResultsView({ date, view }: { date: string; view?: "
           {resolved === "kh" ? (
             <CambodiaKhResults date={date} />
           ) : parts && parts.grid ? (
-            <div dangerouslySetInnerHTML={{ __html: stripAdHtml(rewriteHtml(parts.grid)) }} />
+            <div dangerouslySetInnerHTML={{ __html: splitLottoCards(stripAdHtml(rewriteHtml(parts.grid))) }} />
           ) : (
             <MalaysiaPastFallback date={date} />
           )}
