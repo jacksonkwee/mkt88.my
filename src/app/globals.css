@@ -88,6 +88,26 @@ header.sticky-top {
 }
 
 /*
+ * J step 3 - the game tile row.
+ *
+ * The row sits directly under the header, so it is the first thing the palette
+ * reaches after the bar itself. The tiles are inline-styled in
+ * GameQuickLinks.tsx, hence the overrides: J's border instead of grey, J's ink
+ * for the label, and the amber for the tile of the game being shown - the same
+ * amber that edges the cards. `.header-btn-group` is the row's own class (the
+ * script that keeps it under the header sets its offset).
+ */
+.mkt-press {
+  border-color: var(--j-border) !important;
+  color: var(--j-ink) !important;
+}
+
+.mkt-press[aria-current="page"] {
+  border-color: var(--j-amber) !important;
+  box-shadow: 0 0 0 2px rgba(255, 192, 0, 0.35) !important;
+}
+
+/*
  * Our own animations and "reduce motion".
  *
  * The device setting was ignored by the two animations this site owns: with

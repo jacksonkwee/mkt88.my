@@ -33,6 +33,9 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
       onClick={onClick}
       className="mkt-press"
       title={name}
+      /* Which game the reader is on, for the palette below and for anyone
+         navigating the strip without seeing it. */
+      aria-current={active ? "page" : undefined}
       aria-label={[brand, suffix, zh].filter(Boolean).join(" ")}
       style={{
         display: "flex",
