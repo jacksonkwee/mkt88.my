@@ -3,11 +3,11 @@ Theme Name: Old Theme
 Author: Eric Yam
 */
 .text-normal {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .text-title {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 @media (min-width: 1200px) {
@@ -116,7 +116,7 @@ button:focus {
 }
 
 .footer-menu {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .footer-menu a {
@@ -299,7 +299,7 @@ button:focus {
 .blink {
   animation: blinker 1s linear infinite;
   color: red;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   padding-left: 5px;
 }
@@ -324,7 +324,7 @@ button:focus {
 }
 
 .jackpot_number {
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1;
 }
 
@@ -333,7 +333,7 @@ button:focus {
 }
 
 .jackpot_prize {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #c00;
 }
@@ -357,7 +357,7 @@ button:focus {
 }
 
 .lottery-rank {
-  font-size: 16px;
+  font-size: 12px;
 }
 
 .lottery-prize-title {
@@ -386,13 +386,13 @@ button:focus {
 
 .zodiac {
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   background-color: #cc0000;
 }
 
 /* Paragraph */
 .product-articles p {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--j-ink);
   line-height: 1.5em;
   padding: 5px 0;
@@ -407,7 +407,7 @@ button:focus {
 }
 
 .page-404 a {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .img-container {

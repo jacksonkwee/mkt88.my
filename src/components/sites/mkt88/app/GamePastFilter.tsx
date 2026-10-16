@@ -126,7 +126,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
           type="button"
           className="mkt-past-filter-title"
           onClick={() => setAppOpen((v) => !v)}
-          style={{ color: "#cc0000", fontSize: inApp ? 15 : 14, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer", whiteSpace: "nowrap" }}
+          style={{ color: "#cc0000", fontSize: 15, fontWeight: 800, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer", whiteSpace: "nowrap" }}
           aria-expanded={appOpen}
         >
           {name} Past Result 过去开彩
@@ -157,7 +157,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
                   type="button"
                   className="mkt-past-filter-latest"
                   onClick={() => setDate(latest)}
-                  style={{ padding: "6px 12px", minHeight: 44, borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, cursor: "pointer" }}
+                  style={{ padding: "6px 12px", minHeight: 44, borderRadius: 8, border: 0, background: "#cc0000", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}
                 >
                   Latest 最新
                 </button>

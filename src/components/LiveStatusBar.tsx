@@ -87,7 +87,7 @@ export default function LiveStatusBar() {
         margin: "10px 0 2px", padding: "8px 12px", borderRadius: 8,
         background: state.live ? "#f0fdf4" : "#fff",
         border: "1px solid " + (state.live ? "#86efac" : "var(--j-border-soft)"),
-        fontSize: 13, color: "var(--j-ink)",
+        fontSize: 12, color: "var(--j-ink)",
       }}
     >
       <span
