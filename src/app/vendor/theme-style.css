@@ -155,7 +155,9 @@ button:focus {
 }
 
 .sandakan-bg {
-  color: #060;
+  /* Was #060: 4.35:1 on this yellow, under the 4.5 the rest of the site keeps
+     (measured 16 Oct 2026). #0a3d00 is the same green, dark enough to pass. */
+  color: #0a3d00;
   background-color: #f8c100;
 }
 
@@ -181,7 +183,9 @@ button:focus {
 
 .nine {
   color: #fff;
-  background-color: #f28120;
+  /* Was #f28120: white on it is 2.6:1, the worst contrast on the site (measured
+     16 Oct 2026). The same orange, darkened, puts white at 5.1:1. */
+  background-color: #b35200;
 }
 
 .nine img {
