@@ -161,11 +161,16 @@ not "corrected" later:
   the owner asked for larger figures there so the column reads better on a
   desktop. The app is explicitly excluded from that rule.
 
-Still outside the four, and recorded rather than silently left: the two
-Bootstrap-built inner pages (/statistics and /draw-schedule) keep Bootstrap's own
-heading and table sizes - 24, 20, 16 and its 12.8px caption - and a handful of
-13px hints survive inside the app's inner screens (开彩记录, 收藏号码, 大伯公).
-Both are follow-ups.
+The last of it: /statistics and /draw-schedule now take the scale through a
+`.mkt-inner` scope (they were still on Bootstrap's 24 / 20 / 16px and its 12.8px
+caption), the app's inner screens lost their 25 inline 13px hints, the
+information block's prose moved from 14 to 15, and the 800 weight is gone - the
+game strip's selected tile no longer switches to a heavier weight on top of the
+amber underline it already wears.
+
+Final measurement, eight public pages at 390px: **ten size/weight pairs** - three
+weights (400 body, 600 label, 700 title) over five sizes (12, 15, 17, and the two
+deliberate ones below) - down from twenty-one. No page scrolls sideways.
 
 ### Named Rules
 **The Tabular Rule.** Every numeral in the product uses equal-width figures
