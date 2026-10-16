@@ -23,8 +23,11 @@ export default function SeoText({
           page that uses this block it IS the page's title - and a page with no
           h1 gives Google nothing to hang the page on (measured 14 Oct 2026). */}
       <h1 style={{ fontSize: 20, margin: "10px 0 8px" }}>{heading}</h1>
+      {/* Measured 16 Oct 2026: this copy ran ~122 characters per line at the
+          900px container width, about 1.5x the length an eye can track back
+          from. 72ch is the readable band and still fills a desktop column. */}
       {paragraphs.map((p, i) => (
-        <p key={i} style={{ fontSize: 14, margin: "6px 0" }}>{p}</p>
+        <p key={i} style={{ fontSize: 14, margin: "6px 0", maxWidth: "72ch" }}>{p}</p>
       ))}
       {links && links.length ? (
         <p style={{ fontSize: 14, marginTop: 10 }}>
