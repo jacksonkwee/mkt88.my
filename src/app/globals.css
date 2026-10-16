@@ -14,6 +14,56 @@
   --radius-md: 12px;
 }
 
+/* ------------------------------------------------------------------ *
+ * Direction J - the site's own palette, instead of the inherited one.
+ *
+ * The owner picked this from nine mockups (16 Oct 2026, recorded in
+ * plans/001): a warm off-white page, white cards with a hairline border and an
+ * amber top edge, amber for labels, and a red jackpot figure. The red brand bar
+ * stays red - it is the owner's own requirement and --brand still drives it, so
+ * the admin's colour setting keeps working. These are tokens rather than
+ * literals so the next step (the rest of the redesign) is a value change here,
+ * not a hunt through the file.
+ * ------------------------------------------------------------------ */
+:root {
+  --j-page: #f7f7f4;
+  --j-surface: #ffffff;
+  --j-border: #ece7d8;
+  --j-border-soft: #f1ede2;
+  --j-amber: #ffc000;
+  /* Amber is unreadable as small text on white (measured 2.1:1); this is the
+     same hue dark enough to pass. */
+  --j-amber-deep: #b8860b;
+  --j-ink: #141210;
+  --j-muted: #6b6558;
+  --j-jackpot: #d81f1f;
+}
+
+body {
+  background: var(--j-page);
+}
+
+/* The card keeps its anatomy - every data-id and every cell stays put - and
+   changes only its surface: white, hairline border, amber top edge. */
+.card.outer-box {
+  background: var(--j-surface);
+  border: 1px solid var(--j-border);
+  border-top: 4px solid var(--j-amber);
+  border-radius: 14px;
+}
+
+/* "1st Prize", "Special 特别奖", "Consolation 安慰奖" - reference text, so it
+   sits in the deep amber rather than the bright one. */
+.card.outer-box .lottery-prize-title,
+.card.outer-box td.lottery-prize-title {
+  color: var(--j-amber-deep);
+}
+
+/* The jackpot row: an amber rule on a warm tint, with the amount in red. */
+.card.outer-box .jackpot_prize {
+  color: var(--j-jackpot);
+}
+
 /*
  * Our own animations and "reduce motion".
  *
