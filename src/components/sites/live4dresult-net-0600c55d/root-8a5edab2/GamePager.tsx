@@ -247,9 +247,40 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     if (!el) return;
     el.scrollBy({ left: dx < 0 ? el.clientWidth : -el.clientWidth, behavior: "smooth" });
   };
+  /*
+   * The swipe track is only as tall as the game being shown.
+   *
+   * Every slide is `flex: 0 0 100%` in a flex row, so the container was as tall
+   * as the TALLEST slide - and with align-items: stretch so was every other
+   * slide. On a phone that made the home page 2,743px tall while the Magnum card
+   * ended at 888px: about 800px of empty paper between the last number and the
+   * footer, and on some games more (measured 16 Oct 2026 at 390px). The track
+   * now follows the active slide, and a ResizeObserver keeps it in step so a
+   * card that grows while its draw is publishing still fits.
+   */
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const active = el.children[idx] as HTMLElement | undefined;
+    if (!active) return;
+    const sync = () => {
+      const h = active.getBoundingClientRect().height;
+      if (h > 0) el.style.height = h + "px";
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(active);
+    window.addEventListener("resize", sync);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+      el.style.height = "";
+    };
+  }, [idx, ready]);
+
   return (
     <div ref={track} className="mkt-pager-track"
-      style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "stretch" }}>
+      style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "flex-start" }}>
       {pages.map((pg, i) => (
         <div key={pg.title} className="mkt-past-scope" style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
           {!ready && i !== idx ? null : (
