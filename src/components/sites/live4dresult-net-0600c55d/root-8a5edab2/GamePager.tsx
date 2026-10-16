@@ -261,18 +261,29 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   useEffect(() => {
     const el = track.current;
     if (!el) return;
-    const active = el.children[idx] as HTMLElement | undefined;
-    if (!active) return;
+    const slides = Array.from(el.children) as HTMLElement[];
+    if (!slides.length) return;
+    /*
+     * Measured from the scroll position, not from the pager's index: a real
+     * swipe and a programmatic scroll both move the track, and only one of them
+     * is guaranteed to update the index in time. The track is only as tall as
+     * the slide the reader is actually on.
+     */
     const sync = () => {
-      const h = active.getBoundingClientRect().height;
+      const left = el.scrollLeft;
+      let nearest = slides[0];
+      for (const s of slides) if (Math.abs(s.offsetLeft - left) < Math.abs(nearest.offsetLeft - left)) nearest = s;
+      const h = nearest.getBoundingClientRect().height;
       if (h > 0) el.style.height = h + "px";
     };
     sync();
     const ro = new ResizeObserver(sync);
-    ro.observe(active);
+    for (const s of slides) ro.observe(s);
+    el.addEventListener("scroll", sync, { passive: true });
     window.addEventListener("resize", sync);
     return () => {
       ro.disconnect();
+      el.removeEventListener("scroll", sync);
       window.removeEventListener("resize", sync);
       el.style.height = "";
     };
