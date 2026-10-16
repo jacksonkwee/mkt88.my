@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GAME_DEFS, EAST_LINKS } from "./GameDefs";
 
-const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
+const SG_LOGO = "/sites/mkt88/app/logo_singapore4d.png";
 
 // Pager order used by the phone swipe (mirrors GamePager).
 const PAGER_ORDER = [

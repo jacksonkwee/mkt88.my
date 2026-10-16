@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLang, tr } from "../lib/i18n";
 
 const RED = "#cc0000";
-const LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4";
+const LOGO = "/sites/mkt88/app/logo-mkt88.webp?v=4";
 
 /**
  * The red title bar and the brand logo above the app's own screens.

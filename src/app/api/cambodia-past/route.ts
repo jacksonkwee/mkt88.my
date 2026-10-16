@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import perdanaOfficial from "../../../lib/perdana-official.json";
 import gdNinePastRaw from "../../../lib/gd-nine-past.json";
-import { getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
+import { getViewHtml } from "../../../components/sites/mkt88/app/past-data";
 import recent from "./recent.json";
 import hariPastRaw from "../../../lib/hari-past.json";
 import { DEEP } from "../../../lib/deep-past-cards";

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import AppTopBar from "../../components/AppTopBar";
-import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
+import Footer from "../../components/sites/mkt88/app/Footer";
 import stats from "../../lib/number-stats.json";
 
 export const metadata: Metadata = {

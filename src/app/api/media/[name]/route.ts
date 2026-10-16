@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import { promises as fs } from "fs";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "sites", "live4dresult-net-0600c55d", "root-8a5edab2", "custom");
+const UPLOAD_DIR = path.join(process.cwd(), "public", "sites", "mkt88", "app", "custom");
 const MIME: Record<string, string> = {
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif",
   ".svg": "image/svg+xml", ".webp": "image/webp",

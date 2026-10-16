@@ -134,7 +134,7 @@ export default function AppTools() {
     toastTimer.current = window.setTimeout(() => setToast(null), 9000);
     try {
       if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification(num + " appeared!", { body: game + " · " + prize, icon: "/sites/live4dresult-net-0600c55d/root-8a5edab2/icon_192x192.png" });
+        new Notification(num + " appeared!", { body: game + " · " + prize, icon: "/sites/mkt88/app/icon_192x192.png" });
       }
     } catch { /* ignore */ }
   };

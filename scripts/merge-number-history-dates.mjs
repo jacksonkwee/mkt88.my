@@ -3,7 +3,7 @@
 // Run: node scripts/merge-number-history-dates.mjs 2022-04-21 2022-07-13
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const FROM = process.argv[2];
 const TO = process.argv[3];
 if (!FROM || !TO) throw new Error("usage: node scripts/merge-number-history-dates.mjs <fromIso> <toIso>");

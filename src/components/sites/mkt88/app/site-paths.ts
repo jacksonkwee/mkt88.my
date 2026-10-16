@@ -1,6 +1,6 @@
 import { toSimplified } from "../../../../lib/zh-simplified";
 
-export const ASSET_BASE = "/sites/live4dresult-net-0600c55d/root-8a5edab2";
+export const ASSET_BASE = "/sites/mkt88/app";
 
 const HOST = "https://live4dresult.net";
 

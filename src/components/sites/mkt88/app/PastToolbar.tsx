@@ -8,7 +8,7 @@ interface Props {
   view: "my" | "kh";
 }
 
-const ASSET = "/sites/live4dresult-net-0600c55d/root-8a5edab2";
+const ASSET = "/sites/mkt88/app";
 const CAL = ASSET + "/wp-content/themes/oldtheme-lottery-frontend/assets/images/icon/calendar.png?v=1";
 
 export default function PastToolbar({ current, view }: Props) {

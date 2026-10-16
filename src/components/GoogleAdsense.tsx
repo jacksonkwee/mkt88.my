@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { ADS_CLIENT } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/ad-config";
+import { ADS_CLIENT } from "./sites/mkt88/app/ad-config";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 
 export default function GoogleAdsense() {

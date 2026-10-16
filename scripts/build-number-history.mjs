@@ -7,7 +7,7 @@ import path from "node:path";
 const START_ARG = process.argv[2] || "2022-07-27";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
-const outFile = path.resolve("src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json");
+const outFile = path.resolve("src/components/sites/mkt88/app/number-history-db.json");
 
 function epochDay(iso) {
   return Math.round((Date.parse(iso + "T00:00:00Z") - Date.UTC(2020, 0, 1)) / 86400000);

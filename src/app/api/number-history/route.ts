@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PAST_DATES, getPastEntry } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
-import { toLocal } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
+import { PAST_DATES, getPastEntry } from "../../../components/sites/mkt88/app/past-data";
+import { toLocal } from "../../../components/sites/mkt88/app/site-paths";
 import deepRaw from "../../../lib/deep-past.json";
 import { DEEP_CARDS } from "../../../lib/deep-past-cards";
 import {
   DB, PRIZE_NAMES, hitsFromDbMany, hitsFromHtmlMany, regionOf,
   fmtIso, todayIso, epochDay, isoFromEpoch, type PrizeName, type RawHit,
-} from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history/engine";
+} from "../../../components/sites/mkt88/app/number-history/engine";
 
 export const dynamic = "force-dynamic";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
-const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
-const IMG = "/sites/live4dresult-net-0600c55d/root-8a5edab2/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
+const SG_LOGO = "/sites/mkt88/app/logo_singapore4d.png";
+const IMG = "/sites/mkt88/app/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
 
 /*
  * Logo for a result that carries no path of its own.

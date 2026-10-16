@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
+import Header from "../../components/sites/mkt88/app/Header";
+import RegionButtons from "../../components/sites/mkt88/app/RegionButtons";
+import Footer from "../../components/sites/mkt88/app/Footer";
 import { getSpecialDrawDates } from "../../lib/special-draws";
 
 export const metadata: Metadata = {

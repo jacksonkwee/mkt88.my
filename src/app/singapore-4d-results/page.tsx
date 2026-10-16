@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import SnapshotPage from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/SnapshotPage";
-import GamePager from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePager";
-import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import raw from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/snapshots/singapore-4d-results.content.json";
+import Header from "../../components/sites/mkt88/app/Header";
+import RegionButtons from "../../components/sites/mkt88/app/RegionButtons";
+import SnapshotPage from "../../components/sites/mkt88/app/SnapshotPage";
+import GamePager from "../../components/sites/mkt88/app/GamePager";
+import Footer from "../../components/sites/mkt88/app/Footer";
+import raw from "../../components/sites/mkt88/app/snapshots/singapore-4d-results.content.json";
 import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
-import GamePastFilter from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePastFilter";
+import GamePastFilter from "../../components/sites/mkt88/app/GamePastFilter";
 import { getPastDateLists } from "../../lib/past-dates";
 
 export const metadata: Metadata = {

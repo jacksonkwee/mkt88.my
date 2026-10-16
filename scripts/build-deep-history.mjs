@@ -3,7 +3,7 @@
 // Run: node scripts/build-deep-history.mjs
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const START = "1985-08-25";
 const END = "2022-07-26"; // live4dresult archive takes over from 2022-07-27
 const URL = `https://www.magnum4d.my/results/past/between-dates/${START}/${END}/8000`;

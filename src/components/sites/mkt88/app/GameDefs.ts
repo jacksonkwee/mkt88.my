@@ -10,7 +10,7 @@ export interface GameDef {
 }
 
 const IMG = "/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
-const L = (n: string) => "/sites/live4dresult-net-0600c55d/root-8a5edab2" + IMG + n;
+const L = (n: string) => "/sites/mkt88/app" + IMG + n;
 
 export const GAME_DEFS: GameDef[] = [
   {

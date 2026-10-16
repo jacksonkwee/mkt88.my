@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import LotteryGrid from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LotteryGrid";
-import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import LiveResults from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
-import DirectTopAd from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/DirectTopAd";
+import Header from "../../components/sites/mkt88/app/Header";
+import RegionButtons from "../../components/sites/mkt88/app/RegionButtons";
+import LotteryGrid from "../../components/sites/mkt88/app/LotteryGrid";
+import Footer from "../../components/sites/mkt88/app/Footer";
+import LiveResults from "../../components/sites/mkt88/app/LiveResults";
+import DirectTopAd from "../../components/sites/mkt88/app/DirectTopAd";
 import GoogleAdsense from "../../components/GoogleAdsense";
 
 export const metadata: Metadata = {

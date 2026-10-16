@@ -5,7 +5,7 @@
 //   node scripts/build-deep-history-nine.mjs [--from 2023-01-01]
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const DAY0 = Date.UTC(2020, 0, 1);
 const epochDay = (iso) => Math.round((Date.parse(iso + "T00:00:00Z") - DAY0) / 86400000);
 const isoFromEpoch = (d) => new Date(DAY0 + d * 86400000).toISOString().slice(0, 10);
@@ -49,7 +49,7 @@ async function main() {
   const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
   let gIdx = db.games.findIndex((g) => /nine ?lotto/i.test(g.name));
   if (gIdx < 0) {
-    db.games.push({ name: "Nine Lotto 4D", logo: "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_ninelotto.png", table: "table-17" });
+    db.games.push({ name: "Nine Lotto 4D", logo: "/sites/mkt88/app/logo_ninelotto.png", table: "table-17" });
     gIdx = db.games.length - 1;
     console.log("added Nine Lotto as game index " + gIdx);
   }

@@ -8,7 +8,7 @@
 //   node scripts/merge-local-history.mjs
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const DAY0 = Date.UTC(2020, 0, 1);
 const epochDay = (iso) => Math.round((Date.parse(iso + "T00:00:00Z") - DAY0) / 86400000);
 const is4 = (v) => /^\d{4}$/.test(String(v || ""));

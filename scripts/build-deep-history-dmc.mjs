@@ -6,7 +6,7 @@
 //   /callpassresult?pastdate=YYYYMMDD     -> signed link for that date
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const DAY0 = Date.UTC(2020, 0, 1);
 const epochDay = (iso) => Math.round((Date.parse(iso + "T00:00:00Z") - DAY0) / 86400000);
 const is4 = (v) => /^\d{4}$/.test(String(v || ""));
@@ -54,7 +54,7 @@ async function main() {
   const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
   let gIdx = db.games.findIndex((g) => /Da Ma Cai 1\+3D/i.test(g.name));
   if (gIdx < 0) {
-    db.games.push({ name: "Da Ma Cai 1+3D 大馬彩", logo: "/sites/live4dresult-net-0600c55d/root-8a5edab2/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_damacai.gif?v=1", table: "table-4" });
+    db.games.push({ name: "Da Ma Cai 1+3D 大馬彩", logo: "/sites/mkt88/app/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_damacai.gif?v=1", table: "table-4" });
     gIdx = db.games.length - 1;
   }
 

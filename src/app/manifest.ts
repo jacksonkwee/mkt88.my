@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const ASSET = "/sites/live4dresult-net-0600c55d/root-8a5edab2";
+const ASSET = "/sites/mkt88/app";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {

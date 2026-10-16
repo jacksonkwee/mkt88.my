@@ -1,11 +1,11 @@
-import Header from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import LotteryGrid from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LotteryGrid";
-import Footer from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import LiveResults from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
+import Header from "../components/sites/mkt88/app/Header";
+import RegionButtons from "../components/sites/mkt88/app/RegionButtons";
+import LotteryGrid from "../components/sites/mkt88/app/LotteryGrid";
+import Footer from "../components/sites/mkt88/app/Footer";
+import LiveResults from "../components/sites/mkt88/app/LiveResults";
 import LiveStatusBar from "../components/LiveStatusBar";
 import { getSnapshotForRender } from "../lib/live-snapshot";
-import DirectTopAd from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/DirectTopAd";
+import DirectTopAd from "../components/sites/mkt88/app/DirectTopAd";
 import GoogleAdsense from "../components/GoogleAdsense";
 import SeoText from "../components/SeoText";
 import { getPastDateLists } from "../lib/past-dates";

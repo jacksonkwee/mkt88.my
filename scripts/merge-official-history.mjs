@@ -13,7 +13,7 @@
 //   node scripts/merge-official-history.mjs gd   2020-05-01 2022-04-20
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const DAY0 = Date.UTC(2020, 0, 1);
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const SPECIAL = [..."ABCDEFGHIJKLM"];

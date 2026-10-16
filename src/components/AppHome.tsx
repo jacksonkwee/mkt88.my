@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GAME_DEFS, EAST_LINKS } from "./sites/live4dresult-net-0600c55d/root-8a5edab2/GameDefs";
+import { GAME_DEFS, EAST_LINKS } from "./sites/mkt88/app/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { GearSix } from "@phosphor-icons/react";
 import { useLang, tr, LANG_LABEL } from "../lib/i18n";
@@ -11,10 +11,10 @@ import { RESULT_ALERT_KEY } from "./ResultAlerts";
 import NoticeBar from "./NoticeBar";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
-const HOME = "/sites/live4dresult-net-0600c55d/root-8a5edab2/app-home";
-const SG_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo_singapore4d.png";
+const HOME = "/sites/mkt88/app/app-home";
+const SG_LOGO = "/sites/mkt88/app/logo_singapore4d.png";
 /** The brand logo, at the top of the first page. */
-const MKT_LOGO = "/sites/live4dresult-net-0600c55d/root-8a5edab2/logo-mkt88.webp?v=4";
+const MKT_LOGO = "/sites/mkt88/app/logo-mkt88.webp?v=4";
 const PLAY_URL = "https://play.google.com/store/apps/details?id=com.mkt88.app";
 
 /** Same order the swipe strip uses. */

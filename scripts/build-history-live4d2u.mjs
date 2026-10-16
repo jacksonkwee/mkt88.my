@@ -8,7 +8,7 @@
 //   node scripts/build-history-live4d2u.mjs [--from 0] [--to 9999] [--conc 5]
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const PROGRESS = "scripts/.live4d2u-progress.json";
 const API = "https://www.live4d2u.net/statapiweb.php";
 const DAY0 = Date.UTC(2020, 0, 1);

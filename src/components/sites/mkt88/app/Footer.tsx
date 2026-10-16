@@ -32,7 +32,7 @@ export default function Footer() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img loading="lazy"
-                src="/sites/live4dresult-net-0600c55d/root-8a5edab2/google-play-badge.png"
+                src="/sites/mkt88/app/google-play-badge.png"
                 alt="Get it on Google Play"
                 style={{ height: 60, width: "auto", margin: "-10px 0", display: "inline-block", verticalAlign: "middle" }}
               />

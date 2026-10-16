@@ -18,7 +18,7 @@ import "./vendor/font-awesome-subset.css";
 import "./vendor/theme-style.css";
 import "./globals.css";
 
-const ASSET = "/sites/live4dresult-net-0600c55d/root-8a5edab2";
+const ASSET = "/sites/mkt88/app";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.mkt88.my"),

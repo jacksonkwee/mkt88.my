@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Header from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import Footer from "../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
+import Header from "../../components/sites/mkt88/app/Header";
+import RegionButtons from "../../components/sites/mkt88/app/RegionButtons";
+import Footer from "../../components/sites/mkt88/app/Footer";
 
 export const metadata: Metadata = {
   title: "About MKT 88 4D Results",
@@ -97,7 +97,7 @@ export default function Page() {
               <a href="https://play.google.com/store/apps/details?id=com.mkt88.app" target="_blank" rel="noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/sites/live4dresult-net-0600c55d/root-8a5edab2/google-play-badge.png"
+                  src="/sites/mkt88/app/google-play-badge.png"
                   alt="Get it on Google Play"
                   style={{ width: 200, marginLeft: -10 }}
                 />

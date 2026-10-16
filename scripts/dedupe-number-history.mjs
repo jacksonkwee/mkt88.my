@@ -1,5 +1,5 @@
 import fs from "node:fs";
-const F = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const F = "src/components/sites/mkt88/app/number-history-db.json";
 const db = JSON.parse(fs.readFileSync(F, "utf8"));
 let before = 0, removed = 0;
 for (const n of Object.keys(db.hits)) {

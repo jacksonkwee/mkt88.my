@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Header from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import PastResultsView from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/PastResultsView";
-import Footer from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import { PAST_DATES } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
+import Header from "../../../components/sites/mkt88/app/Header";
+import RegionButtons from "../../../components/sites/mkt88/app/RegionButtons";
+import PastResultsView from "../../../components/sites/mkt88/app/PastResultsView";
+import Footer from "../../../components/sites/mkt88/app/Footer";
+import { PAST_DATES } from "../../../components/sites/mkt88/app/past-data";
 import GoogleAdsense from "../../../components/GoogleAdsense";
 
 export const metadata: Metadata = {

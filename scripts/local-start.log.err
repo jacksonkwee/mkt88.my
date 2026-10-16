@@ -1,0 +1,12 @@
+Error: Page changed from static to dynamic at runtime /, reason: no-store fetch https://live4dresult.net/past-results/2026-10-04 /
+see more here https://nextjs.org/docs/messages/app-static-to-dynamic-error
+    at r (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:19:11232)
+    at <unknown> (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:59799)
+    at <unknown> (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:15045)
+    at e.with (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:24092)
+    at i.with (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:18339)
+    at i.startActiveSpan (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:33305)
+    at e.startActiveSpan (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:33839)
+    at <unknown> (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:14573)
+    at e.with (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:24092)
+    at i.with (C:\dev\GONGXIFACAI\.next\server\chunks\5187.js:1:18339)

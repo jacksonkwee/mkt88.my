@@ -10,7 +10,7 @@
 import fs from "node:fs";
 import path from "node:path";
 const ROOT = process.cwd();
-const DB = path.join(ROOT, "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json");
+const DB = path.join(ROOT, "src/components/sites/mkt88/app/number-history-db.json");
 const OUT = path.join(ROOT, "src/lib/number-stats.json");
 
 const j = JSON.parse(fs.readFileSync(DB, "utf8"));

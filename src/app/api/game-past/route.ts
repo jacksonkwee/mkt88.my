@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { blankStarCells, getViewHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/past-data";
-import { rewriteHtml, stripAdHtml } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/site-paths";
+import { blankStarCells, getViewHtml } from "../../../components/sites/mkt88/app/past-data";
+import { rewriteHtml, stripAdHtml } from "../../../components/sites/mkt88/app/site-paths";
 import recent from "../my-past/recent.json";
-import { GAME_TABLES } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/game-tables";
+import { GAME_TABLES } from "../../../components/sites/mkt88/app/game-tables";
 import { DEEP_CARDS, buildDeepCard, deepHas } from "../../../lib/deep-past-cards";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";

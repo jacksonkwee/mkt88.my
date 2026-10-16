@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Header from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Header";
-import RegionButtons from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/RegionButtons";
-import Footer from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
-import GamePager from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePager";
-import GameColumns from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GameColumns";
-import GamePastFilter from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/GamePastFilter";
-import { EAST_CARD_ID } from "../../../components/sites/live4dresult-net-0600c55d/root-8a5edab2/east-cards";
+import Header from "../../../components/sites/mkt88/app/Header";
+import RegionButtons from "../../../components/sites/mkt88/app/RegionButtons";
+import Footer from "../../../components/sites/mkt88/app/Footer";
+import GamePager from "../../../components/sites/mkt88/app/GamePager";
+import GameColumns from "../../../components/sites/mkt88/app/GameColumns";
+import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
+import { EAST_CARD_ID } from "../../../components/sites/mkt88/app/east-cards";
 import { getSnapshot } from "../../../lib/live-snapshot";
 import { getPastDateLists } from "../../../lib/past-dates";
 

@@ -2,7 +2,7 @@
 // number-history database. Run: node scripts/build-deep-history-st.mjs
 import fs from "node:fs";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 // Range defaults match the original backfill; pass four numbers to widen it,
 // e.g. node scripts/build-deep-history-st.mjs 2022 7 2026 9
 const START_YEAR = Number(process.argv[2] || 1992);

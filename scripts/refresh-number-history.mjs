@@ -8,7 +8,7 @@
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
 
-const DB_FILE = "src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json";
+const DB_FILE = "src/components/sites/mkt88/app/number-history-db.json";
 const DAY0 = Date.UTC(2020, 0, 1);
 const MY_OFFSET_MS = 8 * 60 * 60 * 1000;
 

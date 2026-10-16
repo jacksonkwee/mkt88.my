@@ -4,8 +4,8 @@ import path from "path";
 import { promises as fs } from "fs";
 import { verifyToken, COOKIE_NAME } from "../../../../lib/auth";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "sites", "live4dresult-net-0600c55d", "root-8a5edab2", "custom");
-const PUBLIC_BASE = "/sites/live4dresult-net-0600c55d/root-8a5edab2/custom";
+const UPLOAD_DIR = path.join(process.cwd(), "public", "sites", "mkt88", "app", "custom");
+const PUBLIC_BASE = "/sites/mkt88/app/custom";
 
 async function isAuthed(): Promise<boolean> {
   const store = await cookies();
