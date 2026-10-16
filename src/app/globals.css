@@ -52,12 +52,16 @@ body {
   border-radius: 14px;
 }
 
-/* "1st Prize", "Special 特别奖", "Consolation 安慰奖" - reference text, so it
-   sits in the deep amber rather than the bright one. */
-.card.outer-box .lottery-prize-title,
-.card.outer-box td.lottery-prize-title {
-  color: var(--j-amber-deep);
-}
+/*
+ * The prize-row labels keep the colour they had.
+ *
+ * Colouring them J's deep amber looked right on the white cards, but a good
+ * number of the cards put those cells on a dark tint (#333), where the amber
+ * measures 3.9:1 - on the home page alone that was 67 of the 67 contrast
+ * failures the detector reported after the redesign deployed (measured
+ * 16 Oct 2026). The token stays defined for a later pass that colours the cells
+ * per card; a blanket rule cannot be right for both surfaces.
+ */
 
 /* The jackpot row: an amber rule on a warm tint, with the amount in red. */
 .card.outer-box .jackpot_prize {
