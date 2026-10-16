@@ -9,7 +9,7 @@
  */
 :root {
   --brand: #cc0000;
-  --focus-ring: #cc0000;
+  --focus-ring: var(--brand);
   --radius-sm: 4px;
   --radius-md: 12px;
 }
@@ -229,7 +229,7 @@ body {
  * red links, the buttons, the white footer links, :hover - keeps it.
  */
 a {
-  color: #0069d9;
+  color: var(--link);
 }
 
 /*
