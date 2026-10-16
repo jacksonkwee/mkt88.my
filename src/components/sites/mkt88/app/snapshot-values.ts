@@ -249,6 +249,21 @@ export function overridesFor(snap: Snap, cardId: string, tableCls: string): { va
     if (snap.nineJp) for (const [k, v] of Object.entries(snap.nineJp)) { if (clean(v)) values[k] = v; }
     return { values };
   }
+  /*
+   * Sabah 88's Lotto 6/45, Lotto 5 and Lotto 6 live in cards of their own
+   * beside the 4D one, and the snapshot has no entry for them - so they
+   * rendered the date the page was captured on and read as stuck on
+   * 06-09-2026 (reported 16 Oct 2026). They borrow the 4D card's live draw
+   * date, exactly as the two six-digit cards above borrow theirs. Their numbers
+   * stay on their own data-ids and are written by the snapshot directly, so
+   * nothing here can hand them 4D values.
+   */
+  if (cleanCardId.startsWith("table-10-")) {
+    const sabah4 = snap.cards ? snap.cards["table-10"] : null;
+    if (sabah4 && clean(sabah4.date)) values.date = sabah4.date;
+    if (sabah4 && clean(sabah4.draw_no || "")) values.draw_no = sabah4.draw_no;
+    return { values };
+  }
 
   const t = timeOf(cleanCardId);
   if (!t) return { values };

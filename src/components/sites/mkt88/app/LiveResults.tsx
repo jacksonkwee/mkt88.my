@@ -1060,21 +1060,6 @@ const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "
 /** Apply a table-class -> { dataId: value } map to every matching card. */
 function applyCardMap(cards: Record<string, Record<string, string>>) {
   for (const [cls, vals] of Object.entries(cards || {})) {
-    /*
-     * Sabah 88's Lotto 6/45, Lotto 5 and Lotto 6 are cards of their own, so no
-     * writer reaches them for the draw date: the 4D card beside them showed the
-     * live draw while those three kept the date the page was captured on, which
-     * reads as "the Lotto results stopped on 06-09-2026" (reported 16 Oct
-     * 2026). Their numbers arrive on their own data-ids; only the date is
-     * copied across here.
-     */
-    if (cls === "table-10" && vals && vals.date) {
-      const stamp = String(vals.date).trim();
-      for (const card of Array.from(document.querySelectorAll(".card.outer-box.table-10-lotto"))) {
-        const el = card.querySelector('[data-id="date"]');
-        if (el && (el.textContent || "").trim() !== stamp) el.textContent = stamp;
-      }
-    }
     for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
       // A different draw date means the numbers on this card belong to the old
       // draw, so the new draw's published values are written even when they are
