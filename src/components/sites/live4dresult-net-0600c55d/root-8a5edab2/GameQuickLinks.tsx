@@ -12,6 +12,10 @@ const PAGER_ORDER = [
 ];
 
 function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
+  /*
+   * The tile's aria-label carries brand, "4D" and the Chinese name, even though
+   * only the brand is drawn - see the note on the label below.
+   */
   // Every tile reads "<brand>" / "4D" / "<Chinese>". A trailing "4D" is put on
   // its own line so short names like "Perdana 4D" cannot fit on one line and
   // leave that tile a different height from the rest.
@@ -20,7 +24,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
   const suffix = m ? "4D" : null;
   // 12px is the floor for anything a person has to read; these labels used to be
   // 10px (English) and 9px (Chinese), which is unreadable on a phone.
-  const labelStyle = { fontSize: 12, fontWeight: active ? 800 : 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "normal" as const };
+  const labelStyle = { fontSize: 12, fontWeight: active ? 800 : 700, textAlign: "center" as const, lineHeight: 1.15, whiteSpace: "nowrap" as const };
   return (
     <a
       ref={aRef}
@@ -29,15 +33,16 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
       onClick={onClick}
       className="mkt-press"
       title={name}
+      aria-label={[brand, suffix, zh].filter(Boolean).join(" ")}
       style={{
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         flex: "0 0 auto",
-        width: 60,
+        minWidth: 60,
         boxSizing: "border-box",
-        padding: "6px 2px",
+        padding: "6px 10px",
         border: "1px solid #eee",
         borderRadius: 10,
         background: active ? "#e6e6e6" : "#fff",
@@ -67,9 +72,18 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain" }} />
       </span>
+      {/*
+       * One line: logo + brand.
+       *
+       * This row is pinned to the top of the phone, and its three-line label
+       * (brand / 4D / Chinese) was what made it 141px tall at 390px - a quarter
+       * of the first screenful spent on navigation, before any number is
+       * visible (design review, 16 Oct 2026). The Chinese name is already the
+       * first thing in the card header directly below, and it stays in the
+       * aria-label above. Tiles are now sized by their label, so a long one
+       * like "Grand Dragon" still fits on its single line.
+       */}
       <span style={labelStyle}>{brand}</span>
-      {suffix ? <span style={labelStyle}>{suffix}</span> : null}
-      {zh ? <span style={{ fontSize: 12, color: "#666", textAlign: "center" }}>{zh}</span> : null}
     </a>
   );
 }
