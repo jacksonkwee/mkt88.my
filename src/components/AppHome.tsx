@@ -52,7 +52,7 @@ const ICON_BOX: React.CSSProperties = {
   width: "100%", height: 44, display: "flex", alignItems: "center", justifyContent: "center", flex: "0 0 auto",
 };
 
-const NAME: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: INK, lineHeight: 1.15 };
+const NAME: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: INK, lineHeight: 1.15 };
 const SUB: React.CSSProperties = { fontSize: 12, color: INK_MUTED, lineHeight: 1.15 };
 
 /**
@@ -429,7 +429,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
               <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
                 {(["en", "ms", "zh"] as const).map((l) => (
                   <button key={l} type="button" onClick={() => setLang(l)}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer", fontSize: 13, fontWeight: 700,
+                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer", fontSize: 12, fontWeight: 700,
                       border: lang === l ? "2px solid " + ACCENT : "1px solid var(--j-border)",
                       background: lang === l ? "#ffe9e9" : "#fff", color: lang === l ? ACCENT : "var(--j-ink)" }}>
                     {LANG_LABEL[l]}
@@ -454,7 +454,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: keepOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 10 }}>{tr("keepScreenHelp", lang)}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>{tr("keepScreenHelp", lang)}</div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
               <div>
@@ -471,7 +471,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: soundOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 10 }}>{tr("drawSoundHelp", lang)}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>{tr("drawSoundHelp", lang)}</div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 18 }}>
               <div>
@@ -488,7 +488,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 <span style={{ position: "absolute", top: 3, left: alertsOn ? 29 : 3, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 120ms ease", boxShadow: "0 1px 3px rgba(0,0,0,0.3)" }} />
               </button>
             </div>
-            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 10 }}>{tr("resultAlertsHelp", lang)}</div>
             <button type="button" onClick={() => setSettingsOpen(false)} style={{ width: "100%", marginTop: 16, padding: "11px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 800, cursor: "pointer" }}>{tr("done", lang)}</button>
             {/* The installed app has no address bar, so this is the only way to
                 reach the admin page from inside it - which is where the owner

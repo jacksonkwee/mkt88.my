@@ -1276,3 +1276,33 @@ html[data-lang="zh"] .L-en, html[data-lang="zh"] .L-ms { display: none !importan
   min-height: 44px;
   padding: 0 8px;
 }
+
+/*
+ * The two pages built out of Bootstrap's own parts (/statistics and
+ * /draw-schedule) were the last place the site's type scale did not reach: a
+ * 24px h1, Bootstrap's 20px and 16px headings, a 16px table and its 12.8px
+ * ".small" caption (80% of the 16px it inherited), measured 16 Oct 2026. They
+ * take the four roles now - heading 20/700, section 17/700, body 15 and label
+ * 12 - and nothing outside these two pages is affected.
+ */
+.mkt-inner h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.mkt-inner h2,
+.mkt-inner h3,
+.mkt-inner .h5 {
+  font-size: 17px;
+  font-weight: 700;
+}
+.mkt-inner .table {
+  font-size: 15px;
+}
+.mkt-inner .table th {
+  font-size: 12px;
+  font-weight: 600;
+}
+.mkt-inner .small,
+.mkt-inner small {
+  font-size: 12px;
+}

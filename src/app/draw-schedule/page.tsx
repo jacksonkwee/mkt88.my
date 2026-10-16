@@ -86,7 +86,7 @@ export default async function DrawSchedulePage() {
     <>
       <Header />
       <RegionButtons />
-      <main className="container flex-shrink-0" style={{ minHeight: "60vh" }}>
+      <main className="container flex-shrink-0 mkt-inner" style={{ minHeight: "60vh" }}>
         <div className="row">
           <div className="col-sm-12 mt-3 mb-4">
             <h1 className="h4 mb-3">

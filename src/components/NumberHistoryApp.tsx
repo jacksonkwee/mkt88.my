@@ -356,7 +356,7 @@ export default function NumberHistoryApp() {
                     </button>
                   ) : null}
                 </div>
-                <div style={{ marginTop: 6, fontSize: 13, color: "var(--muted)" }}>
+                <div style={{ marginTop: 6, fontSize: 12, color: "var(--muted)" }}>
                   {tr("nhCompanyHelp", lang)}
                 </div>
               </div>
@@ -374,12 +374,12 @@ export default function NumberHistoryApp() {
             ) : filtered.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: "var(--muted)" }}>
                 {tr("nhNoDraw", lang)}
-                <div style={{ fontSize: 13, marginTop: 6, color: "var(--muted)" }}>{tr("nhNoDrawHint", lang)}</div>
+                <div style={{ fontSize: 12, marginTop: 6, color: "var(--muted)" }}>{tr("nhNoDrawHint", lang)}</div>
               </div>
             ) : (
               <div>
                 {/* Count on the left, Favourite on the same line on the right. */}
-                <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--j-border)", fontSize: 13, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--j-border)", fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     {tr("nhShowing", lang)} {Math.min(filtered.length, MAX_ROWS)} {tr("nhOf", lang)} {filtered.length} {filtered.length === 1 ? tr("nhResultOne", lang) : tr("nhResultMany", lang)}
                     {regions.length ? " · " + regions.map((r) => tr(REGION_KEY[r] || "", lang)).join(" + ") : ""}
@@ -416,7 +416,7 @@ export default function NumberHistoryApp() {
           </div>
         )}
 
-        <div style={{ textAlign: "center", color: "var(--muted)", fontSize: 13, marginTop: 16 }}>
+        <div style={{ textAlign: "center", color: "var(--muted)", fontSize: 12, marginTop: 16 }}>
           {tr("nhNotePerm", lang)}
           <div style={{ marginTop: 4 }}>
             {tr("nhNoteRecords", lang)}
@@ -445,7 +445,7 @@ function tabBtn(active: boolean): React.CSSProperties {
 }
 function chip(active: boolean): React.CSSProperties {
   return {
-    padding: "5px 12px", borderRadius: 12, fontSize: 13, cursor: "pointer",
+    padding: "5px 12px", borderRadius: 12, fontSize: 12, cursor: "pointer",
     border: active ? "2px solid " + RED : "1px solid var(--j-border)",
     background: active ? "#ffe9e9" : "#fff", color: active ? RED : "var(--j-ink)", fontWeight: active ? 700 : 500,
   };

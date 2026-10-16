@@ -86,7 +86,7 @@ export default function DaBoGongApp() {
       return (
         <div style={{ width: size, height: size, borderRadius: 12, border: "1px solid var(--j-border)", background: "#fff7e6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <div style={{ fontSize: size > 60 ? 18 : 13, fontWeight: 800, color: "#cc0000", letterSpacing: 1 }}>{e.num}</div>
-          <div style={{ fontSize: 13, color: "var(--muted)" }}>{tr("dbgImage", lang)}</div>
+          <div style={{ fontSize: 12, color: "var(--muted)" }}>{tr("dbgImage", lang)}</div>
         </div>
       );
     }
@@ -112,7 +112,7 @@ export default function DaBoGongApp() {
             autoFocus
             style={{ width: "100%", padding: "14px 12px", border: "2px solid " + RED, borderRadius: 12, fontSize: 24, textAlign: "center", fontWeight: 800 }}
           />
-          <div style={{ fontSize: 13, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>
+          <div style={{ fontSize: 12, color: "var(--muted)", textAlign: "center", marginTop: 6 }}>
             {tr("dbgHint", lang)}
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
@@ -128,7 +128,7 @@ export default function DaBoGongApp() {
         {data && !loading ? (
           <div style={{ background: "#fff", borderRadius: 12, marginTop: 12, padding: 14, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", textAlign: "center" }}>
             <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: 6, color: RED }}>{data.num}</div>
-            <div style={{ fontSize: 13, color: "var(--muted)", marginBottom: 8 }}>{kindLabel(data.kind)}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", marginBottom: 8 }}>{kindLabel(data.kind)}</div>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <Picture e={data} size={260} />
             </div>
@@ -136,7 +136,7 @@ export default function DaBoGongApp() {
               <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 24, fontWeight: 800 }}>{data.keyword}</div>
                 {data.meaning ? <div style={{ fontSize: 15, color: "var(--muted)", marginTop: 2 }}>{data.meaning}</div> : null}
-                {data.malay ? <div style={{ fontSize: 13, color: "var(--muted)" }}>{data.malay}</div> : null}
+                {data.malay ? <div style={{ fontSize: 12, color: "var(--muted)" }}>{data.malay}</div> : null}
               </div>
             ) : null}
             {historyHref(data.num) ? (
@@ -150,7 +150,7 @@ export default function DaBoGongApp() {
         {/* Keyword results */}
         {results && !loading ? (
           <div style={{ background: "#fff", borderRadius: 12, marginTop: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
-            <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--j-border)", fontSize: 13, color: "var(--muted)" }}>
+            <div style={{ padding: "10px 12px", borderBottom: "1px solid var(--j-border)", fontSize: 12, color: "var(--muted)" }}>
               {results.length} {results.length === 1 ? tr("dbgResultOne", lang) : tr("dbgResultMany", lang)} “{text.trim()}” · {tr("dbgTapHistory", lang)}
             </div>
             {results.length === 0 ? (
@@ -162,7 +162,7 @@ export default function DaBoGongApp() {
                   <Picture e={r} size={54} />
                   <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                     <div style={{ fontWeight: 800, fontSize: 15 }}>{r.keyword}</div>
-                    <div style={{ fontSize: 13, color: "var(--muted)" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
+                    <div style={{ fontSize: 12, color: "var(--muted)" }}>{r.meaning}{r.malay ? " · " + r.malay : ""}</div>
                     {href ? <div style={{ fontSize: 12, color: RED, fontWeight: 700, marginTop: 2 }}>{tr("history", lang)} <ArrowRight size={11} weight="bold" style={{ verticalAlign: "-1px" }} /></div> : null}
                   </div>
                   <div style={{ fontWeight: 900, fontSize: 18, color: RED, letterSpacing: 2 }}>{r.num}</div>
