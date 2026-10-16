@@ -269,3 +269,16 @@ Two findings from the audit are deliberate and must not be "fixed" again:
   the Latin labels and the Chinese game names natively, and it keeps the app
   free of a font download (see Typography above). Swapping it needs a webfont
   that covers CJK, which is the trade-off to weigh first.
+- **An empty cell has three causes, and only one is a defect.** It reads `----`
+  when the draw has not reached that box yet, when the operator deliberately
+  drew that number as a top prize (so the box is empty on their board too), and
+  when a value was cleared because the source went behind. The first two are
+  normal and the operator's own page shows them identically, so our board
+  matches it; the third is the risky one, and the status row above the results
+  is what names it - a board whose "last updated" time has stopped is stale.
+  Decided 16 Oct 2026: do not invent a fourth cell style to separate the first
+  two. If a later pass wants it anyway, the route is a sentinel value for the
+  deliberate holes - the server already knows which boxes those are, from the
+  top-prize letters - plus a dimmer cell. Anything that only changes how `----`
+  is *drawn* cannot tell the three apart, because at that point the information
+  is gone.
