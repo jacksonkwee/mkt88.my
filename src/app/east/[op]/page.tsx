@@ -6,7 +6,7 @@ import Footer from "../../../components/sites/mkt88/app/Footer";
 import GamePager from "../../../components/sites/mkt88/app/GamePager";
 import GameColumns from "../../../components/sites/mkt88/app/GameColumns";
 import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
-import { EAST_CARD_ID } from "../../../components/sites/mkt88/app/east-cards";
+import { EAST_CARD_IDS } from "../../../components/sites/mkt88/app/east-cards";
 import { getSnapshot } from "../../../lib/live-snapshot";
 import { getPastDateLists } from "../../../lib/past-dates";
 
@@ -62,7 +62,7 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
               <GamePastFilter slug={o.pager} name={o.name} kind="my" dates={pastDates.my} tables={pastDates.myTables} />
             </div>
           </div>
-          <GameColumns ids={[EAST_CARD_ID[o.pager]]} snap={snapProp} wide />
+          <GameColumns ids={EAST_CARD_IDS[o.pager]} snap={snapProp} wide />
         </main>
       </div>
       <Footer />

@@ -85,20 +85,14 @@ function jackpotTable(ids: string[]): CardTable {
  * The operator prints one row per group - the number, the bonus and the group's
  * jackpot - and the captured page does not carry these two boards at all, so the
  * table is built here. The ids match what the live snapshot writes.
+ *
+ * The board prints no heading of its own. Its card's header band already names
+ * it - the Sabah 88 logo and "Sabah 88 Lotto 5" on the Sabah 88 blue - and
+ * printing the name a second time in blue read as two headings (owner's
+ * request, 16 Oct 2026).
  */
-function lottoBoard(title: string, group: "5" | "6", rows: number, separated = false): CardTable {
+function lottoBoard(group: "5" | "6", rows: number, separated = false): CardTable {
   const cells: CardRow[] = [];
-  /*
-   * Each board carries its own heading, the way Sports Toto's 5D / 6D card
-   * heads its sections, and wears the Sabah 88 blue - the same colour as that
-   * card's own header band (11 Oct 2026).
-   */
-  if (title) {
-    cells.push({
-      cls: "",
-      cells: [{ tag: "td", cls: "lottery-prize-title sabah88-bg text-center", attrs: { colspan: "4" }, html: title }],
-    });
-  }
   for (let i = 1; i <= rows; i++) {
     const id = "sabahlotto" + group + "_";
     cells.push({
@@ -159,7 +153,7 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     const tail = c.tables.slice(3);      // 3D, Lotto 6/45
     // Lotto 5 and Lotto 6 are separate blocks: each has its own heading and its
     // own gap, so the two boards do not read as one long table.
-    const lotto = cls === "table-10" ? [lottoBoard("Lotto 5", "5", 8, true), lottoBoard("Lotto 6", "6", 5, true)] : [];
+    const lotto = cls === "table-10" ? [lottoBoard("5", 8, true), lottoBoard("6", 5, true)] : [];
     // Cash Sweep's own 3D board, directly under its jackpot rows.
     if (cls === "table-9") return [{ ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] }];
     /*
@@ -205,7 +199,13 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     if (cls === "table-10") {
       const titled = (t: CardTable) => plain(t.rows[0]?.cells[0]?.html || "");
       const d3 = tidy.filter((t) => titled(t) === "3D");
-      const l645 = tidy.filter((t) => titled(t) === "Lotto 6/45");
+      /*
+       * The "Lotto 6/45" board comes from the mirrored page with its own blue
+       * heading row, which its card's header band now repeats (logo plus
+       * "Sabah 88 Lotto 6/45"), so that row is dropped here - same as the two
+       * built boards above (owner's request, 16 Oct 2026).
+       */
+      const l645 = tidy.filter((t) => titled(t) === "Lotto 6/45").map((t) => ({ ...t, rows: t.rows.slice(1) }));
       const part = (suffix: string, name: string, tables: CardTable[]): LotteryCardData => ({
         ...c,
         id: c.id + suffix,
@@ -224,9 +224,21 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
   })
   .filter((c) => Boolean(c));
 
-/** The card id each east page opens with. */
-export const EAST_CARD_ID: Record<string, string> = {
-  sandakan: "table-8-2026-09-06",
-  cashsweep: "table-9-2026-09-06",
-  sabah88: "table-10-2026-09-06",
+/**
+ * The card ids each east page shows on a desktop.
+ *
+ * Sabah 88's card became four (dfdb4ea), and this list was not updated with it:
+ * the page named only the 4D card, so on a desktop the three Lotto boards were
+ * missing altogether while a phone showed all four (reported 16 Oct 2026). The
+ * phone pager already lists all four, so the two now agree.
+ */
+export const EAST_CARD_IDS: Record<string, string[]> = {
+  sandakan: ["table-8-2026-09-06"],
+  cashsweep: ["table-9-2026-09-06"],
+  sabah88: [
+    "table-10-2026-09-06",
+    "table-10-2026-09-06-lotto645",
+    "table-10-2026-09-06-lotto5",
+    "table-10-2026-09-06-lotto6",
+  ],
 };
