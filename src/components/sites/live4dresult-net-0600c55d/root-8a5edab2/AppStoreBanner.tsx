@@ -14,7 +14,7 @@ export default function AppStoreBanner() {
           marginTop: "1rem",
         }}
       >
-        <a href="https://apps.apple.com/ae/app/4d2u-live/id6467018137" target="_blank" rel="noreferrer">
+        <a href="https://play.google.com/store/apps/details?id=com.mkt88.app" target="_blank" rel="noreferrer">
           <img loading="lazy"
             src={IMG + "logo_appstore.png?v=1"}
             width="100%"
@@ -23,7 +23,7 @@ export default function AppStoreBanner() {
           />
         </a>
         <div className="px-1"></div>
-        <a href="https://play.google.com/store/apps/details?id=com.lottery.live4d2u" target="_blank" rel="noreferrer">
+        <a href="https://play.google.com/store/apps/details?id=com.mkt88.app" target="_blank" rel="noreferrer">
           <img loading="lazy"
             src={IMG + "logo_playstore.png?v=1"}
             width="100%"
