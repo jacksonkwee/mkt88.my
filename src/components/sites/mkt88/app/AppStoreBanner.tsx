@@ -1,6 +1,6 @@
 import { ASSET_BASE } from "./site-paths";
 
-const IMG = ASSET_BASE + "/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
+const IMG = ASSET_BASE + "/theme-assets/images/";
 
 export default function AppStoreBanner() {
   return (

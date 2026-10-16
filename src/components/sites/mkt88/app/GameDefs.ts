@@ -9,7 +9,7 @@ export interface GameDef {
   mode: "home" | "lotto";
 }
 
-const IMG = "/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
+const IMG = "/theme-assets/images/";
 const L = (n: string) => "/sites/mkt88/app" + IMG + n;
 
 export const GAME_DEFS: GameDef[] = [

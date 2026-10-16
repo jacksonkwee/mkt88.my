@@ -9,7 +9,7 @@ interface Props {
 }
 
 const ASSET = "/sites/mkt88/app";
-const CAL = ASSET + "/wp-content/themes/oldtheme-lottery-frontend/assets/images/icon/calendar.png?v=1";
+const CAL = ASSET + "/theme-assets/images/icon/calendar.png?v=1";
 
 export default function PastToolbar({ current, view }: Props) {
   const [open, setOpen] = useState(false);

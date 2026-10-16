@@ -6,7 +6,7 @@
       "header": {
         "bgCls": "magnum-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_magnum.gif?v=1",
+          "src": "/theme-assets/images/logo_magnum.gif?v=1",
           "alt": "logo-magnum"
         },
         "name": "Magnum 4D 萬能",
@@ -440,7 +440,7 @@
       "header": {
         "bgCls": "sportstoto-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_toto.gif?v=1",
+          "src": "/theme-assets/images/logo_toto.gif?v=1",
           "alt": "logo-sportstoto"
         },
         "name": "SportsToto 4D 多多",
@@ -478,7 +478,7 @@
                     "width": "12.5%",
                     "rowspan": "3"
                   },
-                  "html": "<span>Zodiac</span>\n                                    <img data-id=\"zodiac\" src=\"/wp-content/themes/oldtheme-lottery-frontend/assets/images/zodiac/goat.png\" onerror=\"this.src='https://live4dresult.net/wp-content/themes/oldtheme-lottery-frontend/assets/images/zodiac/empty.png'\">"
+                  "html": "<span>Zodiac</span>\n                                    <img data-id=\"zodiac\" src=\"/theme-assets/images/zodiac/goat.png\" onerror=\"this.src='https://live4dresult.net/theme-assets/images/zodiac/empty.png'\">"
                 }
               ]
             },
@@ -883,7 +883,7 @@
       "header": {
         "bgCls": "damacai-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_damacai.gif?v=1",
+          "src": "/theme-assets/images/logo_damacai.gif?v=1",
           "alt": "logo-damacai"
         },
         "name": "Da Ma Cai 1+3D 大馬彩",
@@ -1299,7 +1299,7 @@
       "header": {
         "bgCls": "magnum-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_magnum.gif?v=1",
+          "src": "/theme-assets/images/logo_magnum.gif?v=1",
           "alt": "logo-magnum"
         },
         "name": "Magnum Life万能天天彩",
@@ -1516,7 +1516,7 @@
       "header": {
         "bgCls": "magnum-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_magnum.gif?v=1",
+          "src": "/theme-assets/images/logo_magnum.gif?v=1",
           "alt": "logo-magnum"
         },
         "name": "Magnum Jackpot Gold萬能黃金万字积宝",
@@ -1684,7 +1684,7 @@
       "header": {
         "bgCls": "sportstoto-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_toto.gif?v=1",
+          "src": "/theme-assets/images/logo_toto.gif?v=1",
           "alt": "logo-sportstoto"
         },
         "name": "SportsToto 5D, 6D, Lotto多多六合彩",
@@ -2391,7 +2391,7 @@
       "header": {
         "bgCls": "damacai-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_damacai.gif?v=1",
+          "src": "/theme-assets/images/logo_damacai.gif?v=1",
           "alt": "logo-damacai"
         },
         "name": "Da Ma Cai 3+3D 大馬彩",
@@ -2871,7 +2871,7 @@
       "header": {
         "bgCls": "granddragon-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_granddragon.jpg?v=1",
+          "src": "/theme-assets/images/logo_granddragon.jpg?v=1",
           "alt": "logo-granddragon"
         },
         "name": "Grand Dragon 4D 豪龙",
@@ -3333,7 +3333,7 @@
       "header": {
         "bgCls": "nine lotto-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_ninelotto.png?v=1",
+          "src": "/theme-assets/images/logo_ninelotto.png?v=1",
           "alt": "logo-nine lotto"
         },
         "name": "Nine Lotto",
@@ -3723,7 +3723,7 @@
       "header": {
         "bgCls": "granddragon-bg",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_granddragon.jpg?v=1",
+          "src": "/theme-assets/images/logo_granddragon.jpg?v=1",
           "alt": "logo-granddragon"
         },
         "name": "Grand Dragon 6D 豪龙",
@@ -3899,7 +3899,7 @@
       "header": {
         "bgCls": "nine",
         "logo": {
-          "src": "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_ninelotto.png?v=1",
+          "src": "/theme-assets/images/logo_ninelotto.png?v=1",
           "alt": "logo-nine lotto"
         },
         "name": "Nine Lotto 6D",

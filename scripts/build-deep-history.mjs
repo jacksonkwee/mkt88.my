@@ -26,7 +26,7 @@ async function main() {
   const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
   let gIdx = db.games.findIndex((g) => /magnum 4d/i.test(g.name));
   if (gIdx < 0) {
-    db.games.push({ name: "Magnum 4D 萬能", logo: "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_magnum.gif?v=1", table: "table-1" });
+    db.games.push({ name: "Magnum 4D 萬能", logo: "/theme-assets/images/logo_magnum.gif?v=1", table: "table-1" });
     gIdx = db.games.length - 1;
   }
 

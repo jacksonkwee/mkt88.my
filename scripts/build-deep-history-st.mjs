@@ -62,7 +62,7 @@ async function main() {
   const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
   let gIdx = db.games.findIndex((g) => /sportstoto|sports ?toto/i.test(g.name));
   if (gIdx < 0) {
-    db.games.push({ name: "SportsToto 4D 多多", logo: "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_toto.gif?v=1", table: "table-6" });
+    db.games.push({ name: "SportsToto 4D 多多", logo: "/theme-assets/images/logo_toto.gif?v=1", table: "table-6" });
     gIdx = db.games.length - 1;
   }
 

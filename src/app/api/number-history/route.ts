@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const SG_LOGO = "/sites/mkt88/app/logo_singapore4d.png";
-const IMG = "/sites/mkt88/app/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
+const IMG = "/sites/mkt88/app/theme-assets/images/";
 
 /*
  * Logo for a result that carries no path of its own.

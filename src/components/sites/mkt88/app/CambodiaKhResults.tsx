@@ -33,10 +33,10 @@ function moreTable(label: string) {
 }
 
 const LOGO = {
-  gd: "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_granddragon.jpg?v=1",
-  nine: "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_ninelotto.png?v=1",
-  perdana: "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_perdana.jpg?v=1",
-  hari: "/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_harihari.jpg?v=1",
+  gd: "/theme-assets/images/logo_granddragon.jpg?v=1",
+  nine: "/theme-assets/images/logo_ninelotto.png?v=1",
+  perdana: "/theme-assets/images/logo_perdana.jpg?v=1",
+  hari: "/theme-assets/images/logo_harihari.jpg?v=1",
 };
 
 function labelDate(iso: string): string {

@@ -15,7 +15,7 @@ type Store = Record<string, Record<string, DeepGame>>;
 export const DEEP = deepRaw as unknown as Store;
 export const DEEP_FROM = "2021-09-15";
 
-const ASSET = "/sites/mkt88/app/wp-content/themes/oldtheme-lottery-frontend/assets/images/";
+const ASSET = "/sites/mkt88/app/theme-assets/images/";
 const SG_LOGO = "/sites/mkt88/app/logo_singapore4d.png";
 
 /** Which archive records make up each game page, and how to draw them. */

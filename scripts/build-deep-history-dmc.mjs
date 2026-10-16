@@ -54,7 +54,7 @@ async function main() {
   const db = JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
   let gIdx = db.games.findIndex((g) => /Da Ma Cai 1\+3D/i.test(g.name));
   if (gIdx < 0) {
-    db.games.push({ name: "Da Ma Cai 1+3D 大馬彩", logo: "/sites/mkt88/app/wp-content/themes/oldtheme-lottery-frontend/assets/images/logo_damacai.gif?v=1", table: "table-4" });
+    db.games.push({ name: "Da Ma Cai 1+3D 大馬彩", logo: "/sites/mkt88/app/theme-assets/images/logo_damacai.gif?v=1", table: "table-4" });
     gIdx = db.games.length - 1;
   }
 
