@@ -152,7 +152,7 @@ export default function AppTools() {
       <div style={{ fontSize: 12, color: RED, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}><Star size={13} weight="fill" />FAVOURITE NUMBER APPEARED</div>
       <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 3, margin: "2px 0" }}>{toast.num}</div>
       <div style={{ fontSize: 12, color: "#555" }}>{toast.game}</div>
-      <div style={{ fontSize: 12, color: "#666" }}>{toast.prize} · tap to see history</div>
+      <div style={{ fontSize: 12, color: "var(--muted)" }}>{toast.prize} · tap to see history</div>
     </div>
   );
 }

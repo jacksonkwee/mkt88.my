@@ -59,10 +59,10 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
         minWidth: 60,
         boxSizing: "border-box",
         padding: "6px 10px",
-        border: "1px solid #eee",
+        border: "1px solid var(--j-border)",
         borderRadius: 10,
-        background: active ? "#e6e6e6" : "#fff",
-        color: "#333",
+        background: active ? "var(--j-border-soft)" : "#fff",
+        color: "var(--j-ink)",
         textDecoration: "none",
         boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
       }}
@@ -80,7 +80,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
           justifyContent: "center",
           borderRadius: "50%",
           border: "1px solid #d9d9d9",
-          background: "#f7f7f7",
+          background: "var(--j-page)",
           overflow: "hidden",
           marginBottom: 4,
         }}

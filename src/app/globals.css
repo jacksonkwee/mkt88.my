@@ -28,7 +28,7 @@
  */
 :root {
   --link: #0069d9;
-  --muted: #666;
+  --muted: var(--muted);
   --tint-magnum: #ff0;
   --tint-damacai: navy;
   --tint-sportstoto: #ad0006;
@@ -67,6 +67,14 @@
 
 body {
   background: var(--j-page);
+  /*
+   * The site's ink, not Bootstrap's. Almost every word on every page inherited
+   * #212529 from Bootstrap's own body rule, which is why that value kept showing
+   * up in the palette audit as the one colour outside the system; #141210 is the
+   * ink the palette names, and it is the same near-black a shade deeper (measured
+   * 16 Oct 2026).
+   */
+  color: var(--j-ink);
 }
 
 /* The card keeps its anatomy - every data-id and every cell stays put - and
@@ -82,7 +90,7 @@ body {
  * The prize-row labels keep the colour they had.
  *
  * Colouring them J's deep amber looked right on the white cards, but a good
- * number of the cards put those cells on a dark tint (#333), where the amber
+ * number of the cards put those cells on a dark tint (var(--j-ink)), where the amber
  * measures 3.9:1 - on the home page alone that was 67 of the 67 contrast
  * failures the detector reported after the redesign deployed (measured
  * 16 Oct 2026). The token stays defined for a later pass that colours the cells
@@ -221,7 +229,7 @@ footer.footer {
  *
  * Its red arrives with the baked markup, so the colour cannot be corrected at
  * the source the way the two card tints were. Measured 16 Oct 2026: #ff0000 on
- * the #ccc cell is 2.5:1, the worst remaining pair on the site. #991b1b keeps
+ * the var(--j-border) cell is 2.5:1, the worst remaining pair on the site. #991b1b keeps
  * it reading as an alert and brings it to 5.2:1.
  */
 .card.outer-box [data-id="first_jackpot_status"],
@@ -515,7 +523,7 @@ body.mkt-in-app .mkt-app-topbar a:active {
    theme sets z-index 1019, which some phone WebViews let result rows paint
    over - the page appeared to swipe up and down behind the logo. */
 header.sticky-top {
-  background-color: #f7f7f7 !important;
+  background-color: var(--j-page) !important;
   z-index: 2000 !important;
 }
 /* The opened menu is an absolutely positioned panel that starts above the

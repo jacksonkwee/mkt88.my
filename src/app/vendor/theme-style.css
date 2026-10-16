@@ -76,7 +76,7 @@ button:focus {
     width: 100%;
     left: 0;
     top: 65px;
-    background: #f7f7f7;
+    background: var(--j-page);
     border-top: 1px solid #c3c3c3;
     border-bottom-width: 2px;
     box-shadow: 0 5px 5px 0px rgba(0, 0, 0, 0.3);
@@ -95,12 +95,12 @@ button:focus {
 
 .dark {
   color: #fff !important;
-  background-color: #333;
-  border: 1px solid #333;
+  background-color: var(--j-ink);
+  border: 1px solid var(--j-ink);
 }
 
 .grey {
-  background-color: #ccc;
+  background-color: var(--j-border);
 }
 
 .current-menu-item {
@@ -128,10 +128,10 @@ button:focus {
 }
 
 .navbar-inverse {
-  background-color: #f7f7f7;
+  background-color: var(--j-page);
   border-bottom-width: 2px;
   box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.9);
-  border-color: #eee;
+  border-color: var(--j-border);
 }
 
 .full-width {
@@ -225,7 +225,7 @@ button:focus {
 
 .date {
   font-size: 14px;
-  color: #333;
+  color: var(--j-ink);
   padding: 5px 0;
 }
 
@@ -257,12 +257,12 @@ button:focus {
 
 .dropdown-item.active,
 .dropdown-item:active {
-  background-color: #333;
+  background-color: var(--j-ink);
   color: #fff !important;
 }
 
 .dropdown.show {
-  background-color: #333;
+  background-color: var(--j-ink);
   color: #fff !important;
 }
 
@@ -362,8 +362,8 @@ button:focus {
 
 .lottery-prize-title {
   color: #fff;
-  background-color: #333;
-  border: 1px solid #333;
+  background-color: var(--j-ink);
+  border: 1px solid var(--j-ink);
   font-weight: 700;
   font-size: 14px;
   min-height: 25px;
@@ -393,7 +393,7 @@ button:focus {
 /* Paragraph */
 .product-articles p {
   font-size: 16px;
-  color: #333;
+  color: var(--j-ink);
   line-height: 1.5em;
   padding: 5px 0;
 }

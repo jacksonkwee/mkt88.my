@@ -53,7 +53,7 @@ export default function Header() {
                 on a narrow screen still reads as one bar. */}
             <div
               id="menu-top-menu"
-              style={{ marginLeft: "auto", maxWidth: "100%", display: "flex", flexWrap: "nowrap", overflowX: "auto", gap: 2, background: "#fff", border: "1px solid #e6e6e6", borderRadius: 999, padding: 4 }}
+              style={{ marginLeft: "auto", maxWidth: "100%", display: "flex", flexWrap: "nowrap", overflowX: "auto", gap: 2, background: "#fff", border: "1px solid var(--j-border-soft)", borderRadius: 999, padding: 4 }}
             >
               {MENU.map((m) => (
                 <Link
@@ -65,7 +65,7 @@ export default function Header() {
                   /* minHeight 44: these five links are the menu you use all
                      evening, and at 43px they were a pixel under the size a
                      finger is meant to hit comfortably (measured 14 Oct 2026). */
-                  style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 44, padding: "5px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, color: "#333333", textDecoration: "none", whiteSpace: "nowrap", lineHeight: 1.15 }}
+                  style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 44, padding: "5px 10px", borderRadius: 999, fontSize: 12.5, fontWeight: 700, color: "var(--j-ink)", textDecoration: "none", whiteSpace: "nowrap", lineHeight: 1.15 }}
                 >
                   {m.en}
                   <span style={{ background: "var(--brand)", color: "#ffffff", borderRadius: 6, padding: "1px 6px", marginTop: 3, fontSize: 12, fontWeight: 700, whiteSpace: "nowrap" }}>{m.zh}</span>

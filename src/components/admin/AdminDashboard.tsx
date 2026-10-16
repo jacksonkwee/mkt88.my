@@ -164,7 +164,7 @@ export default function AdminDashboard() {
   return (
     <div style={{ maxWidth: 760, margin: "24px auto", padding: "0 16px" }}>
       <h1 style={{ fontSize: 22 }}>Admin Panel</h1>
-      <p style={{ color: "#666" }}>Logged in. Changes apply instantly across the whole site.</p>
+      <p style={{ color: "var(--muted)" }}>Logged in. Changes apply instantly across the whole site.</p>
 
       {health ? (
         <section style={{ ...box, borderColor: health.bad ? "#cc0000" : "#12b76a" }}>
@@ -190,7 +190,7 @@ export default function AdminDashboard() {
         <h2 style={{ fontSize: 17, marginTop: 0 }}>📱 My phone alerts</h2>
         {deviceToken() ? (
           <>
-            <p style={{ color: "#666", fontSize: 13, marginTop: 0 }}>
+            <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
               来源出问题时，用推播通知这台手机（只有你的装置，不会发给用户）。
             </p>
             <button onClick={() => setOwnerAlert(!(ownerDevice && ownerDevice.thisDevice))} style={{ padding: "8px 16px" }}>
@@ -215,13 +215,13 @@ export default function AdminDashboard() {
             这台装置没有 App 推播。请在 <strong>手机 App 里</strong>打开 mkt88.my/admin 并登入，再按这里。
           </p>
         )}
-        {ownerDevice ? <p style={{ fontSize: 13, color: "#666" }}>目前在名单上：{ownerDevice.devices} 台装置</p> : null}
+        {ownerDevice ? <p style={{ fontSize: 13, color: "var(--muted)" }}>目前在名单上：{ownerDevice.devices} 台装置</p> : null}
         {ownerMsg ? <p style={{ fontSize: 13 }}>{ownerMsg}</p> : null}
       </section>
 
       <section style={box}>
         <h2 style={{ fontSize: 17, marginTop: 0 }}>🎯 Special draw dates 特别彩日期</h2>
-        <p style={{ color: "#666", fontSize: 13, marginTop: 0 }}>
+        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
           这里列出的日期，手机会在 12:00、15:00、18:10（马来西亚时间）收到特别开彩提醒；日期过了就自动停止，不用回来删。
           加好或删好后，按最下面的 <strong>Save changes</strong> 才会生效。
         </p>
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
             ))}
           </ul>
         ) : (
-          <p style={{ color: "#666", fontSize: 13 }}>目前没有特别彩日期。</p>
+          <p style={{ color: "var(--muted)", fontSize: 13 }}>目前没有特别彩日期。</p>
         )}
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
           <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={{ padding: 8 }} />
@@ -261,7 +261,7 @@ export default function AdminDashboard() {
 
       <section style={box}>
         <h2 style={{ fontSize: 17, marginTop: 0 }}>✍️ 手动输入成绩</h2>
-        <p style={{ color: "#666", fontSize: 13, marginTop: 0 }}>
+        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
           Sports Toto 4D 和豪龙 4D 有机器人防护，程式抓不到。开彩时用你自己的浏览器打开官方成绩页，把号码照顺序贴进下面的框，再按最下面的 <strong>Save changes</strong>，网页和 App 马上就会显示你贴的号码。
           <br />
           贴的顺序：<strong>头奖、二奖、三奖</strong> → <strong>特别奖</strong> → <strong>安慰奖</strong>。号码之间用空格或换行分开都可以。
@@ -271,7 +271,7 @@ export default function AdminDashboard() {
           const vals = parseManualText(e.text);
           const count = Object.keys(vals).length;
           return (
-            <div key={g.cls} style={{ borderTop: "1px solid #eee", marginTop: 12, paddingTop: 10 }}>
+            <div key={g.cls} style={{ borderTop: "1px solid var(--j-border)", marginTop: 12, paddingTop: 10 }}>
               <strong>{g.name}</strong>
               <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "6px 0", flexWrap: "wrap" }}>
                 <label style={{ fontSize: 13 }}>
@@ -303,7 +303,7 @@ export default function AdminDashboard() {
               ) : (
                 <textarea rows={3} style={input} placeholder={g.hint} value={e.text} onChange={(ev) => setManual(g.cls, { text: ev.target.value })} />
               )}
-              <p style={{ fontSize: 12, margin: "4px 0 0", color: count ? "#1b5e20" : "#666" }}>
+              <p style={{ fontSize: 12, margin: "4px 0 0", color: count ? "#1b5e20" : "var(--muted)" }}>
                 {g.hint}
                 {count ? "　已填 " + count + " 格（记得按 Save changes）" : ""}
               </p>
@@ -319,10 +319,10 @@ export default function AdminDashboard() {
         </label>
         {c.settings.banner.src ? (
           <div style={{ margin: "8px 0" }}>
-            <img src={c.settings.banner.src} alt="banner" style={{ maxWidth: "100%", maxHeight: 90, background: "#eee", borderRadius: 6 }} />
+            <img src={c.settings.banner.src} alt="banner" style={{ maxWidth: "100%", maxHeight: 90, background: "var(--j-border)", borderRadius: 6 }} />
             <button onClick={() => banner({ src: "" })} style={{ marginLeft: 10 }}>Remove</button>
           </div>
-        ) : <p style={{ color: "#666" }}>No banner uploaded.</p>}
+        ) : <p style={{ color: "var(--muted)" }}>No banner uploaded.</p>}
         <label style={label as any}>Upload banner image
           <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "banner")} />
         </label>
@@ -350,16 +350,16 @@ export default function AdminDashboard() {
 
       <section style={box}>
         <h2 style={{ fontSize: 17, marginTop: 0 }}>💰 Advertising - top banner (earn from sponsors)</h2>
-        <p style={{ margin: "4px 0 8px", color: "#666" }}>Sell this slot to an advertiser, upload their banner + link, and enable it. It shows at the top of every results page.</p>
+        <p style={{ margin: "4px 0 8px", color: "var(--muted)" }}>Sell this slot to an advertiser, upload their banner + link, and enable it. It shows at the top of every results page.</p>
         <label style={{ display: "block", margin: "6px 0" }}>
           <input type="checkbox" checked={c.ads.direct.top.enabled} onChange={(e) => directTop({ enabled: e.target.checked })} /> Enable sponsored banner
         </label>
         {c.ads.direct.top.image ? (
           <div style={{ margin: "8px 0" }}>
-            <img src={c.ads.direct.top.image} alt="ad" style={{ maxWidth: "100%", maxHeight: 90, background: "#eee", borderRadius: 6 }} />
+            <img src={c.ads.direct.top.image} alt="ad" style={{ maxWidth: "100%", maxHeight: 90, background: "var(--j-border)", borderRadius: 6 }} />
             <button onClick={() => directTop({ image: "" })} style={{ marginLeft: 10 }}>Remove image</button>
           </div>
-        ) : <p style={{ color: "#666" }}>No banner uploaded.</p>}
+        ) : <p style={{ color: "var(--muted)" }}>No banner uploaded.</p>}
         <label style={label as any}>Banner image (.png/.jpg/.jpeg)
           <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "topAd")} />
         </label>
@@ -382,7 +382,7 @@ export default function AdminDashboard() {
         <button onClick={save} disabled={saving} style={{ padding: "9px 22px", color: "#fff", background: "#cc0000", border: 0, borderRadius: 6 }}>
           {saving ? "Saving…" : "Save changes"}
         </button>
-        <button onClick={logout} style={{ padding: "9px 20px", background: "#eee", border: "1px solid #bbb", borderRadius: 6 }}>Log out</button>
+        <button onClick={logout} style={{ padding: "9px 20px", background: "var(--j-border)", border: "1px solid #bbb", borderRadius: 6 }}>Log out</button>
       </div>
       {msg ? <p style={{ marginTop: 8 }}>{msg}</p> : null}
     </div>

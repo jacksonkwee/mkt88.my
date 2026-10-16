@@ -18,7 +18,7 @@ export default function SeoText({
   links?: { href: string; label: ReactNode }[];
 }) {
   return (
-    <section style={{ maxWidth: 900, margin: "18px auto 30px", padding: "0 14px", color: "#333", lineHeight: 1.65 }}>
+    <section style={{ maxWidth: 900, margin: "18px auto 30px", padding: "0 14px", color: "var(--j-ink)", lineHeight: 1.65 }}>
       {/* The page's main heading. It is an h1 rather than an h2 because on every
           page that uses this block it IS the page's title - and a page with no
           h1 gives Google nothing to hang the page on (measured 14 Oct 2026). */}

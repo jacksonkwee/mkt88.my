@@ -139,7 +139,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
               onChange={(e) => setDate(e.target.value)}
               /* minHeight 44: a native select comes out about 35px tall, which
                  is short for a finger (measured 14 Oct 2026, website). */
-              style={{ padding: "6px 10px", minHeight: 44, borderRadius: 8, border: "1px solid #ccc", minWidth: 220, fontWeight: 600, background: "#fff" }}
+              style={{ padding: "6px 10px", minHeight: 44, borderRadius: 8, border: "1px solid var(--j-border)", minWidth: 220, fontWeight: 600, background: "#fff" }}
             >
               <option value="">Live results (latest) 最新开奖</option>
               {groups.flatMap((g) => g.items).map((d) => (
@@ -161,7 +161,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
             ) : null}
           </>
         ) : (
-          <span style={{ color: "#666", fontSize: 13 }}>No past results yet.</span>
+          <span style={{ color: "var(--muted)", fontSize: 13 }}>No past results yet.</span>
         )}
       </div>
 

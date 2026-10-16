@@ -86,8 +86,8 @@ export default function LiveStatusBar() {
         display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
         margin: "10px 0 2px", padding: "8px 12px", borderRadius: 8,
         background: state.live ? "#f0fdf4" : "#fff",
-        border: "1px solid " + (state.live ? "#86efac" : "#e6e6e6"),
-        fontSize: 13, color: "#333",
+        border: "1px solid " + (state.live ? "#86efac" : "var(--j-border-soft)"),
+        fontSize: 13, color: "var(--j-ink)",
       }}
     >
       <span
@@ -102,7 +102,7 @@ export default function LiveStatusBar() {
       ) : (
         <span>等待开彩 · 下一场 <strong>{state.next}</strong></span>
       )}
-      <span style={{ marginLeft: "auto", color: "#666" }}>
+      <span style={{ marginLeft: "auto", color: "var(--muted)" }}>
         {updated ? "资料更新 " + updated : "读取中…"}
       </span>
     </div>

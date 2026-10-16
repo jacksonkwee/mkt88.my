@@ -139,14 +139,14 @@ export default function FavouritesApp() {
                  screen reader announces the same thing. */
               aria-label={tr("favAdd", lang)}
               inputMode="numeric"
-              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid #ccc", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
+              style={{ flex: 1, minWidth: 0, padding: "10px 12px", border: "1px solid var(--j-border)", borderRadius: 12, fontSize: 18, letterSpacing: 6, textAlign: "center", fontWeight: 800 }} />
           </div>
 
           {perms.length ? (
             <div style={{ marginTop: 12 }}>
               <div style={{ display: "flex", gap: 6, justifyContent: "flex-end", marginBottom: 6 }}>
-                <button onClick={() => (allPicked ? setPicked([]) : selectAll())} style={mini(allPicked ? RED : "#333")}>{tr("favPau", lang)}</button>
-                <button onClick={() => setPicked(reversePicked ? [] : reverseSet)} style={mini(reversePicked ? RED : "#333")}>{tr("favReverse", lang)}</button>
+                <button onClick={() => (allPicked ? setPicked([]) : selectAll())} style={mini(allPicked ? RED : "var(--j-ink)")}>{tr("favPau", lang)}</button>
+                <button onClick={() => setPicked(reversePicked ? [] : reverseSet)} style={mini(reversePicked ? RED : "var(--j-ink)")}>{tr("favReverse", lang)}</button>
               </div>
             </div>
           ) : (
@@ -169,8 +169,8 @@ export default function FavouritesApp() {
                      */
                     flex: 1, minWidth: 0, textAlign: "center", whiteSpace: "normal", lineHeight: 1.15,
                     padding: "6px 3px", borderRadius: 12, cursor: "pointer", fontSize: 12,
-                    border: on ? "2px solid " + RED : "1px solid #ccc",
-                    background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#333", fontWeight: on ? 700 : 500,
+                    border: on ? "2px solid " + RED : "1px solid var(--j-border)",
+                    background: on ? "#ffe9e9" : "#fff", color: on ? RED : "var(--j-ink)", fontWeight: on ? 700 : 500,
                   }}>
                   {scopeName(s, lang)}
                 </button>
@@ -178,7 +178,7 @@ export default function FavouritesApp() {
             })}
           </div>
 
-          <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13, color: "#333" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 13, color: "var(--j-ink)" }}>
             <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} style={{ width: 18, height: 18 }} />
             {tr("favSpecialNotif", lang)}
           </label>
@@ -220,7 +220,7 @@ export default function FavouritesApp() {
                       <span style={{ display: "inline-block", background: YELLOW, color: "#111", fontWeight: 800, fontSize: 18, letterSpacing: 2, borderRadius: 12, padding: "4px 10px" }}>{f.num}</span>
                     </Link>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, color: "#666", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div style={{ fontSize: 13, color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {f.scopes.map((s) => scopeName(s, lang)).join(" · ")}
                       </div>
                       <Link href={"/number-history?num=" + f.num} style={{ fontSize: 13, color: RED, textDecoration: "none" }}>{tr("history", lang)} <ArrowRight size={12} weight="bold" style={{ verticalAlign: "-1px" }} /></Link>
@@ -240,7 +240,7 @@ export default function FavouritesApp() {
                           style={{
                             padding: "4px 10px", borderRadius: 12, fontSize: 13, cursor: "pointer",
                             border: on ? "1.5px solid " + RED : "1px solid #ddd",
-                            background: on ? "#ffe9e9" : "#fff", color: on ? RED : "#666",
+                            background: on ? "#ffe9e9" : "#fff", color: on ? RED : "var(--muted)",
                           }}>
                           {scopeName(s, lang)}
                         </button>
@@ -251,13 +251,13 @@ export default function FavouritesApp() {
               ))}
             </div>
           ) : (
-            <div style={{ marginTop: 10, fontSize: 13, color: "#666" }}>
+            <div style={{ marginTop: 10, fontSize: 13, color: "var(--muted)" }}>
               {tr("favEmpty1", lang)}<b>{tr("favAddBtn", lang)}</b>{tr("favEmpty2", lang)}
             </div>
           )}
         </div>
 
-        <div style={{ textAlign: "center", color: "#666", fontSize: 13, marginTop: 14 }}>
+        <div style={{ textAlign: "center", color: "var(--muted)", fontSize: 13, marginTop: 14 }}>
           {tr("favNote1", lang)}<span style={{ background: YELLOW, padding: "0 4px" }}>{tr("favNoteYellow", lang)}</span>{tr("favNote2", lang)}
         </div>
       </div>
