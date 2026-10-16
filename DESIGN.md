@@ -269,14 +269,18 @@ Two findings from the audit are deliberate and must not be "fixed" again:
   the Latin labels and the Chinese game names natively, and it keeps the app
   free of a font download (see Typography above). Swapping it needs a webfont
   that covers CJK, which is the trade-off to weigh first.
-- **The status row's greens and the favourite highlight are semantic, not
-  palette.** The palette audit reports the live-publishing greens (`#16a34a` on
-  `#f0fdf4`, border `#86efac`, ink `#15803d`) and the favourite yellow on the
-  results pages as off-palette. They carry meaning rather than decoration - "this
-  draw is being published right now", "this is one of your numbers" - so they are
-  kept and named here instead of being dragged towards amber. The palette governs
-  the surfaces around them; every other colour the audit lists on the six pages
-  is old residue and is fair game.
+- **The status row's greens, the favourite highlight and the dimmed empty cell
+  are semantic, not palette.** The palette audit reports the live-publishing
+  greens (`#16a34a` on `#f0fdf4`, border `#86efac`, ink `#15803d`), the favourite
+  yellow on the results pages, and `.jackpot_number.blank`'s `#aaa` as
+  off-palette. They carry meaning rather than decoration - "this draw is being
+  published right now", "this is one of your numbers", "this box is deliberately
+  empty" - so they are kept and named here instead of being dragged towards
+  amber. The `.blank` grey in particular must stay visible: it is the marker that
+  tells a deliberate hole apart from a cell the draw has not reached, so lightening
+  it towards `--j-border` would erase the distinction, not tidy it. The palette
+  governs the surfaces around them; every other colour the audit lists on the six
+  pages is old residue and is fair game.
 - **An empty cell has three causes, and only one is a defect.** It reads `----`
   when the draw has not reached that box yet, when the operator deliberately
   drew that number as a top prize (so the box is empty on their board too), and

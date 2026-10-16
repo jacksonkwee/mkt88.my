@@ -140,7 +140,7 @@ button:focus {
 
 /* Background of Lottery */
 .magnum-bg {
-  color: #444;
+  color: var(--j-ink);
   background-color: var(--tint-magnum);
 }
 
@@ -305,11 +305,11 @@ button:focus {
 }
 
 .border {
-  border-color: #aaa !important;
+  border-color: var(--j-border) !important;
 }
 
 .border-dark {
-  border-color: #555 !important;
+  border-color: var(--j-ink) !important;
 }
 
 .outer-box {
@@ -381,7 +381,7 @@ button:focus {
 
 .singapore-title {
   color: #fff;
-  background-color: #48486f;
+  background-color: var(--tint-singapore);
 }
 
 .zodiac {
