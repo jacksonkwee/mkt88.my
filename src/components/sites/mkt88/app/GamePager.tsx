@@ -34,7 +34,18 @@ const PAGES: PageDef[] = [
   // The Toto card has no live feed, so it is a fixed capture the app shows
   // under the 4D draw, exactly as the website does.
   { title: "Singapore 4D", slug: "sg", ids: ["table-11-2026-09-06", "table-12-2026-09-03"] },
-  { title: "Sabah 88 沙巴88", slug: "sabah88", ids: ["table-10-2026-09-06"] },
+  /*
+   * Sabah 88 is four boards on one slide: the 4D card, then the three Lotto
+   * boards that used to sit inside it. The website page listed them from the
+   * start; this pager did not, so on a phone the three Lotto boards disappeared
+   * entirely (reported 16 Oct 2026).
+   */
+  { title: "Sabah 88 沙巴88", slug: "sabah88", ids: [
+    "table-10-2026-09-06",
+    "table-10-2026-09-06-lotto645",
+    "table-10-2026-09-06-lotto5",
+    "table-10-2026-09-06-lotto6",
+  ] },
   { title: "Cash Sweep 沙捞越", slug: "cashsweep", ids: ["table-9-2026-09-06"] },
   { title: "Sandakan 山打根", slug: "sandakan", ids: ["table-8-2026-09-06"] },
   { title: "Grand Dragon", slug: "grand-dragon", kh: true, ids: ["table-13-2026-09-06", "table-14-2026-09-06-6d"] },
