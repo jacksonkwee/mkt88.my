@@ -23,7 +23,7 @@ export default function PastToolbar({ current, view }: Props) {
           <div style={{ position: "relative" }} className="d-inline-block">
             <label className="p-0 btn btn-primary d-flex align-items-center" style={{ marginBottom: 0, cursor: "pointer" }}>
               <input type="radio" name="options" autoComplete="off" readOnly />
-              <img
+              <img loading="lazy"
                 className="ui-datepicker-trigger btn btn-primary"
                 src={CAL}
                 alt="..."

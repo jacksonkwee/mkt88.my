@@ -63,10 +63,10 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
       <div style={{ display: "flex", justifyContent: "center", padding: "5px 0 0", background: "#f4f4f4" }}>
         {/* display:contents keeps the link clickable without giving it a box of
             its own, so the logo is laid out exactly as it is on the screens
-            that render it as a plain <img> - one centred item, same size. */}
+            that render it as a plain <img loading="lazy"> - one centred item, same size. */}
         <Link href="/" onClick={goHome} aria-label="MKT 88 4D home" style={{ display: "contents" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
+          <img loading="lazy" src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
         </Link>
       </div>
     </div>

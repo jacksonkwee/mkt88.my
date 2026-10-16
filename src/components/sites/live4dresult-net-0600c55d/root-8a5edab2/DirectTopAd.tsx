@@ -23,7 +23,7 @@ export default function DirectTopAd() {
     return (
       <div style={{ textAlign: "center", margin: "10px 0" }}>
         <a href={top.link || "#"} target={top.link ? "_blank" : undefined} rel="noreferrer">
-          <img src={top.image} alt="Advertisement" style={{ maxWidth: "100%", borderRadius: 6 }} />
+          <img loading="lazy" src={top.image} alt="Advertisement" style={{ maxWidth: "100%", borderRadius: 6 }} />
         </a>
       </div>
     );

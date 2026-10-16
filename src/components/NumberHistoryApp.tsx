@@ -273,7 +273,7 @@ export default function NumberHistoryApp() {
           {dabo && primary ? (
             <Link href={"/dabogong?num=" + primary}
               style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, padding: 8, borderRadius: 12, background: YELLOW_SOFT, textDecoration: "none", color: "#111" }}>
-              <img src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
+              <img loading="lazy" src={daboThumb} alt={dabo.keyword || primary} referrerPolicy="no-referrer" onError={() => setDaboBad(true)}
                 style={{ width: 54, height: 54, objectFit: "cover", borderRadius: 12, background: "#fff", border: "1px solid #eee" }} />
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, color: "#8a6d00", fontWeight: 700 }}>{tr("dabogong", lang)} {kindLabel(dabo.kind)}</div>
@@ -398,7 +398,7 @@ export default function NumberHistoryApp() {
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 10px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff", whiteSpace: "nowrap" }}>
                       <div style={{ width: 26, height: 26, borderRadius: 8, border: "1px solid #e6e6e6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#fff", flexShrink: 0 }}>
-                        {logoSrc(data, m.logo) ? <img src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 12, color: "#666" }}>4D</span>}
+                        {logoSrc(data, m.logo) ? <img loading="lazy" src={logoSrc(data, m.logo)} alt="" style={{ maxWidth: 22, maxHeight: 22 }} /> : <span style={{ fontSize: 12, color: "#666" }}>4D</span>}
                       </div>
                       <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", fontWeight: 700, fontSize: 14 }}>{toSimplified(m.game)}</span>
                       <span style={{ fontSize: 12, color: "#666", flexShrink: 0 }}>{shortDate(m.date)}</span>

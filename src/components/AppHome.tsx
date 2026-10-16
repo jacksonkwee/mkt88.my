@@ -344,14 +344,14 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         {/* Brand logo, top of the first page. */}
         <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
+          <img loading="lazy" src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (
             <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <span style={ICON_BOX}><img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
+              <span style={ICON_BOX}><img loading="lazy" src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
               <span style={NAME}>{t.name}</span>
               {t.zh ? <span style={SUB}>{t.zh}</span> : null}
             </Nav>
@@ -391,7 +391,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
               <span style={ICON_BOX}>
                 {t.logo ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                  <img loading="lazy" src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 ) : (
                   <GearSix size={30} weight="bold" color={ACCENT} aria-hidden="true" />
                 )}

@@ -15,7 +15,7 @@ export default function AppStoreBanner() {
         }}
       >
         <a href="https://apps.apple.com/ae/app/4d2u-live/id6467018137" target="_blank" rel="noreferrer">
-          <img
+          <img loading="lazy"
             src={IMG + "logo_appstore.png?v=1"}
             width="100%"
             style={{ maxWidth: 200, position: "relative" }}
@@ -24,7 +24,7 @@ export default function AppStoreBanner() {
         </a>
         <div className="px-1"></div>
         <a href="https://play.google.com/store/apps/details?id=com.lottery.live4d2u" target="_blank" rel="noreferrer">
-          <img
+          <img loading="lazy"
             src={IMG + "logo_playstore.png?v=1"}
             width="100%"
             style={{ maxWidth: 200 }}

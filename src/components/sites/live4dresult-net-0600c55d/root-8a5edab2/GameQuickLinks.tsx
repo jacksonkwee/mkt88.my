@@ -70,7 +70,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain" }} />
+        <img loading="lazy" src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain" }} />
       </span>
       {/*
        * One line: logo + brand.

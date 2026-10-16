@@ -132,7 +132,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
         <div className={headerClass}>
           {h.logo.src ? (
             <div className="lottery-logo">
-              <img src={toLocal(h.logo.src)} alt={h.logo.alt} />
+              <img loading="lazy" src={toLocal(h.logo.src)} alt={h.logo.alt} />
             </div>
           ) : null}
           {/*

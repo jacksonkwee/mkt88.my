@@ -16,7 +16,7 @@ export default function TopBanner() {
   if (!src) return null;
   return (
     <div style={{ textAlign: "center", background: "#111", padding: "6px 10px" }}>
-      <img src={src} alt="banner" style={{ maxWidth: "100%", maxHeight: 90, borderRadius: 6 }} />
+      <img loading="lazy" src={src} alt="banner" style={{ maxWidth: "100%", maxHeight: 90, borderRadius: 6 }} />
     </div>
   );
 }
