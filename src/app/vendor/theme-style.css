@@ -141,51 +141,51 @@ button:focus {
 /* Background of Lottery */
 .magnum-bg {
   color: #444;
-  background-color: #ff0;
+  background-color: var(--tint-magnum);
 }
 
 .damacai-bg {
   color: #fff;
-  background-color: navy;
+  background-color: var(--tint-damacai);
 }
 
 .sportstoto-bg {
   color: #fff;
-  background-color: #ad0006;
+  background-color: var(--tint-sportstoto);
 }
 
 .sandakan-bg {
   /* Was #060: 4.35:1 on this yellow, under the 4.5 the rest of the site keeps
      (measured 16 Oct 2026). #0a3d00 is the same green, dark enough to pass. */
   color: #0a3d00;
-  background-color: #f8c100;
+  background-color: var(--tint-sandakan);
 }
 
 .cashsweep-bg {
   color: #fff;
-  background-color: green;
+  background-color: var(--tint-cashsweep);
 }
 
 .sabah88-bg {
   color: #fff;
-  background-color: #3333ff;
+  background-color: var(--tint-sabah88);
 }
 
 .singapore-bg {
   color: #fff;
-  background-color: #0378bb;
+  background-color: var(--tint-singapore);
 }
 
 .granddragon-bg {
   color: #fff;
-  background-color: #e81409;
+  background-color: var(--tint-granddragon);
 }
 
 .nine {
   color: #fff;
   /* Was #f28120: white on it is 2.6:1, the worst contrast on the site (measured
      16 Oct 2026). The same orange, darkened, puts white at 5.1:1. */
-  background-color: #b35200;
+  background-color: var(--tint-nine);
 }
 
 .nine img {
