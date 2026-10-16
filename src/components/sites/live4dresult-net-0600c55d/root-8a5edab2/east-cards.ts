@@ -145,10 +145,14 @@ function d3Table(): CardTable {
 
 export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
   .map(cardFor)
-  .map((c) => {
+  /*
+   * flatMap, not map: Sabah 88's card becomes four of them (below), and the
+   * other two games still contribute exactly one each.
+   */
+  .flatMap((c): LotteryCardData[] => {
     const cls = c ? (/^table-\d+/.exec(c.id) || [""])[0] : "";
     const ids = JACKPOT_IDS[cls];
-    if (!c || !ids) return c;
+    if (!c || !ids) return c ? [c] : [];
     // The jackpot board sits directly under the consolation grid, the way
     // Magnum's does; the operator's remaining boards follow it.
     const head = c.tables.slice(0, 3);   // 4D prizes, Special, Consolation
@@ -157,7 +161,7 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
     // own gap, so the two boards do not read as one long table.
     const lotto = cls === "table-10" ? [lottoBoard("Lotto 5", "5", 8, true), lottoBoard("Lotto 6", "6", 5, true)] : [];
     // Cash Sweep's own 3D board, directly under its jackpot rows.
-    if (cls === "table-9") return { ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] };
+    if (cls === "table-9") return [{ ...c, tables: [...head, jackpotTable(ids), d3Table(), ...tail] }];
     /*
      * The captured 3D board's title row spans five columns, which gives that
      * table a five-column grid - so its "1st Prize / 859" rows only filled part
@@ -185,9 +189,40 @@ export const EAST_CARDS: LotteryCardData[] = CARD_CLASSES
       );
       return { ...t, rows };
     });
-    return { ...c, tables: [...head, jackpotTable(ids), ...tidy, ...lotto] };
+    /*
+     * Sabah 88 carries four boards in one card - 4D (with 3D), Lotto 6/45,
+     * Lotto 5 and Lotto 6 - which is why it read as one very long card while
+     * every other game on the site is one board per card. The owner asked for
+     * them as four cards (16 Oct 2026, the A treatment: amber top edge, rounded
+     * corner), which they get by construction: each is a `card outer-box`, so
+     * the one card stylesheet dresses all four.
+     *
+     * The three new cards take ids of their own rather than reusing table-10:
+     * the phone's writers and the source shape-check both select
+     * `.card.outer-box.table-10`, and a second card carrying that class would be
+     * handed 4D numbers.
+     */
+    if (cls === "table-10") {
+      const titled = (t: CardTable) => plain(t.rows[0]?.cells[0]?.html || "");
+      const d3 = tidy.filter((t) => titled(t) === "3D");
+      const l645 = tidy.filter((t) => titled(t) === "Lotto 6/45");
+      const part = (suffix: string, name: string, tables: CardTable[]): LotteryCardData => ({
+        ...c,
+        id: c.id + suffix,
+        cardCls: "card outer-box table-10-lotto",
+        header: { ...c.header, name },
+        tables,
+      });
+      return [
+        { ...c, tables: [...head, jackpotTable(ids), ...d3] },
+        part("-lotto645", "Sabah 88 Lotto 6/45", l645),
+        part("-lotto5", "Sabah 88 Lotto 5", [lotto[0]]),
+        part("-lotto6", "Sabah 88 Lotto 6", [lotto[1]]),
+      ];
+    }
+    return [{ ...c, tables: [...head, jackpotTable(ids), ...tidy, ...lotto] }];
   })
-  .filter((c): c is LotteryCardData => Boolean(c));
+  .filter((c) => Boolean(c));
 
 /** The card id each east page opens with. */
 export const EAST_CARD_ID: Record<string, string> = {

@@ -20,7 +20,18 @@ import { getSnapshotForRender } from "../../lib/live-snapshot";
  * the same place as the card on that game's own page.
  */
 /** Left to right: Sabah 88, Cash Sweep, Sandakan. */
-const EAST_ROWS = ["table-10-2026-09-06", "table-9-2026-09-06", "table-8-2026-09-06"];
+/**
+ * Sabah 88 is four cards now - its 4D board, then the three Lotto boards the
+ * captured card used to carry inside it - so the id list names all four.
+ */
+const EAST_ROWS = [
+  "table-10-2026-09-06",
+  "table-10-2026-09-06-lotto645",
+  "table-10-2026-09-06-lotto5",
+  "table-10-2026-09-06-lotto6",
+  "table-9-2026-09-06",
+  "table-8-2026-09-06",
+];
 
 export const metadata: Metadata = {
   alternates: { canonical: "/sabah-sarawak-4d-results" },
