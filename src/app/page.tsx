@@ -3,6 +3,7 @@ import RegionButtons from "../components/sites/live4dresult-net-0600c55d/root-8a
 import LotteryGrid from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LotteryGrid";
 import Footer from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/Footer";
 import LiveResults from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/LiveResults";
+import LiveStatusBar from "../components/LiveStatusBar";
 import { getSnapshotForRender } from "../lib/live-snapshot";
 import DirectTopAd from "../components/sites/live4dresult-net-0600c55d/root-8a5edab2/DirectTopAd";
 import GoogleAdsense from "../components/GoogleAdsense";
@@ -27,6 +28,7 @@ export default async function Home() {
         <div className="row">
           <div className="col-sm-12">
             <DirectTopAd />
+            <LiveStatusBar />
             <LotteryGrid snap={snapProp} pastDates={pastDates} myDates={pastDates.my} />
           </div>
         </div>
