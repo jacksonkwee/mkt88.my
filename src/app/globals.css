@@ -49,6 +49,22 @@
   color: #991b1b !important;
 }
 
+/*
+ * The header logo must not be wider than the screen.
+ *
+ * Its height comes from the admin logo setting and its width is `auto`, and the
+ * MKT88 mark is a wide wordmark: measured 16 Oct 2026 at 390px, height 48
+ * rendered it 390px wide, which with its 8px right margin widened the document
+ * to 414px - on every page that carries the header, and with no clipping
+ * ancestor to stop it, so the page scrolled sideways. The width is capped here
+ * (not the height, which stays the admin's) and the image is contained rather
+ * than squashed.
+ */
+header a img {
+  max-width: min(60vw, 240px) !important;
+  object-fit: contain;
+}
+
 html,
 body {
   min-height: 100vh;
