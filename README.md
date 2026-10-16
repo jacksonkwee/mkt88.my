@@ -42,9 +42,9 @@ live page's total height vary by a few tens of px between loads).
 
 ## Structure
 - src/app/ — routes (/, region pages, past results), global CSS (bootstrap, font-awesome, theme)
-- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/ — components, captured card data,
+- src/components/sites/mkt88/app/ — components, captured card data,
   and `snapshots/*.content.json` (static content for the extra pages)
-- public/sites/live4dresult-net-0600c55d/root-8a5edab2/ — namespaced assets
+- public/sites/mkt88/app/ — namespaced assets
 - docs/research/live4dresult-net-0600c55d/ — extraction artifacts & specs
 - docs/design-references/live4dresult-net-0600c55d/ — reference screenshots
 
