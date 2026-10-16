@@ -97,12 +97,16 @@ header.sticky-top {
  * amber that edges the cards. `.header-btn-group` is the row's own class (the
  * script that keeps it under the header sets its offset).
  */
-.mkt-press {
+/* Scoped to the header: `.mkt-press` is the shared press feedback used by
+   buttons elsewhere on the site, and a global colour override here would have
+   repainted them too. The tile row and the region strip both live inside the
+   sticky header. */
+header.sticky-top .mkt-press {
   border-color: var(--j-border) !important;
   color: var(--j-ink) !important;
 }
 
-.mkt-press[aria-current="page"] {
+header.sticky-top .mkt-press[aria-current="page"] {
   border-color: var(--j-amber) !important;
   box-shadow: 0 0 0 2px rgba(255, 192, 0, 0.35) !important;
 }
