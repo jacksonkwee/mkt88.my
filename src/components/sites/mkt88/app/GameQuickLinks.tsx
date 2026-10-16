@@ -11,6 +11,19 @@ const PAGER_ORDER = [
   "sandakan", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
 ];
 
+/**
+ * Two tiles read a shorter name than their card does.
+ *
+ * The row draws one line per tile, and "Da Ma Cai 1+3D" and "Lucky HariHari 4D"
+ * are the two longest strings in it (asked for 16 Oct 2026). The full name is
+ * untouched everywhere else: it is still the tile's aria-label, the card header
+ * and the page title.
+ */
+const TILE_NAME: Record<string, string> = {
+  damacai: "Da Ma Cai",
+  "lucky-harihari": "Lucky Hari",
+};
+
 function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
   /*
    * The tile's aria-label carries brand, "4D" and the Chinese name, even though
@@ -195,7 +208,7 @@ export default function GameQuickLinks() {
       }}
     >
       {items.map((it, i) => (
-        <Tile key={i} href={it.href} logo={it.logo} name={it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }} />
+        <Tile key={i} href={it.href} logo={it.logo} name={TILE_NAME[PAGER_ORDER[i]] || it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }} />
       ))}
     </div>
   );
