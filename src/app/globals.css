@@ -112,6 +112,39 @@ header.sticky-top .mkt-press[aria-current="page"] {
 }
 
 /*
+ * J step 4 - the footer.
+ *
+ * It was Bootstrap's bg-dark: a cold slate (#343a40) with plain white links, so
+ * the bottom of every page belonged to a different palette from the top. J's
+ * footer is a warm near-black under an amber rule, with the footer links in the
+ * amber, so the page closes the way it opened. Bootstrap applies the slate by
+ * class and the link colour is set !important in the theme, hence both
+ * overrides.
+ */
+footer.footer {
+  background: #1a1613 !important;
+  border-top: 3px solid var(--j-amber);
+  color: #f5efe6;
+}
+
+.footer-menu a {
+  color: var(--j-amber) !important;
+}
+
+/*
+ * The 6D jackpot table's title rows.
+ *
+ * Its cells had 2.5px of space above and below the text where 14px text needs
+ * 4.2px - the last cramped cell the audit found (measured 16 Oct 2026). Scoped
+ * to the two 6D cards so no other card's height moves.
+ */
+.card.outer-box.table-14 td.lottery-prize-title,
+.card.outer-box.table-18 td.lottery-prize-title {
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
+}
+
+/*
  * Our own animations and "reduce motion".
  *
  * The device setting was ignored by the two animations this site owns: with
