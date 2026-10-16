@@ -1380,6 +1380,25 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (drawNotOlder(sabah88.date, base.date)) cards["table-10"] = mergeCardPayload(base, sabah88);
   }
   /*
+   * The three Lotto boards are cards of their own, split out of Sabah 88's card
+   * in dfdb4ea, and they carry the class "table-10-lotto" rather than
+   * "table-10" so the 4D writers cannot reach them.
+   *
+   * Every card is kept live by matching the class it carries against a key in
+   * this snapshot - the boot script, LiveResults and React all read a card's
+   * values by class - and nothing ever published a "table-10-lotto" key. The
+   * three cards therefore matched nothing and kept the date, draw number and
+   * numbers the page was captured with, while the 4D card beside them moved on
+   * (reported 16 Oct 2026: the date froze on 06-09-2026, and the Lotto 5 / Lotto
+   * 6 grids stayed "----").
+   *
+   * They are fed by the same operator board as the 4D card, so it is published
+   * under their class as well. Each card picks up only the data-ids it actually
+   * carries, so no 4D number can land on them.
+   */
+  const sabahLotto = cards["table-10"] as Record<string, string> | undefined;
+  if (sabahLotto) cards["table-10-lotto"] = { ...sabahLotto };
+  /*
    * Special Cash Sweep from the operator's own feed. This one carries its draw
    * date, so an older draw can never land under today's heading.
    */
