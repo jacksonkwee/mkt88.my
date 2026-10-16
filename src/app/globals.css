@@ -65,6 +65,29 @@ body {
 }
 
 /*
+ * J step 2 - the header's details.
+ *
+ * The red bar itself stays red: it is the owner's own requirement, and the
+ * admin's colour setting drives it through --brand. The direction shows up in
+ * its edges instead - an amber rule under the bar that echoes the card's top
+ * edge, and the five-item menu pill in the J surface colours rather than plain
+ * white on grey. The five items are inline-styled in Header.tsx, hence the
+ * overrides here.
+ */
+header.sticky-top {
+  border-bottom: 3px solid var(--j-amber);
+}
+
+#menu-top-menu {
+  background: var(--j-surface) !important;
+  border-color: var(--j-border) !important;
+}
+
+#menu-top-menu a {
+  color: var(--j-ink) !important;
+}
+
+/*
  * Our own animations and "reduce motion".
  *
  * The device setting was ignored by the two animations this site owns: with
