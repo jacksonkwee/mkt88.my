@@ -143,6 +143,23 @@ body {
 }
 
 /*
+ * Two sizes the captured markup left behind on the boards.
+ *
+ * The jackpot figure and the "RM 1,000 everyday for 20 years" lines had no
+ * size of their own, so they inherited the page's 16px - the last size on a
+ * result card that was neither a label (12), body text (15) nor a number (17).
+ * The figure is a number and takes 17; the prose takes 15 (measured 16 Oct
+ * 2026: 16px on twelve jackpot amounts and thirteen prize lines).
+ */
+.card.outer-box td > b[data-id$="jackpot_prize"] {
+  font-size: 17px;
+}
+
+.card.outer-box td.grey {
+  font-size: 15px;
+}
+
+/*
  * J step 2 - the header's details.
  *
  * The red bar itself stays red: it is the owner's own requirement, and the
