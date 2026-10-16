@@ -59,7 +59,14 @@ export const DEFAULTS: SiteContent = {
   settings: {
     primary: "#cc0000",
     fontSize: 16,
-    logo: { src: "", size: 70 },
+    /*
+     * 56, not 70. The header logo is a wide wordmark (720x216), so its height
+     * sets its width: at 70 the drawn logo is 234px wide, at 56 it is 187px.
+     * This default is what paints for the moment before the stored settings
+     * arrive, and a big jump in that moment is what made the app's first open
+     * look wrong until a page switch re-painted it (reported 16 Oct 2026).
+     */
+    logo: { src: "", size: 56 },
     banner: { enabled: false, src: "" },
   },
   ads: {
