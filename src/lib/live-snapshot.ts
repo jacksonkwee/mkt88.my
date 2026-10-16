@@ -562,8 +562,62 @@ const sixParts = (main: string): Record<string, string> => ({
   six_5a: main.slice(0, 2), six_5b: main.slice(4),
 });
 
-/** One gdlotto dated page -> the 6D / 6+1D values plus a key identifying the draw. */
-function gdPartsOf(html: string): { six: SixEntry; jp: Record<string, string>; key: string } {
+/**
+ * Grand Dragon's 4D board from the operator's own page - the same page the 6D
+ * already comes from.
+ *
+ * The operator prints one letter per drawn number: A..M are the thirteen Special
+ * boxes and N..W the ten Consolation boxes, which is exactly the card's own
+ * layout, so the board maps onto it by position. A box reads "----" where that
+ * number was drawn as a 1st/2nd/3rd prize - the deliberate hole the card
+ * reproduces - and the board prints its own draw date, so the values cannot be
+ * paired with the wrong day.
+ *
+ * The 4D card used to be fed by the mirrors while only the 6D came from here
+ * (see MIRROR_ONLY below); this is what lets it read the operator too. Verified
+ * against the live board 16 Oct 2026: 30 of 30 cells, holes included.
+ */
+function gd4Of(html: string): { iso: string; values: Record<string, string> } | null {
+  // The board's cells come out as "A| |7554", so every separator is collapsed
+  // before matching - "4D 1st Prize ( D ) 2890".
+  const txt = clean(html).replace(/[|\s]+/g, " ");
+  /*
+   * "4D" heads the block rather than each row, so the rows are matched on
+   * "Nth Prize (letter) number" - the operator's own shape, which cannot pick up
+   * a 6D row because those carry no letter.
+   */
+  const row = (n: string) => {
+    const m = new RegExp(n + "\\s*Prize\\s*\\(\\s*([A-M])\\s*\\)\\s*(\\d{4})").exec(txt);
+    return m ? m[2] : null;
+  };
+  const first = row("1st"), second = row("2nd"), third = row("3rd");
+  if (!first || !second || !third) return null;
+  const values: Record<string, string> = { first_prize: first, second_prize: second, third_prize: third };
+  const segment = (from: string, to: string) => {
+    const m = new RegExp(from + "([\\s\\S]*?)" + to).exec(txt);
+    return m ? m[1] : "";
+  };
+  const fill = (text: string, letters: string, prefix: string): boolean => {
+    const got = new Map<string, string>();
+    // A character class, not the run of letters: ([A-M]) matches one letter.
+    for (const m of text.matchAll(new RegExp("([" + letters + "])\\s+(----|\\d{4})", "g"))) got.set(m[1], m[2]);
+    let complete = true;
+    letters.split("").forEach((ch, i) => {
+      const v = got.get(ch);
+      if (v === undefined) complete = false;
+      else values[prefix + "-" + (i + 1)] = v;
+    });
+    return complete;
+  };
+  if (!fill(segment("Special\\s*Prize", "Consolation\\s*Prize"), "ABCDEFGHIJKLM", "special")) return null;
+  if (!fill(segment("Consolation\\s*Prize", "\\b6D\\b"), "NOPQRSTUVW", "consolation")) return null;
+  const d = /Date\s*:\s*(\d{2})\/(\d{2})\/(\d{4})/.exec(txt);
+  if (!d) return null;
+  return { iso: d[3] + "-" + d[2] + "-" + d[1], values };
+}
+
+/** One gdlotto dated page -> the 4D board, the 6D / 6+1D values, plus a key identifying the draw. */
+function gdPartsOf(html: string): { four: { iso: string; values: Record<string, string> } | null; six: SixEntry; jp: Record<string, string>; key: string } {
   const txt = clean(html);
   const jp: Record<string, string> = {};
   const m6 = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
@@ -577,7 +631,7 @@ function gdPartsOf(html: string): { six: SixEntry; jp: Record<string, string>; k
     if (mm) digits.push(mm[1].trim());
   }
   if (digits.length === 7) { const g7 = digits.join(""); if (/^\d{7}$/.test(g7)) jp.jp7_grand = g7.slice(0, 6) + " + " + g7[6]; }
-  return { six, jp, key: [main, jp.jp7_pool || "", digits.join("")].join("|") };
+  return { four: gd4Of(html), six, jp, key: [main, jp.jp7_pool || "", digits.join("")].join("|") };
 }
 
 function gdUrl(iso: string): string {
@@ -593,7 +647,7 @@ function gdUrl(iso: string): string {
  * feed puts on the card, so while today's page still matches yesterday's the
  * cards are left blank instead of showing the previous draw.
  */
-async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<string, string> | null }> {
+async function gdSixToday(iso: string): Promise<{ four: Record<string, string> | null; six: SixEntry; jp: Record<string, string> | null }> {
   try {
     const [y, m, d] = iso.split("-").map(Number);
     const prevDay = new Date(Date.UTC(y, m - 1, d));
@@ -606,7 +660,7 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
 // does not answer is picked up by the other Grand Dragon sources and the
 // client's own (also bounded) fetch.
     const [html, prevHtml] = await Promise.all([get(gdUrl(iso), false, 4000, 0), get(gdUrl(prevIso), false, 4000, 0)]);
-    if (!html) return { six: null, jp: null };
+    if (!html) return { four: null, six: null, jp: null };
     const today = gdPartsOf(html);
     const previous = prevHtml ? gdPartsOf(prevHtml) : null;
     // gdlotto answers today's URL with the previous draw until today's is
@@ -616,6 +670,11 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
     const sameDraw = !!previous && today.key === previous.key;
     const draw = sameDraw && previous ? previous : today;
     const six = draw.six ? { ...draw.six, date: weekdayOf(sameDraw ? prevIso : iso) } : null;
+    /*
+     * The 4D board prints its own date, so it needs no guessing: whatever draw
+     * the numbers belong to, that is the date that travels with them.
+     */
+    const four = draw.four ? { ...draw.four.values, date: weekdayOf(draw.four.iso) } : null;
     // The jackpot figures carry no date of their own, and the site keeps showing
     // the previous draw's pool and grand prize until the new jackpot is settled,
     // so they only count as this draw's when they actually changed.
@@ -630,8 +689,8 @@ async function gdSixToday(iso: string): Promise<{ six: SixEntry; jp: Record<stri
      * draw is already showing (pages differ) but its jackpot has not settled.
      */
     const jp = (!sameDraw && sameJp) ? null : (Object.keys(draw.jp).length ? draw.jp : null);
-    return { six, jp };
-  } catch { return { six: null, jp: null }; }
+    return { four, six, jp };
+  } catch { return { four: null, six: null, jp: null }; }
 }
 
 /** Read one official 9lotto value by its DOM id (n1, n2, n3, nA...). */
@@ -1398,6 +1457,23 @@ export async function buildSnapshot(): Promise<Snapshot> {
    */
   const sabahLotto = cards["table-10"] as Record<string, string> | undefined;
   if (sabahLotto) cards["table-10-lotto"] = { ...sabahLotto };
+  /*
+   * Grand Dragon 4D from the operator's own board, read off the same page the 6D
+   * comes from (see gd4Of above). Until now this card was on the MIRROR_ONLY
+   * list below - the last game whose 4D came from a clone - so this is the write
+   * that lets the card leave the mirror.
+   *
+   * The operator's board carries its own date and its own deliberate holes, and
+   * it is checked against the shape table-13 must have before it is allowed on
+   * the card, exactly like every other official source. The mirror write happens
+   * earlier, so an older board cannot displace a newer one: drawNotOlder keeps
+   * whichever draw is current.
+   */
+  const gd4 = gdSix.four;
+  if (gd4 && checkSource("grand-dragon", "Grand Dragon 豪龙（官方）", "table-13", gd4)) {
+    const base = (cards["table-13"] || {}) as Record<string, string>;
+    if (drawNotOlder(gd4.date, base.date)) cards["table-13"] = mergeCardPayload(base, gd4);
+  }
   /*
    * Special Cash Sweep from the operator's own feed. This one carries its draw
    * date, so an older draw can never land under today's heading.
