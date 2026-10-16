@@ -257,3 +257,15 @@ Two findings from the audit are deliberate and must not be "fixed" again:
   at height 48 it rendered 390px wide on a 390px screen and pushed the document
   to 414px. The cap is what keeps the page from scrolling sideways, so raising
   it re-introduces that bug.
+- **The card's amber top edge stays 4px on a 14px radius.** The detector reports
+  this as `border-accent-on-rounded`, an anti-pattern it associates with older
+  decorative styling, eleven times per page. The owner was shown the three
+  options side by side - keep it, square the top corners, or replace the bar
+  with a 1px gold rule under the card heading - and chose to keep it as it is
+  (16 Oct 2026, direction J). Reported, not a defect; do not "fix" it without
+  asking again.
+- **Arial is not a finding either.** The detector flags `body` for using an
+  overused face. This project uses the system UI stack on purpose: it renders
+  the Latin labels and the Chinese game names natively, and it keeps the app
+  free of a font download (see Typography above). Swapping it needs a webfont
+  that covers CJK, which is the trade-off to weigh first.
