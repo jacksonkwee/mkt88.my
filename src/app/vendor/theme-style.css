@@ -77,7 +77,7 @@ button:focus {
     left: 0;
     top: 65px;
     background: var(--j-page);
-    border-top: 1px solid #c3c3c3;
+    border-top: 1px solid var(--j-border);
     border-bottom-width: 2px;
     box-shadow: 0 5px 5px 0px rgba(0, 0, 0, 0.3);
   }

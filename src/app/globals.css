@@ -28,7 +28,17 @@
  */
 :root {
   --link: #0069d9;
-  --muted: var(--muted);
+  /*
+   * This read `var(--muted)` - the token naming itself. A custom property that
+   * references its own name is cyclic, so the whole declaration is thrown away
+   * and every `color: var(--muted)` on the site and in the app inherited the
+   * body ink instead of the quiet grey it was written for: 45 places where the
+   * small print - help lines, hints, "no favourites yet" - was as dark as the
+   * numbers beside it, and the greys looked consolidated when they were not
+   * (measured on the live site 16 Oct 2026). It is an alias of the palette's
+   * muted ink now, so the places already written against it come out grey.
+   */
+  --muted: var(--j-muted);
   --tint-magnum: #ff0;
   --tint-damacai: navy;
   --tint-sportstoto: #ad0006;
@@ -75,6 +85,36 @@ body {
    * 16 Oct 2026).
    */
   color: var(--j-ink);
+}
+
+/*
+ * The two pages built out of Bootstrap's own parts - /statistics and
+ * /draw-schedule - still wore Bootstrap's greys: a cold blue-grey note box
+ * (bg #e2e3e5, ink #383d41) and #212529 / #6c757d / #dee2e6 table chrome,
+ * which is what the palette audit kept flagging as "old palette residue" on
+ * the inner pages (16 Oct 2026). They take the palette's own values now, so
+ * those two pages stop reading as a different, colder design.
+ */
+.alert-secondary {
+  background: var(--j-border-soft);
+  border-color: var(--j-border);
+  color: var(--j-ink);
+}
+
+.table {
+  color: var(--j-ink);
+}
+
+.table td,
+.table th,
+.table thead th {
+  border-color: var(--j-border);
+}
+
+/* Bootstrap sets both of these with !important, so the override needs it too. */
+.table caption,
+.text-muted {
+  color: var(--j-muted) !important;
 }
 
 /* The card keeps its anatomy - every data-id and every cell stays put - and
