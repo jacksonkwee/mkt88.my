@@ -151,6 +151,10 @@ footer.footer {
 .card.outer-box.table-18 td.lottery-prize-title {
   padding-top: 5px !important;
   padding-bottom: 5px !important;
+  /* The vertical fix exposed the other half of the same finding: 3.7px beside
+     the text, where 14px text wants 8px, on the 6D row that spans the table. */
+  padding-left: 8px !important;
+  padding-right: 8px !important;
 }
 
 /*
