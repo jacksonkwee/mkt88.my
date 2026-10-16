@@ -1951,6 +1951,26 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
   /*
+   * Grand Dragon 6D from the operator's own page as well.
+   *
+   * The card used to be blank unless the owner typed it, because no machine of
+   * ours could read this board (15 Oct 2026). gdlotto answers now: checked
+   * 16 Oct 2026, gdlotto.com and gdlotto.net return the same board - the 4D
+   * board and the 6D number together, for the day's draw - so the 6D comes
+   * from there with its own date, and the card can no longer wear yesterday's
+   * date over today's number. A typed board still wins for the draw it was
+   * typed for; it stops winning once the feed has a newer draw (see the pass
+   * below, which refuses a typed board older than the card).
+   */
+  const gd6Feed = gdSix.six;
+  let gd6Written = false;
+  if (gd6Feed?.date && drawNotOlder(gd6Feed.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
+    const base = (cards["table-14"] || {}) as Record<string, string>;
+    cards["table-14"] = mergeCardPayload(base, { date: gd6Feed.date, six_main: gd6Feed.main, ...gd6Feed.subs });
+    gd6Written = true;
+  }
+
+  /*
    * The boards the owner typed in from the operator's own page.
    *
    * Applied last, so a typed board beats every automatic source for that card:
@@ -2020,13 +2040,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
     noteSource("manual:" + cls, "手动输入 " + cls, { ok: true });
   }
   /*
-   * Grand Dragon 6D has no source any of our machines can read: the operator's
-   * site is behind Cloudflare and refuses us, and no mirror carries this board
-   * (checked 15 Oct 2026 - live4dresult.net has no 6D card at all). Until the
-   * owner types one in, blank the card rather than leave the 6 September board
-   * the markup was built with sitting there under a stale date.
+   * Blank the 6D card only when nothing has it.
+   *
+   * The operator's page feeds it now (see the write above) and the owner can
+   * still type a board when that feed is refused; this is the fallback for the
+   * case where neither has a value. Without it the card keeps the 6 September
+   * board the markup was built with, sitting there under a stale date.
    */
-  if (!/\d/.test(String(manual["table-14"]?.text || ""))) {
+  if (!gd6Written && !/\d/.test(String(manual["table-14"]?.text || ""))) {
     cards["table-14"] = { ...(cards["table-14"] || {}), date: "", six_main: "----" };
   }
 
