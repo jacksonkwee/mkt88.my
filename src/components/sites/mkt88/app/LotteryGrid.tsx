@@ -20,16 +20,6 @@ const DESKTOP: ColItem[][] = [
   ],
   [{ type: "card", id: "table-5-2026-09-06" }],
   [{ type: "card", id: "table-7-2026-09-06" }],
-  [
-    { type: "card", id: "table-13-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-14-2026-09-06-6d" },
-  ],
-  [
-    { type: "card", id: "table-17-2026-09-06" },
-    { type: "br" },
-    { type: "card", id: "table-18-2026-09-06-6d" },
-  ],
 ];
 
 /**

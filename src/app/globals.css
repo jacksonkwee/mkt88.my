@@ -198,12 +198,23 @@ footer.footer {
  * rather than decoration.
  */
 @media (prefers-reduced-motion: reduce) {
-  .fx-marquee-track,
   .fx-blink,
   .blink {
     animation: none !important;
   }
 }
+
+/*
+ * The announcement marquee is deliberately NOT in that block.
+ *
+ * It was, and that stopped the announcement scrolling on any device with
+ * "reduce motion" set - including the owner's, who reported "the flowing notice
+ * got slower and does not flow" (16 Oct 2026). The announcement is his own
+ * requirement, and a slow text scroller is a long way from the flashing the
+ * setting exists to stop, which is what the blink above still does. If this
+ * surface ever needs to satisfy the setting strictly, the answer is a
+ * pause/next control on the notice, not a silent stop.
+ */
 
 /*
  * The jackpot status line ("Partially Won") on the Magnum card.
