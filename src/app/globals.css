@@ -1306,3 +1306,13 @@ html[data-lang="zh"] .L-en, html[data-lang="zh"] .L-ms { display: none !importan
 .mkt-inner small {
   font-size: 12px;
 }
+
+/* Paragraphs inherit Bootstrap's 16px body size; they are body text, so 15.
+   The note boxes keep their label size, which is what the rule above sets. */
+.mkt-inner p {
+  font-size: 15px;
+}
+.mkt-inner .small p,
+.mkt-inner .alert p {
+  font-size: 12px;
+}
