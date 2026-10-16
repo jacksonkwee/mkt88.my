@@ -126,7 +126,7 @@ export default function FavouritesApp() {
   const del = (n: string) => { setFavs(removeFav(n)); setPicked((p) => p.filter((x) => x !== n)); };
 
   return (
-    <div className="mkt-app-screen" style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
+    <div className="mkt-app-screen" style={{ minHeight: "100vh", background: "var(--j-page, #f7f7f4)", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
       <AppTopBar titleKey="favTitle" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, marginBottom: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>

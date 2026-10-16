@@ -52,7 +52,9 @@ const DOC = "config/site";
 const emptyUnit = (): AdUnit => ({ enabled: false, image: "", link: "" });
 
 export const DEFAULTS: SiteContent = {
-  notice: { enabled: false, text: "", bg: "#fff3cd", color: "#664d03", fx: "none" },
+  /* J's own tint for the announcement: the Bootstrap warning yellow was the one
+     place on the site that still looked like a different product. */
+  notice: { enabled: false, text: "", bg: "#fff8e6", color: "#7a5b00", fx: "none" },
   copyright: "Copyright © 2016 - 2026 mkt88.my. All Rights Reserved.",
   specialDraws: ["2026-10-27", "2026-12-29"],
   manual: {},

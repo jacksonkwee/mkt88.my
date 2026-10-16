@@ -60,7 +60,9 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
       {/* Brand logo, fixed with the bar. */}
       {/* Kept tight: this block is pinned, so every pixel it takes is a pixel
           the results below never get. */}
-      <div style={{ display: "flex", justifyContent: "center", padding: "5px 0 0", background: "#f4f4f4" }}>
+      {/* The app's own screens sit under the same palette as the site, so this
+          reads the page token instead of a second cold grey (16 Oct 2026). */}
+      <div style={{ display: "flex", justifyContent: "center", padding: "5px 0 0", background: "var(--j-page, #f7f7f4)" }}>
         {/* display:contents keeps the link clickable without giving it a box of
             its own, so the logo is laid out exactly as it is on the screens
             that render it as a plain <img loading="lazy"> - one centred item, same size. */}
