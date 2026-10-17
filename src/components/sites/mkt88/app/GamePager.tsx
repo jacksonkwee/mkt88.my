@@ -253,10 +253,22 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   // down to phone width cannot leave the icons doing nothing.
   useEffect(() => {
     const onGo = (e: Event) => {
-      const el = track.current;
-      if (!el || el.getClientRects().length === 0) return;
       const d = (e as CustomEvent).detail;
-      if (d && typeof d.index === "number") goToIndex(el, d.index);
+      if (!d || typeof d.index !== "number") return;
+      /*
+       * The app's first page covers the site, so the track has no width at the
+       * moment this tap is handled. Wait for it to be laid out again instead of
+       * dropping the request - dropping it is why tapping the game whose route
+       * we were already on left the pager on the slide the reader had swiped to.
+       */
+      let tries = 0;
+      const run = () => {
+        const el = track.current;
+        if (el && el.getClientRects().length) { goToIndex(el, d.index); return; }
+        if (++tries > 20) return;
+        window.setTimeout(run, 50);
+      };
+      run();
     };
     window.addEventListener("mktpager-go", onGo);
     return () => window.removeEventListener("mktpager-go", onGo);
