@@ -79,6 +79,36 @@ const MANUAL_CARDS: ManualCard[] = (() => {
   return out;
 })();
 
+/**
+ * Sports Toto 5D and 6D: only the first numbers are typed.
+ *
+ * 5D prints 4th/5th/6th as the 1st prize's last four, three and two digits;
+ * 6D prints 2nd-5th as the first/last five, four, three and two digits of its
+ * six-digit number. The operator's board works that way, so the boxes here do
+ * too - typed once, the rest of the row fills itself in.
+ */
+function totoDerived(vals: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  const five = String(vals["d5_number_1"] || "").trim();
+  if (/^\d{5}$/.test(five)) {
+    out["d5_number_4"] = five.slice(-4);
+    out["d5_number_5"] = five.slice(-3);
+    out["d5_number_6"] = five.slice(-2);
+  }
+  const six = String(vals["d6_number_1"] || "").trim();
+  if (/^\d{6}$/.test(six)) {
+    for (const n of [2, 3, 4, 5]) {
+      out["d6_first_number_" + n] = six.slice(0, 7 - n) + "*".repeat(n - 1);
+      out["d6_second_number_" + n] = "*".repeat(n - 1) + six.slice(n - 1);
+    }
+  }
+  return out;
+}
+
+const TOTO_AUTO = new Set(["d5_number_4", "d5_number_5", "d5_number_6",
+  "d6_first_number_2", "d6_second_number_2", "d6_first_number_3", "d6_second_number_3",
+  "d6_first_number_4", "d6_second_number_4", "d6_first_number_5", "d6_second_number_5"]);
+
 /** "special-3" reads C, "consolation-1" reads N - the operator's own letters. */
 function cellLabel(f: string): string {
   const sp = /^special-(\\d+)$/.exec(f);
@@ -365,21 +395,37 @@ export default function AdminDashboard() {
                 </label>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
-                {card.fields.map((f) => (
-                  <label key={f} style={{ fontSize: 11, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ color: "var(--muted)" }}>{cellLabel(f)}</span>
-                    <input
-                      value={vals[f] || ""}
-                      onChange={(ev) => {
-                        const next = { ...vals };
-                        next[f] = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
-                        setManual(card.cls, { text: buildManualText(next) });
-                      }}
-                      style={{ width: 68, padding: 6, boxSizing: "border-box" }}
-                    />
-                  </label>
-                ))}
+                {card.fields.map((f) => {
+                  const auto = card.cls === "table-7" && TOTO_AUTO.has(f);
+                  const shown = auto ? (totoDerived(vals)[f] || "") : (vals[f] || "");
+                  return (
+                    <label key={f} style={{ fontSize: 11, display: "flex", flexDirection: "column", gap: 2 }}>
+                      <span style={{ color: auto ? "#8a8f98" : "var(--muted)" }}>{cellLabel(f)}</span>
+                      {auto ? (
+                        <input readOnly value={shown} title="自动算出，不用填"
+                          style={{ width: 68, padding: 6, boxSizing: "border-box", background: "#f2f3f5", color: "#6b7280" }} />
+                      ) : (
+                        <input
+                          value={shown}
+                          onChange={(ev) => {
+                            const next = { ...vals };
+                            next[f] = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
+                            if (card.cls === "table-7") Object.assign(next, totoDerived(next));
+                            setManual(card.cls, { text: buildManualText(next) });
+                          }}
+                          style={{ width: 68, padding: 6, boxSizing: "border-box" }}
+                        />
+                      )}
+                    </label>
+                  );
+                })}
               </div>
+              {card.cls === "table-7" ? (
+                <p style={{ fontSize: 12, margin: "6px 0 0", color: "var(--muted)" }}>
+                  5D 只填 d5_number_1–3，第 4–6 格自动取 1 奖的尾 4／3／2 位；
+                  6D 只填 d6_number_1 六位数，第 2–5 排自动拆成前后 5／4／3／2 位。
+                </p>
+              ) : null}
               <p style={{ fontSize: 12, margin: "6px 0 0", color: count ? "#1b5e20" : "var(--muted)" }}>
                 已有 {Object.keys(vals).length} 个格子填了值（记得按最下面的 Save changes）
               </p>
