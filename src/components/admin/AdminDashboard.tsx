@@ -1,23 +1,67 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import cardsRaw from "../sites/mkt88/app/cards-data.json";
+import lottoRaw from "../sites/mkt88/app/lotto-data.json";
+import { EAST_CARDS } from "../sites/mkt88/app/east-cards";
+import { SG_CARDS } from "../sites/mkt88/app/sg-cards";
 
 type Any = Record<string, any>;
 
-/** The cards the owner can type in - see MANUAL_FIELDS in lib/live-snapshot.ts. */
+/**
+ * 备用：手动纠正。
+ *
+ * Every game now updates itself from its operator, so this panel is only for
+ * the day a source refuses our server or one cell needs fixing. The cells are
+ * read from the cards themselves, so the boxes always match the board - there
+ * is no second list to keep in step.
+ */
 const MANUAL_GAMES = [
-  {
-    cls: "table-6", name: "Sports Toto 4D 多多", mode: "grid",
-    fields: ["1st", "2nd", "3rd", ...Array.from({ length: 10 }, (_, i) => "S" + (i + 1)), ...Array.from({ length: 10 }, (_, i) => "C" + (i + 1))],
-    hint: "官方只列 10 个特别奖（S1–S10）和 10 个安慰奖（C1–C10），另外 3 格留空",
-  },
-  {
-    cls: "table-13", name: "Grand Dragon 4D 豪龙", mode: "grid",
-    fields: ["1st", "2nd", "3rd", ...[..."ABCDEFGHIJKLM"], ...[..."NOPQRSTUVW"]],
-    hint: "在号码出现的那一格直接填号码；没填的格子保持原样",
-  },
-  { cls: "table-14", name: "Grand Dragon 6D 豪龙 6D", mode: "grid", fields: ["6D"], hint: "直接填 6 位数，下面的小奖会自动算" },
+  "Magnum 4D", "Da Ma Cai", "Sports Toto", "Singapore 4D", "Sabah 88", "Cash Sweep",
+  "Sandakan", "Grand Dragon", "Nine Lotto", "Perdana", "Lucky HariHari",
 ];
+
+const CLASS_GAME: Record<string, string> = {
+  "table-1": "Magnum 4D", "table-2": "Magnum 4D", "table-3": "Magnum 4D",
+  "table-4": "Da Ma Cai", "table-5": "Da Ma Cai",
+  "table-6": "Sports Toto", "table-7": "Sports Toto",
+  "table-8": "Sandakan", "table-9": "Cash Sweep", "table-10": "Sabah 88",
+  "table-11": "Singapore 4D", "table-12": "Singapore 4D",
+  "table-13": "Grand Dragon", "table-14": "Grand Dragon",
+  "table-15": "Lucky HariHari", "table-16": "Perdana",
+  "table-17": "Nine Lotto", "table-18": "Nine Lotto",
+};
+
+type ManualCard = { id: string; cls: string; name: string; game: string; fields: string[] };
+
+const MANUAL_CARDS: ManualCard[] = (() => {
+  const raw = [
+    ...((cardsRaw as unknown as { cards: Any[] }).cards || []),
+    ...((lottoRaw as unknown as { cards: Any[] }).cards || []),
+    ...(EAST_CARDS as unknown as Any[]),
+    ...(SG_CARDS as unknown as Any[]),
+  ];
+  const seen = new Set<string>();
+  const out: ManualCard[] = [];
+  for (const c of raw) {
+    const cls = String(c.cardCls || "").replace("card outer-box ", "").split(" ")[0];
+    const game = CLASS_GAME[cls];
+    if (!game || seen.has(c.id)) continue;
+    const fields: string[] = [];
+    for (const tb of c.tables || []) {
+      for (const row of tb.rows || []) {
+        for (const cell of row.cells || []) {
+          const id = cell?.attrs?.["data-id"];
+          if (id && id !== "date" && id !== "draw_no" && !fields.includes(id)) fields.push(id);
+        }
+      }
+    }
+    if (!fields.length) continue;
+    seen.add(c.id);
+    out.push({ id: c.id, cls, name: c.header?.name || c.id, game, fields });
+  }
+  return out;
+})();
 
 /** "I=1912" lines and the grid of boxes are two views of the same thing. */
 function parseManualText(text: string): Record<string, string> {
@@ -57,6 +101,7 @@ export default function AdminDashboard() {
   const [ownerDevice, setOwnerDevice] = useState<Any | null>(null);
   const [ownerMsg, setOwnerMsg] = useState("");
   const [saving, setSaving] = useState(false);
+  const [manualGame, setManualGame] = useState(MANUAL_GAMES[0]);
   const [msg, setMsg] = useState("");
   const [newDate, setNewDate] = useState("");
 
@@ -260,56 +305,68 @@ export default function AdminDashboard() {
       </section>
 
       <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>✍️ 手动输入成绩</h2>
+        <h2 style={{ fontSize: 17, marginTop: 0 }}>✍️ 备用：手动纠正</h2>
         <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
-          Sports Toto 4D 和豪龙 4D 有机器人防护，程式抓不到。开彩时用你自己的浏览器打开官方成绩页，把号码照顺序贴进下面的框，再按最下面的 <strong>Save changes</strong>，网页和 App 马上就会显示你贴的号码。
-          <br />
-          贴的顺序：<strong>头奖、二奖、三奖</strong> → <strong>特别奖</strong> → <strong>安慰奖</strong>。号码之间用空格或换行分开都可以。
+          11 个游戏现在都会自己从官方来源更新，这里平时<strong>不用填</strong>。
+          只有官方拒接、或某一格要改正时才用：先选游戏，再在格子里填号码。
+          同一场里你填的优先；下一场自动数据到了就会盖过去。
         </p>
-        {MANUAL_GAMES.map((g) => {
-          const e = manualFor(g.cls);
+        <label style={{ fontSize: 13, fontWeight: 600 }}>
+          选择游戏
+          <select
+            value={manualGame}
+            onChange={(ev) => setManualGame(ev.target.value)}
+            style={{ marginLeft: 8, padding: "8px 10px", minHeight: 40, borderRadius: 8, border: "1px solid var(--j-border)", fontWeight: 600 }}
+          >
+            {MANUAL_GAMES.map((g) => <option key={g} value={g}>{g}</option>)}
+          </select>
+        </label>
+        {MANUAL_CARDS.filter((card) => card.game === manualGame).map((card) => {
+          const e = manualFor(card.cls);
           const vals = parseManualText(e.text);
-          const count = Object.keys(vals).length;
+          const count = card.fields.filter((f) => vals[f]).length;
           return (
-            <div key={g.cls} style={{ borderTop: "1px solid var(--j-border)", marginTop: 12, paddingTop: 10 }}>
-              <strong>{g.name}</strong>
+            <div key={card.id} style={{ borderTop: "1px solid var(--j-border)", marginTop: 12, paddingTop: 10 }}>
+              <strong>{card.name}</strong>
+              <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: 8 }}>{card.cls}</span>
               <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "6px 0", flexWrap: "wrap" }}>
                 <label style={{ fontSize: 13 }}>
                   日期
-                  <input type="date" value={e.date} onChange={(ev) => setManual(g.cls, { date: ev.target.value })} style={{ padding: 6, marginLeft: 6 }} />
+                  <input type="date" value={e.date} onChange={(ev) => setManual(card.cls, { date: ev.target.value })} style={{ padding: 6, marginLeft: 6 }} />
                 </label>
                 <label style={{ fontSize: 13 }}>
                   期号（可留空）
-                  <input value={e.drawNo} onChange={(ev) => setManual(g.cls, { drawNo: ev.target.value })} style={{ padding: 6, marginLeft: 6, width: 110 }} />
+                  <input value={e.drawNo} onChange={(ev) => setManual(card.cls, { drawNo: ev.target.value })} style={{ padding: 6, marginLeft: 6, width: 110 }} />
                 </label>
               </div>
-              {g.mode === "grid" ? (
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 6 }}>
-                  {g.fields.map((f) => (
-                    <label key={f} style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
-                      <span style={{ minWidth: 28, fontWeight: 600 }}>{f}:</span>
-                      <input
-                        value={vals[f] || ""}
-                        onChange={(ev) => {
-                          const next = { ...vals };
-                          next[f] = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
-                          setManual(g.cls, { text: buildManualText(next) });
-                        }}
-                        style={{ width: 70, padding: 6, boxSizing: "border-box" }}
-                      />
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <textarea rows={3} style={input} placeholder={g.hint} value={e.text} onChange={(ev) => setManual(g.cls, { text: ev.target.value })} />
-              )}
-              <p style={{ fontSize: 12, margin: "4px 0 0", color: count ? "#1b5e20" : "var(--muted)" }}>
-                {g.hint}
-                {count ? "　已填 " + count + " 格（记得按 Save changes）" : ""}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
+                {card.fields.map((f) => (
+                  <label key={f} style={{ fontSize: 11, display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ color: "var(--muted)" }}>{f}</span>
+                    <input
+                      value={vals[f] || ""}
+                      onChange={(ev) => {
+                        const next = { ...vals };
+                        next[f] = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
+                        setManual(card.cls, { text: buildManualText(next) });
+                      }}
+                      style={{ width: 68, padding: 6, boxSizing: "border-box" }}
+                    />
+                  </label>
+                ))}
+              </div>
+              <p style={{ fontSize: 12, margin: "6px 0 0", color: count ? "#1b5e20" : "var(--muted)" }}>
+                已有 {Object.keys(vals).length} 个格子填了值（记得按最下面的 Save changes）
               </p>
             </div>
           );
         })}
+        {manualGame === "Perdana" || manualGame === "Lucky HariHari" ? (
+          <p style={{ fontSize: 13, marginTop: 10, color: "var(--muted)" }}>
+            这个游戏的 4D 卡是按位置绘制的（格子上没有编号），所以只能填 6D 卡；
+            4D 成绩由官方来源自动更新，不用手填。
+          </p>
+        ) : null}
       </section>
 
       <section style={box}>

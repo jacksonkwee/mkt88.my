@@ -2216,6 +2216,16 @@ export async function buildSnapshot(): Promise<Snapshot> {
     } else if (fields) {
       const nums = text.split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
       fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });
+    } else {
+      /*
+       * Any other card: the owner's boxes send "special-7=1234" lines, one per
+       * cell, named exactly like the cell's data-id. That is what lets the admin
+       * offer a manual board for every game - the cell names come from the card
+       * itself, so nothing has to be mapped by hand here.
+       */
+      for (const m of text.matchAll(/([A-Za-z][A-Za-z0-9_-]{1,24})\s*=\s*(\d{1,7})/g)) {
+        typed[m[1]] = m[2];
+      }
     }
     if (!Object.keys(typed).length) continue;
     /*
