@@ -122,9 +122,16 @@ function cellLabel(f: string): string {
 function parseManualText(text: string): Record<string, string> {
   const out: Record<string, string> = {};
   const alias: Record<string, string> = { "1ST": "1st", "2ND": "2nd", "3RD": "3rd" };
-  for (const m of String(text || "").matchAll(/([A-Za-z0-9]{1,3})\s*[:=]\s*(\d{1,6})/g)) {
-    const k = m[1].toUpperCase();
-    out[alias[k] || k] = m[2];
+  /*
+   * The grid writes the cell's own data-id, and Toto's are long:
+   * d5_number_1, d6_first_number_2. The old 1-3 character key dropped every
+   * one of them, so a typed Toto board looked empty the moment it was read
+   * back. Keep the data-id exactly as written; only the short prize aliases
+   * are normalised.
+   */
+  for (const m of String(text || "").matchAll(/([A-Za-z][A-Za-z0-9_-]{0,30}|[0-9][A-Za-z0-9]{0,2})\s*[:=]\s*(\d{1,7})/g)) {
+    const key = alias[m[1].toUpperCase()] || m[1];
+    out[key] = m[2];
   }
   if (!Object.keys(out).length) {
     const bare = String(text || "").match(/\d{6,7}/);

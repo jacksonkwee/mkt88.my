@@ -1538,6 +1538,14 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
  */
 const MANUAL_CLEAR: Record<string, string[]> = {
   "table-6": MANUAL_FIELDS["table-6"],
+  "table-7": [
+    ...Array.from({ length: 6 }, (_, i) => "d5_number_" + (i + 1)),
+    "d6_number_1",
+    ...Array.from({ length: 4 }, (_, i) => ["d6_first_number_" + (i + 2), "d6_second_number_" + (i + 2)]).flat(),
+    ...Array.from({ length: 8 }, (_, i) => "star_toto_number_" + (i + 1)),
+    ...Array.from({ length: 6 }, (_, i) => "power_toto_number_" + (i + 1)),
+    ...Array.from({ length: 6 }, (_, i) => "supreme_toto_number_" + (i + 1)),
+  ],
   "table-13": Object.values(MANUAL_KEYS["table-13"]),
   "table-14": ["six_main", "six_5a", "six_5b", "six_4a", "six_4b", "six_3a", "six_3b", "six_2a", "six_2b"],
 };
@@ -2442,33 +2450,41 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * in order, which is what Sports Toto's board wants.
      */
     const typed: Record<string, string> = {};
+    /*
+     * The admin grid sends the cell's own data-id: first_prize=1234,
+     * special-1=1234, d5_number_1=12345. Those names are longer than the
+     * short aliases, and Toto's d5_/d6_ keys were being dropped entirely -
+     * the board was saved but never applied. Read the data-id form for every
+     * card first, regardless of whether it also has short aliases.
+     */
+    for (const m of text.matchAll(/([A-Za-z][A-Za-z0-9_-]{0,30})\s*[:=]\s*(\d{1,7})/g)) {
+      if (/^[A-Z0-9]{1,3}$/.test(m[1])) continue;   // S1 / C1 / A are mapped below
+      typed[m[1]] = m[2];
+    }
+    /*
+     * Short aliases still work: S1 / C1 / A-W / 1ST / 2ND / 3RD / 6D.
+     */
     if (keys) {
       for (const m of text.matchAll(/([A-Za-z0-9]{1,3})\s*[:=]\s*(\d{1,6})/g)) {
         const id = keys[m[1].toUpperCase()];
         if (id) typed[id] = m[2];
       }
-      /*
-       * The 6D board is a single number, so typing it bare is the natural thing
-       * to do: accept "117749" exactly as readily as "6D=117749" (the owner
-       * typed the bare number first, 15 Oct 2026, and nothing appeared).
-       */
-      if (!Object.keys(typed).length && cls === "table-14") {
-        const bare = text.match(/\d{6,7}/);
-        if (bare) typed.six_main = bare[0].slice(0, 6);
-      }
-    } else if (fields) {
+    }
+    /*
+     * A plain list of numbers still fills a card in order, but only when no
+     * named cell was given.
+     */
+    if (!Object.keys(typed).length && fields) {
       const nums = text.split(/[^0-9]+/).filter((v) => /^\d{1,6}$/.test(v));
       fields.forEach((id, i) => { if (i < nums.length) typed[id] = nums[i]; });
-    } else {
-      /*
-       * Any other card: the owner's boxes send "special-7=1234" lines, one per
-       * cell, named exactly like the cell's data-id. That is what lets the admin
-       * offer a manual board for every game - the cell names come from the card
-       * itself, so nothing has to be mapped by hand here.
-       */
-      for (const m of text.matchAll(/([A-Za-z][A-Za-z0-9_-]{1,24})\s*=\s*(\d{1,7})/g)) {
-        typed[m[1]] = m[2];
-      }
+    }
+    /*
+     * The 6D board is a single number, so typing it bare is the natural thing
+     * to do: accept "117749" exactly as readily as "6D=117749".
+     */
+    if (!Object.keys(typed).length && cls === "table-14") {
+      const bare = text.match(/\d{6,7}/);
+      if (bare) typed.six_main = bare[0].slice(0, 6);
     }
     if (!Object.keys(typed).length) continue;
     /*
@@ -2484,6 +2500,26 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const typedDay = entry.date ? dayScore(weekdayOf(entry.date)) : 0;
     const cardDay = dayScore((cards[cls] as Record<string, string> | undefined)?.date);
     if (typedDay && cardDay && typedDay < cardDay) continue;
+    /*
+     * Toto 5D/6D: the operator prints the 4th-6th (and 2nd-5th) as slices of
+     * the first number. Derive them here too, so a board typed with only
+     * d5_number_1 / d6_number_1 is still complete on the card.
+     */
+    if (cls === "table-7") {
+      const five = String(typed["d5_number_1"] || "").trim();
+      if (/^\d{5}$/.test(five)) {
+        typed["d5_number_4"] = five.slice(-4);
+        typed["d5_number_5"] = five.slice(-3);
+        typed["d5_number_6"] = five.slice(-2);
+      }
+      const six = String(typed["d6_number_1"] || "").trim();
+      if (/^\d{6}$/.test(six)) {
+        for (const n of [2, 3, 4, 5]) {
+          typed["d6_first_number_" + n] = six.slice(0, 7 - n) + "*".repeat(n - 1);
+          typed["d6_second_number_" + n] = "*".repeat(n - 1) + six.slice(n - 1);
+        }
+      }
+    }
     const next: Record<string, string> = { ...(cards[cls] || {}) };
     if (entry.date) {
       const label = weekdayOf(entry.date);
