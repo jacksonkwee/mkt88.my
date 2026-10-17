@@ -71,8 +71,11 @@ public class MainActivity extends BridgeActivity {
     // the logo forever. It used to be 1500ms, which dropped the logo onto the
     // bare red backdrop about a second before the page appeared.
     appHandler.postDelayed(this::markWebViewReady, 2500);
-    // Load ads after the app is usable so startup stays fast.
-    appHandler.postDelayed(this::initializeAds, 2500);
+    // Ads wait ten seconds now. At 2.5s the AdMob initialisation and the first
+    // banner load landed exactly when people tap their first game, and on a
+    // slower phone that first tap felt dead while the ad SDK worked. Nothing
+    // about the first ten seconds needs an ad.
+    appHandler.postDelayed(this::initializeAds, 10000);
   }
 
   @Override
