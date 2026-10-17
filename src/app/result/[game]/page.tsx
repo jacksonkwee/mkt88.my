@@ -13,16 +13,15 @@ import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
 import { getPastDateLists } from "../../../lib/past-dates";
 
 /*
- * Rebuild this page every 30 seconds instead of freezing it at deploy time.
+ * This page stays static on purpose.
  *
- * The page is pre-rendered, and the snapshot it was built with is sometimes
- * empty (the build host cannot reach every operator). A frozen copy then
- * served the 6 September board until the phone fetched the live one - four
- * seconds on Magnum, eighteen on one run (reported 17 Oct 2026). Regenerating
- * on the server keeps the HTML carrying real numbers, and the visitor never
- * waits: Vercel hands out the last good copy while the next one is built.
+ * It was briefly revalidated every 30 seconds so its HTML would carry a live
+ * board, but a stale entry made the client navigation wait for the whole
+ * render - a three second spinner on every tap (reported 17 Oct 2026). The
+ * page is served instantly again; anything the markup cannot vouch for is
+ * masked until /api/home-live answers (see LiveResults), so an old board can
+ * never be read as a result.
  */
-export const revalidate = 30;
 
 export async function generateMetadata({ params }: { params: Promise<{ game: string }> }): Promise<Metadata> {
   const { game } = await params;
