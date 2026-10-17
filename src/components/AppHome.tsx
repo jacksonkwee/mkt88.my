@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { GAME_DEFS, EAST_LINKS } from "./sites/mkt88/app/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { GearSix } from "@phosphor-icons/react";
@@ -139,6 +139,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [lucky, setLucky] = useState<string | null>(null);
   /** The tile whose page is being fetched, so a second tap cannot restart it. */
   const [pending, setPending] = useState<string | null>(null);
+  const router = useRouter();
   const [lang, setLang] = useLang();
   const [specialDraw, setSpecialDraw] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -191,6 +192,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
       pendingNav.current = null;
       setPending(null);
       setOpen(false);
+      document.body.classList.remove("mkt-boot-wait");
     }
   }, [pathname, open]);
 
@@ -222,6 +224,24 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     }
     setOpen(false);
   };
+
+  /*
+   * A tile tapped before this component was alive (the boot script queues it).
+   *
+   * The tap that used to become a full page load is now a client-side
+   * navigation that starts the moment React is ready - one tap, no reload
+   * (reported 17 Oct 2026: tapping straight after launch took two seconds and
+   * needed several taps, while the same tap a second later was instant).
+   */
+  useEffect(() => {
+    const w = window as unknown as { __mktQueuedHref?: string | null };
+    const href = w.__mktQueuedHref;
+    if (!href) return;
+    w.__mktQueuedHref = null;
+    openPage(href);
+    router.push(href);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // A navigation that never lands must not leave the tiles dead.
   useEffect(() => {

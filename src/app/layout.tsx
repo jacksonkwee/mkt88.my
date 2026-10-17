@@ -117,9 +117,13 @@ const BOOT_SCRIPT = `
      * waited behind them - measured 3.6s against 0.1s without them.
      */
     /*
-     * A tap that lands before React is ready navigates the hard way (a full
-     * page load). Show that it registered, and ignore the following taps: each
-     * one restarted the load and made the wait longer.
+     * A tap that lands before React is ready must not become a full page load.
+     *
+     * That was the whole difference the owner measured on 17 Oct 2026: tap a
+     * game the instant the app opens and it reloads the site (two seconds, and
+     * more taps because it looks dead); wait a moment and the same tap is a
+     * client-side navigation. So the tap is remembered here and AppHome takes
+     * it as soon as it is alive - one tap, no reload, a spinner in between.
      */
     var __mktBusy = false;
     document.addEventListener('click', function (e) {
@@ -127,12 +131,15 @@ const BOOT_SCRIPT = `
       var t = e.target;
       var a = t && t.closest ? t.closest('.mkt-app-home a[href^="/"]') : null;
       if (!a) return;
-      if (__mktBusy) { e.preventDefault(); return; }
+      e.preventDefault();
+      if (__mktBusy) return;
       __mktBusy = true;
+      window.__mktQueuedHref = a.getAttribute('href');
       document.body.className += ' mkt-boot-wait';
       window.setTimeout(function () {
+        window.__mktQueuedHref = null;
         document.body.className = document.body.className.replace(' mkt-boot-wait', '');
-      }, 10000);
+      }, 8000);
     }, true);
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
