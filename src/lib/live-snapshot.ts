@@ -869,6 +869,90 @@ function totoCards(j: Record<string, any> | null): { four?: Record<string, strin
   return { four, fiveSix: Object.keys(six).length ? six : undefined };
 }
 
+/**
+ * Sports Toto's official live draw board.
+ *
+ * GetResults is the after-draw archive: it only moves to the new draw around
+ * 20:45-21:20, while the draw itself starts at 19:15. The operator publishes
+ * the numbers as they are drawn on totolive.sportstoto.com.my. That host
+ * refuses our server (Akamai 403), so the page is read through Jina's public
+ * text renderer. This is the operator's own board, not a mirror; the archive
+ * still wins when it arrives.
+ */
+function parseTotoLive(text: string): Record<string, string> | null {
+  if (!text || !/TOTO 4D\b/i.test(text)) return null;
+  const dm = /Draw Date\s*:\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/i.exec(text);
+  if (!dm) return null;
+  const iso = dm[3] + "-" + dm[2].padStart(2, "0") + "-" + dm[1].padStart(2, "0");
+  const four: Record<string, string> = { date: weekdayOf(iso) };
+  const no = /Draw No\s*:\s*([0-9/]+)/i.exec(text);
+  if (no) four.draw_no = no[1];
+  const start = text.search(/TOTO 4D\b/i);
+  const end = text.indexOf("TOTO 4D JACKPOT", start);
+  const block = start >= 0 ? text.slice(start, end > start ? end : undefined) : text;
+  // The top row is empty until the three prizes are picked at the end; then
+  // it prints e.g. "G 5110 E 5751 L 7296".
+  const topStart = block.search(/Third Prize/i);
+  const topEnd = block.search(/Special Prize/i);
+  const topText = topStart >= 0 && topEnd > topStart ? block.slice(topStart + "Third Prize".length, topEnd) : "";
+  const topPairs = [...topText.matchAll(/\b([A-M])\s*(\d{4})\b/gi)].map((m) => m[2]);
+  const topNums = [...topText.matchAll(/\b(\d{4})\b/g)].map((m) => m[1]);
+  // A-M are the thirteen special boxes. A letter the operator has not drawn
+  // yet (or has moved into the top three) is blank on its board and here.
+  const spStart = block.search(/Special Prize/i);
+  const spEnd = block.search(/Consolation Prize/i);
+  const spText = spStart >= 0 && spEnd > spStart ? block.slice(spStart + "Special Prize".length, spEnd) : "";
+  const letters = "ABCDEFGHIJKLM";
+  const special: Record<string, string> = {};
+  for (const m of spText.matchAll(/\b([A-M])\s*(\d{4})\b/gi)) special[m[1].toUpperCase()] = m[2];
+  for (let i = 0; i < 13; i++) four["special-" + (i + 1)] = special[letters[i]] || "----";
+  four["special-14"] = "";
+  four["special-15"] = "";
+  const conStart = block.search(/Consolation Prize/i);
+  const conText = conStart >= 0 ? block.slice(conStart + "Consolation Prize".length) : "";
+  const cons = [...conText.matchAll(/\b(\d{4})\b/g)].map((m) => m[1]).slice(0, 10);
+  for (let i = 0; i < 10; i++) four["consolation-" + (i + 1)] = cons[i] || "----";
+  const top = topPairs.length >= 3 ? topPairs : topNums.length >= 3 ? topNums : [];
+  four.first_prize = top[0] || "----";
+  four.second_prize = top[1] || "----";
+  four.third_prize = top[2] || "----";
+  // A board with only the date is not a draw yet.
+  const hasNumber = Object.entries(four).some(([k, v]) =>
+    (k.startsWith("special-") || k.startsWith("consolation-") || /prize$/.test(k)) && /^\d{4}$/.test(v));
+  return hasNumber ? four : null;
+}
+
+let totoLiveCache: { at: number; four: Record<string, string> } | null = null;
+let totoLiveBusy = false;
+
+function totoLiveWindow(): boolean {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value || 0);
+  const mins = get("hour") * 60 + get("minute");
+  return mins >= 18 * 60 + 55 && mins <= 21 * 60 + 30;
+}
+
+/** Read the live board in the background; never hold a snapshot build for it. */
+async function refreshTotoLive(): Promise<void> {
+  if (totoLiveBusy || !totoLiveWindow()) return;
+  if (totoLiveCache && Date.now() - totoLiveCache.at < 10_000) return;
+  totoLiveBusy = true;
+  try {
+    const res = await fetch("https://r.jina.ai/https://totolive.sportstoto.com.my/stoto/?ts=" + Date.now(), {
+      headers: { "User-Agent": UA, Accept: "text/plain", "X-No-Cache": "true" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return;
+    const four = parseTotoLive(await res.text());
+    if (four) totoLiveCache = { at: Date.now(), four };
+  } catch { /* the archive still updates later */ }
+  finally { totoLiveBusy = false; }
+}
+
 /** Read one official 9lotto value by its DOM id (n1, n2, n3, nA...). */
 function nineCell(html: string, id: string): string {
   const m = new RegExp('id="' + id + '"[^>]*>\\s*(----|\\d{4})\\s*<', "i").exec(html);
@@ -2107,17 +2191,6 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
-  /*
-   * Sports Toto from the operator's own app API (see totoCards): the 4D board
-   * and the 5D / 6D / Star / Power / Supreme boards beside it.
-   */
-  const toto = totoCards(totoRes);
-  if (toto.four) {
-    cards["table-6"] = toto.four;
-    noteSource("sports-toto", "Sports Toto 多多（官方）", { ok: true });
-  }
-  if (toto.fiveSix) cards["table-7"] = toto.fiveSix;
-
   const hari: Record<string, HariEntry> = { "15:30": h15 || h15y, "19:30": h19 || h19y };
 
   /**
@@ -2145,6 +2218,29 @@ export async function buildSnapshot(): Promise<Snapshot> {
     for (const k of Object.keys(before)) if (isDash(now[k]) && !isDash(before[k])) out[k] = before[k];
     return out;
   };
+  /*
+   * Sports Toto: the official live board first, the after-draw archive as the
+   * final authority. The live page prints specials and consolations as they
+   * are drawn, and the three top prizes only at the end - exactly the order
+   * the card shows them in.
+   */
+  void refreshTotoLive();
+  const toto = totoCards(totoRes);
+  const liveFour = totoLiveCache?.four;
+  const officialFour = toto.four;
+  let four: Record<string, string> | undefined;
+  if (officialFour && liveFour) {
+    if (isOlder(officialFour.date, liveFour.date)) four = liveFour;
+    else if (isOlder(liveFour.date, officialFour.date)) four = officialFour;
+    else four = addNew(liveFour, officialFour);
+  } else {
+    four = officialFour || liveFour;
+  }
+  if (four) {
+    cards["table-6"] = four;
+    noteSource("sports-toto", "Sports Toto 多多（官方）", { ok: true });
+  }
+  if (toto.fiveSix) cards["table-7"] = toto.fiveSix;
   const prev = cache;
   if (prev) {
     for (const [cls, vals] of Object.entries(cards)) {
