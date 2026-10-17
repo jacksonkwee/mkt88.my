@@ -458,6 +458,14 @@ function applySet(card: Element, s: PrizeSet, live = false, copyDate = "") {
     }
   }
   const consCells = tables[2] ? [...tables[2].querySelectorAll("td.lottery-number")] : [];
+  /*
+   * The consolation boxes are lettered N-W here as well. Only the special row
+   * was getting its letters, so Perdana and HariHari showed one lettered grid
+   * and one bare one (reported 17 Oct 2026); the operator letters both.
+   */
+  consCells.slice(0, 10).forEach((cell, i) => {
+    if (cell && !cell.hasAttribute("data-letter")) cell.setAttribute("data-letter", "NOPQRSTUVW"[i]);
+  });
   s.cons.forEach((v, i) => stage(consCells[i], v, true));
   if (s.date) {
     const dt = card.querySelector('[data-id="date"]');

@@ -1376,3 +1376,29 @@ body.mkt-in-app.mkt-boot-wait::before {
   border-top-color: #cc0000;
   animation: mkt-spin 700ms linear infinite;
 }
+
+/*
+ * The consolation row is lettered N to W, like the special row is A to M:
+ * the operator labels every box, and the prize rows point back at them.
+ * Drawn with CSS so the cell text stays just the number.
+ */
+.card.outer-box.table-13 [data-id="consolation-1"]::before,
+.card.outer-box.table-17 [data-id="consolation-1"]::before { content: "N "; }
+.card.outer-box.table-13 [data-id="consolation-2"]::before,
+.card.outer-box.table-17 [data-id="consolation-2"]::before { content: "O "; }
+.card.outer-box.table-13 [data-id="consolation-3"]::before,
+.card.outer-box.table-17 [data-id="consolation-3"]::before { content: "P "; }
+.card.outer-box.table-13 [data-id="consolation-4"]::before,
+.card.outer-box.table-17 [data-id="consolation-4"]::before { content: "Q "; }
+.card.outer-box.table-13 [data-id="consolation-5"]::before,
+.card.outer-box.table-17 [data-id="consolation-5"]::before { content: "R "; }
+.card.outer-box.table-13 [data-id="consolation-6"]::before,
+.card.outer-box.table-17 [data-id="consolation-6"]::before { content: "S "; }
+.card.outer-box.table-13 [data-id="consolation-7"]::before,
+.card.outer-box.table-17 [data-id="consolation-7"]::before { content: "T "; }
+.card.outer-box.table-13 [data-id="consolation-8"]::before,
+.card.outer-box.table-17 [data-id="consolation-8"]::before { content: "U "; }
+.card.outer-box.table-13 [data-id="consolation-9"]::before,
+.card.outer-box.table-17 [data-id="consolation-9"]::before { content: "V "; }
+.card.outer-box.table-13 [data-id="consolation-10"]::before,
+.card.outer-box.table-17 [data-id="consolation-10"]::before { content: "W "; }
