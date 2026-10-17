@@ -93,11 +93,10 @@ export default function LiveSound({ enabled }: { enabled?: boolean }) {
     /**
      * Is this card's draw today's?
      *
-     * The chime is for a result arriving DURING a draw. A card that fills in
-     * with yesterday's draw - which is what happens every time the app opens
-     * and the sources catch up - is not news, and that is what rang two or
-     * three times on launch. Only today's draw may ring, once per game per
-     * draw; a new game's result during the evening rings once each.
+     * The chime is for numbers arriving DURING a draw. A card that fills in
+     * with yesterday's draw - which happens every time the app opens and the
+     * sources catch up - is not news, and that is what rang two or three times
+     * on launch.
      */
     const isToday = (label: string): boolean => {
       const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
@@ -108,13 +107,34 @@ export default function LiveSound({ enabled }: { enabled?: boolean }) {
       return m[1] === dd && m[2] === mm && m[3] === String(now.getUTCFullYear());
     };
 
+    /**
+     * The cells that hold a result number (never the date, draw number or a
+     * label). A cell counts as news only when it goes from nothing to a
+     * number, or when the card has moved to a new draw - a correction to a
+     * number already on screen is not a new result.
+     */
+    const VALUE_ID = /^(first_prize|second_prize|third_prize|special-\d+|consolation-\d+|six_main|d5_number_[1-3]|d6_number_1|number_\d+|star_toto_number_[1-8]|power_toto_number_\d|supreme_toto_number_\d)$/;
+
     const check = () => {
+      let fresh = 0;
       for (const card of cards()) {
         const hit = keyOf(card);
-        if (!hit || seen.current.has(hit.key)) continue;
-        seen.current.add(hit.key);
-        if (seeded.current && isToday(hit.date)) beep();
+        if (!hit) continue;
+        const live = isToday(hit.date);
+        for (const el of Array.from(card.querySelectorAll("[data-id]"))) {
+          const id = el.getAttribute("data-id") || "";
+          if (!VALUE_ID.test(id)) continue;
+          const v = (el.textContent || "").replace(/\s+/g, "");
+          if (!/^\d{1,6}$/.test(v)) continue;
+          const cellKey = hit.key + "|" + id;
+          if (seen.current.has(cellKey)) continue;
+          seen.current.add(cellKey);
+          if (seeded.current && live) fresh++;
+        }
       }
+      // One chime per batch of newly published numbers: numbers that arrive
+      // together are one moment, numbers that arrive seconds apart ring again.
+      if (fresh > 0) beep();
     };
 
     // First pass only records what is already on screen - opening the app must
