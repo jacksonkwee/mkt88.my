@@ -2,6 +2,7 @@ import perdanaOfficial from "./perdana-official.json";
 import sgLiveCapture from "../../data/sg-live.json";
 import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
 import { getSiteContent } from "./site-store";
+import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -1450,10 +1451,98 @@ const MANUAL_CLEAR: Record<string, string[]> = {
   "table-14": ["six_main", "six_5a", "six_5b", "six_4a", "six_4b", "six_3a", "six_3b", "six_2a", "six_2b"],
 };
 
+/**
+ * The newest Singapore 4D board any server instance has seen.
+ *
+ * Vercel runs several instances and each keeps its own snapshot. live4d.sg
+ * opens today's draw, publishes a few numbers and then clears the list until
+ * the official archive catches up. One instance caught those numbers and held
+ * today; another never saw them and held yesterday. Phones polling alternated
+ * between the two, so the card lost its top prizes and jumped back a draw
+ * (reported 17 Oct 2026).
+ *
+ * Firestore is already the shared store for the admin settings. The newest
+ * board is written there once its three main prizes are in, and every instance
+ * reads it while building - so one instance can no longer take the card back.
+ */
+const SG_GUARD_DOC = "state/sg4d";
+const SG_GUARD_MS = 10_000;
+let sgGuard: { at: number; board: Record<string, string> | null } | null = null;
+
+function sgDay(v?: Record<string, string> | string): number {
+  const s = typeof v === "string" ? v : v?.date;
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(s || "");
+  return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+}
+function sgDash(v?: string): boolean {
+  return !v || /^----+$/.test(String(v).trim());
+}
+function sgHasMain(b?: Record<string, string> | null): boolean {
+  return !!b && ["first_prize", "second_prize", "third_prize"].every((k) => !!b[k] && !sgDash(b[k]));
+}
+/** Same draw: keep every number already known, add the newly published ones. */
+function sgMerge(base: Record<string, string>, next: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = { ...base };
+  for (const [k, v] of Object.entries(next)) {
+    if (v === undefined || v === null || v === "") continue;
+    if (sgDash(v) && out[k] && !sgDash(out[k])) continue;
+    out[k] = String(v);
+  }
+  return out;
+}
+function sgSame(a: Record<string, string> | null, b: Record<string, string>): boolean {
+  if (!a) return false;
+  const ak = Object.keys(a), bk = Object.keys(b);
+  return ak.length === bk.length && bk.every((k) => (a[k] || "") === (b[k] || ""));
+}
+function sgCount(b: Record<string, string>): number {
+  return Object.keys(b).filter((k) => k !== "date" && k !== "draw_no" && !sgDash(b[k])).length;
+}
+/** The shared guard is only needed while the Singapore draw is being published. */
+function sgGuardWindow(): boolean {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value || 0);
+  const mins = get("hour") * 60 + get("minute");
+  return mins >= 17 * 60 + 45 && mins <= 21 * 60;
+}
+async function readSgGuard(): Promise<Record<string, string> | null> {
+  if (!pushConfigured()) return null;
+  if (sgGuard && sgGuard.board && Date.now() - sgGuard.at < SG_GUARD_MS) return sgGuard.board;
+  if (!sgGuardWindow()) return null;
+  const doc = await Promise.race([
+    firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(SG_GUARD_DOC),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 900)),
+  ]);
+  let board: Record<string, string> | null = null;
+  const raw = doc?.fields?.json?.stringValue;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as Record<string, string>;
+      if (sgDay(parsed)) board = parsed;
+    } catch { /* a broken document is ignored */ }
+  }
+  // A failed or not-yet-created document is retried on the next build; only a
+  // real board is cached for the full interval.
+  sgGuard = board ? { at: Date.now(), board } : null;
+  return board;
+}
+async function writeSgGuard(board: Record<string, string>): Promise<void> {
+  if (!pushConfigured()) return;
+  if (!sgGuardWindow()) return;
+  sgGuard = { at: Date.now(), board };
+  await Promise.race([
+    firestorePut(SG_GUARD_DOC, { json: JSON.stringify(board) }),
+    new Promise<void>((resolve) => setTimeout(() => resolve(), 1200)),
+  ]);
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, gdApi, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes] = await Promise.all([
+  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, gdApi, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored] = await Promise.all([
     get("https://live4dresult.net/"),
     /*
      * The mirror's East Malaysia and Singapore pages used to be read here as
@@ -1488,6 +1577,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     stc4dToday(),
     damacaiToday(today.iso),
     totoResults(),
+    readSgGuard(),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -1799,94 +1889,108 @@ export async function buildSnapshot(): Promise<Snapshot> {
   }
   // Singapore sources can arrive out of order. Use the newest dated result and
   // merge same-date fields so an older archive never overwrites a live draw.
-  const sgDate = (v?: Record<string, string>): number => {
-    const m = /(\d{2})-(\d{2})-(\d{4})/.exec(v?.date || "");
-    return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+  //
+  // The reference is the last board that actually had its three main prizes -
+  // the copy on this instance or the shared high-water mark. A source card that
+  // carries only part of a new draw is not allowed to become the reference.
+  const todayMs = Date.parse(today.iso + "T00:00:00Z");
+  const freshSg = (b: Record<string, string>): boolean => {
+    const d = sgDay(b);
+    return d > 0 && d <= todayMs && todayMs - d <= 4 * 86400000;
   };
+  const prevSg = (cache?.cards?.["table-11"] || null) as Record<string, string> | null;
+  const refs = [sgStored, prevSg].filter((b): b is Record<string, string> => !!b && sgHasMain(b) && freshSg(b));
+  refs.sort((a, b) => sgDay(b) - sgDay(a));
+  const refSg = refs[0] || null;
+  const refDay = sgDay(refSg || undefined);
   // Same-date priority: official Singapore Pools > live4d2u > the live stream >
   // the capture. A blank never replaces a number that is already known, so the
   // stream clearing itself cannot wipe a draw that is on screen.
-  const sgParts = [capturedSg(), sgLive4d, liveCards["table-11"], sgOfficial["table-11"]].filter(Boolean) as Record<string, string>[];
+  const sgParts = ([capturedSg(), sgLive4d, liveCards["table-11"], sgOfficial["table-11"]] as (Record<string, string> | null)[])
+    .filter((b): b is Record<string, string> => !!b && freshSg(b));
   if (sgParts.length) {
     const isDashVal = (v: string) => /^----+$/.test(String(v || "").trim());
     /**
-     * A DATE on its own is not a result.
+     * A newer DATE is only a result once its three main prizes are in.
      *
      * live4d.sg opens a new draw entry the moment the draw starts: today's date
-     * with a single 1st-prize flag and an empty number list. Taking the newest
-     * DATE threw away the complete board we already held, so the Singapore card
-     * went from a full result to blank in one step - reported on 3 Oct 2026 as
-     * "1st/2nd/3rd missing, blank suddenly", with the board left half filled.
+     * with an empty list, then publishes a few consolations, then clears them
+     * again. Treating ANY number as a live draw switched to today with 1st,
+     * 2nd and 3rd still blank and only the bottom rows filled. The next build
+     * saw no numbers for that date and fell back to the previous draw, so the
+     * card appeared to lose its top half and then jump back a draw (reported
+     * 17 Oct 2026).
      *
-     * Only move to the newer date once it carries its main prizes; until then
-     * keep serving the last COMPLETE draw, with its own date on the card. That
-     * is never wrong - it is just the previous draw until today's is real.
+     * Requiring only the three main prizes still shows the draw live: specials
+     * and consolations continue to fill in as they are published.
      */
-    /*
-     * A date counts as live as soon as ANY of its numbers is published - not
-     * only once all three main prizes are in. Waiting for the whole board held
-     * the card on the previous draw right through the reveal, which is why
-     * Singapore stopped showing anything live and then produced the finished
-     * result in one step (reported 4 Oct 2026).
-     *
-     * What it still refuses is a date with NO numbers at all - that is the case
-     * that used to blank the card, and it stays blocked.
-     */
-    const hasAnyResult = (b?: Record<string, string>): boolean =>
-      !!b && Object.entries(b).some(([k, v]) =>
-        k !== "date" && k !== "draw_no" && !!v && !isDashVal(v));
-    let newest = Math.max(...sgParts.map((p) => sgDate(p)));
-    if (!sgParts.some((p) => sgDate(p) === newest && hasAnyResult(p))) {
-      const liveDates = sgParts.filter((p) => hasAnyResult(p)).map((p) => sgDate(p)).filter((d) => d > 0);
-      if (liveDates.length) newest = Math.max(...liveDates);
+    const hasMainPrizes = (b?: Record<string, string>): boolean =>
+      !!b && ["first_prize", "second_prize", "third_prize"].every((k) => {
+        const v = b[k];
+        return !!v && !isDashVal(v);
+      });
+    let newest = Math.max(refDay, ...sgParts.map((p) => sgDay(p)));
+    if (newest > refDay && !sgParts.some((p) => sgDay(p) === newest && hasMainPrizes(p))) {
+      const ready = sgParts.filter((p) => sgDay(p) > refDay && hasMainPrizes(p)).map((p) => sgDay(p));
+      newest = ready.length ? Math.max(...ready) : refDay;
     }
-    // Seed from the card we already have ONLY when it is the same draw.
-    //
-    // Seeding from an older one carried its numbers into every slot the new
-    // draw had not published yet, and the rule below ("a blank never replaces a
-    // known number") then kept them there. That is how 27/09s 1st prize, 8791,
-    // ended up sitting under 30/09s date mixed with a few numbers from the new
-    // draw - which reads as "the app has no live result".
-    const baseSg = (cards["table-11"] || {}) as Record<string, string>;
-    const finalSg: Record<string, string> = sgDate(baseSg) === newest ? { ...baseSg } : {};
-    for (const p of sgParts) {
-      if (sgDate(p) !== newest) continue;
-      for (const [k, v] of Object.entries(p)) {
-        if (v === undefined || v === null || v === "") continue;
-        const cur = finalSg[k];
-        if (isDashVal(v) && cur && !isDashVal(cur)) continue;
-        finalSg[k] = String(v);
+    if (newest > 0) {
+      // Seed from the reference ONLY when it is the same draw. Seeding from an
+      // older one carried its numbers into every slot the new draw had not
+      // published yet, and the "blank never replaces a known number" rule then
+      // kept them there.
+      const finalSg: Record<string, string> = sgDay(refSg || undefined) === newest ? { ...refSg } : {};
+      for (const p of sgParts) {
+        if (sgDay(p) !== newest) continue;
+        for (const [k, v] of Object.entries(p)) {
+          if (v === undefined || v === null || v === "") continue;
+          const cur = finalSg[k];
+          if (isDashVal(v) && cur && !isDashVal(cur)) continue;
+          finalSg[k] = String(v);
+        }
       }
+      // Anything today's sources have not published yet is blank, never
+      // yesterday's number.
+      if (!finalSg.date) {
+        finalSg.date = weekdayOf(new Date(newest).toISOString().slice(0, 10));
+      }
+      for (const k of ["first_prize", "second_prize", "third_prize"]) {
+        if (!(k in finalSg)) finalSg[k] = "----";
+      }
+      for (let i = 1; i <= 15; i++) {
+        if (!("special-" + i in finalSg)) finalSg["special-" + i] = "----";
+      }
+      for (let i = 1; i <= 10; i++) {
+        if (!("consolation-" + i in finalSg)) finalSg["consolation-" + i] = "----";
+      }
+      // Live4D.sg publishes the new draw before it knows the official draw
+      // number. Never keep the previous draw's number with the new date.
+      const anyDrawNo = sgParts.some((p) => sgDay(p) === newest && p.draw_no && !isDashVal(p.draw_no));
+      if (!anyDrawNo && newest > Math.max(0, ...sgParts.filter((p) => sgDay(p) < newest).map((p) => sgDay(p)))) {
+        finalSg.draw_no = "----";
+      }
+      cards["table-11"] = finalSg;
+    } else {
+      // No usable date at all: keep the newest complete board rather than the
+      // partial new-draw card that started this.
+      const complete = sgParts.filter(hasMainPrizes).sort((a, b) => sgDay(b) - sgDay(a))[0];
+      if (complete) cards["table-11"] = { ...complete };
     }
-    // Anything today's sources have not published yet is blank, never
-    // yesterday's number.
-    if (newest > 0 && !finalSg.date) {
-      finalSg.date = weekdayOf(new Date(newest).toISOString().slice(0, 10));
+  }
+  // Never let this build take the card behind the shared high-water mark, and
+  // publish today's board there as soon as its main prizes are known.
+  {
+    const c = cards["table-11"] as Record<string, string> | undefined;
+    const storedDay = sgDay(sgStored || undefined);
+    if (sgStored && freshSg(sgStored) && storedDay > sgDay(c || undefined)) {
+      cards["table-11"] = { ...sgStored };
     }
-    for (const k of ["first_prize", "second_prize", "third_prize"]) {
-      if (!(k in finalSg)) finalSg[k] = "----";
+    const final = cards["table-11"] as Record<string, string> | undefined;
+    const newerDraw = !!final && sgDay(final) > storedDay;
+    const moreNumbers = !!final && sgDay(final) === storedDay && sgCount(final) >= (sgStored ? sgCount(sgStored) : -1);
+    if (final && sgHasMain(final) && (newerDraw || moreNumbers) && !sgSame(sgStored, final)) {
+      await writeSgGuard(final);
     }
-    for (let i = 1; i <= 15; i++) {
-      if (!("special-" + i in finalSg)) finalSg["special-" + i] = "----";
-    }
-    for (let i = 1; i <= 10; i++) {
-      if (!("consolation-" + i in finalSg)) finalSg["consolation-" + i] = "----";
-    }
-    // Live4D.sg publishes the new draw before it knows the official draw
-    // number. Never keep the previous draw's number with the new date.
-    const anyDrawNo = sgParts.some((p) => sgDate(p) === newest && p.draw_no && !isDashVal(p.draw_no));
-    if (!anyDrawNo && newest > Math.max(0, ...sgParts.filter((p) => sgDate(p) < newest).map((p) => sgDate(p)))) {
-      finalSg.draw_no = "----";
-    }
-    // The other 4D apps publish a new draw a few minutes before any source we
-    // have. Today's date with an empty board looks like a broken app, so until
-    // the new draw has its main prizes keep the last complete result on screen
-    // - it is never wrong, only a little older.
-    // Whatever the sources have for the newest date is what is shown, even when
-    // the draw is still being revealed and some prizes are still "----". Falling
-    // back to the last complete board looked tidier but meant showing yesterday
-    // under today and then flicking forward again, which is worse.
-    cards["table-11"] = finalSg;
   }
   // 9lotto.com is the authority for this card and is used whenever it has
   // anything at all; otherwise the live archive's own board is kept. Never

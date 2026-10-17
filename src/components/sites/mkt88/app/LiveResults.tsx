@@ -117,6 +117,19 @@ function applySnapshot(): boolean {
     for (const [id, vals] of Object.entries(snap.cards)) {
       const card = document.getElementById(id);
       if (!card) continue;
+      /*
+       * The cache is only a head start, never a time machine.
+       *
+       * It is written from whatever the page last showed. If that was the
+       * previous draw, restoring it on mount overwrote a newer board that the
+       * server had already rendered - which is how Singapore jumped back to
+       * 14-10 after showing today's draw (reported 17 Oct 2026).
+       */
+      const curDate = (card.querySelector('[data-id="date"]')?.textContent || "").trim();
+      const savedDay = dateScore(String(vals.date || ""));
+      const curDay = dateScore(curDate);
+      if (!savedDay && curDay) continue;
+      if (savedDay && curDay && savedDay < curDay) continue;
       for (const [k, v] of Object.entries(vals)) {
         const el = card.querySelector('[data-id="' + k + '"]');
         if (el && (el.textContent || "").trim() !== v) { el.textContent = v; el.classList.remove("live-pending"); applied++; }
