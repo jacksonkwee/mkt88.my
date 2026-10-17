@@ -3,6 +3,7 @@ import sgLiveCapture from "../../data/sg-live.json";
 import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
 import { getSiteContent } from "./site-store";
 import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
+import { after } from "next/server";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -951,6 +952,12 @@ async function refreshTotoLive(): Promise<void> {
     if (four) totoLiveCache = { at: Date.now(), four };
   } catch { /* the archive still updates later */ }
   finally { totoLiveBusy = false; }
+}
+
+/** Let the response go first, but keep the serverless function alive for the fetch. */
+function scheduleTotoLive(): void {
+  try { after(() => refreshTotoLive()); }
+  catch { void refreshTotoLive(); }
 }
 
 /** Read one official 9lotto value by its DOM id (n1, n2, n3, nA...). */
@@ -2224,7 +2231,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * are drawn, and the three top prizes only at the end - exactly the order
    * the card shows them in.
    */
-  void refreshTotoLive();
+  scheduleTotoLive();
   const toto = totoCards(totoRes);
   const liveFour = totoLiveCache?.four;
   const officialFour = toto.four;
