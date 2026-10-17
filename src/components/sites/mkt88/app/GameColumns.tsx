@@ -41,7 +41,17 @@ const EAST_GAME = /^table-(8|9|10)\b/;
 export default function GameColumns({ ids, snap: serverSnap, wide }: { ids: string[]; snap?: unknown; wide?: boolean }) {
   const clockNight = useDrawOrder();
   const ctxSnap = useSnap();
-  const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
+  /*
+   * The live copy, not the one the page was rendered with.
+   *
+   * `serverSnap` never changes after the page loads, so the pager kept the
+   * draw order it was opened with: at 3:30pm Perdana and HariHari still showed
+   * the 7:30 draw on top while the 3:30 draw was being revealed, even though a
+   * fresh page load ordered them correctly (reported 17 Oct 2026). useSnap()
+   * follows the boot script's live snapshot, so the order moves with the draw.
+   */
+  const liveSnap = ctxSnap && ctxSnap.cards && Object.keys(ctxSnap.cards).length ? ctxSnap : null;
+  const snap = liveSnap || (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
   // Perdana and HariHari put the draw whose result is actually out on top.
   const night = ids.some((id) => id.startsWith("table-16"))
     ? perdanaNightFirst(snap, clockNight)
