@@ -54,4 +54,11 @@ number-history:
         exit 0
       fi
     - git commit -m "Number history updated $(date -u '+%Y-%m-%d %H:%M UTC')"
-    - git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+    # Two ways to push: the job token (needs "Allow Git push requests" in the
+    # CI/CD settings) or a Project Access Token kept in GIT_PUSH_TOKEN.
+    - |
+      if [ -n "$GIT_PUSH_TOKEN" ]; then
+        git push "https://oauth2:${GIT_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+      else
+        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+      fi
