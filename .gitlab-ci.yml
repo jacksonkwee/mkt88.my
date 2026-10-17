@@ -44,7 +44,10 @@ number-history:
     - node scripts/build-number-stats.mjs
     - git config user.name "mkt88-results-bot"
     - git config user.email "ci@mkt88.my"
-    - git add -- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json src/lib/number-stats.json src/lib/gd-nine-past.json src/lib/hari-past.json
+    # The project folders were renamed on 16 Oct 2026. This line still named the
+    # old one, so `git add` failed and every scheduled run died before pushing -
+    # which is the other half of why the hot numbers went stale.
+    - git add -- src/components/sites/mkt88/app/number-history-db.json src/lib/number-stats.json src/lib/gd-nine-past.json src/lib/hari-past.json
     - |
       if git diff --cached --quiet; then
         echo "nothing new today"
