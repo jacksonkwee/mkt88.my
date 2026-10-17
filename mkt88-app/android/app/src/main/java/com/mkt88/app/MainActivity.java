@@ -62,6 +62,7 @@ public class MainActivity extends BridgeActivity {
     checkForAppUpdate();
     startWebViewReadyCheck();
     installResultBridge();
+    registerBackCallback();
 
     // Keep the launch logo up until the page has actually painted.
     // WebViewReadyCheck below releases it as soon as the page has real content,
@@ -127,11 +128,19 @@ public class MainActivity extends BridgeActivity {
    * the first screen the key leaves the app, and anywhere else it asks the page
    * to show that screen first (asked for 14 Oct 2026).
    */
-  @Override
-  public void onBackPressed() {
+  /**
+   * One handler for both back systems.
+   *
+   * Android 13+ delivers back through OnBackInvokedCallback once it is enabled
+   * in the manifest, and from Android 15 (apps targeting 35+) that is the only
+   * path - onBackPressed() is not called any more, so the key closed the app
+   * instead of showing the first screen (reported 17 Oct 2026). The legacy
+   * override stays for phones below 13.
+   */
+  private void handleBack() {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) {
-      super.onBackPressed();
+      finish();
       return;
     }
     try {
@@ -139,14 +148,31 @@ public class MainActivity extends BridgeActivity {
         String state = value == null ? "" : value;
         if (state.contains("page")) {
           webView.evaluateJavascript(JS_GO_HOME, null);
-        } else {
-          // On the first screen, or a page that cannot answer: leave the app.
+        } else if (state.contains("home")) {
+          // Already on the first screen: this is the press that leaves the app.
           finish();
+        } else {
+          // No hooks yet (still loading, or an old cached copy). Go to the
+          // first screen - back should never be what closes the app.
+          webView.evaluateJavascript("(function(){try{location.href='/';}catch(e){}})()", null);
         }
       });
     } catch (Exception ignored) {
       finish();
     }
+  }
+
+  /** Android 13+: register the callback the system uses instead of onBackPressed. */
+  private void registerBackCallback() {
+    if (Build.VERSION.SDK_INT >= 33) {
+      getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+          android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+    }
+  }
+
+  @Override
+  public void onBackPressed() {
+    handleBack();
   }
 
   /**
