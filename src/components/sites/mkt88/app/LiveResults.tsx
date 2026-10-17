@@ -1151,6 +1151,39 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
   }
 }
 
+/**
+ * Nine Lotto's three prizes come out of its lettered special boxes, so each
+ * prize row carries the letter of the box it came from - the same as Grand
+ * Dragon. Nine's operator does not print that letter: where a box still holds
+ * the number we match it by value; when the operator has blanked those boxes
+ * (its usual board) the three blanks, read A to M, are 1st, 2nd and 3rd.
+ */
+function letterNinePrizes() {
+  const cells = document.querySelectorAll(".card.outer-box.table-17:not(.mkt-past)");
+  for (const card of Array.from(cells)) {
+    const prizes = ["first_prize", "second_prize", "third_prize"].map((id) => card.querySelector('[data-id="' + id + '"]'));
+    if (prizes.some((c) => !c)) continue;
+    const specials = Array.from(card.querySelectorAll('[data-id^="special-"]')).slice(0, 13).map((el, i) => ({
+      L: "ABCDEFGHIJKLM"[i],
+      v: (el.textContent || "").trim(),
+    }));
+    let matched = 0;
+    prizes.forEach((cell) => {
+      if (!cell) return;
+      const v = (cell.textContent || "").trim();
+      const hit = /^\d{4}$/.test(v) ? specials.find((s) => s.v === v) : undefined;
+      if (hit) { cell.setAttribute("data-letter", hit.L); matched++; }
+    });
+    if (matched) continue;
+    const holes = specials.filter((s) => /^----+$/.test(s.v)).map((s) => s.L);
+    prizes.forEach((cell, i) => {
+      if (!cell) return;
+      if (holes[i]) cell.setAttribute("data-letter", holes[i]);
+      else cell.removeAttribute("data-letter");
+    });
+  }
+}
+
 /** One fast request (server-cached, pre-warmed) that fills every live card. */
 async function syncFromServerFast(): Promise<boolean> {
   try {
@@ -1161,7 +1194,7 @@ async function syncFromServerFast(): Promise<boolean> {
     let did = false;
     if (homeRes && homeRes.ok) {
       const h = (await homeRes.json()) as { cards?: Record<string, Record<string, string>> };
-      if (h && h.cards) { applyCardMap(h.cards); did = true; }
+      if (h && h.cards) { applyCardMap(h.cards); letterNinePrizes(); did = true; }
     }
     if (camRes && camRes.ok) {
       const j = (await camRes.json()) as FastFeed;
