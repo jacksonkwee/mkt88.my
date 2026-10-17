@@ -2189,6 +2189,42 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * admin panel next to the box.
    */
   const manual = (await getSiteContent()).manual || {};
+  /*
+   * Perdana and HariHari 4D, typed by letter.
+   *
+   * Those two cards are drawn by position and carry no data-ids, but the
+   * operator's board - and ours - labels the boxes A-M (special) and N-W
+   * (consolation), with the 1st/2nd/3rd prize taken out of three of them. So
+   * the owner types the same thing here: 1ST=, 2ND=, 3RD= and the letters.
+   * The entry lands in the slot it belongs to, and only when it is not older
+   * than the draw already on that slot.
+   */
+  for (const [key, entry] of Object.entries(manual)) {
+    const m = /^(perdana|hari):(\d{2}:\d{2})$/.exec(key);
+    if (!m) continue;
+    const text = String((entry as { text?: string } | undefined)?.text || "");
+    const lettered: Record<string, string> = {};
+    for (const mm of text.matchAll(/([A-Z])\s*=\s*(\d{1,4})/g)) lettered[mm[1]] = mm[2];
+    const prizeOf = (n: string) => {
+      const mm = new RegExp(n + "\\s*=\\s*(\\d{1,4})", "i").exec(text);
+      return mm ? mm[1] : "----";
+    };
+    const prize = [prizeOf("1st"), prizeOf("2nd"), prizeOf("3rd")];
+    const special = [..."ABCDEFGHIJKLM"].map((L) => lettered[L] || "----");
+    const cons = [..."NOPQRSTUVW"].map((L) => lettered[L] || "----");
+    const hasAny = [...prize, ...special, ...cons].some((v) => /^\d{1,4}$/.test(v));
+    if (!hasAny) continue;
+    const typedDate = (entry as { date?: string } | undefined)?.date;
+    const label = typedDate ? weekdayOf(typedDate) : weekdayOf(today.iso);
+    const set: PrizeSet = { prize, special, cons, date: label, drawNo: (entry as { drawNo?: string } | undefined)?.drawNo || undefined };
+    if (m[1] === "perdana") {
+      const cur = perdana[m[2]];
+      if (drawNotOlder(label, cur?.date)) perdana[m[2]] = set;
+    } else {
+      const cur: NonNullable<HariEntry> = hari[m[2]] || { set: null, six: null, jp: null };
+      if (drawNotOlder(label, cur.set?.date)) hari[m[2]] = { ...cur, set };
+    }
+  }
   for (const [cls, entry] of Object.entries(manual)) {
     const fields = MANUAL_FIELDS[cls];
     const text = String(entry?.text || "");

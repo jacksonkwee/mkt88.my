@@ -60,8 +60,33 @@ const MANUAL_CARDS: ManualCard[] = (() => {
     seen.add(c.id);
     out.push({ id: c.id, cls, name: c.header?.name || c.id, game, fields });
   }
+  /*
+   * Perdana and HariHari 4D: drawn by position, so there are no data-ids to
+   * read. Their boxes are the operator's own letters - A-M specials, N-W
+   * consolations - plus the three prizes, which come out of three of those
+   * boxes. Two sessions each: the 3:30 and the 7:30.
+   */
+  const LETTERS = [..."ABCDEFGHIJKLM", ..."NOPQRSTUVW"];
+  const slots: [string, string, string][] = [
+    ["perdana:15:30", "Perdana 4D (3:30PM)", "Perdana"],
+    ["perdana:19:30", "Perdana 4D (7:30PM)", "Perdana"],
+    ["hari:15:30", "Lucky HariHari 4D (3:30PM)", "Lucky HariHari"],
+    ["hari:19:30", "Lucky HariHari 4D (7:30PM)", "Lucky HariHari"],
+  ];
+  for (const [cls, name, game] of slots) {
+    out.push({ id: cls, cls, name, game, fields: ["1ST", "2ND", "3RD", ...LETTERS] });
+  }
   return out;
 })();
+
+/** "special-3" reads C, "consolation-1" reads N - the operator's own letters. */
+function cellLabel(f: string): string {
+  const sp = /^special-(\\d+)$/.exec(f);
+  if (sp) return "ABCDEFGHIJKLM"[Number(sp[1]) - 1] || f;
+  const cn = /^consolation-(\\d+)$/.exec(f);
+  if (cn) return "NOPQRSTUVW"[Number(cn[1]) - 1] || f;
+  return f;
+}
 
 /** "I=1912" lines and the grid of boxes are two views of the same thing. */
 function parseManualText(text: string): Record<string, string> {
@@ -342,7 +367,7 @@ export default function AdminDashboard() {
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
                 {card.fields.map((f) => (
                   <label key={f} style={{ fontSize: 11, display: "flex", flexDirection: "column", gap: 2 }}>
-                    <span style={{ color: "var(--muted)" }}>{f}</span>
+                    <span style={{ color: "var(--muted)" }}>{cellLabel(f)}</span>
                     <input
                       value={vals[f] || ""}
                       onChange={(ev) => {
@@ -363,8 +388,8 @@ export default function AdminDashboard() {
         })}
         {manualGame === "Perdana" || manualGame === "Lucky HariHari" ? (
           <p style={{ fontSize: 13, marginTop: 10, color: "var(--muted)" }}>
-            这个游戏的 4D 卡是按位置绘制的（格子上没有编号），所以只能填 6D 卡；
-            4D 成绩由官方来源自动更新，不用手填。
+            4D 的格子和营运商一样用字母：A–M 是特别奖，N–W 是安慰奖；1ST / 2ND / 3RD 填上方三个奖。
+            空着的格子就保持空白。
           </p>
         ) : null}
       </section>
