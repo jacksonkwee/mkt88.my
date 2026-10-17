@@ -1462,7 +1462,7 @@ const MANUAL_CLEAR: Record<string, string[]> = {
  * (reported 17 Oct 2026).
  *
  * Firestore is already the shared store for the admin settings. The newest
- * board is written there once its three main prizes are in, and every instance
+ * board is written there once a main prize is in, and every instance
  * reads it while building - so one instance can no longer take the card back.
  */
 const SG_GUARD_DOC = "state/sg4d";
@@ -1477,8 +1477,8 @@ function sgDay(v?: Record<string, string> | string): number {
 function sgDash(v?: string): boolean {
   return !v || /^----+$/.test(String(v).trim());
 }
-function sgHasMain(b?: Record<string, string> | null): boolean {
-  return !!b && ["first_prize", "second_prize", "third_prize"].every((k) => !!b[k] && !sgDash(b[k]));
+function sgHasAnyMain(b?: Record<string, string> | null): boolean {
+  return !!b && ["first_prize", "second_prize", "third_prize"].some((k) => !!b[k] && !sgDash(b[k]));
 }
 /** Same draw: keep every number already known, add the newly published ones. */
 function sgMerge(base: Record<string, string>, next: Record<string, string>): Record<string, string> {
@@ -1899,7 +1899,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     return d > 0 && d <= todayMs && todayMs - d <= 4 * 86400000;
   };
   const prevSg = (cache?.cards?.["table-11"] || null) as Record<string, string> | null;
-  const refs = [sgStored, prevSg].filter((b): b is Record<string, string> => !!b && sgHasMain(b) && freshSg(b));
+  const refs = [sgStored, prevSg].filter((b): b is Record<string, string> => !!b && sgHasAnyMain(b) && freshSg(b));
   refs.sort((a, b) => sgDay(b) - sgDay(a));
   const refSg = refs[0] || null;
   const refDay = sgDay(refSg || undefined);
@@ -1911,7 +1911,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   if (sgParts.length) {
     const isDashVal = (v: string) => /^----+$/.test(String(v || "").trim());
     /**
-     * A newer DATE is only a result once its three main prizes are in.
+     * A newer DATE is only a result once at least one main prize is in.
      *
      * live4d.sg opens a new draw entry the moment the draw starts: today's date
      * with an empty list, then publishes a few consolations, then clears them
@@ -1921,17 +1921,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * card appeared to lose its top half and then jump back a draw (reported
      * 17 Oct 2026).
      *
-     * Requiring only the three main prizes still shows the draw live: specials
-     * and consolations continue to fill in as they are published.
+     * Requiring one main prize still blocks the bottom-only board, while the
+     * other main prizes, specials and consolations fill in as they arrive.
      */
-    const hasMainPrizes = (b?: Record<string, string>): boolean =>
-      !!b && ["first_prize", "second_prize", "third_prize"].every((k) => {
+    const hasAnyMainPrize = (b?: Record<string, string>): boolean =>
+      !!b && ["first_prize", "second_prize", "third_prize"].some((k) => {
         const v = b[k];
         return !!v && !isDashVal(v);
       });
     let newest = Math.max(refDay, ...sgParts.map((p) => sgDay(p)));
-    if (newest > refDay && !sgParts.some((p) => sgDay(p) === newest && hasMainPrizes(p))) {
-      const ready = sgParts.filter((p) => sgDay(p) > refDay && hasMainPrizes(p)).map((p) => sgDay(p));
+    if (newest > refDay && !sgParts.some((p) => sgDay(p) === newest && hasAnyMainPrize(p))) {
+      const ready = sgParts.filter((p) => sgDay(p) > refDay && hasAnyMainPrize(p)).map((p) => sgDay(p));
       newest = ready.length ? Math.max(...ready) : refDay;
     }
     if (newest > 0) {
@@ -1973,8 +1973,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
     } else {
       // No usable date at all: keep the newest complete board rather than the
       // partial new-draw card that started this.
-      const complete = sgParts.filter(hasMainPrizes).sort((a, b) => sgDay(b) - sgDay(a))[0];
-      if (complete) cards["table-11"] = { ...complete };
+      const start = sgParts.filter(hasAnyMainPrize).sort((a, b) => sgDay(b) - sgDay(a))[0];
+      if (start) cards["table-11"] = { ...start };
     }
   }
   // Never let this build take the card behind the shared high-water mark, and
@@ -1988,7 +1988,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const final = cards["table-11"] as Record<string, string> | undefined;
     const newerDraw = !!final && sgDay(final) > storedDay;
     const moreNumbers = !!final && sgDay(final) === storedDay && sgCount(final) >= (sgStored ? sgCount(sgStored) : -1);
-    if (final && sgHasMain(final) && (newerDraw || moreNumbers) && !sgSame(sgStored, final)) {
+    if (final && sgHasAnyMain(final) && (newerDraw || moreNumbers) && !sgSame(sgStored, final)) {
       await writeSgGuard(final);
     }
   }
