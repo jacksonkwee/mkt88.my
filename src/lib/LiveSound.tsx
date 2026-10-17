@@ -140,14 +140,22 @@ export default function LiveSound({ enabled }: { enabled?: boolean }) {
     // First pass only records what is already on screen - opening the app must
     // not set off a burst of chimes for results that were already published.
     const seed = window.setTimeout(() => { check(); seeded.current = true; }, 2500);
-    const mo = new MutationObserver(check);
+    // Every write on a page fires a batch of mutations; checking on each one
+    // scanned every card cell hundreds of times a second and made a slow phone
+    // stutter while a page painted. One pass per quarter second is plenty for a
+    // chime.
+    var __pending = 0;
+    const mo = new MutationObserver(function () {
+      if (__pending) return;
+      __pending = window.setTimeout(function () { __pending = 0; check(); }, 250);
+    });
     mo.observe(document.body, { subtree: true, childList: true, characterData: true });
     // A slow sweep as a safety net: if a source writes in a way the observer
     // does not see, the chime still arrives.
     const sweep = window.setInterval(check, 5000);
     // Marker so the chime can be checked from outside.
     document.documentElement.setAttribute("data-mkt-sound", "on");
-    return () => { window.clearTimeout(seed); window.clearInterval(sweep); mo.disconnect(); };
+    return () => { window.clearTimeout(seed); window.clearTimeout(__pending); window.clearInterval(sweep); mo.disconnect(); };
   }, [on]);
 
   return null;
