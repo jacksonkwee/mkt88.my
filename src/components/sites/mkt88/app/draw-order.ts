@@ -62,19 +62,18 @@ function slotState(snap: Snap | undefined, id: string, cls: string): Slot {
 }
 
 /**
- * Which draw sits on top: the one whose result we actually have.
+ * Which draw sits on top: the one whose draw is today's.
  *
- * The owner's rule (17 Oct 2026): the 3:30 column moves to the top when the
- * 3:30 result is out, and the 7:30 column moves up when the 7:30 result is out.
- * The clock alone cannot do that - a draw is published minutes to half an hour
- * after its session time, and the operator sometimes runs late - so the newest
- * PUBLISHED board wins, the later session first when both are for the same day.
- * The clock is only the fallback for when neither board has a number at all.
+ * The owner's rule (17 Oct 2026): the 3:30 column moves to the top once the
+ * 3:30 draw is under way, and the 7:30 column moves up when its draw starts.
+ * That is a date question, not a "has a number yet" one - Perdana can still be
+ * revealing its 3:30 board when the card must already sit on top (reported
+ * 17 Oct 2026 at 16:00: 3:30 was under way, its board still empty, and the
+ * column stayed below yesterday's 7:30). Both draws for the same day means the
+ * later session first; with no date at all the clock decides.
  */
 export function newestDrawFirst(early: Slot, late: Slot, clockNight: boolean): boolean {
-  if (early.ready && late.ready) return late.day >= early.day;
-  if (late.ready) return true;
-  if (early.ready) return false;
+  if (early.day || late.day) return late.day >= early.day;
   return clockNight;
 }
 
