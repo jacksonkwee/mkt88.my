@@ -110,6 +110,50 @@ const BOOT_SCRIPT = `
     // several taps before the page stayed up.
     var __mktHome = __mktPath === '/' || __mktPath === '';
     document.body.className += ' mkt-in-app' + (__mktHome && __mktPath.indexOf('/admin') !== 0 ? ' mkt-home-open' : '');
+    /*
+     * Start fetching the pages behind the tiles now, not after React boots.
+     *
+     * React's prefetch only begins once it has hydrated - 1.5 to 2.5 seconds
+     * after launch on a phone - so a tap in the first second was a full page
+     * load: four to five seconds on mobile data (reported 17 Oct 2026). These
+     * document prefetches start at once, so that load comes out of the cache.
+     * Skipped on a metered or 2G connection.
+     */
+    try {
+      var __mktConn = navigator.connection || {};
+      var __mktSlow = __mktConn.saveData || /(^|-)2g$/.test(__mktConn.effectiveType || '');
+      if (!__mktSlow) {
+        var __mktPre = ['/result/magnum', '/result/damacai', '/result/sportstoto', '/singapore-4d-results',
+          '/sabah-sarawak-4d-results?op=sabah88', '/sabah-sarawak-4d-results?op=cashsweep',
+          '/sabah-sarawak-4d-results?op=sandakan', '/result/grand-dragon', '/result/nine-lotto',
+          '/result/perdana', '/result/lucky-harihari', '/favourites', '/dabogong',
+          '/number-history', '/statistics'];
+        for (var __mktI = 0; __mktI < __mktPre.length; __mktI++) {
+          var __mktLk = document.createElement('link');
+          __mktLk.rel = 'prefetch';
+          __mktLk.href = __mktPre[__mktI];
+          document.head.appendChild(__mktLk);
+        }
+      }
+    } catch (e) {}
+    /*
+     * A tap that lands before React is ready navigates the hard way (a full
+     * page load). Show that it registered, and ignore the following taps: each
+     * one restarted the load and made the wait longer.
+     */
+    var __mktBusy = false;
+    document.addEventListener('click', function (e) {
+      if (window.__mktGoHome) return;                 // hydrated: the app handles it
+      var t = e.target;
+      var a = t && t.closest ? t.closest('.mkt-app-home a[href^="/"]') : null;
+      if (!a) return;
+      if (__mktBusy) { e.preventDefault(); return; }
+      __mktBusy = true;
+      document.body.className += ' mkt-boot-wait';
+      window.setTimeout(function () {
+        document.body.className = document.body.className.replace(' mkt-boot-wait', '');
+      }, 10000);
+    }, true);
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;

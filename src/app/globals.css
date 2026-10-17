@@ -1341,3 +1341,38 @@ html[data-lang="zh"] .L-en, html[data-lang="zh"] .L-ms { display: none !importan
 @media (prefers-reduced-motion: reduce) {
   .mkt-spin { animation-duration: 1.6s; }
 }
+
+/*
+ * Immediate feedback for a tile tapped before React is ready (the boot
+ * script adds mkt-boot-wait). Without it the first tap looked dead for the
+ * seconds a full page load takes.
+ */
+body.mkt-in-app .mkt-app-home a {
+  /* Removes the 300ms double-tap-zoom wait the WebView adds to a tap. */
+  touch-action: manipulation;
+}
+
+body.mkt-in-app.mkt-boot-wait::before,
+body.mkt-in-app.mkt-boot-wait::after {
+  content: "";
+  position: fixed;
+  z-index: 100070;
+}
+
+body.mkt-in-app.mkt-boot-wait::after {
+  inset: 0;
+  background: rgba(246, 247, 249, 0.95);
+}
+
+body.mkt-in-app.mkt-boot-wait::before {
+  z-index: 100071;
+  left: 50%;
+  top: 42%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 3px solid rgba(204, 0, 0, 0.22);
+  border-top-color: #cc0000;
+  animation: mkt-spin 700ms linear infinite;
+}
