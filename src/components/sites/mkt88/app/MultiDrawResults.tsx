@@ -4,7 +4,7 @@ import LotteryCard, { type LotteryCardData } from "./LotteryCard";
 import rawLotto from "./lotto-data.json";
 import LiveResults from "./LiveResults";
 import DirectTopAd from "./DirectTopAd";
-import { perdanaIds, hariIds } from "./draw-order";
+import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
@@ -17,11 +17,12 @@ function getCard(id: string): LotteryCardData | undefined {
 }
 
 export default function MultiDrawResults({ snap: serverSnap }: { snap?: unknown } = {}) {
-  const night = useDrawOrder();
+  const clockNight = useDrawOrder();
   const ctxSnap = useSnap();
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
-  const per = perdanaIds();
-  const hari = hariIds(night);
+  // Both two-draw games order themselves by the result that is actually out.
+  const per = perdanaIds(perdanaNightFirst(snap, clockNight));
+  const hari = hariIds(hariNightFirst(snap, clockNight));
 
   const splitCards = (ids: string[]): LotteryCardData[] => {
     const out: LotteryCardData[] = [];

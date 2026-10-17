@@ -5,6 +5,7 @@ import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
 import { EAST_CARDS } from "./east-cards";
 import { useDrawOrder } from "./use-draw-order";
+import { hariNightFirst, perdanaNightFirst } from "./draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
 
@@ -35,12 +36,18 @@ const EAST_GAME = /^table-(8|9|10)\b/;
 /**
  * Desktop result columns for one game.
  * A 6D card always sits directly under its own 4D card, and the two-draw
- * games (Perdana / Lucky HariHari) put the draw we are waiting for on the left.
+ * games (Perdana / Lucky HariHari) put the draw whose result is out on the left.
  */
 export default function GameColumns({ ids, snap: serverSnap, wide }: { ids: string[]; snap?: unknown; wide?: boolean }) {
-  const night = useDrawOrder();
+  const clockNight = useDrawOrder();
   const ctxSnap = useSnap();
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
+  // Perdana and HariHari put the draw whose result is actually out on top.
+  const night = ids.some((id) => id.startsWith("table-16"))
+    ? perdanaNightFirst(snap, clockNight)
+    : ids.some((id) => id.startsWith("table-15"))
+      ? hariNightFirst(snap, clockNight)
+      : clockNight;
 
   const cols: { key: string; items: LotteryCardData[] }[] = [];
   for (const id of ids) {

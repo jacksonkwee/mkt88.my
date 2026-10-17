@@ -1,4 +1,6 @@
-/** Draw-slot ordering helpers for the two-draws-a-day games (Lucky HariHari). */
+import { overridesFor, type Snap } from "./snapshot-values";
+
+/** Draw-slot ordering helpers for the two-draws-a-day games (Perdana, Lucky HariHari). */
 
 /**
  * True while the 7:30pm draw is the current one.
@@ -39,4 +41,55 @@ export function hariIds(night: boolean): string[] {
   const early = [HARI_1530, HARI_1530_6D];
   const late = [HARI_1930, HARI_1930_6D];
   return night ? [...late, ...early] : [...early, ...late];
+}
+
+/** "dd-mm-yyyy (Wed)" -> a sortable value, 0 when the date is unknown. */
+export function drawDayOf(label?: string): number {
+  const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
+  return m ? Date.UTC(Number(m[3]), Number(m[2]) - 1, Number(m[1])) : 0;
+}
+
+type Slot = { day: number; ready: boolean };
+
+/** The draw a slot's card is showing, and whether its board has numbers yet. */
+function slotState(snap: Snap | undefined, id: string, cls: string): Slot {
+  const ov = overridesFor(snap || {}, id, cls);
+  const prizes = ov.prizeSet ? ov.prizeSet.prize : [];
+  return {
+    day: drawDayOf(ov.values ? ov.values.date : undefined),
+    ready: prizes.some((v) => !!v && !/^----+$/.test(v)),
+  };
+}
+
+/**
+ * Which draw sits on top: the one whose result we actually have.
+ *
+ * The owner's rule (17 Oct 2026): the 3:30 column moves to the top when the
+ * 3:30 result is out, and the 7:30 column moves up when the 7:30 result is out.
+ * The clock alone cannot do that - a draw is published minutes to half an hour
+ * after its session time, and the operator sometimes runs late - so the newest
+ * PUBLISHED board wins, the later session first when both are for the same day.
+ * The clock is only the fallback for when neither board has a number at all.
+ */
+export function newestDrawFirst(early: Slot, late: Slot, clockNight: boolean): boolean {
+  if (early.ready && late.ready) return late.day >= early.day;
+  if (late.ready) return true;
+  if (early.ready) return false;
+  return clockNight;
+}
+
+export function perdanaNightFirst(snap: Snap | undefined, clockNight: boolean): boolean {
+  return newestDrawFirst(
+    slotState(snap, PERDANA_1530, "table-16"),
+    slotState(snap, PERDANA_1930, "table-16"),
+    clockNight,
+  );
+}
+
+export function hariNightFirst(snap: Snap | undefined, clockNight: boolean): boolean {
+  return newestDrawFirst(
+    slotState(snap, HARI_1530, "table-15"),
+    slotState(snap, HARI_1930, "table-15"),
+    clockNight,
+  );
 }

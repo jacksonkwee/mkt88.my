@@ -6,7 +6,7 @@ import cardsRaw from "./cards-data.json";
 import lottoRaw from "./lotto-data.json";
 import { EAST_CARDS } from "./east-cards";
 import { SG_CARDS } from "./sg-cards";
-import { hariIds, perdanaIds } from "./draw-order";
+import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
@@ -53,16 +53,17 @@ const PAGES: PageDef[] = [
 ];
 
 /**
- * The HariHari slides are time aware: the draw we are waiting for (or the one
- * that just came out) sits on top, and every HariHari 6D result sits directly
- * below its own 4D result. Perdana runs a single 7:30PM draw.
+ * The Perdana and HariHari slides follow the draw that is actually out: the
+ * 3:30 pair sits on top once the 3:30 result is published, and the 7:30 pair
+ * moves up when that one is. Each HariHari 6D result stays directly below its
+ * own 4D result.
  */
-function pagesFor(night: boolean): PageDef[] {
+function pagesFor(perdanaNight: boolean, hariNight: boolean): PageDef[] {
   const loss = PAGES.filter((p) => p.title !== "Perdana 4D" && !p.title.startsWith("Lucky HariHari"));
   return [
     ...loss,
-    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds(night) },
-    { title: "Lucky HariHari 天天好运", slug: "lucky-harihari", kh: true, ids: hariIds(night) },
+    { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds(perdanaNight) },
+    { title: "Lucky HariHari 天天好运", slug: "lucky-harihari", kh: true, ids: hariIds(hariNight) },
   ];
 }
 
@@ -83,10 +84,11 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]>; khByGame?: Record<string, string[]> };
   showPast?: boolean;
 }) {
-  const night = useDrawOrder();
+  const clockNight = useDrawOrder();
   const ctxSnap = useSnap();
   const snap = (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
-  const pages = pagesFor(night);
+  // Each game follows its own published result, not the clock.
+  const pages = pagesFor(perdanaNightFirst(snap, clockNight), hariNightFirst(snap, clockNight));
 
   // Only the game the visitor opened is sent with the page; the other ten
   // slides are filled in a moment later, right after the first screen paints.
