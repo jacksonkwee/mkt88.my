@@ -802,9 +802,18 @@ function totoCards(j: Record<string, any> | null): { four?: Record<string, strin
     v.first_prize = totoNum(d4["1stPrizeNo"]) || "----";
     v.second_prize = totoNum(d4["2ndPrizeNo"]) || "----";
     v.third_prize = totoNum(d4["3rdPrizeNo"]) || "----";
-    // Ten specials published, fifteen slots on the card: the spare five are blank.
+    /*
+     * The board is thirteen boxes: ten specials, plus the three whose numbers
+     * were promoted to 1st/2nd/3rd at the end of the draw - the card shows those
+     * three as holes, exactly as the operator's board leaves them. The API does
+     * not say which three boxes they were, so the holes sit at the end of the
+     * grid; the three numbers themselves are in the prize rows above. Slots 14
+     * and 15 are not part of the board and stay empty.
+     */
     for (let i = 1; i <= 10; i++) v["special-" + i] = totoNum(d4["SpecialNo" + i]) || "----";
-    for (let i = 11; i <= 15; i++) v["special-" + i] = "----";
+    for (let i = 11; i <= 13; i++) v["special-" + i] = "----";
+    v["special-14"] = "";
+    v["special-15"] = "";
     for (let i = 1; i <= 10; i++) v["consolation-" + i] = totoNum(d4["ConsolationNo" + i]) || "----";
     four = v;
   }
