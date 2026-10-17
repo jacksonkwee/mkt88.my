@@ -76,26 +76,44 @@ export default function LiveSound({ enabled }: { enabled?: boolean }) {
       });
     };
 
-    /** Which game this card is, plus which draw - so a new draw chimes again. */
-    const keyOf = (card: Element): string | null => {
+    /** Which game this card is, which draw, and that draw's date. */
+    const keyOf = (card: Element): { key: string; date: string } | null => {
       for (const id of READY_IDS) {
         const el = card.querySelector('[data-id="' + id + '"]');
         if (!isReady(el)) continue;
-        const date = card.querySelector('[data-id="date"]');
+        const date = (card.querySelector('[data-id="date"]') || {}).textContent || "";
         const name = card.querySelector(".lottery-name");
-        return (name ? name.textContent : card.className) + "|" + id + "|" + (date ? date.textContent : "");
+        return { key: (name ? name.textContent : card.className) + "|" + id + "|" + date, date };
       }
       return null;
     };
 
     const cards = () => Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)"));
 
+    /**
+     * Is this card's draw today's?
+     *
+     * The chime is for a result arriving DURING a draw. A card that fills in
+     * with yesterday's draw - which is what happens every time the app opens
+     * and the sources catch up - is not news, and that is what rang two or
+     * three times on launch. Only today's draw may ring, once per game per
+     * draw; a new game's result during the evening rings once each.
+     */
+    const isToday = (label: string): boolean => {
+      const m = /(\d{2})-(\d{2})-(\d{4})/.exec(label || "");
+      if (!m) return false;
+      const now = new Date(Date.now() + 8 * 3600 * 1000);
+      const dd = String(now.getUTCDate()).padStart(2, "0");
+      const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+      return m[1] === dd && m[2] === mm && m[3] === String(now.getUTCFullYear());
+    };
+
     const check = () => {
       for (const card of cards()) {
-        const key = keyOf(card);
-        if (!key || seen.current.has(key)) continue;
-        seen.current.add(key);
-        if (seeded.current) beep();
+        const hit = keyOf(card);
+        if (!hit || seen.current.has(hit.key)) continue;
+        seen.current.add(hit.key);
+        if (seeded.current && isToday(hit.date)) beep();
       }
     };
 

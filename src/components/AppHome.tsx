@@ -73,9 +73,12 @@ function luckyNumber(): string {
  * layout and threw the user straight back onto this screen instead of the game
  * they picked.
  */
-function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; children: React.ReactNode }) {
+function Nav({ href, onClick, prefetch, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; prefetch?: boolean; children: React.ReactNode }) {
   if (href.startsWith("/")) {
-    return <Link href={href} prefetch={false} className="mkt-press" style={TILE} onClick={onClick}>{children}</Link>;
+    // Inside the app the page behind a tile is fetched while the first screen is
+    // still showing, so the first tap is as fast as the second (the second tap
+    // was always fast because the route was already in the router cache).
+    return <Link href={href} prefetch={prefetch ?? false} className="mkt-press" style={TILE} onClick={onClick}>{children}</Link>;
   }
   // onClick must be attached here too: the Lucky Numbers tile points at "#",
   // so it takes this branch - and its handler was being dropped, which made the
@@ -139,6 +142,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const [lucky, setLucky] = useState<string | null>(null);
   /** The tile whose page is being fetched, so a second tap cannot restart it. */
   const [pending, setPending] = useState<string | null>(null);
+  // Prefetch only in the installed app: the first page is drawn (hidden) for
+  // website visitors too, and they should not pay for fifteen page downloads.
+  const prefetchPages = isCapacitorApp();
   const [lang, setLang] = useLang();
   const [specialDraw, setSpecialDraw] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -392,7 +398,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, pointerEvents: pending ? "none" : undefined }}>
           {games.map((t) => (
-            <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
+            <Nav key={t.name} href={t.href} prefetch={prefetchPages} onClick={() => openPage(t.href)}>
               <span style={ICON_BOX}>
                 {pending === t.href ? (
                   <span className="mkt-spin" aria-label="Loading" />
@@ -421,6 +427,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
             <Nav
               key={t.name}
               href={t.href}
+              prefetch={prefetchPages}
               onClick={(e) => {
                 if (t.settings) { e.preventDefault(); setSettingsOpen(true); return; }
                 if (t.lucky) {

@@ -47,7 +47,14 @@
   --tint-sabah88: #3333ff;
   --tint-singapore: #0378bb;
   --tint-granddragon: #e81409;
-  --tint-nine: #b35200;
+  /*
+   * Bright orange again, with dark ink on it instead of white.
+   *
+   * The card header used #f28120, but white on it is 2.6:1, so on 16 Oct it was
+   * darkened to #b35200 - which reads as brown (reported 17 Oct 2026). Orange
+   * stays, and the text goes dark: #3a1a00 on #f28120 is 5.9:1.
+   */
+  --tint-nine: #f28120;
 }
 
 /* ------------------------------------------------------------------ *

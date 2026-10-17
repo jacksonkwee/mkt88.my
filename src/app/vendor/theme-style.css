@@ -182,9 +182,8 @@ button:focus {
 }
 
 .nine {
-  color: #fff;
-  /* Was #f28120: white on it is 2.6:1, the worst contrast on the site (measured
-     16 Oct 2026). The same orange, darkened, puts white at 5.1:1. */
+  /* Orange stays; the text is dark so it is readable on it (5.9:1). */
+  color: #3a1a00;
   background-color: var(--tint-nine);
 }
 
