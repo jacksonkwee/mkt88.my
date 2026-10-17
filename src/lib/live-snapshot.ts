@@ -751,6 +751,114 @@ function gdApiSix(j: Record<string, unknown>): { six: SixEntry; jp: Record<strin
   return { six, jp: Object.keys(jp).length ? jp : null };
 }
 
+/**
+ * Sports Toto from the operator's own app API.
+ *
+ * Found in the Sports Toto app (com.stmlottery.sportstoto 1.2.43) on 17 Oct
+ * 2026. The website answers 403 to every machine we have; this endpoint
+ * answers a plain POST with an empty body, no key:
+ *
+ *   POST https://api.sportstoto.com.my/api/v1/app/GetResults   {}
+ *
+ * and returns the last seven draws of every game - 4D with its ten specials
+ * and ten consolations, 5D, 6D, and Star/Power/Supreme Toto with their
+ * jackpots. That is the whole of table-6 and table-7, so neither card needs
+ * the mirror any more.
+ */
+async function totoResults(): Promise<Record<string, any> | null> {
+  try {
+    const res = await fetch("https://api.sportstoto.com.my/api/v1/app/GetResults", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": UA },
+      body: "{}",
+      cache: "no-store",
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!res.ok) return null;
+    const j = await res.json();
+    return j && typeof j === "object" ? (j as Record<string, any>) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The newest draw in one of GetResults' per-game arrays. */
+function totoNewest(list: any): any {
+  if (!Array.isArray(list) || !list.length) return null;
+  return [...list].sort((a, b) => String(b?.DrawDate ?? "").localeCompare(String(a?.DrawDate ?? "")))[0];
+}
+
+const totoNum = (v: unknown) => String(v ?? "").trim();
+
+/** table-6 (4D) and table-7 (5D, 6D, Star/Power/Supreme) from the operator. */
+function totoCards(j: Record<string, any> | null): { four?: Record<string, string>; fiveSix?: Record<string, string> } {
+  if (!j) return {};
+  const d4 = totoNewest(j["4dResult"]);
+  const iso4 = String(d4?.DrawDate ?? "").slice(0, 10);
+  let four: Record<string, string> | undefined;
+  if (d4 && /^\d{4}-\d{2}-\d{2}$/.test(iso4)) {
+    const v: Record<string, string> = { date: weekdayOf(iso4) };
+    if (d4.DrawNo) v.draw_no = totoNum(d4.DrawNo);
+    v.first_prize = totoNum(d4["1stPrizeNo"]) || "----";
+    v.second_prize = totoNum(d4["2ndPrizeNo"]) || "----";
+    v.third_prize = totoNum(d4["3rdPrizeNo"]) || "----";
+    // Ten specials published, fifteen slots on the card: the spare five are blank.
+    for (let i = 1; i <= 10; i++) v["special-" + i] = totoNum(d4["SpecialNo" + i]) || "----";
+    for (let i = 11; i <= 15; i++) v["special-" + i] = "----";
+    for (let i = 1; i <= 10; i++) v["consolation-" + i] = totoNum(d4["ConsolationNo" + i]) || "----";
+    four = v;
+  }
+
+  const d5 = totoNewest(j["5dResult"]);
+  const d6 = totoNewest(j["6dResult"]);
+  const six: Record<string, string> = {};
+  const iso5 = String((d5 || d6)?.DrawDate ?? "").slice(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso5)) six.date = weekdayOf(iso5);
+  if (d5) {
+    const a = totoNum(d5["1stPrizeNo"]);
+    const b = totoNum(d5["2ndPrizeNo"]);
+    const c = totoNum(d5["3rdPrizeNo"]);
+    if (/^\d{5}$/.test(a) && /^\d{5}$/.test(b) && /^\d{5}$/.test(c)) {
+      six.d5_number_1 = a; six.d5_number_2 = b; six.d5_number_3 = c;
+      // 4th / 5th / 6th are the 1st prize's last four, three and two digits.
+      six.d5_number_4 = a.slice(-4); six.d5_number_5 = a.slice(-3); six.d5_number_6 = a.slice(-2);
+    }
+  }
+  if (d6) {
+    const m = totoNum(d6["1stPrizeNo"]);
+    if (/^\d{6}$/.test(m)) {
+      six.d6_number_1 = m;
+      for (const n of [2, 3, 4, 5]) {
+        six["d6_first_number_" + n] = m.slice(0, 7 - n) + "*".repeat(n - 1);
+        six["d6_second_number_" + n] = "*".repeat(n - 1) + m.slice(n - 1);
+      }
+    }
+  }
+  const rm = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0
+      ? "RM " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : "----";
+  };
+  const lotto = (o: any, prefix: string, bonus: boolean) => {
+    if (!o) return;
+    const nums = [1, 2, 3, 4, 5, 6].map((i) => totoNum(o["DrawnNo" + i]));
+    if (nums.some((v) => !/^\d{1,2}$/.test(v))) return;
+    nums.forEach((v, i) => { six[prefix + "_number_" + (i + 1)] = v; });
+    if (bonus) { six[prefix + "_number_7"] = "+"; six[prefix + "_number_8"] = totoNum(o.BonusNo) || "----"; }
+  };
+  const n650 = totoNewest(j["650dResult"]);
+  const n655 = totoNewest(j["655dResult"]);
+  const n658 = totoNewest(j["658dResult"]);
+  lotto(n650, "star_toto", true);
+  lotto(n655, "power_toto", false);
+  lotto(n658, "supreme_toto", false);
+  if (n650) { six.star_toto_first_jackpot_prize = rm(n650.Jackpot1); six.star_toto_second_jackpot_prize = rm(n650.Jackpot2); }
+  if (n655) six.power_toto_first_jackpot_prize = rm(n655.Jackpot);
+  if (n658) six.supreme_toto_first_jackpot_prize = rm(n658.Jackpot);
+  return { four, fiveSix: Object.keys(six).length ? six : undefined };
+}
+
 /** Read one official 9lotto value by its DOM id (n1, n2, n3, nA...). */
 function nineCell(html: string, id: string): string {
   const m = new RegExp('id="' + id + '"[^>]*>\\s*(----|\\d{4})\\s*<', "i").exec(html);
@@ -1336,7 +1444,7 @@ const MANUAL_CLEAR: Record<string, string[]> = {
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, gdApi, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
+  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, gdApi, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes] = await Promise.all([
     get("https://live4dresult.net/"),
     /*
      * The mirror's East Malaysia and Singapore pages used to be read here as
@@ -1370,6 +1478,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     cashSweepToday(),
     stc4dToday(),
     damacaiToday(today.iso),
+    totoResults(),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -1407,6 +1516,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
     ...checkedFeed(sgOfficial, "Singapore Pools"),
     ...checkedFeed(liveCards, "live4d2u"),
   };
+  /*
+   * Sports Toto comes from its own app API now (see totoCards). Dropping the
+   * mirror's copy here means those two cards cannot come from anywhere else;
+   * if the API is unreachable this build leaves them to the cache pass, which
+   * keeps the last board we published instead of blanking the card.
+   */
+  delete (cards as Record<string, unknown>)["table-6"];
+  delete (cards as Record<string, unknown>)["table-7"];
   /*
    * Singapore Toto straight from Singapore Pools.
    *
@@ -1877,6 +1994,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  /*
+   * Sports Toto from the operator's own app API (see totoCards): the 4D board
+   * and the 5D / 6D / Star / Power / Supreme boards beside it.
+   */
+  const toto = totoCards(totoRes);
+  if (toto.four) {
+    cards["table-6"] = toto.four;
+    noteSource("sports-toto", "Sports Toto 多多（官方）", { ok: true });
+  }
+  if (toto.fiveSix) cards["table-7"] = toto.fiveSix;
+
   const hari: Record<string, HariEntry> = { "15:30": h15 || h15y, "19:30": h19 || h19y };
 
   /**
@@ -1983,8 +2111,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * real result - not a mistake. Rewriting an official board would hide a number
    * the player can see on the operator's own page, which is worse than the
    * duplicate. Only mirror-sourced cards are sanity-checked, because the
-   * mid-reveal glitches come from there: Magnum Jackpot Gold and the two Sports
-   * Toto cards.
+   * mid-reveal glitches come from there: Magnum Jackpot Gold.
    */
   /*
    * Grand Dragon 4D (table-13) belongs here too: its 4D card is fed by the
@@ -1992,7 +2119,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * it the stale value in cell 13 that copies cell 12 is never cleared, which is
    * exactly what was reported on 04-10-2026.
    */
-  const MIRROR_ONLY = ["table-6", "table-7", "table-13"];
+  const MIRROR_ONLY = ["table-13"];
   /*
    * A mirror card must not wear a new date while it is still showing the old
    * draw's numbers.
