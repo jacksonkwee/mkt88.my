@@ -99,6 +99,17 @@ function isAdminPath(): boolean {
   try { return /^\/admin(\/|$)/.test(window.location.pathname); } catch { return false; }
 }
 
+/**
+ * The first page belongs to the home route only.
+ *
+ * Opening the app on a game page (a link, a notification, or a tap that
+ * landed before React hydrated and so did a full page load) must show that
+ * game - not cover it with the tile grid again.
+ */
+function isHomePath(): boolean {
+  try { const p = window.location.pathname; return p === "/" || p === ""; } catch { return false; }
+}
+
 /** Keep-screen-on preference. Default is ON. */
 const WAKE_KEY = "mkt_keep_screen_on";
 
@@ -123,7 +134,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // The overlay's markup is always rendered now, so the server and the client
   // agree on the HTML and the page can be cached; only the body classes decide
   // whether it is actually shown, and those are set for the app before paint.
-  const [open, setOpen] = useState(() => initialOpen || (isCapacitorApp() && !isAdminPath()));
+  const [open, setOpen] = useState(() => initialOpen || (isCapacitorApp() && !isAdminPath() && isHomePath()));
   const [lucky, setLucky] = useState<string | null>(null);
   const [lang, setLang] = useLang();
   const [specialDraw, setSpecialDraw] = useState(false);

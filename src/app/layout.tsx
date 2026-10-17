@@ -103,7 +103,13 @@ const BOOT_SCRIPT = `
     // No regex here: this script lives inside a template literal, which eats
     // the backslashes and leaves "Invalid regular expression flags" (this broke
     // every page for a few hours on 15 Oct 2026).
-    document.body.className += ' mkt-in-app' + (__mktPath.indexOf('/admin') === 0 ? '' : ' mkt-home-open');
+    // The first page is the app's home screen, so it only covers the home
+    // route. It used to cover every route, so a tap made before React
+    // hydrated - a plain link by then, which does a full page load - landed
+    // on the game and this screen covered it again; that is why a tile needed
+    // several taps before the page stayed up.
+    var __mktHome = __mktPath === '/' || __mktPath === '';
+    document.body.className += ' mkt-in-app' + (__mktHome && __mktPath.indexOf('/admin') !== 0 ? ' mkt-home-open' : '');
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;
