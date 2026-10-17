@@ -9,6 +9,7 @@ import { GearSix } from "@phosphor-icons/react";
 import { useLang, tr, LANG_LABEL } from "../lib/i18n";
 import { RESULT_ALERT_KEY } from "./ResultAlerts";
 import NoticeBar from "./NoticeBar";
+import { gamePagerIndex } from "./sites/mkt88/app/game-order";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/mkt88/app/app-home";
@@ -136,6 +137,8 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // whether it is actually shown, and those are set for the app before paint.
   const [open, setOpen] = useState(() => initialOpen || (isCapacitorApp() && !isAdminPath() && isHomePath()));
   const [lucky, setLucky] = useState<string | null>(null);
+  /** The tile whose page is being fetched, so a second tap cannot restart it. */
+  const [pending, setPending] = useState<string | null>(null);
   const [lang, setLang] = useLang();
   const [specialDraw, setSpecialDraw] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -186,19 +189,42 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     if (!open || !pendingNav.current) return;
     if (pathname !== pendingNav.current) {
       pendingNav.current = null;
+      setPending(null);
       setOpen(false);
     }
   }, [pathname, open]);
 
-  /** Close the first page now, or hold it until a different page is ready. */
+  /**
+   * Close the first page now, or hold it until a different page is ready.
+   *
+   * A game tap also tells the swipe pager which slide it means: the pager keeps
+   * the slide the reader swiped to while the URL stays where they entered, so
+   * coming back through the logo and tapping the game whose route we are still
+   * on has to move the track explicitly (reported 17 Oct 2026).
+   */
   const openPage = (href: string) => {
     const path = href.split("?")[0];
+    const game = /^\/result\/([a-z0-9-]+)/.exec(path);
+    if (game) {
+      try { window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: gamePagerIndex(game[1]) } })); } catch { /* not a browser */ }
+    }
     if (path.startsWith("/") && path !== pathname) {
       pendingNav.current = pathname || "/";
+      // The tap is registered: show it on the tile and refuse further taps
+      // until the page arrives (a second tap restarted the fetch, which is
+      // what made a slow page feel like a dead button).
+      setPending(path);
       return;
     }
     setOpen(false);
   };
+
+  // A navigation that never lands must not leave the tiles dead.
+  useEffect(() => {
+    if (!pending) return;
+    const t = window.setTimeout(() => setPending(null), 8000);
+    return () => window.clearTimeout(t);
+  }, [pending]);
 
   // Load the saved preferences (both default ON).
   useEffect(() => {
@@ -360,11 +386,17 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           <img loading="lazy" src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, pointerEvents: pending ? "none" : undefined }}>
           {games.map((t) => (
             <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <span style={ICON_BOX}><img loading="lazy" src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} /></span>
+              <span style={ICON_BOX}>
+                {pending === t.href ? (
+                  <span className="mkt-spin" aria-label="Loading" />
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img loading="lazy" src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                )}
+              </span>
               <span style={NAME}>{t.name}</span>
               {t.zh ? <span style={SUB}>{t.zh}</span> : null}
             </Nav>
@@ -380,7 +412,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           {tr("seeLive", lang)}
         </button>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, pointerEvents: pending ? "none" : undefined }}>
           {actions.map((t) => (
             <Nav
               key={t.name}
@@ -402,7 +434,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
               }}
             >
               <span style={ICON_BOX}>
-                {t.logo ? (
+                {pending === t.href ? (
+                  <span className="mkt-spin" aria-label="Loading" />
+                ) : t.logo ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img loading="lazy" src={t.logo} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                 ) : (

@@ -7,6 +7,7 @@ import lottoRaw from "./lotto-data.json";
 import { EAST_CARDS } from "./east-cards";
 import { SG_CARDS } from "./sg-cards";
 import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-order";
+import { GAME_PAGER_ORDER, gamePagerIndex } from "./game-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
@@ -67,15 +68,9 @@ function pagesFor(perdanaNight: boolean, hariNight: boolean): PageDef[] {
   ];
 }
 
-/** Game name order used by the icon pages to pick the starting slide. */
-export const GAME_PAGER_ORDER = [
-  "magnum", "damacai", "sportstoto", "sg", "sabah88", "cashsweep",
-  "sandakan", "grand-dragon", "nine-lotto", "perdana", "lucky-harihari",
-];
-export function gamePagerIndex(name: string): number {
-  const i = GAME_PAGER_ORDER.indexOf(name);
-  return i >= 0 ? i : 0;
-}
+// The order lives in ./game-order so the app's first page can use it
+// without pulling this pager (and the card data) into its bundle.
+export { GAME_PAGER_ORDER, gamePagerIndex };
 
 export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pastDates, showPast }: {
   initialIndex?: number;
@@ -228,6 +223,30 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /*
+   * Follow the game the route asks for.
+   *
+   * Tapping a second game from the app's first page re-renders this component
+   * with a new route but the same DOM, so the track stayed on the slide the
+   * reader had swiped to - tap Toto and land on the game you were on before
+   * going home (reported 17 Oct 2026). This moves it whenever the game does.
+   */
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    let timer = 0;
+    const put = () => {
+      if (!el.getClientRects().length || !el.clientWidth) return false;
+      const want = Math.max(0, Math.min(idx, pages.length - 1)) * el.clientWidth;
+      if (Math.abs(el.scrollLeft - want) > 2) el.scrollLeft = want;
+      dispatchIdx(el);
+      return true;
+    };
+    if (!put()) timer = window.setTimeout(put, 200);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, pages.length]);
 
   // Tapping a game logo switches the slide directly instead of reloading.
   // Registered even while the track is off screen (desktop width), so a resize
