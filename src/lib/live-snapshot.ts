@@ -693,6 +693,64 @@ async function gdSixToday(iso: string): Promise<{ four: Record<string, string> |
   } catch { return { four: null, six: null, jp: null }; }
 }
 
+/**
+ * Grand Dragon's own result API - the one the DGLotto app reads.
+ *
+ * Found in the app (com.gdlt.gdlotto 2.1.2) on 17 Oct 2026: it calls
+ * /api/result/{yyyy}/{mm}/{dd} and gets one object per draw. It carries the
+ * whole 4D board by letter (A-M specials, N-W consolations), which letter each
+ * of the three prizes came from, the 6D number and the 6+1D jackpot.
+ *
+ * It is the cleanest source this game has: plain JSON, no Cloudflare, and it
+ * answers for a draw that is still being revealed - the fields fill in one at
+ * a time - which is what lets the card go up DURING the draw, not after it.
+ * It answers "null" until the operator has anything for that day.
+ */
+async function gdApiResult(iso: string): Promise<Record<string, unknown> | null> {
+  const [y, m, d] = iso.split("-");
+  const j = await get(`https://result.gdlotto.com/api/result/${Number(y)}/${Number(m)}/${Number(d)}`, true, 4000, 0);
+  return j && typeof j === "object" && !Array.isArray(j) ? (j as Record<string, unknown>) : null;
+}
+
+/** The API's 4D board, shaped for the card - holes where the prizes came from. */
+function gdApiBoard(j: Record<string, unknown>): Record<string, string> | null {
+  const iso = String(j.DrawDate ?? "").slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const val = (k: string) => {
+    const v = String(j[k] ?? "").trim();
+    return /^\d{4}$/.test(v) ? v : "";
+  };
+  const letters = ["DrawNumber1", "DrawNumber2", "DrawNumber3"].map((k) => String(j[k] ?? "").trim().toUpperCase());
+  const out: Record<string, string> = { date: weekdayOf(iso) };
+  if (j.DrawCode) out.draw_no = String(j.DrawCode);
+  // The operator prints the three prize letters as holes on the 4D board.
+  const cell = (L: string) => (letters.includes(L) ? "----" : val("DrawNumber" + L) || "----");
+  [..."ABCDEFGHIJKLM"].forEach((L, i) => { out["special-" + (i + 1)] = cell(L); });
+  [..."NOPQRSTUVW"].forEach((L, i) => { out["consolation-" + (i + 1)] = cell(L); });
+  ["first_prize", "second_prize", "third_prize"].forEach((id, i) => {
+    out[id] = letters[i] ? val("DrawNumber" + letters[i]) || "----" : "----";
+  });
+  // A date with no number on it is not a board.
+  const any = Object.keys(out).some((k) => /^\d{4}$/.test(out[k]));
+  return any ? out : null;
+}
+
+/** The API's 6D number and 6+1D jackpot, in the shape the cards already use. */
+function gdApiSix(j: Record<string, unknown>): { six: SixEntry; jp: Record<string, string> | null } {
+  const iso = String(j.DrawDate ?? "").slice(0, 10);
+  const main = String(j.DrawNumber6D ?? "").trim();
+  const six: SixEntry = /^\d{6}$/.test(main) ? { main, subs: sixParts(main), date: weekdayOf(iso) } : null;
+  const jp: Record<string, string> = {};
+  const sameDay = String(j.Jackpot61DDate ?? "").slice(0, 10) === iso;
+  const digits = String(j.DrawNumber7D ?? "").trim();
+  const pool = Number(String(j.Jackpot61DPool ?? "").replace(/[^0-9.]/g, ""));
+  if (sameDay && Number.isFinite(pool) && pool > 0) {
+    jp.jp7_pool = "USD" + pool.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  if (sameDay && /^\d{7}$/.test(digits)) jp.jp7_grand = digits.slice(0, 6) + " + " + digits.slice(6);
+  return { six, jp: Object.keys(jp).length ? jp : null };
+}
+
 /** Read one official 9lotto value by its DOM id (n1, n2, n3, nA...). */
 function nineCell(html: string, id: string): string {
   const m = new RegExp('id="' + id + '"[^>]*>\\s*(----|\\d{4})\\s*<', "i").exec(html);
@@ -1278,7 +1336,7 @@ const MANUAL_CLEAR: Record<string, string[]> = {
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
+  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, gdApi, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai] = await Promise.all([
     get("https://live4dresult.net/"),
     /*
      * The mirror's East Malaysia and Singapore pages used to be read here as
@@ -1304,6 +1362,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hariFor("15:30", yest.iso, yest.noPad),
     hariFor("19:30", yest.iso, yest.noPad),
     gdSixToday(today.iso),
+    gdApiResult(today.iso),
     nineOfficialToday(today.iso),
     live4dSgToday(today.iso),
     magnumLiveToday(today.iso),
@@ -1473,6 +1532,21 @@ export async function buildSnapshot(): Promise<Snapshot> {
   if (gd4 && checkSource("grand-dragon", "Grand Dragon 豪龙（官方）", "table-13", gd4)) {
     const base = (cards["table-13"] || {}) as Record<string, string>;
     if (drawNotOlder(gd4.date, base.date)) cards["table-13"] = mergeCardPayload(base, gd4);
+  }
+  /*
+   * The same board from the operator's app API (see gdApiResult).
+   *
+   * This is the writer that keeps the card moving DURING a draw: the operator
+   * fills its fields one at a time, so each rebuild publishes the numbers that
+   * are out and leaves the rest as holes. It goes through the same two guards as
+   * every other official board - a newer draw replaces the card whole (so no
+   * number from yesterday can sit under today's date), an older one is refused.
+   */
+  const apiBoard = gdApi ? gdApiBoard(gdApi) : null;
+  const apiSix = gdApi ? gdApiSix(gdApi) : { six: null, jp: null };
+  if (apiBoard && drawNotOlder(apiBoard.date, (cards["table-13"] as Record<string, string> | undefined)?.date)) {
+    cards["table-13"] = mergeCardPayload((cards["table-13"] || {}) as Record<string, string>, apiBoard);
+    noteSource("grand-dragon-api", "Grand Dragon 豪龙（官方 API）", { ok: true });
   }
   /*
    * Special Cash Sweep from the operator's own feed. This one carries its draw
@@ -1962,7 +2036,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * typed for; it stops winning once the feed has a newer draw (see the pass
    * below, which refuses a typed board older than the card).
    */
-  const gd6Feed = gdSix.six;
+  const gd6Feed = gdSix.six || apiSix.six;
   let gd6Written = false;
   if (gd6Feed?.date && drawNotOlder(gd6Feed.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
     const base = (cards["table-14"] || {}) as Record<string, string>;
@@ -2158,7 +2232,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
-    gd6: gdSix.six, gdjp7: gdSix.jp, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
+    gd6: gdSix.six || apiSix.six, gdjp7: gdSix.jp || apiSix.jp, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
   };
   // Store any source that just changed state (one write per change, not one per
   // rebuild - this runs every few seconds).
