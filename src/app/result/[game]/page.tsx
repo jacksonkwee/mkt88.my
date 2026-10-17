@@ -12,6 +12,18 @@ import { getSnapshot } from "../../../lib/live-snapshot";
 import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
 import { getPastDateLists } from "../../../lib/past-dates";
 
+/*
+ * Rebuild this page every 30 seconds instead of freezing it at deploy time.
+ *
+ * The page is pre-rendered, and the snapshot it was built with is sometimes
+ * empty (the build host cannot reach every operator). A frozen copy then
+ * served the 6 September board until the phone fetched the live one - four
+ * seconds on Magnum, eighteen on one run (reported 17 Oct 2026). Regenerating
+ * on the server keeps the HTML carrying real numbers, and the visitor never
+ * waits: Vercel hands out the last good copy while the next one is built.
+ */
+export const revalidate = 30;
+
 export async function generateMetadata({ params }: { params: Promise<{ game: string }> }): Promise<Metadata> {
   const { game } = await params;
   const def = gameBySlug[game];

@@ -204,9 +204,13 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    */
   const openPage = (href: string) => {
     const path = href.split("?")[0];
+    // The three east games share one route and differ only by ?op=, so the
+    // path alone cannot tell the pager which one was tapped.
     const game = /^\/result\/([a-z0-9-]+)/.exec(path);
-    if (game) {
-      try { window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: gamePagerIndex(game[1]) } })); } catch { /* not a browser */ }
+    const east = /^\/sabah-sarawak-4d-results\?op=([a-z0-9-]+)/.exec(href);
+    const slot = game ? game[1] : east ? east[1] : "";
+    if (slot) {
+      try { window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: gamePagerIndex(slot) } })); } catch { /* not a browser */ }
     }
     if (path.startsWith("/") && path !== pathname) {
       pendingNav.current = pathname || "/";

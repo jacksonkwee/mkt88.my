@@ -1260,8 +1260,17 @@ export default function LiveResults() {
     // The inline boot script already wrote the current numbers into the page,
     // so there is nothing stale to hide or restore.
     const booted = (window as unknown as { __MKT_BOOT__?: boolean }).__MKT_BOOT__ === true;
-    const hadCache = booted ? true : applySnapshot();
-    if (!hadCache && !booted && bootClasses.length) maskStaleCards(bootClasses);
+    /*
+     * A page whose snapshot is empty is the one case where the baked markup is
+     * all there is - and that markup is the 6 September capture, which must
+     * never be read as a result. Mask it until the first sync writes the live
+     * board (reported 17 Oct 2026: Magnum showed 06-09 for four seconds, and
+     * eighteen on one run).
+     */
+    const bootSnap = (window as unknown as { __MKT_SNAP__?: { cards?: Record<string, unknown> } }).__MKT_SNAP__;
+    const snapEmpty = !bootSnap || !bootSnap.cards || !Object.keys(bootSnap.cards).length;
+    const hadCache = booted && !snapEmpty ? true : applySnapshot();
+    if (!hadCache && bootClasses.length) maskStaleCards(bootClasses);
     // Keep the cache warm independently of the sync (a slow source must never
     // delay the "instant results" copy of the values on screen).
     collectSnapshot();
