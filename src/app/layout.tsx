@@ -111,31 +111,11 @@ const BOOT_SCRIPT = `
     var __mktHome = __mktPath === '/' || __mktPath === '';
     document.body.className += ' mkt-in-app' + (__mktHome && __mktPath.indexOf('/admin') !== 0 ? ' mkt-home-open' : '');
     /*
-     * Start fetching the pages behind the tiles now, not after React boots.
-     *
-     * React's prefetch only begins once it has hydrated - 1.5 to 2.5 seconds
-     * after launch on a phone - so a tap in the first second was a full page
-     * load: four to five seconds on mobile data (reported 17 Oct 2026). These
-     * document prefetches start at once, so that load comes out of the cache.
-     * Skipped on a metered or 2G connection.
+     * The pages behind the tiles are prefetched by the router once React has
+     * hydrated (see AppHome). Doing it here as well fired fifteen document
+     * prefetches at launch and a tap that came while they were still running
+     * waited behind them - measured 3.6s against 0.1s without them.
      */
-    try {
-      var __mktConn = navigator.connection || {};
-      var __mktSlow = __mktConn.saveData || /(^|-)2g$/.test(__mktConn.effectiveType || '');
-      if (!__mktSlow) {
-        var __mktPre = ['/result/magnum', '/result/damacai', '/result/sportstoto', '/singapore-4d-results',
-          '/sabah-sarawak-4d-results?op=sabah88', '/sabah-sarawak-4d-results?op=cashsweep',
-          '/sabah-sarawak-4d-results?op=sandakan', '/result/grand-dragon', '/result/nine-lotto',
-          '/result/perdana', '/result/lucky-harihari', '/favourites', '/dabogong',
-          '/number-history', '/statistics'];
-        for (var __mktI = 0; __mktI < __mktPre.length; __mktI++) {
-          var __mktLk = document.createElement('link');
-          __mktLk.rel = 'prefetch';
-          __mktLk.href = __mktPre[__mktI];
-          document.head.appendChild(__mktLk);
-        }
-      }
-    } catch (e) {}
     /*
      * A tap that lands before React is ready navigates the hard way (a full
      * page load). Show that it registered, and ignore the following taps: each
