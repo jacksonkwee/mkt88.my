@@ -150,6 +150,43 @@ function deviceToken(): string {
   try { return window.localStorage.getItem("mkt_push_token") || ""; } catch { return ""; }
 }
 
+/**
+ * One settings function per panel. The page lists what can be changed and
+ * opens only the one being worked on, so it stays short.
+ */
+function Section({ id, title, hint, accent, openSection, setOpenSection, children }: {
+  id: string;
+  title: string;
+  hint?: string;
+  accent?: string;
+  openSection: string;
+  setOpenSection: (v: string) => void;
+  children: React.ReactNode;
+}) {
+  const open = openSection === id;
+  return (
+    <section style={{ border: "1px solid " + (accent || "#ddd"), borderRadius: 8, marginTop: 12, background: "#fff", overflow: "hidden" }}>
+      <button
+        type="button"
+        onClick={() => setOpenSection(open ? "" : id)}
+        aria-expanded={open}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 12, padding: "14px 16px", background: "none", border: 0, cursor: "pointer",
+          textAlign: "left", fontSize: 16, fontWeight: 700, color: "inherit",
+        }}
+      >
+        <span>{title}</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 500, color: "var(--muted)" }}>
+          {hint}
+          <span aria-hidden="true">{open ? "▴" : "▾"}</span>
+        </span>
+      </button>
+      {open ? <div style={{ padding: "0 16px 16px" }}>{children}</div> : null}
+    </section>
+  );
+}
+
 export default function AdminDashboard() {
   const [c, setC] = useState<Any | null>(null);
   const [health, setHealth] = useState<Any | null>(null);
@@ -159,6 +196,7 @@ export default function AdminDashboard() {
   const [manualGame, setManualGame] = useState(MANUAL_GAMES[0]);
   const [msg, setMsg] = useState("");
   const [newDate, setNewDate] = useState("");
+  const [openSection, setOpenSection] = useState("");
 
   useEffect(() => {
     fetch("/api/admin/content")
@@ -257,7 +295,6 @@ export default function AdminDashboard() {
     } catch { setOwnerMsg("失败"); }
   };
 
-  const box: React.CSSProperties = { border: "1px solid #ddd", borderRadius: 8, padding: 16, marginTop: 12, background: "#fff" };
   const label: React.CSSProperties = { display: "block", margin: "8px 0 4px", fontWeight: 600 };
   const input: React.CSSProperties = { width: "100%", boxSizing: "border-box", padding: 8 };
 
@@ -267,10 +304,14 @@ export default function AdminDashboard() {
       <p style={{ color: "var(--muted)" }}>Logged in. Changes apply instantly across the whole site.</p>
 
       {health ? (
-        <section style={{ ...box, borderColor: health.bad ? "#cc0000" : "#12b76a" }}>
-          <h2 style={{ fontSize: 17, marginTop: 0 }}>
-            📡 Live sources {health.bad ? "— " + health.bad + " needs attention" : "— all good"}
-          </h2>
+        <Section
+          id="health"
+          title="📡 Live sources 官方来源"
+          hint={health.bad ? health.bad + " 个需要处理" : "全部正常"}
+          accent={health.bad ? "#cc0000" : "#12b76a"}
+          openSection={openSection}
+          setOpenSection={setOpenSection}
+        >
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
             {(health.sources || []).map((s: Any) => (
               <li key={s.key} style={{ color: s.ok ? "#1b5e20" : "#cc0000", marginBottom: 2 }}>
@@ -283,11 +324,10 @@ export default function AdminDashboard() {
             ))}
             {!(health.sources || []).length ? <li>No source has reported yet.</li> : null}
           </ul>
-        </section>
+        </Section>
       ) : null}
 
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>📱 My phone alerts</h2>
+      <Section id="alerts" title="📱 My phone alerts 管理员通知" openSection={openSection} setOpenSection={setOpenSection}>
         {deviceToken() ? (
           <>
             <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
@@ -317,10 +357,9 @@ export default function AdminDashboard() {
         )}
         {ownerDevice ? <p style={{ fontSize: 13, color: "var(--muted)" }}>目前在名单上：{ownerDevice.devices} 台装置</p> : null}
         {ownerMsg ? <p style={{ fontSize: 13 }}>{ownerMsg}</p> : null}
-      </section>
+      </Section>
 
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>🎯 Special draw dates 特别彩日期</h2>
+      <Section id="dates" title="🎯 Special draw dates 特别彩日期" openSection={openSection} setOpenSection={setOpenSection}>
         <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
           这里列出的日期，手机会在 12:00、15:00、18:10（马来西亚时间）收到特别开彩提醒；日期过了就自动停止，不用回来删。
           加好或删好后，按最下面的 <strong>Save changes</strong> 才会生效。
@@ -357,10 +396,9 @@ export default function AdminDashboard() {
             添加日期
           </button>
         </div>
-      </section>
+      </Section>
 
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>✍️ 备用：手动纠正</h2>
+      <Section id="manual" title="✍️ 备用：手动纠正" hint="平时不用填" openSection={openSection} setOpenSection={setOpenSection}>
         <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 0 }}>
           11 个游戏现在都会自己从官方来源更新，这里平时<strong>不用填</strong>。
           只有官方拒接、或某一格要改正时才用：先选游戏，再在格子里填号码。
@@ -438,10 +476,9 @@ export default function AdminDashboard() {
             空着的格子就保持空白。
           </p>
         ) : null}
-      </section>
+      </Section>
 
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>📷 Top banner image</h2>
+      <Section id="banner" title="📷 Top banner image 顶部横幅" openSection={openSection} setOpenSection={setOpenSection}>
         <label style={{ display: "block", margin: "6px 0" }}>
           <input type="checkbox" checked={c.settings.banner.enabled} onChange={(e) => banner({ enabled: e.target.checked })} /> Show banner
         </label>
@@ -454,10 +491,9 @@ export default function AdminDashboard() {
         <label style={label as any}>Upload banner image
           <input type="file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onChange={(e) => e.target.files && upload(e.target.files[0], "banner")} />
         </label>
-      </section>
+      </Section>
 
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>📣 Announcement bar</h2>
+      <Section id="notice" title="📣 Announcement bar 公告栏" openSection={openSection} setOpenSection={setOpenSection}>
         <label style={{ display: "block", margin: "6px 0" }}>
           <input type="checkbox" checked={c.notice.enabled} onChange={(e) => notice({ enabled: e.target.checked })} /> Show announcement
         </label>
@@ -474,10 +510,9 @@ export default function AdminDashboard() {
             </select>
           </label>
         </div>
-      </section>
+      </Section>
 
-      <section style={box}>
-        <h2 style={{ fontSize: 17, marginTop: 0 }}>💰 Advertising - top banner (earn from sponsors)</h2>
+      <Section id="ads" title="💰 Advertising 广告位" hint="赞助商横幅" openSection={openSection} setOpenSection={setOpenSection}>
         <p style={{ margin: "4px 0 8px", color: "var(--muted)" }}>Sell this slot to an advertiser, upload their banner + link, and enable it. It shows at the top of every results page.</p>
         <label style={{ display: "block", margin: "6px 0" }}>
           <input type="checkbox" checked={c.ads.direct.top.enabled} onChange={(e) => directTop({ enabled: e.target.checked })} /> Enable sponsored banner
@@ -504,7 +539,7 @@ export default function AdminDashboard() {
         <label style={label as any}>Contact link (optional)
           <input style={input} value={c.ads.direct.placeholder.link} onChange={(e) => placeholder({ link: e.target.value })} placeholder="mailto:you@example.com" />
         </label>
-      </section>
+      </Section>
 
       <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
         <button onClick={save} disabled={saving} style={{ padding: "9px 22px", color: "#fff", background: "#cc0000", border: 0, borderRadius: 6 }}>
