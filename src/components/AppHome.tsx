@@ -259,7 +259,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   };
 
   useEffect(() => {
-    if (!isCapacitorApp() || isAdminPath()) return;
+    // Only the home route gets the tile grid on launch; a deep link into a game
+    // must open that game uncovered.
+    if (!isCapacitorApp() || isAdminPath() || !isHomePath()) return;
     // Remember that this launch already showed the home screen. Without it,
     // every page load inside the app re-opened it - so tapping a game looked
     // like the app jumping back to the first page.
