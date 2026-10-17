@@ -35,11 +35,22 @@ jobs:
       - name: Bring the draw history up to date
         run: node scripts/refresh-number-history.mjs
 
+      # HariHari's recent days come from our own past-results API, and the hot
+      # numbers are rebuilt from the database - without this step they stay at
+      # whatever date the file was last written by hand.
+      - name: Fill HariHari and rebuild the hot numbers
+        run: |
+          node scripts/build-hari-past.mjs --days 20
+          node scripts/merge-local-history.mjs
+          node scripts/build-number-stats.mjs
+
       - name: Publish the new draws
         run: |
           git config user.name  "mkt88-results-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -- src/components/sites/live4dresult-net-0600c55d/root-8a5edab2/number-history-db.json
+          # The folder was renamed on 16 Oct 2026; the old path made this add
+          # fail, and every run since then quietly published nothing.
+          git add -- src/components/sites/mkt88/app/number-history-db.json src/lib/hari-past.json src/lib/number-stats.json
           if git diff --cached --quiet; then
             echo "nothing new"
             exit 0
