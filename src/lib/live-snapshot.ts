@@ -2457,7 +2457,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * the board was saved but never applied. Read the data-id form for every
      * card first, regardless of whether it also has short aliases.
      */
-    for (const m of text.matchAll(/([A-Za-z][A-Za-z0-9_-]{0,30})\s*[:=]\s*(\d{1,7})/g)) {
+    for (const m of text.matchAll(/([A-Za-z][A-Za-z0-9_-]{0,48})\s*[:=]\s*(\d{1,7})/g)) {
       if (/^[A-Z0-9]{1,3}$/.test(m[1])) continue;   // S1 / C1 / A are mapped below
       typed[m[1]] = m[2];
     }

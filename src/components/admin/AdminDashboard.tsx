@@ -26,6 +26,7 @@ const CLASS_GAME: Record<string, string> = {
   "table-4": "Da Ma Cai", "table-5": "Da Ma Cai",
   "table-6": "Sports Toto", "table-7": "Sports Toto",
   "table-8": "Sandakan", "table-9": "Cash Sweep", "table-10": "Sabah 88",
+  "table-10-lotto": "Sabah 88",
   "table-11": "Singapore 4D", "table-12": "Singapore 4D",
   "table-13": "Grand Dragon", "table-14": "Grand Dragon",
   "table-15": "Lucky HariHari", "table-16": "Perdana",
@@ -42,9 +43,24 @@ const MANUAL_CARDS: ManualCard[] = (() => {
     ...(SG_CARDS as unknown as Any[]),
   ];
   const seen = new Set<string>();
-  const out: ManualCard[] = [];
+  /*
+   * Sabah 88's three Lotto boards share one table-10-lotto card class. The
+   * owner needs every cell, so they are one manual card with the union of
+   * their fields - the server writes that union to the shared class and each
+   * public card renders the ids it owns.
+   */
+  const byCls = new Map<string, ManualCard>();
   for (const c of raw) {
-    const cls = String(c.cardCls || "").replace("card outer-box ", "").split(" ")[0];
+    /*
+     * The class list can carry extra markers (Singapore Toto is
+     * "card outer-box mkt-static table-12"), so take the table-N token rather
+     * than the first word. This is why table-12 never appeared in the manual
+     * list before.
+     */
+    const cls = (String(c.cardCls || "").match(/\btable-\d+(?:-[a-z0-9]+)*\b/) || [""])[0];
+    // The 3-cell Perdana/HariHari cards are the prize rows only; the full
+    // 26-cell cards are added below and drive the public board.
+    if (!cls || cls === "table-15" || cls === "table-16") continue;
     const game = CLASS_GAME[cls];
     if (!game || seen.has(c.id)) continue;
     const fields: string[] = [];
@@ -58,8 +74,16 @@ const MANUAL_CARDS: ManualCard[] = (() => {
     }
     if (!fields.length) continue;
     seen.add(c.id);
-    out.push({ id: c.id, cls, name: c.header?.name || c.id, game, fields });
+    const name = c.header?.name || c.id;
+    const existing = byCls.get(cls);
+    if (existing) {
+      for (const f of fields) if (!existing.fields.includes(f)) existing.fields.push(f);
+      if (!existing.name.split(" / ").includes(name)) existing.name += " / " + name;
+    } else {
+      byCls.set(cls, { id: c.id, cls, name, game, fields });
+    }
   }
+  const out: ManualCard[] = [...byCls.values()];
   /*
    * Perdana and HariHari 4D: drawn by position, so there are no data-ids to
    * read. Their boxes are the operator's own letters - A-M specials, N-W
@@ -121,17 +145,19 @@ function cellLabel(f: string): string {
 /** "I=1912" lines and the grid of boxes are two views of the same thing. */
 function parseManualText(text: string): Record<string, string> {
   const out: Record<string, string> = {};
-  const alias: Record<string, string> = { "1ST": "1st", "2ND": "2nd", "3RD": "3rd" };
   /*
    * The grid writes the cell's own data-id, and Toto's are long:
    * d5_number_1, d6_first_number_2. The old 1-3 character key dropped every
    * one of them, so a typed Toto board looked empty the moment it was read
    * back. Keep the data-id exactly as written; only the short prize aliases
-   * are normalised.
+   * are kept in their original case so the 1ST/2ND/3RD boxes match the grid.
    */
-  for (const m of String(text || "").matchAll(/([A-Za-z][A-Za-z0-9_-]{0,30}|[0-9][A-Za-z0-9]{0,2})\s*[:=]\s*(\d{1,7})/g)) {
-    const key = alias[m[1].toUpperCase()] || m[1];
-    out[key] = m[2];
+  for (const m of String(text || "").matchAll(/([A-Za-z][A-Za-z0-9_-]{0,48}|[0-9][A-Za-z0-9]{0,2})\s*[:=]\s*(\d{1,7})/g)) {
+    const raw = m[1];
+    const upper = raw.toUpperCase();
+    // Old entries saved "1st"; the grid's boxes are 1ST. Normalise the three
+    // prize labels so both forms point at the same box.
+    out[upper === "1ST" || upper === "2ND" || upper === "3RD" ? upper : raw] = m[2];
   }
   if (!Object.keys(out).length) {
     const bare = String(text || "").match(/\d{6,7}/);
