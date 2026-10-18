@@ -243,6 +243,17 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /*
+   * Warm the one tool page people tap most. One static route, once, after the
+   * light home is interactive - not the eleven-route burst that slowed the
+   * first tap.
+   */
+  useEffect(() => {
+    if (!open || !isCapacitorApp() || isAdminPath() || !isHomePath()) return;
+    const t = window.setTimeout(() => router.prefetch("/dabogong"), 700);
+    return () => window.clearTimeout(t);
+  }, [open, router]);
+
   // A navigation that never lands must not leave the tiles dead.
   useEffect(() => {
     if (!pending) return;
