@@ -69,13 +69,13 @@ function luckyNumber(): string {
 
 /**
  * Internal links go through next/link so tapping a game is a client-side
- * navigation. A plain <a> reloads the whole page, which re-mounted the root
- * layout and threw the user straight back onto this screen instead of the game
- * they picked.
+ * navigation. Prefetch is left on: it starts only after React has hydrated the
+ * light home shell, so it warms the game route for the first tap without the
+ * launch-time prefetch storm that used to compete with hydration.
  */
 function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; children: React.ReactNode }) {
   if (href.startsWith("/")) {
-    return <Link href={href} prefetch={false} className="mkt-press" style={TILE} onClick={onClick}>{children}</Link>;
+    return <Link href={href} className="mkt-press" style={TILE} onClick={onClick}>{children}</Link>;
   }
   // onClick must be attached here too: the Lucky Numbers tile points at "#",
   // so it takes this branch - and its handler was being dropped, which made the
