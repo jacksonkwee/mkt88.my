@@ -1585,8 +1585,12 @@ function sgDay(v?: Record<string, string> | string): number {
 function sgDash(v?: string): boolean {
   return !v || /^----+$/.test(String(v).trim());
 }
-function sgHasAnyMain(b?: Record<string, string> | null): boolean {
-  return !!b && ["first_prize", "second_prize", "third_prize"].some((k) => !!b[k] && !sgDash(b[k]));
+function sgHasAnyLive(b?: Record<string, string> | null): boolean {
+  if (!b) return false;
+  if (["first_prize", "second_prize", "third_prize"].some((k) => !!b[k] && !sgDash(b[k]))) return true;
+  // live4d.sg reveals the ten specials before it picks 1st/2nd/3rd from them.
+  // A special-only board is the live draw, not a stale bottom-only board.
+  return Array.from({ length: 10 }, (_, i) => b["special-" + (i + 1)]).some((v) => !!v && !sgDash(v));
 }
 /** Same draw: keep every number already known, add the newly published ones. */
 function sgMerge(base: Record<string, string>, next: Record<string, string>): Record<string, string> {
@@ -2007,7 +2011,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     return d > 0 && d <= todayMs && todayMs - d <= 4 * 86400000;
   };
   const prevSg = (cache?.cards?.["table-11"] || null) as Record<string, string> | null;
-  const refs = [sgStored, prevSg].filter((b): b is Record<string, string> => !!b && sgHasAnyMain(b) && freshSg(b));
+  const refs = [sgStored, prevSg].filter((b): b is Record<string, string> => !!b && sgHasAnyLive(b) && freshSg(b));
   refs.sort((a, b) => sgDay(b) - sgDay(a));
   const refSg = refs[0] || null;
   const refDay = sgDay(refSg || undefined);
@@ -2029,17 +2033,23 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * card appeared to lose its top half and then jump back a draw (reported
      * 17 Oct 2026).
      *
-     * Requiring one main prize still blocks the bottom-only board, while the
-     * other main prizes, specials and consolations fill in as they arrive.
+     * A special is enough to move to the new draw: live4d.sg reveals the ten
+     * specials first and only picks 1st/2nd/3rd at the end. A board with only
+     * consolations and no specials/main prizes is still refused - that was the
+     * broken half-board reported on 17 Oct 2026.
      */
-    const hasAnyMainPrize = (b?: Record<string, string>): boolean =>
-      !!b && ["first_prize", "second_prize", "third_prize"].some((k) => {
+    const hasAnyLiveNumber = (b?: Record<string, string>): boolean => {
+      if (!b) return false;
+      if (["first_prize", "second_prize", "third_prize"].some((k) => {
         const v = b[k];
         return !!v && !isDashVal(v);
-      });
+      })) return true;
+      return Array.from({ length: 10 }, (_, i) => b["special-" + (i + 1)])
+        .some((v) => !!v && !isDashVal(v));
+    };
     let newest = Math.max(refDay, ...sgParts.map((p) => sgDay(p)));
-    if (newest > refDay && !sgParts.some((p) => sgDay(p) === newest && hasAnyMainPrize(p))) {
-      const ready = sgParts.filter((p) => sgDay(p) > refDay && hasAnyMainPrize(p)).map((p) => sgDay(p));
+    if (newest > refDay && !sgParts.some((p) => sgDay(p) === newest && hasAnyLiveNumber(p))) {
+      const ready = sgParts.filter((p) => sgDay(p) > refDay && hasAnyLiveNumber(p)).map((p) => sgDay(p));
       newest = ready.length ? Math.max(...ready) : refDay;
     }
     if (newest > 0) {
@@ -2081,7 +2091,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     } else {
       // No usable date at all: keep the newest complete board rather than the
       // partial new-draw card that started this.
-      const start = sgParts.filter(hasAnyMainPrize).sort((a, b) => sgDay(b) - sgDay(a))[0];
+      const start = sgParts.filter(hasAnyLiveNumber).sort((a, b) => sgDay(b) - sgDay(a))[0];
       if (start) cards["table-11"] = { ...start };
     }
   }
@@ -2096,7 +2106,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const final = cards["table-11"] as Record<string, string> | undefined;
     const newerDraw = !!final && sgDay(final) > storedDay;
     const moreNumbers = !!final && sgDay(final) === storedDay && sgCount(final) >= (sgStored ? sgCount(sgStored) : -1);
-    if (final && sgHasAnyMain(final) && (newerDraw || moreNumbers) && !sgSame(sgStored, final)) {
+    if (final && sgHasAnyLive(final) && (newerDraw || moreNumbers) && !sgSame(sgStored, final)) {
       await writeSgGuard(final);
     }
   }
