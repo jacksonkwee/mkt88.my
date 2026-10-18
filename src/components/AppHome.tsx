@@ -73,9 +73,9 @@ function luckyNumber(): string {
  * home and the first tap (measured again 18 Oct 2026); the light shell alone
  * is what made the first response fast.
  */
-function Nav({ href, onClick, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; children: React.ReactNode }) {
+function Nav({ href, onClick, onPointerDown, children }: { href: string; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void; children: React.ReactNode }) {
   if (href.startsWith("/")) {
-    return <Link href={href} prefetch={false} className="mkt-press" style={TILE} onClick={onClick}>{children}</Link>;
+    return <Link href={href} prefetch={false} className="mkt-press" style={TILE} onClick={onClick} onPointerDown={onPointerDown}>{children}</Link>;
   }
   // onClick must be attached here too: the Lucky Numbers tile points at "#",
   // so it takes this branch - and its handler was being dropped, which made the
@@ -398,6 +398,18 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     { href: "#", logo: "", name: "Settings", zh: "设置", key: "settings", settings: true },
   ];
 
+  /*
+   * Warm one route, not eleven. The first tile is the one most people try
+   * first; doing it after the light shell is interactive keeps it off the
+   * hydration path, while the per-tile pointerdown prefetch covers the rest.
+   */
+  const firstGameHref = games[0]?.href || "";
+  useEffect(() => {
+    if (!open || !isCapacitorApp() || !firstGameHref.startsWith("/")) return;
+    const t = window.setTimeout(() => router.prefetch(firstGameHref), 500);
+    return () => window.clearTimeout(t);
+  }, [open, firstGameHref, router]);
+
   return (
     <div className="mkt-app-home" style={{ position: "fixed", inset: 0, zIndex: 100050, background: PAGE_BG, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
         {/* Announcement strip: the first thing on the app's own screen, same as
@@ -412,7 +424,12 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, pointerEvents: pending ? "none" : undefined }}>
           {games.map((t) => (
-            <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
+            <Nav
+              key={t.name}
+              href={t.href}
+              onClick={() => openPage(t.href)}
+              onPointerDown={() => { if (t.href.startsWith("/")) router.prefetch(t.href); }}
+            >
               <span style={ICON_BOX}>
                 {pending === t.href ? (
                   <span className="mkt-spin" aria-label="Loading" />
@@ -452,7 +469,8 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           {actions.map((t) => (
             <Nav
               key={t.name}
-              href={t.href}
+              href={t.href}              onPointerDown={() => { if (t.href.startsWith("/")) router.prefetch(t.href); }}
+
               onClick={(e) => {
                 if (t.settings) { e.preventDefault(); setSettingsOpen(true); return; }
                 if (t.lucky) {
