@@ -1366,7 +1366,9 @@ export default function LiveResults() {
       // No clock rule: a page that still has a card being revealed is checked
       // every second, and a page where every card is finished is checked every
       // few seconds - just enough to notice the next draw starting.
-      if (Date.now() - lastFast < (anyLiveCard() ? 1000 : 5000)) return;
+      // Even with every card finished, check often enough to catch a draw
+      // that has just been published (Singapore used to sit a minute behind).
+      if (Date.now() - lastFast < (anyLiveCard() ? 1000 : 2500)) return;
       fastBusy = true;
       try { await syncFromServerFast(); lastFast = Date.now(); }
       catch { /* picked up on the next tick */ }

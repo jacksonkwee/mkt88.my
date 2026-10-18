@@ -147,10 +147,19 @@ function singaporeArchiveVersion(): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Singapore",
     year: "numeric", month: "numeric", day: "numeric",
-    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
   }).formatToParts(new Date());
   const get = (type: string) => parts.find((p) => p.type === type)?.value || "0";
-  return get("year") + "y" + Number(get("month")) + "d" + Number(get("day")) + "h" + Number(get("hour")) + "m" + get("minute");
+  /*
+   * The official file changes once a draw, but its CDN keeps the old copy for
+   * the rest of the URL's cache life. A minute token meant a file published at
+   * 18:48:09 was still served as yesterday until 18:49:00 (seen 18 Oct 2026).
+   * Five-second buckets keep the URL stable enough for the CDN but never hold
+   * a new draw back for a whole minute.
+   */
+  const bucket = Math.floor(Number(get("second")) / 5) * 5;
+  return get("year") + "y" + Number(get("month")) + "d" + Number(get("day")) +
+    "h" + Number(get("hour")) + "m" + get("minute") + "s" + String(bucket).padStart(2, "0");
 }
 /** Singapore Pools official top-draw file -> { "table-11": { dataId: value } } */
 function parseSingapore(html: string | null): Record<string, Record<string, string>> {
