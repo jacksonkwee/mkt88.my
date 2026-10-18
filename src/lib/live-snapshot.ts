@@ -1064,7 +1064,12 @@ function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
   if (!Object.values(nums).some((v) => /^\d{4}$/.test(v))) return null;
   const vals: Record<string, string> = {
     date: weekdayOf(dateIso),
-    first_prize: nums["1"] || "----",
+    /*
+     * After the draw live4d.sg clears its n[] list, but leaves the 1st prize
+     * in flag (today: flag "1927", n []). Without this the feed looked empty
+     * and the card stayed on yesterday until the official archive published.
+     */
+    first_prize: nums["1"] || (/^\d{4}$/.test(String(result.flag || "").trim()) ? String(result.flag).trim() : "----"),
     second_prize: nums["2"] || "----",
     third_prize: nums["3"] || "----",
   };
