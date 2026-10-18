@@ -23,7 +23,13 @@ export default async function Home() {
    */
   const ua = (await headers()).get("user-agent") || "";
   if (/MKT88Android|Capacitor|Android.*;\s*wv/i.test(ua)) {
-    return <div id="mkt-app-shell" style={{ minHeight: "100vh", background: "#fff" }} />;
+    return (
+      <div id="mkt-app-shell" style={{ minHeight: "100vh", background: "#fff" }}>
+        {/* One low-priority HTML prefetch, not eleven RSC prefetches: it warms
+            the first tile's route without competing with the home hydration. */}
+        <link rel="prefetch" href="/result/magnum" />
+      </div>
+    );
   }
   /*
    * The app opens on this page, so it must not wait for the sweep of thirteen
