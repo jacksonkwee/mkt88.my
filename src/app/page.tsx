@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Header from "../components/sites/mkt88/app/Header";
 import RegionButtons from "../components/sites/mkt88/app/RegionButtons";
 import LotteryGrid from "../components/sites/mkt88/app/LotteryGrid";
@@ -11,6 +12,19 @@ import SeoText from "../components/SeoText";
 import { getPastDateLists } from "../lib/past-dates";
 
 export default async function Home() {
+  /*
+   * The installed app opens on this route. Its first screen is AppHome, which
+   * covers the site completely - hydrating the eleven result cards and
+   * LiveResults behind it took several seconds on a phone, so a tap made just
+   * after launch sat in the pre-hydration queue until that work finished.
+   *
+   * The app gets a tiny shell instead; the full results page is loaded when the
+   * reader taps a game or 查看成绩. The website is unchanged.
+   */
+  const ua = (await headers()).get("user-agent") || "";
+  if (/MKT88Android|Capacitor|Android.*;\s*wv/i.test(ua)) {
+    return <div id="mkt-app-shell" style={{ minHeight: "100vh", background: "#fff" }} />;
+  }
   /*
    * The app opens on this page, so it must not wait for the sweep of thirteen
    * upstream pages before it can send its first byte - see

@@ -430,7 +430,19 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         <button
           type="button"
           className="mkt-press"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            /*
+             * The app's home is a lightweight shell now: there is no result
+             * grid behind it to reveal. Send 查看成绩 to the real results page
+             * instead of closing onto an empty background.
+             */
+            if (typeof document !== "undefined" && document.getElementById("mkt-app-shell")) {
+              openPage("/4dresults");
+              router.push("/4dresults");
+              return;
+            }
+            setOpen(false);
+          }}
           style={{ width: "100%", margin: "8px 0", padding: "12px 0", border: 0, borderRadius: RADIUS, background: ACCENT, color: "#fff", fontSize: 15, fontWeight: 700, letterSpacing: 0.2, cursor: "pointer" }}
         >
           {tr("seeLive", lang)}
