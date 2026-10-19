@@ -90,15 +90,17 @@ let gdRefreshing = false;
 let gdNextAttempt = 0;
 let gdPageDownUntil = 0;
 let gdPageFailures = 0;
-/**
- * 8s between reads while the operator answers, 30s while it is refusing.
+/*
+ * How often the operator is asked for its board.
  *
- * The refusal is a rate limit, not an outage: it clears by itself after a short
- * while. A full minute of silence could swallow an entire draw, which is what
- * left the 6D card empty for days.
+ * This was 8 seconds, which is seven calls a minute - and their API counts
+ * calls, so we were the ones tripping its limit. Once refused, every later call
+ * is refused too, which is why the 6D card went days without a value. One call
+ * every 45 seconds is enough to fill the 6D with the draw it belongs to and
+ * leaves real headroom; after a refusal the next attempt waits two minutes.
  */
-const GD_REFRESH_MS = 8000;
-const GD_BACKOFF_MS = 30000;
+const GD_REFRESH_MS = 45000;
+const GD_BACKOFF_MS = 120000;
 
 function refreshGdOfficial(iso: string): void {
   if (gdRefreshing || Date.now() < gdNextAttempt) return;
