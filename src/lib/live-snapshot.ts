@@ -1679,7 +1679,10 @@ const MANUAL_FIELDS: Record<string, string[]> = {
    * typed by hand when the operator's API is refusing us, which is the only
    * way that card can be complete on a blocked evening.
    */
-  "table-14": ["six_main", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+  "table-14": ["six_main", "jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+  // Perdana's 4D Jackpot card: the pool, the letter it was drawn under, and
+  // how many units won.
+  "table-16": ["jp4_pool", "jp4_letter", "jp4_units"],
 };
 
 /**
@@ -1705,9 +1708,10 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
   },
   "table-14": {
     "6D": "six_main",
-    "JPPOOL": "jp7_pool", "JPGRAND": "jp7_grand",
+    "JPPOOL": "jp_pool", "JPGRAND": "jp7_grand",
     "JPLETTER": "jp_letter", "JPUNITS": "jp_units",
   },
+  "table-16": { "POOL4": "jp4_pool", "LETTER4": "jp4_letter", "UNITS4": "jp4_units" },
 };
 
 /**
@@ -2696,19 +2700,46 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * shape, so each is read on its own here.
      */
     if (cls === "table-14") {
-      const pool = /(?:jppool|jp7_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
+      /*
+       * The card the owner sees prints "Jackpot Pool / 奖金池" from data-id
+       * jp_pool - jp7_pool is only a legacy id a guard script still looks for.
+       * Both are written so the box and the guard agree.
+       */
+      const pool = /(?:jppool|jp7_pool|jp_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
       if (pool) {
         const n = Number(pool[1].replace(/,/g, ""));
         if (Number.isFinite(n) && n > 0) {
-          typed.jp7_pool = "USD " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          const money = "USD " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          typed.jp_pool = money;
+          typed.jp7_pool = money;
         }
       }
       const grand = /(?:jpgrand|jp7_grand)\s*[:=]\s*([0-9]{1,6}\s*\+\s*[0-9])/i.exec(text);
       if (grand) typed.jp7_grand = grand[1].replace(/\s+/g, " ");
-      const letter = /(?:jpletter|jp_letter)\s*[:=]\s*([A-M])\b/i.exec(text);
+      const letter = /(?:jpletter|jp_letter|jp4_letter)\s*[:=]\s*([A-M])\b/i.exec(text);
       if (letter) typed.jp_letter = letter[1].toUpperCase();
-      const units = /(?:jpunits|jp_units)\s*[:=]\s*([\d,]+)/i.exec(text);
+      const units = /(?:jpunits|jp_units|jp4_units)\s*[:=]\s*([\d,]+)/i.exec(text);
       if (units) typed.jp_units = units[1].replace(/,/g, "");
+    }
+    /*
+     * Perdana's 4D Jackpot card, same treatment.
+     *
+     * "jp4_pool=17410726.81" used to be cut to seven digits by the generic
+     * reader and "jp4_letter=B" was dropped outright, because that reader only
+     * takes numbers.
+     */
+    if (cls === "table-16") {
+      const pool = /(?:pool4|jp4_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
+      if (pool) {
+        const n = Number(pool[1].replace(/,/g, ""));
+        if (Number.isFinite(n) && n > 0) {
+          typed.jp4_pool = "USD " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+      const letter = /(?:letter4|jp4_letter)\s*[:=]\s*([A-Z])\b/i.exec(text);
+      if (letter) typed.jp4_letter = letter[1].toUpperCase();
+      const units = /(?:units4|jp4_units)\s*[:=]\s*([\d,]+)/i.exec(text);
+      if (units) typed.jp4_units = units[1].replace(/,/g, "");
     }
     if (!Object.keys(typed).length) continue;
     /*
