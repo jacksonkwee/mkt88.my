@@ -94,6 +94,7 @@ const MANUAL_CARDS: ManualCard[] = (() => {
    */
   const EXTRA_FIELDS: Record<string, string[]> = {
     "table-14": ["six_main", "jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+    "table-13": ["jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
   };
   for (const card of out) {
     for (const f of EXTRA_FIELDS[card.cls] || []) {

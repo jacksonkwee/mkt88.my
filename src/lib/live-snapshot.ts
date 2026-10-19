@@ -1672,6 +1672,7 @@ const MANUAL_FIELDS: Record<string, string[]> = {
     "first_prize", "second_prize", "third_prize",
     ...Array.from({ length: 13 }, (_, i) => "special-" + (i + 1)),
     ...Array.from({ length: 10 }, (_, i) => "consolation-" + (i + 1)),
+    "jp_pool", "jp_letter", "jp_units", "jp7_pool", "jp7_grand",
   ],
   /*
    * Grand Dragon's 6D card carries more than the six digits: the 6+1D pool,
@@ -1705,6 +1706,7 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
     ...Object.fromEntries([...GD_SPECIAL_LETTERS].map((L, i) => [L, "special-" + (i + 1)])),
     ...Object.fromEntries([...GD_CONSOLATION_LETTERS].map((L, i) => [L, "consolation-" + (i + 1)])),
     "1ST": "first_prize", "2ND": "second_prize", "3RD": "third_prize",
+    "JPPOOL": "jp_pool", "JPLETTER": "jp_letter", "JPUNITS": "jp_units",
   },
   "table-14": {
     "6D": "six_main",
@@ -2723,7 +2725,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * or "JPLETTER=B" were dropped completely. Each of the four has its own
      * shape, so each is read on its own here.
      */
-    if (cls === "table-14") {
+    /*
+     * Both Grand Dragon cards carry a jackpot block: the 4D board (table-13)
+     * has "Jackpot Pool / 积宝字母 / 中奖注数" underneath its numbers, and the 6D
+     * board (table-14) has the 6+1D figures. The same four boxes exist on each,
+     * so they are read for both.
+     */
+    if (cls === "table-13" || cls === "table-14") {
       /*
        * The card the owner sees prints "Jackpot Pool / 奖金池" from data-id
        * jp_pool - jp7_pool is only a legacy id a guard script still looks for.
