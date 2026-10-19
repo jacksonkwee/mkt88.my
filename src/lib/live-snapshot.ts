@@ -2662,7 +2662,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (keys) {
       for (const m of text.matchAll(/([A-Za-z0-9]{1,3})\s*[:=]\s*(\d{1,6})/g)) {
         const id = keys[m[1].toUpperCase()];
-        if (id) typed[id] = m[2];
+        /*
+         * The short alias must not overwrite a value the box name already
+         * provided. A board saved as "6D=117749 ... six_main=785527" holds the
+         * old short form and the new exact one, and the short form used to win
+         * simply by being read last - so the card kept the old 6D.
+         */
+        if (id && typed[id] === undefined) typed[id] = m[2];
       }
     }
     /*
