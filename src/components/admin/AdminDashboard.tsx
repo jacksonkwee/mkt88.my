@@ -304,7 +304,16 @@ export default function AdminDashboard() {
         body: JSON.stringify(c),
       });
       if (res.ok) { setC(await res.json()); setMsg("Saved successfully ✅"); }
-      else setMsg("Save failed");
+      else {
+        /*
+         * Say WHY it failed. "Save failed" hid a 401 (session gone) and a
+         * read-only store behind the same two words, so a typed 6D could look
+         * saved and never appear.
+         */
+        let why = "";
+        try { const j = await res.json(); why = String(j?.error || ""); } catch { /* no body */ }
+        setMsg("Save failed (" + res.status + (why ? ": " + why : "") + ")");
+      }
     } catch { setMsg("Save failed"); }
     setSaving(false);
   };
