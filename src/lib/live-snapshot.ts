@@ -2671,6 +2671,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const cardDay = dayScore((cards[cls] as Record<string, string> | undefined)?.date);
     if (typedDay && cardDay && typedDay < cardDay) continue;
     /*
+     * Never let a typed board drive the 6D card.
+     *
+     * A hand-typed entry carries a date that the operator never confirms, so an
+     * old number typed under today's date reads as today's draw. That is exactly
+     * what happened on 19 Oct 2026: an entry dated 19-10 held the 15-10 number
+     * and the card showed it as the current result. The card is fed by the
+     * operator's own API now, with yesterday's board as the fallback, and a blank
+     * is better than a number attributed to the wrong day.
+     */
+    if (cls === "table-14") continue;
+    /*
      * Toto 5D/6D: the operator prints the 4th-6th (and 2nd-5th) as slices of
      * the first number. Derive them here too, so a board typed with only
      * d5_number_1 / d6_number_1 is still complete on the card.
