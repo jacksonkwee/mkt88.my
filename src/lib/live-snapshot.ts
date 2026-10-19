@@ -124,6 +124,12 @@ function gdRefreshGap(): number {
 
 function refreshGdOfficial(iso: string): void {
   if (gdRefreshing || Date.now() < gdNextAttempt) return;
+  /*
+   * Once today's 6D is in hand there is nothing left to ask for. Stopping here
+   * is what keeps us inside the operator's per-IP budget instead of spending it
+   * on a board we already have.
+   */
+  if (gdOfficial?.iso === iso && gdOfficial.six?.date === weekdayOf(iso)) return;
   gdRefreshing = true;
   void (async () => {
     try {
@@ -2558,11 +2564,9 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * below, which refuses a typed board older than the card).
    */
   const gd6Feed = gd?.six || null;
-  let gd6Written = false;
   if (gd6Feed?.date && drawNotOlder(gd6Feed.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
     const base = (cards["table-14"] || {}) as Record<string, string>;
     cards["table-14"] = mergeCardPayload(base, { date: gd6Feed.date, six_main: gd6Feed.main, ...gd6Feed.subs });
-    gd6Written = true;
   }
 
   /*
@@ -2671,17 +2675,6 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const cardDay = dayScore((cards[cls] as Record<string, string> | undefined)?.date);
     if (typedDay && cardDay && typedDay < cardDay) continue;
     /*
-     * Never let a typed board drive the 6D card.
-     *
-     * A hand-typed entry carries a date that the operator never confirms, so an
-     * old number typed under today's date reads as today's draw. That is exactly
-     * what happened on 19 Oct 2026: an entry dated 19-10 held the 15-10 number
-     * and the card showed it as the current result. The card is fed by the
-     * operator's own API now, with yesterday's board as the fallback, and a blank
-     * is better than a number attributed to the wrong day.
-     */
-    if (cls === "table-14") continue;
-    /*
      * Toto 5D/6D: the operator prints the 4th-6th (and 2nd-5th) as slices of
      * the first number. Derive them here too, so a board typed with only
      * d5_number_1 / d6_number_1 is still complete on the card.
@@ -2720,16 +2713,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
     noteSource("manual:" + cls, "手动输入 " + cls, { ok: true });
   }
   /*
-   * Blank the 6D card only when nothing has it.
+   * When nothing has a 6D figure, the card KEEPS the last one it showed.
    *
-   * The operator's page feeds it now (see the write above) and the owner can
-   * still type a board when that feed is refused; this is the fallback for the
-   * case where neither has a value. Without it the card keeps the 6 September
-   * board the markup was built with, sitting there under a stale date.
+   * It used to be blanked here, so one refused read emptied the card and left
+   * the owner staring at "----" all evening (reported 19 Oct 2026). Keeping the
+   * previous board means a refused feed costs freshness, never a blank - and the
+   * date on the card is still the date that board belongs to, so nothing is
+   * passed off as today's.
    */
-  if (!gd6Written && !/\d/.test(String(manual["table-14"]?.text || ""))) {
-    cards["table-14"] = { ...(cards["table-14"] || {}), date: "", six_main: "----" };
-  }
 
   /*
    * The three main prizes are ALWAYS three different numbers in a real draw.
