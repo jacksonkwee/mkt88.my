@@ -88,16 +88,52 @@ type GdOfficial = {
 let gdOfficial: GdOfficial | null = null;
 let gdRefreshing = false;
 let gdNextAttempt = 0;
-/** 8s between reads while the operator answers, 60s while it is refusing. */
+let gdPageDownUntil = 0;
+let gdPageFailures = 0;
+/**
+ * 8s between reads while the operator answers, 30s while it is refusing.
+ *
+ * The refusal is a rate limit, not an outage: it clears by itself after a short
+ * while. A full minute of silence could swallow an entire draw, which is what
+ * left the 6D card empty for days.
+ */
 const GD_REFRESH_MS = 8000;
-const GD_BACKOFF_MS = 60000;
+const GD_BACKOFF_MS = 30000;
 
 function refreshGdOfficial(iso: string): void {
   if (gdRefreshing || Date.now() < gdNextAttempt) return;
   gdRefreshing = true;
   void (async () => {
     try {
-      const [page, api] = await Promise.all([gdSixToday(iso), gdApiResult(iso)]);
+      /*
+       * Their dated page is behind Cloudflare and refuses us for hours at a
+       * time. Asking for it every cycle cost two four-second timeouts and
+       * counted towards the same rate limit as the API, which is the call that
+       * actually works. After two empty page reads it is left alone for five
+       * minutes and the API carries the card on its own.
+       */
+      const pageAsk = Date.now() < gdPageDownUntil
+        ? Promise.resolve({ four: null, six: null, jp: null } as Awaited<ReturnType<typeof gdSixToday>>)
+        : gdSixToday(iso);
+      const [page, todayApi] = await Promise.all([pageAsk, gdApiResult(iso)]);
+      if (page.four || page.six || page.jp) {
+        gdPageFailures = 0;
+        gdPageDownUntil = 0;
+      } else if (++gdPageFailures >= 2) {
+        gdPageDownUntil = Date.now() + 5 * 60000;
+      }
+      /*
+       * The operator's API answers for TODAY only once today's draw starts, and
+       * it rate-limits: a handful of calls in a row and it refuses everything
+       * for a while. Its dated page is usually refused outright.
+       *
+       * So when today's call comes back empty, ask for yesterday's as well and
+       * carry that board instead. Without this the 6D card had nothing to show
+       * from the moment the day turned over and sat frozen on the last number
+       * it ever received (15-10-2026, reported 19 Oct 2026).
+       */
+      const prevIso = new Date(Date.parse(iso + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
+      const api = todayApi || (await gdApiResult(prevIso));
       const apiParts = api ? gdApiSix(api) : { six: null, jp: null };
       /*
        * Whichever board is for the NEWER draw wins.
