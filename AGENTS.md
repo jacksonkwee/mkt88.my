@@ -19,6 +19,11 @@ Read them before touching the live results pipeline.
 - The operator's own hosts are rate-limited per IP and share one budget across
   `result.gdlotto.com` and `result.gdlotto.net`. Never poll them every few
   seconds; that is what emptied the 6D card for days.
+- A blanked booth is DATA. When a GD number moves up to 1st/2nd/3rd the
+  operator empties its lettered box, and the mirror sends it empty. Leaving that
+  key out of the card makes the phone keep whatever it showed there before,
+  which is how B and E carried the previous draw's numbers all evening. Once a
+  board has any number, its empty boxes must be sent as `----`.
 
 ## Manual corrections
 
