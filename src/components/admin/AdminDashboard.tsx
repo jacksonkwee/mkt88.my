@@ -106,6 +106,21 @@ const MANUAL_CARDS: ManualCard[] = (() => {
     }
   }
   /*
+   * Boxes the owner does not want on the 4D card.
+   *
+   * The captured Grand Dragon 4D markup carries the 6+1D ids (jp7_pool,
+   * jp7_grand) beside its own jp_pool / jp_letter / jp_units, so the manual
+   * grid showed five jackpot boxes where the card has one row. They are hidden
+   * here; the server still applies them if they are present in a saved board.
+   */
+  const HIDDEN_FIELDS: Record<string, string[]> = {
+    "table-13": ["jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+  };
+  for (const card of out) {
+    const hide = HIDDEN_FIELDS[card.cls];
+    if (hide) card.fields = card.fields.filter((f) => !hide.includes(f));
+  }
+  /*
    * Perdana and HariHari 4D: drawn by position, so there are no data-ids to
    * read. Their boxes are the operator's own letters - A-M specials, N-W
    * consolations - plus the three prizes, which come out of three of those
