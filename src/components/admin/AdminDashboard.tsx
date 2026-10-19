@@ -580,7 +580,24 @@ export default function AdminDashboard() {
               <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "6px 0", flexWrap: "wrap" }}>
                 <label style={{ fontSize: 13 }}>
                   日期
-                  <input type="date" value={e.date} onChange={(ev) => setManual(card.cls, { date: ev.target.value })} style={{ padding: 6, marginLeft: 6 }} />
+                  <input
+                    type="date"
+                    value={e.date}
+                    onChange={(ev) => {
+                      /*
+                       * Moving a card to a different draw starts from a blank
+                       * board. Without this the numbers typed for the previous
+                       * evening stayed in the text and were saved again under
+                       * the new date - which is how the 15 Oct specials ended
+                       * up on the 19 Oct card.
+                       */
+                      const nextDate = ev.target.value;
+                      setManual(card.cls, nextDate !== e.date
+                        ? { date: nextDate, text: "", drawNo: "" }
+                        : { date: nextDate });
+                    }}
+                    style={{ padding: 6, marginLeft: 6 }}
+                  />
                 </label>
                 <label style={{ fontSize: 13 }}>
                   期号（可留空）
