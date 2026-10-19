@@ -93,14 +93,34 @@ let gdPageFailures = 0;
 /*
  * How often the operator is asked for its board.
  *
- * This was 8 seconds, which is seven calls a minute - and their API counts
- * calls, so we were the ones tripping its limit. Once refused, every later call
- * is refused too, which is why the 6D card went days without a value. One call
- * every 45 seconds is enough to fill the 6D with the draw it belongs to and
- * leaves real headroom; after a refusal the next attempt waits two minutes.
+ * Their API counts calls per IP and refuses EVERYTHING once the count is used
+ * up - both of its hostnames share the same budget, so there is no way around
+ * it. Polling it every eight seconds (seven calls a minute) is what burned the
+ * budget and left the 6D card without a value for days.
+ *
+ * The live 4D board does not need this call: the mirror already carries it.
+ * What the API is needed for is the 6D number, the 6+1D pool and its letter,
+ * and those settle with the draw. So: every five minutes, every two minutes
+ * during the 19:00-21:00 draw window, and ten minutes of silence after a
+ * refusal.
  */
-const GD_REFRESH_MS = 45000;
-const GD_BACKOFF_MS = 120000;
+const GD_BACKOFF_MS = 600000;
+const GD_REFRESH_MS = 300000;
+const GD_REFRESH_DRAW_MS = 120000;
+
+/** Malaysia hour, 0-23 - the draw window is set in that clock. */
+function myHour(): number {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  return Number(parts.find((p) => p.type === "hour")?.value || 0);
+}
+
+/** The next gap before asking the operator again. */
+function gdRefreshGap(): number {
+  const h = myHour();
+  return h >= 19 && h < 21 ? GD_REFRESH_DRAW_MS : GD_REFRESH_MS;
+}
 
 function refreshGdOfficial(iso: string): void {
   if (gdRefreshing || Date.now() < gdNextAttempt) return;
@@ -155,7 +175,7 @@ function refreshGdOfficial(iso: string): void {
       const jp = page.jp || apiParts.jp;
       if (board || six || jp) {
         gdOfficial = { iso, board, six, jp, strict, at: Date.now() };
-        gdNextAttempt = Date.now() + GD_REFRESH_MS;
+        gdNextAttempt = Date.now() + gdRefreshGap();
       } else {
         gdNextAttempt = Date.now() + GD_BACKOFF_MS;
       }
@@ -828,8 +848,15 @@ async function gdSixToday(iso: string): Promise<{ four: Record<string, string> |
  */
 async function gdApiResult(iso: string): Promise<Record<string, unknown> | null> {
   const [y, m, d] = iso.split("-");
-  const j = await get(`https://result.gdlotto.com/api/result/${Number(y)}/${Number(m)}/${Number(d)}`, true, 4000, 0);
-  return j && typeof j === "object" && !Array.isArray(j) ? (j as Record<string, unknown>) : null;
+  const path = `/api/result/${Number(y)}/${Number(m)}/${Number(d)}`;
+  // The operator serves the same JSON from two names. The .com one is the one
+  // the app uses; .net answered on 19 Oct 2026 while .com was refusing, so both
+  // are tried - but they share one quota per IP, so this is not a way around it.
+  for (const host of ["result.gdlotto.net", "result.gdlotto.com"]) {
+    const j = await get("https://" + host + path, true, 4000, 0);
+    if (j && typeof j === "object" && !Array.isArray(j)) return j as Record<string, unknown>;
+  }
+  return null;
 }
 
 /** The API's 4D board, shaped for the card - holes where the prizes came from. */
