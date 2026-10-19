@@ -159,6 +159,17 @@ function parseManualText(text: string): Record<string, string> {
     // prize labels so both forms point at the same box.
     out[upper === "1ST" || upper === "2ND" || upper === "3RD" ? upper : raw] = m[2];
   }
+  /*
+   * Anything that is not a bare number - a letter, a money figure, a status
+   * word, a star pattern - kept falling out of the grid, so it vanished from the
+   * box the moment the panel redrew and never reached the store. Read those
+   * lines too, without touching what the pass above already filled.
+   */
+  for (const line of String(text || "").split(/\r?\n/)) {
+    const m = /^\s*([A-Za-z][A-Za-z0-9_-]{0,48})\s*[:=]\s*(.+?)\s*$/.exec(line);
+    if (!m) continue;
+    if (out[m[1]] === undefined && out[m[1].toUpperCase()] === undefined) out[m[1]] = m[2];
+  }
   if (!Object.keys(out).length) {
     const bare = String(text || "").match(/\d{6,7}/);
     if (bare) out["6D"] = bare[0].slice(0, 6);
