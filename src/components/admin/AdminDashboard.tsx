@@ -93,8 +93,12 @@ const MANUAL_CARDS: ManualCard[] = (() => {
    * every card, whatever the capture holds.
    */
   const EXTRA_FIELDS: Record<string, string[]> = {
-    "table-14": ["six_main", "jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
-    "table-13": ["jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+    /*
+     * Only the 6D card needs anything added. The 4D card already carries its
+     * own jp_pool / jp_letter / jp_units boxes in the captured board, so adding
+     * them here produced a second, duplicate set (reported 19 Oct 2026).
+     */
+    "table-14": ["six_main", "jp7_pool", "jp7_grand"],
   };
   for (const card of out) {
     for (const f of EXTRA_FIELDS[card.cls] || []) {
