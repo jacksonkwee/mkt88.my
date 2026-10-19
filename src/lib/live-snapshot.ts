@@ -100,6 +100,45 @@ let gdPageFailures = 0;
  */
 let gdBooths: { iso: string; map: Record<string, string> } = { iso: "", map: {} };
 /*
+ * The same map, kept where every instance can see it.
+ *
+ * Vercel runs several instances and recycles them; an instance that happens to
+ * start after the draw has already blanked the booths would learn nothing. The
+ * map is written to Firestore as it fills and read back by whichever instance
+ * answers next, so tomorrow's draw does not depend on one process staying warm.
+ */
+const GD_BOOTH_DOC = "state/gdbooths";
+let gdBoothLoadTried = "";
+let gdBoothSavedAt = 0;
+
+async function loadGdBooths(iso: string): Promise<void> {
+  if (gdBoothLoadTried === iso) return;
+  gdBoothLoadTried = iso;
+  if (!pushConfigured()) return;
+  try {
+    const doc = await Promise.race([
+      firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(GD_BOOTH_DOC),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 900)),
+    ]);
+    const raw = doc?.fields?.json?.stringValue;
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as { iso?: string; map?: Record<string, string> };
+    if (parsed.iso === iso && parsed.map && typeof parsed.map === "object") {
+      gdBooths = { iso, map: { ...gdBooths.map, ...parsed.map } };
+    }
+  } catch { /* a missing or unreadable document just means nothing learned yet */ }
+}
+
+function saveGdBooths(): void {
+  if (!pushConfigured()) return;
+  if (Date.now() - gdBoothSavedAt < 30000) return;
+  gdBoothSavedAt = Date.now();
+  void Promise.race([
+    firestorePut(GD_BOOTH_DOC, { json: JSON.stringify(gdBooths) }),
+    new Promise<void>((resolve) => setTimeout(() => resolve(), 1500)),
+  ]).catch(() => {});
+}
+/*
  * How often the operator is asked for its board.
  *
  * Their API counts calls per IP and refuses EVERYTHING once the count is used
@@ -1858,6 +1897,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Grand Dragon's official board is read beside this sweep, never inside it -
   // see refreshGdOfficial(). Everything else here is answered by one of these.
   refreshGdOfficial(today.iso);
+  await loadGdBooths(today.iso);
   // Only today's read counts. A host that has been blocked since yesterday must
   // not leave yesterday's board looking like this evening's answer.
   const gd = gdOfficial && gdOfficial.iso === today.iso ? gdOfficial : null;
@@ -2901,10 +2941,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const g13 = cards["table-13"] as Record<string, string> | undefined;
     if (g13) {
       if (gdBooths.iso !== today.iso) gdBooths = { iso: today.iso, map: {} };
+      let learned = false;
       for (let i = 1; i <= 13; i++) {
         const v = String(g13["special-" + i] || "").trim();
-        if (/^\d{4}$/.test(v)) gdBooths.map["special-" + i] = v;
+        if (/^\d{4}$/.test(v) && gdBooths.map["special-" + i] !== v) {
+          gdBooths.map["special-" + i] = v;
+          learned = true;
+        }
       }
+      if (learned) saveGdBooths();
     }
   }
   for (const cls of ["table-13", "table-14"]) {
