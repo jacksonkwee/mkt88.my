@@ -2874,7 +2874,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
     const next: Record<string, string> = { ...(cards[cls] || {}) };
     if (entry.date) {
       const label = weekdayOf(entry.date);
-      if (label !== (next.date || "")) for (const id of MANUAL_CLEAR[cls] || []) next[id] = "----";
+      /*
+       * Only a typing for a NEWER draw clears the board. It used to clear
+       * whenever the label merely differed - including when the card had no
+       * date yet - so a correction for the same evening wiped every special and
+       * consolation the automatic feed had just filled (reported 19 Oct 2026).
+       */
+      const typedDay = dayScore(label);
+      const cardDay = dayScore(next.date);
+      if (typedDay && cardDay && typedDay > cardDay) {
+        for (const id of MANUAL_CLEAR[cls] || []) next[id] = "----";
+      }
       next.date = label;
     }
     if (entry.drawNo) next.draw_no = String(entry.drawNo).trim();
