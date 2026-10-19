@@ -172,6 +172,12 @@ function parseManualText(text: string): Record<string, string> {
   for (const m of String(text || "").matchAll(/([A-Za-z][A-Za-z0-9_-]{0,48}|[0-9][A-Za-z0-9]{0,2})\s*[:=]\s*(\d{1,7})/g)) {
     const raw = m[1];
     const upper = raw.toUpperCase();
+    /*
+     * Money and letter boxes must keep their whole value. This digit-only pass
+     * used to grab "1741072" out of "jp_pool=1741072.81", so the box redrew
+     * without the cents and the saved text lost them too.
+     */
+    if (/^(jp_pool|jp7_pool|jp4_pool|jp_letter|jp4_letter|jp_units|jp4_units)$/i.test(raw)) continue;
     // Old entries saved "1st"; the grid's boxes are 1ST. Normalise the three
     // prize labels so both forms point at the same box.
     out[upper === "1ST" || upper === "2ND" || upper === "3RD" ? upper : raw] = m[2];
