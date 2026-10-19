@@ -91,6 +91,15 @@ let gdNextAttempt = 0;
 let gdPageDownUntil = 0;
 let gdPageFailures = 0;
 /*
+ * Which booth each Grand Dragon number was seen in today.
+ *
+ * While a GD draw is revealed, a number appears in its lettered special box
+ * first and only later moves up to 1st/2nd/3rd - at which point the mirror
+ * blanks the box. Remembering the box as the board fills is what lets the card
+ * print "E 9162" from the mirror alone, with no operator call.
+ */
+let gdBooths: { iso: string; map: Record<string, string> } = { iso: "", map: {} };
+/*
  * How often the operator is asked for its board.
  *
  * Their API counts calls per IP and refuses EVERYTHING once the count is used
@@ -2888,6 +2897,16 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * Done after the duplicate check above, which compares bare numbers: adding
    * the letter first would have hidden a genuinely repeated prize.
    */
+  {
+    const g13 = cards["table-13"] as Record<string, string> | undefined;
+    if (g13) {
+      if (gdBooths.iso !== today.iso) gdBooths = { iso: today.iso, map: {} };
+      for (let i = 1; i <= 13; i++) {
+        const v = String(g13["special-" + i] || "").trim();
+        if (/^\d{4}$/.test(v)) gdBooths.map["special-" + i] = v;
+      }
+    }
+  }
   for (const cls of ["table-13", "table-14"]) {
     const c = cards[cls] as Record<string, string> | undefined;
     if (!c) continue;
@@ -2899,6 +2918,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
       if (!/^[A-W]$/.test(letter)) {
         const idx = [..."ABCDEFGHIJKLM"].findIndex((_, j) => String(c["special-" + (j + 1)] || "").trim() === raw);
         letter = idx >= 0 ? "ABCDEFGHIJKLM"[idx] : "";
+      }
+      // The booth it was seen in before the mirror blanked it.
+      if (!letter) {
+        const seen = Object.entries(gdBooths.map).find(([, v]) => v === raw);
+        letter = seen ? "ABCDEFGHIJKLM"[Number(seen[0].replace("special-", "")) - 1] || "" : "";
       }
       if (letter) c[id] = letter + " " + raw;
     });
