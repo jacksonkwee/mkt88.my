@@ -21,6 +21,40 @@ const MANUAL_GAMES = [
   "Sandakan", "Grand Dragon", "Nine Lotto", "Perdana", "Lucky HariHari",
 ];
 
+/**
+ * The cells of every card, as the public pages render them today.
+ *
+ * The grid used to be built from a captured copy of the markup, which drifts:
+ * Magnum's jackpot lines, Toto's zodiac box and Nine Lotto's 6D row were all
+ * missing from it, so those cells could not be typed at all. This reads the real
+ * pages once when the panel opens and uses exactly what it finds.
+ */
+async function readLiveFields(): Promise<Record<string, string[]>> {
+  const pages = [
+    "/4dresults", "/lotto-4d", "/sabah-sarawak-4d-results",
+    "/singapore-4d-results", "/result/perdana", "/result/lucky-harihari", "/cambodia-4d-results",
+  ];
+  const out: Record<string, string[]> = {};
+  for (const p of pages) {
+    try {
+      const html = await (await fetch(p, { cache: "no-store" })).text();
+      const marks = [...html.matchAll(/id="(table-\d+(?:-[a-z0-9]+)*)-\d{4}-\d{2}-\d{2}"/g)];
+      for (let i = 0; i < marks.length; i++) {
+        const cls = marks[i][1];
+        const from = marks[i].index || 0;
+        const to = i + 1 < marks.length ? (marks[i + 1].index || html.length) : Math.min(html.length, from + 60000);
+        const seg = html.slice(from, to);
+        const ids = new Set(out[cls] || []);
+        for (const d of seg.matchAll(/data-id="([^"]+)"/g)) {
+          if (d[1] !== "date" && d[1] !== "draw_no") ids.add(d[1]);
+        }
+        out[cls] = [...ids];
+      }
+    } catch { /* a page that fails keeps the captured list for that card */ }
+  }
+  return out;
+}
+
 const CLASS_GAME: Record<string, string> = {
   "table-1": "Magnum 4D", "table-2": "Magnum 4D", "table-3": "Magnum 4D",
   "table-4": "Da Ma Cai", "table-5": "Da Ma Cai",
@@ -280,9 +314,16 @@ export default function AdminDashboard() {
   const [ownerMsg, setOwnerMsg] = useState("");
   const [saving, setSaving] = useState(false);
   const [manualGame, setManualGame] = useState(MANUAL_GAMES[0]);
+  const [liveFields, setLiveFields] = useState<Record<string, string[]>>({});
   const [msg, setMsg] = useState("");
   const [newDate, setNewDate] = useState("");
   const [openSection, setOpenSection] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    void readLiveFields().then((m) => { if (alive) setLiveFields(m); });
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     fetch("/api/admin/content")
@@ -512,7 +553,9 @@ export default function AdminDashboard() {
         {MANUAL_CARDS.filter((card) => card.game === manualGame).map((card) => {
           const e = manualFor(card.cls);
           const vals = parseManualText(e.text);
-          const count = card.fields.filter((f) => vals[f]).length;
+          // What the live card actually renders wins over the captured list.
+          const fields = liveFields[card.cls]?.length ? liveFields[card.cls] : card.fields;
+          const count = fields.filter((f) => vals[f]).length;
           return (
             <div key={card.id} style={{ borderTop: "1px solid var(--j-border)", marginTop: 12, paddingTop: 10 }}>
               <strong>{card.name}</strong>
@@ -528,7 +571,7 @@ export default function AdminDashboard() {
                 </label>
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>
-                {card.fields.map((f) => {
+                {fields.map((f) => {
                   const auto = card.cls === "table-7" && TOTO_AUTO.has(f);
                   const shown = auto ? (totoDerived(vals)[f] || "") : (vals[f] || "");
                   return (
