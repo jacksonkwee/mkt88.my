@@ -2676,6 +2676,30 @@ export async function buildSnapshot(): Promise<Snapshot> {
       }
     }
     /*
+     * Everything the two passes above could not read, read as plain text.
+     *
+     * They only accept digits, so a letter ("jp_letter=B"), a money figure
+     * ("jp_pool=USD 1,741,072.81"), a status ("first_jackpot_status=Partially
+     * Won") or a star pattern ("d6_first_number_2=85463*") was silently dropped
+     * and the cell on the card stayed empty. This fills any box that earlier
+     * passes did not, and never overwrites one they did.
+     */
+    for (const line of text.split(/\r?\n/)) {
+      const m = /^\s*([A-Za-z][A-Za-z0-9_-]{0,48})\s*[:=]\s*(.+?)\s*$/.exec(line);
+      if (!m) continue;
+      if (/^[A-Z0-9]{1,3}$/.test(m[1])) continue; // short aliases handled above
+      if (typed[m[1]] === undefined) typed[m[1]] = m[2];
+    }
+    /*
+     * "1st = D 2890" - the operator prints the prize letter in front of the
+     * number, so the digit reader above saw "D" and skipped the line. Take the
+     * number at the end.
+     */
+    for (const m of text.matchAll(/^\s*(1st|2nd|3rd)\s*[:=]\s*[A-W]?\s*(\d{1,4})\s*$/gim)) {
+      const id = { "1st": "first_prize", "2nd": "second_prize", "3rd": "third_prize" }[m[1].toLowerCase() as "1st" | "2nd" | "3rd"];
+      if (id && typed[id] === undefined) typed[id] = m[2];
+    }
+    /*
      * A plain list of numbers still fills a card in order, but only when no
      * named cell was given.
      */
