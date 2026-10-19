@@ -560,6 +560,23 @@ export default function AdminDashboard() {
             <div key={card.id} style={{ borderTop: "1px solid var(--j-border)", marginTop: 12, paddingTop: 10 }}>
               <strong>{card.name}</strong>
               <span style={{ color: "var(--muted)", fontSize: 12, marginLeft: 8 }}>{card.cls}</span>
+              {/*
+               * One click to remove this card's typed board.
+               *
+               * Leftover lines from an older evening ("A=7554 ...") keep
+               * winning over the automatic feed, because a typed board always
+               * has priority. Deleting them line by line is easy to get wrong,
+               * so the whole entry can be cleared here.
+               */}
+              {e.text || e.date || e.drawNo ? (
+                <button
+                  type="button"
+                  onClick={() => { if (confirm("清空这张卡的手写记录？自动成绩会重新显示。")) setManual(card.cls, { text: "", date: "", drawNo: "" }); }}
+                  style={{ marginLeft: 10, padding: "4px 10px", fontSize: 12, borderRadius: 6, border: "1px solid #d0d5dd", background: "#fff", cursor: "pointer" }}
+                >
+                  清空这张卡
+                </button>
+              ) : null}
               <div style={{ display: "flex", gap: 12, alignItems: "center", margin: "6px 0", flexWrap: "wrap" }}>
                 <label style={{ fontSize: 13 }}>
                   日期
