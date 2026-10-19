@@ -59,6 +59,77 @@ let inflight: Promise<Snapshot> | null = null;
 let warmer: ReturnType<typeof setInterval> | null = null;
 
 /**
+ * Grand Dragon's official board, refreshed beside the snapshot instead of
+ * inside it.
+ *
+ * The operator is the fastest source this game has - on 17 Oct 2026 its board
+ * carried the new draw 18 seconds before the mirror did - but its host is also
+ * the least dependable: Cloudflare refuses our datacenter for long stretches.
+ * While it is refusing, the two dated-page fetches sat inside buildSnapshot()
+ * until their 4 second timeout on EVERY rebuild, so one blocked site held all
+ * eleven games back by four seconds.
+ *
+ * So the fetch moved out of the awaited sweep. Each build publishes whatever
+ * the last successful read produced, and kicks off the next read in the
+ * background; the page the player sees never waits for gdlotto. When the
+ * operator answers, its board is what the card carries. When it is blocked, the
+ * mirror's copy still lands first and keeps the card alive until the block
+ * clears - with a backoff, so a blocked IP is not hammered into a longer block.
+ */
+type GdOfficial = {
+  iso: string;
+  board: Record<string, string> | null;
+  six: SixEntry;
+  jp: Record<string, string> | null;
+  /** True when the board came from the operator's complete dated page. */
+  strict: boolean;
+  at: number;
+};
+let gdOfficial: GdOfficial | null = null;
+let gdRefreshing = false;
+let gdNextAttempt = 0;
+/** 8s between reads while the operator answers, 60s while it is refusing. */
+const GD_REFRESH_MS = 8000;
+const GD_BACKOFF_MS = 60000;
+
+function refreshGdOfficial(iso: string): void {
+  if (gdRefreshing || Date.now() < gdNextAttempt) return;
+  gdRefreshing = true;
+  void (async () => {
+    try {
+      const [page, api] = await Promise.all([gdSixToday(iso), gdApiResult(iso)]);
+      const apiParts = api ? gdApiSix(api) : { six: null, jp: null };
+      /*
+       * Whichever board is for the NEWER draw wins.
+       *
+       * The dated page answers today's URL with yesterday's complete board
+       * until today's is published, while the app API starts handing over
+       * today's board number by number as they are drawn. Taking the page
+       * unconditionally would go back to showing yesterday until the whole
+       * draw had finished - the opposite of what this card is for.
+       */
+      const pageBoard = page.four || null;
+      const apiBoard = api ? gdApiBoard(api) : null;
+      const pageLater = drawDay(pageBoard?.date) >= drawDay(apiBoard?.date);
+      const board = pageBoard && pageLater ? pageBoard : apiBoard || pageBoard;
+      const strict = !!board && board === pageBoard;
+      const six = page.six || apiParts.six;
+      const jp = page.jp || apiParts.jp;
+      if (board || six || jp) {
+        gdOfficial = { iso, board, six, jp, strict, at: Date.now() };
+        gdNextAttempt = Date.now() + GD_REFRESH_MS;
+      } else {
+        gdNextAttempt = Date.now() + GD_BACKOFF_MS;
+      }
+    } catch {
+      gdNextAttempt = Date.now() + GD_BACKOFF_MS;
+    } finally {
+      gdRefreshing = false;
+    }
+  })();
+}
+
+/**
  * One rebuild at a time. Several phones can poll in the same second, and each
  * one used to fire its own sweep of ~13 upstream pages. They now share a single
  * build, which is what makes the shorter freshness window affordable.
@@ -1659,7 +1730,13 @@ async function writeSgGuard(board: Record<string, string>): Promise<void> {
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
-  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, gdSix, gdApi, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored] = await Promise.all([
+  // Grand Dragon's official board is read beside this sweep, never inside it -
+  // see refreshGdOfficial(). Everything else here is answered by one of these.
+  refreshGdOfficial(today.iso);
+  // Only today's read counts. A host that has been blocked since yesterday must
+  // not leave yesterday's board looking like this evening's answer.
+  const gd = gdOfficial && gdOfficial.iso === today.iso ? gdOfficial : null;
+  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored] = await Promise.all([
     get("https://live4dresult.net/"),
     /*
      * The mirror's East Malaysia and Singapore pages used to be read here as
@@ -1684,8 +1761,6 @@ export async function buildSnapshot(): Promise<Snapshot> {
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
     hariFor("19:30", yest.iso, yest.noPad),
-    gdSixToday(today.iso),
-    gdApiResult(today.iso),
     nineOfficialToday(today.iso),
     live4dSgToday(today.iso),
     magnumLiveToday(today.iso),
@@ -1861,25 +1936,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * earlier, so an older board cannot displace a newer one: drawNotOlder keeps
    * whichever draw is current.
    */
-  const gd4 = gdSix.four;
-  if (gd4 && checkSource("grand-dragon", "Grand Dragon 豪龙（官方）", "table-13", gd4)) {
+  const gd4 = gd?.board || null;
+  /*
+   * The complete page board is shape-checked like every other official board.
+   * The app API's board is NOT: it fills in one number at a time, and the
+   * operator sometimes publishes the same number twice, which is a real result.
+   * Refusing that board would have kept the mirror's numbers on the card during
+   * exactly the minutes the official one is ahead.
+   */
+  if (gd4 && (!gd?.strict || checkSource("grand-dragon", "Grand Dragon 豪龙（官方）", "table-13", gd4))) {
     const base = (cards["table-13"] || {}) as Record<string, string>;
     if (drawNotOlder(gd4.date, base.date)) cards["table-13"] = mergeCardPayload(base, gd4);
-  }
-  /*
-   * The same board from the operator's app API (see gdApiResult).
-   *
-   * This is the writer that keeps the card moving DURING a draw: the operator
-   * fills its fields one at a time, so each rebuild publishes the numbers that
-   * are out and leaves the rest as holes. It goes through the same two guards as
-   * every other official board - a newer draw replaces the card whole (so no
-   * number from yesterday can sit under today's date), an older one is refused.
-   */
-  const apiBoard = gdApi ? gdApiBoard(gdApi) : null;
-  const apiSix = gdApi ? gdApiSix(gdApi) : { six: null, jp: null };
-  if (apiBoard && drawNotOlder(apiBoard.date, (cards["table-13"] as Record<string, string> | undefined)?.date)) {
-    cards["table-13"] = mergeCardPayload((cards["table-13"] || {}) as Record<string, string>, apiBoard);
-    noteSource("grand-dragon-api", "Grand Dragon 豪龙（官方 API）", { ok: true });
   }
   /*
    * Special Cash Sweep from the operator's own feed. This one carries its draw
@@ -2411,7 +2478,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * typed for; it stops winning once the feed has a newer draw (see the pass
    * below, which refuses a typed board older than the card).
    */
-  const gd6Feed = gdSix.six || apiSix.six;
+  const gd6Feed = gd?.six || null;
   let gd6Written = false;
   if (gd6Feed?.date && drawNotOlder(gd6Feed.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
     const base = (cards["table-14"] || {}) as Record<string, string>;
@@ -2681,7 +2748,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
-    gd6: gdSix.six || apiSix.six, gdjp7: gdSix.jp || apiSix.jp, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
+    gd6: gd?.six || null, gdjp7: gd?.jp || null, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
   };
   // Store any source that just changed state (one write per change, not one per
   // rebuild - this runs every few seconds).
