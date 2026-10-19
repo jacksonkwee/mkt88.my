@@ -2681,6 +2681,29 @@ export async function buildSnapshot(): Promise<Snapshot> {
       const bare = text.match(/\d{6,7}/);
       if (bare) typed.six_main = bare[0].slice(0, 6);
     }
+    /*
+     * The 6D card's own figures, typed the way they are printed.
+     *
+     * The generic reader above only accepts bare digits, so "JPPOOL=USD
+     * 6,644,162.00" lost its currency and its commas, and "JPGRAND=153816 + 7"
+     * or "JPLETTER=B" were dropped completely. Each of the four has its own
+     * shape, so each is read on its own here.
+     */
+    if (cls === "table-14") {
+      const pool = /(?:jppool|jp7_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
+      if (pool) {
+        const n = Number(pool[1].replace(/,/g, ""));
+        if (Number.isFinite(n) && n > 0) {
+          typed.jp7_pool = "USD " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+      }
+      const grand = /(?:jpgrand|jp7_grand)\s*[:=]\s*([0-9]{1,6}\s*\+\s*[0-9])/i.exec(text);
+      if (grand) typed.jp7_grand = grand[1].replace(/\s+/g, " ");
+      const letter = /(?:jpletter|jp_letter)\s*[:=]\s*([A-M])\b/i.exec(text);
+      if (letter) typed.jp_letter = letter[1].toUpperCase();
+      const units = /(?:jpunits|jp_units)\s*[:=]\s*([\d,]+)/i.exec(text);
+      if (units) typed.jp_units = units[1].replace(/,/g, "");
+    }
     if (!Object.keys(typed).length) continue;
     /*
      * A typed board is only used while the card has not moved past it.
