@@ -85,6 +85,22 @@ const MANUAL_CARDS: ManualCard[] = (() => {
   }
   const out: ManualCard[] = [...byCls.values()];
   /*
+   * Cards whose boxes changed shape since the page was captured.
+   *
+   * The grid is built from the captured markup, so when the Grand Dragon 6D
+   * card moved from jp7_pool to jp_pool (and never had a letter box captured at
+   * all) those fields simply had no cell to type into. They are added here for
+   * every card, whatever the capture holds.
+   */
+  const EXTRA_FIELDS: Record<string, string[]> = {
+    "table-14": ["six_main", "jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+  };
+  for (const card of out) {
+    for (const f of EXTRA_FIELDS[card.cls] || []) {
+      if (!card.fields.includes(f)) card.fields.push(f);
+    }
+  }
+  /*
    * Perdana and HariHari 4D: drawn by position, so there are no data-ids to
    * read. Their boxes are the operator's own letters - A-M specials, N-W
    * consolations - plus the three prizes, which come out of three of those
@@ -500,7 +516,13 @@ export default function AdminDashboard() {
                           value={shown}
                           onChange={(ev) => {
                             const next = { ...vals };
-                            next[f] = ev.target.value.replace(/[^0-9]/g, "").slice(0, 7);
+                            /*
+                             * Every box used to strip anything that was not a
+                             * digit, so a jackpot letter, a money figure or a
+                             * sliced 6D pattern could not be typed at all - the
+                             * cell simply refused. Text is kept as typed now.
+                             */
+                            next[f] = ev.target.value.slice(0, 24);
                             if (card.cls === "table-7") Object.assign(next, totoDerived(next));
                             setManual(card.cls, { text: buildManualText(next) });
                           }}
