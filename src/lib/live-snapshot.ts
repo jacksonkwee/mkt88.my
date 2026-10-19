@@ -2950,6 +2950,27 @@ export async function buildSnapshot(): Promise<Snapshot> {
   {
     const g13 = cards["table-13"] as Record<string, string> | undefined;
     if (g13) {
+      /*
+       * A blank booth is data, not "no news".
+       *
+       * Grand Dragon blanks the three boxes whose numbers became 1st/2nd/3rd.
+       * Leaving those keys out let the phone keep whatever it had shown before
+       * (the previous draw's number sat in B and E all evening - reported
+       * 19 Oct 2026). Once the board carries any number, the empty boxes are
+       * written as "----" so the card is cleared with it.
+       */
+      const anyShown = [...Array.from({ length: 13 }, (_, i) => g13["special-" + (i + 1)]),
+        ...Array.from({ length: 10 }, (_, i) => g13["consolation-" + (i + 1)]),
+        g13.first_prize, g13.second_prize, g13.third_prize]
+        .some((v) => /^\d{4}/.test(String(v || "").trim()));
+      if (anyShown) {
+        for (let i = 1; i <= 13; i++) {
+          if (g13["special-" + i] === undefined || String(g13["special-" + i]).trim() === "") g13["special-" + i] = "----";
+        }
+        for (let i = 1; i <= 10; i++) {
+          if (g13["consolation-" + i] === undefined || String(g13["consolation-" + i]).trim() === "") g13["consolation-" + i] = "----";
+        }
+      }
       if (gdBooths.iso !== today.iso) gdBooths = { iso: today.iso, map: {} };
       let learned = false;
       for (let i = 1; i <= 13; i++) {
