@@ -1462,7 +1462,15 @@ async function cashSweepToday(): Promise<Record<string, string> | null> {
  */
 async function stc4dToday(): Promise<Record<string, string> | null> {
   try {
-    const html = await get("https://stc4d.com/live-draw", false, 4000, 0);
+    /*
+     * Both pages are asked for at once. This used to be two round trips in a
+     * row - the live board, then the home page for the jackpot pools - and
+     * every rebuild waited for both of them one after the other.
+     */
+    const [html, home] = await Promise.all([
+      get("https://stc4d.com/live-draw", false, 4000, 0),
+      get("https://stc4d.com/", false, 4000, 0),
+    ]);
     if (!html) return null;
     const four = (v: string): string => (/^\d{3,4}$/.test(v) ? v.padStart(4, "0") : "----");
     const fm = /id="ld-first"[^>]*>\s*(\d{3,4})\s*</.exec(html);
@@ -1501,7 +1509,6 @@ async function stc4dToday(): Promise<Record<string, string> | null> {
      * page: "4D Jackpot 1" carries the amount in .reference-jackpot-value, and
      * "Jackpot 2 Pool" in the <strong> beside it.
      */
-    const home = await get("https://stc4d.com/", false, 4000, 0);
     if (home) {
       const j1 = /class="reference-jackpot-value"[^>]*>([^<]+)</.exec(home);
       const j2 = /Jackpot 2 Pool[\s\S]{0,240}?<strong>([^<]+)</.exec(home);
@@ -1755,8 +1762,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * believed to take 14s - is gone: it threw away slow but perfectly good
      * answers, and with them the draw.
      */
-    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 6000, 1),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 6000, 1),
+    /*
+     * No retry any more. Perdana answers in about 1.6 seconds, but when it does
+     * hang this call used to wait six seconds and then try again - twelve
+     * seconds, holding every one of the eleven games while it did. A missed
+     * cycle keeps the last good copy on the card, and the next cycle is only
+     * four seconds away.
+     */
+    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 6000, 0),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 6000, 0),
     hariFor("15:30", today.iso, today.noPad),
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
@@ -2752,7 +2766,12 @@ export async function buildSnapshot(): Promise<Snapshot> {
   };
   // Store any source that just changed state (one write per change, not one per
   // rebuild - this runs every few seconds).
-  await flushSourceHealth();
+  /*
+   * Recorded after the answer is sent. It only does anything when a source has
+   * just changed state, and on those cycles it was putting a Firestore round
+   * trip in front of the numbers - measured as part of every rebuild.
+   */
+  try { after(() => flushSourceHealth()); } catch { void flushSourceHealth(); }
   cache = snap;
   return snap;
 }
