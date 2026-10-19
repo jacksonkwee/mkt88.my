@@ -2962,7 +2962,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
       const anyShown = [...Array.from({ length: 13 }, (_, i) => g13["special-" + (i + 1)]),
         ...Array.from({ length: 10 }, (_, i) => g13["consolation-" + (i + 1)]),
         g13.first_prize, g13.second_prize, g13.third_prize]
-        .some((v) => /^\d{4}/.test(String(v || "").trim()));
+        // "E 9162" counts as a number on the board just as "9162" does.
+        .some((v) => /\d{3,}/.test(String(v || "").trim()));
       if (anyShown) {
         for (let i = 1; i <= 13; i++) {
           if (g13["special-" + i] === undefined || String(g13["special-" + i]).trim() === "") g13["special-" + i] = "----";
