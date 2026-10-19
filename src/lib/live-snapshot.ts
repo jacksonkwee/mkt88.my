@@ -734,11 +734,20 @@ function gd4Of(html: string): { iso: string; values: Record<string, string> } | 
    */
   const row = (n: string) => {
     const m = new RegExp(n + "\\s*Prize\\s*\\(\\s*([A-M])\\s*\\)\\s*(\\d{4})").exec(txt);
-    return m ? m[2] : null;
+    return m ? { letter: m[1], value: m[2] } : null;
   };
   const first = row("1st"), second = row("2nd"), third = row("3rd");
   if (!first || !second || !third) return null;
-  const values: Record<string, string> = { first_prize: first, second_prize: second, third_prize: third };
+  /*
+   * The operator prints the prize as "1st Prize (D) 2890": the letter is the
+   * booth the number came from. It is kept beside the number so the card can
+   * show "D 2890", and so the letter survives even when that booth is blank on
+   * the board.
+   */
+  const values: Record<string, string> = {
+    first_prize: first.value, second_prize: second.value, third_prize: third.value,
+    __prizeLetter1: first.letter, __prizeLetter2: second.letter, __prizeLetter3: third.letter,
+  };
   const segment = (from: string, to: string) => {
     const m = new RegExp(from + "([\\s\\S]*?)" + to).exec(txt);
     return m ? m[1] : "";
@@ -882,6 +891,8 @@ function gdApiBoard(j: Record<string, unknown>): Record<string, string> | null {
   [..."NOPQRSTUVW"].forEach((L, i) => { out["consolation-" + (i + 1)] = cell(L); });
   ["first_prize", "second_prize", "third_prize"].forEach((id, i) => {
     out[id] = letters[i] ? val("DrawNumber" + letters[i]) || "----" : "----";
+    // The booth the prize came from, kept so the card can print "D 2890".
+    if (/^[A-W]$/.test(letters[i] || "")) out["__prizeLetter" + (i + 1)] = letters[i];
   });
   // A date with no number on it is not a board.
   const any = Object.keys(out).some((k) => /^\d{4}$/.test(out[k]));
@@ -2697,9 +2708,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * number, so the digit reader above saw "D" and skipped the line. Take the
      * number at the end.
      */
-    for (const m of text.matchAll(/^\s*(1st|2nd|3rd)\s*[:=]\s*[A-W]?\s*(\d{1,4})\s*$/gim)) {
-      const id = { "1st": "first_prize", "2nd": "second_prize", "3rd": "third_prize" }[m[1].toLowerCase() as "1st" | "2nd" | "3rd"];
-      if (id && typed[id] === undefined) typed[id] = m[2];
+    for (const m of text.matchAll(/^\s*(1st|2nd|3rd)\s*[:=]\s*([A-W])?\s*(\d{1,4})\s*$/gim)) {
+      const ord = m[1].toLowerCase() as "1st" | "2nd" | "3rd";
+      const id = { "1st": "first_prize", "2nd": "second_prize", "3rd": "third_prize" }[ord];
+      const which = { "1st": 1, "2nd": 2, "3rd": 3 }[ord];
+      if (id && typed[id] === undefined) typed[id] = m[3];
+      /* "1st = D 2890" - remember the booth so the card can print "D 2890". */
+      if (m[2] && typed["__prizeLetter" + which] === undefined) typed["__prizeLetter" + which] = m[2].toUpperCase();
     }
     /*
      * A plain list of numbers still fills a card in order, but only when no
@@ -2859,6 +2874,34 @@ export async function buildSnapshot(): Promise<Snapshot> {
       c.second_prize = "----";
       c.third_prize = "----";
     }
+  }
+  /*
+   * Grand Dragon prints its prizes as the booth plus the number: "D 2890".
+   *
+   * The number came up in one of the lettered special boxes (A-M), and the
+   * operator writes that letter in front of the prize while blanking the box it
+   * came from. The card was showing the bare number, so a player could not tell
+   * which booth it belonged to (reported 19 Oct 2026). The letter is taken from
+   * the board itself first - a box still holding that number - and otherwise
+   * from the letter the operator published beside the prize.
+   *
+   * Done after the duplicate check above, which compares bare numbers: adding
+   * the letter first would have hidden a genuinely repeated prize.
+   */
+  for (const cls of ["table-13", "table-14"]) {
+    const c = cards[cls] as Record<string, string> | undefined;
+    if (!c) continue;
+    const ids = ["first_prize", "second_prize", "third_prize"];
+    ids.forEach((id, i) => {
+      const raw = String(c[id] || "").trim();
+      if (!/^\d{4}$/.test(raw)) return;                 // already has a letter, or empty
+      let letter = String(c["__prizeLetter" + (i + 1)] || "").trim().toUpperCase();
+      if (!/^[A-W]$/.test(letter)) {
+        const idx = [..."ABCDEFGHIJKLM"].findIndex((_, j) => String(c["special-" + (j + 1)] || "").trim() === raw);
+        letter = idx >= 0 ? "ABCDEFGHIJKLM"[idx] : "";
+      }
+      if (letter) c[id] = letter + " " + raw;
+    });
   }
 
   /*
