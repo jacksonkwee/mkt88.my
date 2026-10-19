@@ -901,6 +901,15 @@ function gdApiSix(j: Record<string, unknown>): { six: SixEntry; jp: Record<strin
     jp.jp7_pool = "USD" + pool.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   if (sameDay && /^\d{7}$/.test(digits)) jp.jp7_grand = digits.slice(0, 6) + " + " + digits.slice(6);
+  /*
+   * The letter and the winning-unit count, when the operator includes them.
+   * They are shown beside the pool on the card, and nothing used to fill them
+   * at all - the boxes were markup the app never wrote.
+   */
+  const letter = String(j.Jackpot61DLetter ?? j.JackpotLetter ?? "").trim().toUpperCase();
+  if (sameDay && /^[A-M]$/.test(letter)) jp.jp_letter = letter;
+  const units = String(j.Jackpot61DUnits ?? j.JackpotUnits ?? "").trim();
+  if (sameDay && /^\d+$/.test(units)) jp.jp_units = units;
   return { six, jp: Object.keys(jp).length ? jp : null };
 }
 
@@ -1664,8 +1673,13 @@ const MANUAL_FIELDS: Record<string, string[]> = {
     ...Array.from({ length: 13 }, (_, i) => "special-" + (i + 1)),
     ...Array.from({ length: 10 }, (_, i) => "consolation-" + (i + 1)),
   ],
-  // Grand Dragon 6D is one six-digit number; its sub-prizes are its own slices.
-  "table-14": ["six_main"],
+  /*
+   * Grand Dragon's 6D card carries more than the six digits: the 6+1D pool,
+   * its grand prize, the jackpot letter and the winning units. All four are
+   * typed by hand when the operator's API is refusing us, which is the only
+   * way that card can be complete on a blocked evening.
+   */
+  "table-14": ["six_main", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
 };
 
 /**
@@ -1689,7 +1703,11 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
     ...Object.fromEntries([...GD_CONSOLATION_LETTERS].map((L, i) => [L, "consolation-" + (i + 1)])),
     "1ST": "first_prize", "2ND": "second_prize", "3RD": "third_prize",
   },
-  "table-14": { "6D": "six_main" },
+  "table-14": {
+    "6D": "six_main",
+    "JPPOOL": "jp7_pool", "JPGRAND": "jp7_grand",
+    "JPLETTER": "jp_letter", "JPUNITS": "jp_units",
+  },
 };
 
 /**
@@ -1710,7 +1728,10 @@ const MANUAL_CLEAR: Record<string, string[]> = {
     ...Array.from({ length: 6 }, (_, i) => "supreme_toto_number_" + (i + 1)),
   ],
   "table-13": Object.values(MANUAL_KEYS["table-13"]),
-  "table-14": ["six_main", "six_5a", "six_5b", "six_4a", "six_4b", "six_3a", "six_3b", "six_2a", "six_2b"],
+  "table-14": [
+    "six_main", "six_5a", "six_5b", "six_4a", "six_4b", "six_3a", "six_3b", "six_2a", "six_2b",
+    "jp7_pool", "jp7_grand", "jp_letter", "jp_units",
+  ],
 };
 
 /**
