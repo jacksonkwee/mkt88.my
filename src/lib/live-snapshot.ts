@@ -495,11 +495,18 @@ function gdSocketBoard(snapshot: FourDKingSnapshot | null): Record<string, strin
   if (pool) {
     out.jp_pool = pool;
     out.jp7_pool = pool;
+    out.jp4_pool = pool;
   }
   const letter = /^[A-M]/i.exec(String(data.DrawNumberJackpot ?? "").trim());
-  if (letter) out.jp_letter = letter[0].toUpperCase();
+  if (letter) {
+    out.jp_letter = letter[0].toUpperCase();
+    out.jp4_letter = letter[0].toUpperCase();
+  }
   const units = String(data.JackpotWinner ?? "").trim();
-  if (/^\d+$/.test(units)) out.jp_units = units;
+  if (/^\d+$/.test(units)) {
+    out.jp_units = units;
+    out.jp4_units = units;
+  }
   return out;
 }
 
@@ -1793,7 +1800,7 @@ const MANUAL_FIELDS: Record<string, string[]> = {
     "first_prize", "second_prize", "third_prize",
     ...Array.from({ length: 13 }, (_, i) => "special-" + (i + 1)),
     ...Array.from({ length: 10 }, (_, i) => "consolation-" + (i + 1)),
-    "jp_pool", "jp_letter", "jp_units", "jp7_pool", "jp7_grand",
+    "jp4_pool", "jp4_letter", "jp4_units",
   ],
   /*
    * Grand Dragon's 6D card carries more than the six digits: the 6+1D pool,
@@ -1827,7 +1834,7 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
     ...Object.fromEntries([...GD_SPECIAL_LETTERS].map((L, i) => [L, "special-" + (i + 1)])),
     ...Object.fromEntries([...GD_CONSOLATION_LETTERS].map((L, i) => [L, "consolation-" + (i + 1)])),
     "1ST": "first_prize", "2ND": "second_prize", "3RD": "third_prize",
-    "JPPOOL": "jp_pool", "JPLETTER": "jp_letter", "JPUNITS": "jp_units",
+    "JPPOOL": "jp4_pool", "JPLETTER": "jp4_letter", "JPUNITS": "jp4_units",
   },
   "table-14": {
     "6D": "six_main",
@@ -2893,25 +2900,32 @@ export async function buildSnapshot(): Promise<Snapshot> {
      */
     if (cls === "table-13" || cls === "table-14") {
       /*
-       * The card the owner sees prints "Jackpot Pool / 奖金池" from data-id
-       * jp_pool - jp7_pool is only a legacy id a guard script still looks for.
-       * Both are written so the box and the guard agree.
+       * The 4D card prints this block from jp4_pool / jp4_letter / jp4_units.
+       * The 6D card uses jp7_pool and jp7_grand. The older jp_* names are kept
+       * as aliases so existing typed content and guards keep working.
        */
-      const pool = /(?:jppool|jp7_pool|jp_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
+      const pool = /(?:jppool|jp7_pool|jp_pool|jp4_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
       if (pool) {
         const n = Number(pool[1].replace(/,/g, ""));
         if (Number.isFinite(n) && n > 0) {
           const money = "USD " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
           typed.jp_pool = money;
           typed.jp7_pool = money;
+          if (cls === "table-13") typed.jp4_pool = money;
         }
       }
       const grand = /(?:jpgrand|jp7_grand)\s*[:=]\s*([0-9]{1,6}\s*\+\s*[0-9])/i.exec(text);
       if (grand) typed.jp7_grand = grand[1].replace(/\s+/g, " ");
       const letter = /(?:jpletter|jp_letter|jp4_letter)\s*[:=]\s*([A-M])\b/i.exec(text);
-      if (letter) typed.jp_letter = letter[1].toUpperCase();
+      if (letter) {
+        typed.jp_letter = letter[1].toUpperCase();
+        if (cls === "table-13") typed.jp4_letter = letter[1].toUpperCase();
+      }
       const units = /(?:jpunits|jp_units|jp4_units)\s*[:=]\s*([\d,]+)/i.exec(text);
-      if (units) typed.jp_units = units[1].replace(/,/g, "");
+      if (units) {
+        typed.jp_units = units[1].replace(/,/g, "");
+        if (cls === "table-13") typed.jp4_units = units[1].replace(/,/g, "");
+      }
     }
     /*
      * Perdana's 4D Jackpot card, same treatment.
