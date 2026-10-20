@@ -3,6 +3,7 @@ import sgLiveCapture from "../../data/sg-live.json";
 import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
 import { getSiteContent } from "./site-store";
 import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
+import { getFourDKingSnapshot, type FourDKingSnapshot } from "./fourdking";
 import { after } from "next/server";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
@@ -460,6 +461,67 @@ function parseLiveFeed(feed: any): Record<string, Record<string, string>> {
   }
   return out;
 }
+
+function usdText(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  const match = raw.match(/[\d,.]+/);
+  if (!match) return "";
+  const number = Number(match[0].replace(/,/g, ""));
+  if (!Number.isFinite(number)) return "";
+  return "USD " + number.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/** 4dking's live GD packet, shaped like the table-13 card. */
+function gdSocketBoard(snapshot: FourDKingSnapshot | null): Record<string, string> | null {
+  const data = snapshot?.gd;
+  const iso = String(data?.dd ?? "").slice(0, 10);
+  if (!data || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const cell = (value: unknown) => {
+    const text = String(value ?? "").trim();
+    return !text || text === "-" ? "----" : text;
+  };
+  const out: Record<string, string> = {
+    date: weekdayOf(iso),
+    draw_no: cell(data.dn),
+  };
+  ["first_prize", "second_prize", "third_prize"].forEach((id, i) => {
+    out[id] = cell(data["n" + (i + 1)]);
+    const letter = String(data["n" + (i + 1) + "_pos"] ?? "").trim().toUpperCase();
+    if (/^[A-M]$/.test(letter)) out["__prizeLetter" + (i + 1)] = letter;
+  });
+  for (let i = 1; i <= 13; i++) out["special-" + i] = cell(data["s" + i]);
+  for (let i = 1; i <= 10; i++) out["consolation-" + i] = cell(data["c" + i]);
+  const pool = usdText(data.JackpotPrize);
+  if (pool) {
+    out.jp_pool = pool;
+    out.jp7_pool = pool;
+  }
+  const letter = /^[A-M]/i.exec(String(data.DrawNumberJackpot ?? "").trim());
+  if (letter) out.jp_letter = letter[0].toUpperCase();
+  const units = String(data.JackpotWinner ?? "").trim();
+  if (/^\d+$/.test(units)) out.jp_units = units;
+  return out;
+}
+
+/** 4dking's live GD6D packet, shaped like table-14 and the shared 6D fields. */
+function gdSocketSix(snapshot: FourDKingSnapshot | null): {
+  six: SixEntry;
+  jp: Record<string, string> | null;
+} {
+  const data = snapshot?.gd6;
+  const main = String(data?.n1 ?? "").trim();
+  const iso = String(data?.dd ?? snapshot?.gd?.dd ?? "").slice(0, 10);
+  const six: SixEntry = /^\d{6}$/.test(main) && /^\d{4}-\d{2}-\d{2}$/.test(iso)
+    ? { main, subs: sixParts(main), date: weekdayOf(iso) }
+    : null;
+  const jp: Record<string, string> = {};
+  const pool = usdText(data?.jp1);
+  if (pool) jp.jp7_pool = pool;
+  const extra = String(data?.d1 ?? "").trim();
+  if (/^\d$/.test(extra) && /^\d{6}$/.test(main)) jp.jp7_grand = main + " + " + extra;
+  return { six, jp: Object.keys(jp).length ? jp : null };
+}
+
 function myDate(offsetDays = 0): { iso: string; noPad: string } {
   const now = new Date(Date.now() + offsetDays * 86400000);
   const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit" }).format(now).split("-");
@@ -1901,16 +1963,10 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Only today's read counts. A host that has been blocked since yesterday must
   // not leave yesterday's board looking like this evening's answer.
   const gd = gdOfficial && gdOfficial.iso === today.iso ? gdOfficial : null;
-  const [home, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored] = await Promise.all([
+  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored, gdSocket] = await Promise.all([
     get("https://live4dresult.net/"),
-    /*
-     * The mirror's East Malaysia and Singapore pages used to be read here as
-     * well. Both are gone: Sabah 88, Sandakan, Cash Sweep, Singapore 4D and
-     * Singapore Toto all have an operator source of their own now, and a mirror
-     * copy of the same card was only ever a second writer of it (asked for
-     * 15 Oct 2026). A source that drops out for a round cannot empty a card -
-     * the last good snapshot is kept (see the cache pass further down).
-     */
+    get("https://live4dresult.net/sabah-sarawak-4d-results/"),
+    get("https://live4dresult.net/singapore-4d-results/"),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
     get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
@@ -1942,6 +1998,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     damacaiToday(today.iso),
     totoResults(),
     readSgGuard(),
+    getFourDKingSnapshot(),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -1950,6 +2007,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const sgTotoOfficial = parseSingaporeToto(sgToto);
   const liveCards = parseLiveFeed(feed);
   const homeCards = parseCards(home);
+  const eastCards = parseCards(east);
+  const sgMirrorCards = parseCards(sgTotoPage);
+  const gdSocketValues = gdSocketBoard(gdSocket);
+  if (gdSocketValues) {
+    liveCards["table-13"] = mergeCardPayload(liveCards["table-13"] || {}, gdSocketValues);
+    noteSource("fourdking", "4DKing Socket 豪龙实时", { ok: true });
+  }
   /*
    * Every source is checked against the shape its game must have before it is
    * allowed onto a card.
@@ -1976,6 +2040,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
   };
   const cards = {
     ...checkedFeed(homeCards, "镜像站首页"),
+    ...checkedFeed(eastCards, "镜像站东马页"),
+    ...checkedFeed(sgMirrorCards, "镜像站新加坡页"),
     ...checkedFeed(sgOfficial, "Singapore Pools"),
     ...checkedFeed(liveCards, "live4d2u"),
   };
@@ -2650,10 +2716,23 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * typed for; it stops winning once the feed has a newer draw (see the pass
    * below, which refuses a typed board older than the card).
    */
+  const socketSix = gdSocketSix(gdSocket);
   const gd6Feed = gd?.six || null;
-  if (gd6Feed?.date && drawNotOlder(gd6Feed.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
+  const socketSixDay = drawDay(socketSix.six?.date);
+  const officialSixDay = drawDay(gd6Feed?.date);
+  const socketSixWins = !!socketSix.six && (
+    !gd6Feed ||
+    socketSixDay > officialSixDay ||
+    (socketSixDay === officialSixDay && (gdSocket?.at || 0) >= (gd?.at || 0))
+  );
+  const liveGd6 = socketSixWins ? socketSix.six : gd6Feed;
+  const liveGdJp = socketSixWins
+    ? { ...(gd?.jp || {}), ...(socketSix.jp || {}) }
+    : { ...(socketSix.jp || {}), ...(gd?.jp || {}) };
+  if (socketSixWins) noteSource("fourdking:gd6", "4DKing Socket 豪龙 6D", { ok: true });
+  if (liveGd6?.date && drawNotOlder(liveGd6.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
     const base = (cards["table-14"] || {}) as Record<string, string>;
-    cards["table-14"] = mergeCardPayload(base, { date: gd6Feed.date, six_main: gd6Feed.main, ...gd6Feed.subs });
+    cards["table-14"] = mergeCardPayload(base, { date: liveGd6.date, six_main: liveGd6.main, ...liveGd6.subs });
   } else {
     /*
      * The operator's API is the only place the 6D comes from, and it refuses us
@@ -3114,10 +3193,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
+  const gdjp7 = Object.keys(liveGdJp).length ? liveGdJp : null;
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
-    gd6: gd?.six || null, gdjp7: gd?.jp || null, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
+    gd6: liveGd6, gdjp7, nine6: nineOfficial.six, nineJp: nineOfficial.jp,
   };
   // Store any source that just changed state (one write per change, not one per
   // rebuild - this runs every few seconds).
