@@ -416,12 +416,6 @@ export default function NumberHistoryApp() {
           </div>
         )}
 
-        <div style={{ textAlign: "center", color: "var(--muted)", fontSize: 12, marginTop: 16 }}>
-          {tr("nhNotePerm", lang)}
-          <div style={{ marginTop: 4 }}>
-            {tr("nhNoteRecords", lang)}
-          </div>
-        </div>
       </div>
     </div>
   );
