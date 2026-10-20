@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { gameBySlug } from "./GameDefs";
 import { markLiveValue, copyMayWrite } from "./snapshot-values";
+import { jackpotLetterOf, nextJackpotLetter } from "../../../../lib/jackpot-letter.mjs";
 
 /**
  * LiveResults - updates the rendered tables in place, without a page reload.
@@ -750,12 +751,9 @@ async function gdInfo(): Promise<GdInfo | null> {
    * follows (confirmed 6 Oct 2026).
    */
   if (cand.length >= 2) {
-    const seen = /[A-M]/.exec(String(cand[0].jp4.jp4_letter || "").toUpperCase());
-    const prev = /[A-M]/.exec(String(cand[1].jp4.jp4_letter || "").toUpperCase());
-    if (!seen && prev) {
-      const ABC = "ABCDEFGHIJKLM";
-      cand[0].jp4.jp4_letter = ABC[(ABC.indexOf(prev[0]) + 1) % 13];
-    }
+    const seen = jackpotLetterOf(cand[0].jp4.jp4_letter);
+    const previous = jackpotLetterOf(cand[1].jp4.jp4_letter);
+    if (!seen && previous) cand[0].jp4.jp4_letter = nextJackpotLetter(previous) || "----";
   }
   if (cand.length >= 2) {
     // gdlotto answers today's URL with yesterday's draw until today's is out.

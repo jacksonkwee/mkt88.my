@@ -4,6 +4,7 @@ import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
 import { getSiteContent } from "./site-store";
 import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
 import { getFourDKingSnapshot, type FourDKingSnapshot } from "./fourdking";
+import { assertCardBindings } from "./card-contracts";
 import { after } from "next/server";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
@@ -492,21 +493,11 @@ function gdSocketBoard(snapshot: FourDKingSnapshot | null): Record<string, strin
   for (let i = 1; i <= 13; i++) out["special-" + i] = cell(data["s" + i]);
   for (let i = 1; i <= 10; i++) out["consolation-" + i] = cell(data["c" + i]);
   const pool = usdText(data.JackpotPrize);
-  if (pool) {
-    out.jp_pool = pool;
-    out.jp7_pool = pool;
-    out.jp4_pool = pool;
-  }
+  if (pool) out.jp4_pool = pool;
   const letter = /^[A-M]/i.exec(String(data.DrawNumberJackpot ?? "").trim());
-  if (letter) {
-    out.jp_letter = letter[0].toUpperCase();
-    out.jp4_letter = letter[0].toUpperCase();
-  }
+  if (letter) out.jp4_letter = letter[0].toUpperCase();
   const units = String(data.JackpotWinner ?? "").trim();
-  if (/^\d+$/.test(units)) {
-    out.jp_units = units;
-    out.jp4_units = units;
-  }
+  if (/^\d+$/.test(units)) out.jp4_units = units;
   return out;
 }
 
@@ -1808,7 +1799,7 @@ const MANUAL_FIELDS: Record<string, string[]> = {
    * typed by hand when the operator's API is refusing us, which is the only
    * way that card can be complete on a blocked evening.
    */
-  "table-14": ["six_main", "jp_pool", "jp7_pool", "jp7_grand", "jp_letter", "jp_units"],
+  "table-14": ["six_main", "jp7_pool", "jp7_grand"],
   // Perdana's 4D Jackpot card: the pool, the letter it was drawn under, and
   // how many units won.
   "table-16": ["jp4_pool", "jp4_letter", "jp4_units"],
@@ -1838,8 +1829,7 @@ const MANUAL_KEYS: Record<string, Record<string, string>> = {
   },
   "table-14": {
     "6D": "six_main",
-    "JPPOOL": "jp_pool", "JPGRAND": "jp7_grand",
-    "JPLETTER": "jp_letter", "JPUNITS": "jp_units",
+    "JPPOOL": "jp7_pool", "JPGRAND": "jp7_grand",
   },
   "table-16": { "POOL4": "jp4_pool", "LETTER4": "jp4_letter", "UNITS4": "jp4_units" },
 };
@@ -2674,11 +2664,11 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * mid-reveal glitches come from there: Magnum Jackpot Gold.
    */
   /*
-   * Grand Dragon 4D (table-13) belongs here too: its 4D card is fed by the
-   * mirrors, not by an operator page - only its 6D comes from gdlotto. Without
-   * it the stale value in cell 13 that copies cell 12 is never cleared, which is
-   * exactly what was reported on 04-10-2026.
+   * The restored East Malaysia and Singapore mirror pages are early writers,
+   * like Grand Dragon 4D. They all need the date roll-over guard; only
+   * table-13 also needs the older duplicate-cell cleanup below.
    */
+  const MIRROR_BACKED = ["table-8", "table-9", "table-10", "table-12", "table-13"];
   const MIRROR_ONLY = ["table-13"];
   /*
    * A mirror card must not wear a new date while it is still showing the old
@@ -2692,7 +2682,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * on screen; until then the card stays on the last draw we can vouch for,
    * which is the rule Singapore has used since 3 Oct.
    */
-  for (const cls of MIRROR_ONLY) {
+  for (const cls of MIRROR_BACKED) {
     const c = cards[cls] as Record<string, string> | undefined;
     const prev = cache?.cards?.[cls] as Record<string, string> | undefined;
     if (!c || !prev) continue;
@@ -2901,31 +2891,32 @@ export async function buildSnapshot(): Promise<Snapshot> {
     if (cls === "table-13" || cls === "table-14") {
       /*
        * The 4D card prints this block from jp4_pool / jp4_letter / jp4_units.
-       * The 6D card uses jp7_pool and jp7_grand. The older jp_* names are kept
-       * as aliases so existing typed content and guards keep working.
+       * The 6D card uses jp7_pool and jp7_grand. Typed aliases are normalised
+       * below so only ids that exist on the rendered card leave this function.
        */
       const pool = /(?:jppool|jp7_pool|jp_pool|jp4_pool)\s*[:=]\s*(?:usd|rm)?\s*([\d,]+(?:\.\d+)?)/i.exec(text);
       if (pool) {
         const n = Number(pool[1].replace(/,/g, ""));
         if (Number.isFinite(n) && n > 0) {
           const money = "USD " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-          typed.jp_pool = money;
-          typed.jp7_pool = money;
           if (cls === "table-13") typed.jp4_pool = money;
+          else typed.jp7_pool = money;
         }
       }
       const grand = /(?:jpgrand|jp7_grand)\s*[:=]\s*([0-9]{1,6}\s*\+\s*[0-9])/i.exec(text);
       if (grand) typed.jp7_grand = grand[1].replace(/\s+/g, " ");
       const letter = /(?:jpletter|jp_letter|jp4_letter)\s*[:=]\s*([A-M])\b/i.exec(text);
-      if (letter) {
-        typed.jp_letter = letter[1].toUpperCase();
-        if (cls === "table-13") typed.jp4_letter = letter[1].toUpperCase();
-      }
+      if (letter && cls === "table-13") typed.jp4_letter = letter[1].toUpperCase();
       const units = /(?:jpunits|jp_units|jp4_units)\s*[:=]\s*([\d,]+)/i.exec(text);
-      if (units) {
-        typed.jp_units = units[1].replace(/,/g, "");
-        if (cls === "table-13") typed.jp4_units = units[1].replace(/,/g, "");
-      }
+      if (units && cls === "table-13") typed.jp4_units = units[1].replace(/,/g, "");
+    }
+    if (cls === "table-13") {
+      if (!typed.jp4_pool && typed.jp_pool) typed.jp4_pool = typed.jp_pool;
+      for (const key of ["jp_pool", "jp7_pool", "jp_letter", "jp_units"]) delete typed[key];
+    }
+    if (cls === "table-14") {
+      if (!typed.jp7_pool && typed.jp_pool) typed.jp7_pool = typed.jp_pool;
+      for (const key of ["jp_pool", "jp_letter", "jp_units"]) delete typed[key];
     }
     /*
      * Perdana's 4D Jackpot card, same treatment.
@@ -3207,7 +3198,10 @@ export async function buildSnapshot(): Promise<Snapshot> {
     }
   }
 
-  const gdjp7 = Object.keys(liveGdJp).length ? liveGdJp : null;
+  const gdjp7 = Object.keys(liveGdJp).length
+    ? Object.fromEntries(Object.entries(liveGdJp).filter(([key]) => key === "jp7_pool" || key === "jp7_grand"))
+    : null;
+  assertCardBindings(cards);
   const snap: Snapshot = {
     at: Date.now(), cards, perdana,
     hari,
