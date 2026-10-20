@@ -269,7 +269,7 @@ function rebuildOnce(): Promise<Snapshot> {
  * next one - the "a blank never replaces a known number" rule below stops that
  * from wiping a card that already has its numbers.
  */
-async function get(url: string, json = false, timeoutMs = 4000, retries = 0): Promise<any> {
+async function get(url: string, json = false, timeoutMs = 1800, retries = 0): Promise<any> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
@@ -993,7 +993,7 @@ async function totoResults(): Promise<Record<string, any> | null> {
       headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": UA },
       body: "{}",
       cache: "no-store",
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(1800),
     });
     if (!res.ok) return null;
     const j = await res.json();
@@ -1164,7 +1164,7 @@ async function refreshTotoLive(): Promise<void> {
     const res = await fetch("https://r.jina.ai/https://totolive.sportstoto.com.my/stoto/?ts=" + Date.now(), {
       headers: { "User-Agent": UA, Accept: "text/plain", "X-No-Cache": "true" },
       cache: "no-store",
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(2500),
     });
     if (!res.ok) return;
     const four = parseTotoLive(await res.text());
@@ -1340,7 +1340,7 @@ async function magnumLiveToday(iso: string): Promise<Record<string, string> | nu
     const res = await fetch("https://www.magnum4d.my/live-draw", {
       headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*", Referer: "https://www.magnum4d.my/" },
       cache: "no-store",
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(1800),
     });
     if (!res.ok) return null;
     const root = await res.json();
@@ -1553,7 +1553,7 @@ async function cashSweepToday(): Promise<Record<string, string> | null> {
     const res = await fetch("https://www.cashsweep.com.my/live.json", {
       headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*", Referer: "https://www.cashsweep.com.my/results" },
       cache: "no-store",
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(1800),
     });
     if (!res.ok) return null;
     const j = (await res.json()) as { d?: string; n?: Record<string, number | string>; j1v?: unknown; j2v?: unknown };
@@ -1680,7 +1680,7 @@ async function damacaiToday(iso: string): Promise<{ four: Record<string, string>
     const res = await fetch(DAMACAI_JSON, {
       headers: { "User-Agent": UA, Accept: "application/json,text/plain,*/*" },
       cache: "no-store",
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(1800),
     });
     if (!res.ok) return null;
     const j = (await res.json()) as Record<string, unknown>;
@@ -1927,8 +1927,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * cycle keeps the last good copy on the card, and the next cycle is only
      * four seconds away.
      */
-    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 6000, 0),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 6000, 0),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 1800, 0),
+    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 1800, 0),
     hariFor("15:30", today.iso, today.noPad),
     hariFor("19:30", today.iso, today.noPad),
     hariFor("15:30", yest.iso, yest.noPad),
