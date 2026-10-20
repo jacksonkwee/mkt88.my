@@ -2971,7 +2971,8 @@ export async function buildSnapshot(): Promise<Snapshot> {
         for (let i = 1; i <= 10; i++) {
           if (g13["consolation-" + i] === undefined || String(g13["consolation-" + i]).trim() === "") g13["consolation-" + i] = "----";
         }
-      } else if (/^20\d\d-\d\d-\d\d/.test(String(g13.date || ""))) {
+      // The card prints its date as "20-10-2026 (Tue)", not ISO.
+      } else if (/^\d{2}-\d{2}-\d{4}/.test(String(g13.date || "").trim())) {
         /*
          * The mirror has rolled to today's date but not a single number is out
          * yet. Publishing that card would put today's date over yesterday's
