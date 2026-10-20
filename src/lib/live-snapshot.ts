@@ -1980,13 +1980,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
     ...checkedFeed(liveCards, "live4d2u"),
   };
   /*
-   * Sports Toto comes from its own app API now (see totoCards). Dropping the
-   * mirror's copy here means those two cards cannot come from anywhere else;
-   * if the API is unreachable this build leaves them to the cache pass, which
-   * keeps the last board we published instead of blanking the card.
+   * Sports Toto: the mirror's copy is kept as the first writer, and the
+   * operator's own API corrects it later in the same build when it answers.
+   *
+   * These two used to be deleted here so only the API could write them. That
+   * made the cards wait for the operator even when the mirror had the new draw
+   * seconds earlier - the same regression that slowed the other games.
    */
-  delete (cards as Record<string, unknown>)["table-6"];
-  delete (cards as Record<string, unknown>)["table-7"];
   /*
    * Singapore Toto straight from Singapore Pools.
    *
