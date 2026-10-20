@@ -2654,6 +2654,23 @@ export async function buildSnapshot(): Promise<Snapshot> {
   if (gd6Feed?.date && drawNotOlder(gd6Feed.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
     const base = (cards["table-14"] || {}) as Record<string, string>;
     cards["table-14"] = mergeCardPayload(base, { date: gd6Feed.date, six_main: gd6Feed.main, ...gd6Feed.subs });
+  } else {
+    /*
+     * The operator's API is the only place the 6D comes from, and it refuses us
+     * for long stretches. Rather than leave yesterday's number under yesterday's
+     * date for ever, the card reads today with "----" until a real value lands -
+     * the same "waiting for the draw" state the 4D board uses.
+     */
+    const t14 = (cards["table-14"] || {}) as Record<string, string>;
+    const todayLabel = weekdayOf(today.iso);
+    if (drawDay(t14.date) < drawDay(todayLabel)) {
+      cards["table-14"] = {
+        ...t14,
+        date: todayLabel,
+        six_main: "----", jp7_pool: "----", jp7_grand: "----",
+        jp_letter: "----", jp_units: "----",
+      };
+    }
   }
 
   /*
