@@ -99,7 +99,7 @@ export default function DaBoGongApp() {
   };
 
   return (
-    <div className="mkt-app-screen" style={{ minHeight: "100vh", background: "var(--j-page, #f7f7f4)", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 60 }}>
+    <div className="mkt-app-screen" style={{ minHeight: "100vh", background: "var(--j-page, #f7f7f4)", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif" }}>
       <AppTopBar titleKey="dabogongTitle" />
       <div style={{ maxWidth: 480, margin: "0 auto", padding: 12 }}>
         <div style={{ background: "#fff", borderRadius: 12, padding: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>

@@ -250,7 +250,7 @@ export default function NumberHistoryApp() {
   const daboThumb = dabo ? (daboBad ? "/api/dabogong/img?u=" + encodeURIComponent(dabo.image) : dabo.image) : "";
 
   return (
-    <div className="mkt-app-screen" style={{ minHeight: "100vh", background: "var(--j-page, #f7f7f4)", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif", paddingBottom: 70 }}>
+    <div className="mkt-app-screen" style={{ minHeight: "100vh", background: "var(--j-page, #f7f7f4)", fontFamily: "-apple-system, 'Segoe UI', Roboto, Arial, sans-serif" }}>
       <AppTopBar titleKey="history" />
       <div style={{ maxWidth: 560, margin: "0 auto", padding: 12 }}>
         {/* Search + 大伯公 */}
