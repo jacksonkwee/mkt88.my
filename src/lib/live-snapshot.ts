@@ -2977,11 +2977,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
          * The mirror has rolled to today's date but not a single number is out
          * yet. Publishing that card would put today's date over yesterday's
          * numbers on the phone (reported 20 Oct 2026, right after the 19:00
-         * open). Dropping the card here leaves the cache pass holding the last
-         * complete board - yesterday, with yesterday's own date - until today's
-         * first number appears.
+         * open). Every box is written as "----" so the phone clears yesterday
+         * and shows today as pending until the first number lands.
          */
-        delete cards["table-13"];
+        g13.first_prize = "----";
+        g13.second_prize = "----";
+        g13.third_prize = "----";
+        for (let i = 1; i <= 13; i++) g13["special-" + i] = "----";
+        for (let i = 1; i <= 10; i++) g13["consolation-" + i] = "----";
       }
       if (gdBooths.iso !== today.iso) gdBooths = { iso: today.iso, map: {} };
       let learned = false;
