@@ -460,6 +460,23 @@ export default function AdminDashboard() {
             ))}
             {!(health.sources || []).length ? <li>No source has reported yet.</li> : null}
           </ul>
+          {health.past ? (
+            <div style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)" }}>
+              <strong style={{ fontSize: 13 }}>
+                Past archive 过去档案 · last {health.past.windowDays} days
+              </strong>
+              <p style={{ margin: "5px 0", color: health.past.incomplete?.length ? "#cc0000" : "#1b5e20", fontSize: 13 }}>
+                {health.past.complete}/{health.past.windowDays} complete
+                {health.past.incomplete?.length ? " · " + health.past.incomplete.length + " need repair" : ""}
+              </p>
+              {(health.past.incomplete || []).map((x: Any) => (
+                <div key={x.date} style={{ color: "#cc0000", fontSize: 12, marginTop: 3 }}>
+                  <strong>{x.date}</strong>{" "}
+                  GD: {x.status?.gd || "missing"} · Nine: {x.status?.nine || "missing"}
+                </div>
+              ))}
+            </div>
+          ) : null}
         </Section>
       ) : null}
 

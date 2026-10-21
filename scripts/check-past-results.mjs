@@ -7,14 +7,31 @@ const fixtures = {
 };
 const base = (process.argv[2] || process.env.PAST_BASE_URL || "").replace(/\/+$/, "");
 
+const store = base
+  ? null
+  : JSON.parse(readFileSync(new URL("../src/lib/gd-nine-past.json", import.meta.url), "utf8"));
+const klDay = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit",
+});
+
 async function recordFor(date) {
-  if (!base) {
-    const store = JSON.parse(readFileSync(new URL("../src/lib/gd-nine-past.json", import.meta.url), "utf8"));
-    return store[date];
-  }
+  if (!base) return store[date];
   const response = await fetch(`${base}/api/cambodia-past?date=${date}&verify=${Date.now()}`, { cache: "no-store" });
   if (!response.ok) throw new Error(`${date} returned HTTP ${response.status}`);
   return response.json();
+}
+
+if (!base) {
+  const missing = [];
+  for (let i = 1; i <= 30; i++) {
+    const date = klDay.format(new Date(Date.now() - i * 86400000));
+    const record = await recordFor(date);
+    if (!record || !coreResultComplete(record, "gd") || !coreResultComplete(record, "nine")) {
+      missing.push(date);
+    }
+  }
+  if (missing.length) throw new Error("Recent past-result archive incomplete: " + missing.join(", "));
+  console.log("Recent 30-day past archive OK");
 }
 
 for (const [date, expected] of Object.entries(fixtures)) {
