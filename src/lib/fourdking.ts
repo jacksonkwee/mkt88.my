@@ -30,6 +30,7 @@ function applyResult(message: unknown, state: Omit<FourDKingSnapshot, "at">): bo
       return false;
     }
   }
+  if (Array.isArray(message)) body = { data: message };
   if (!isObject(body)) return false;
 
   let changed = false;
@@ -61,6 +62,20 @@ function applyResult(message: unknown, state: Omit<FourDKingSnapshot, "at">): bo
     }
   }
   return changed;
+}
+
+async function readHttpFallback(state: Omit<FourDKingSnapshot, "at">): Promise<boolean> {
+  try {
+    const response = await fetch("https://mapp.4dking.live/nocache/result_v23.json", {
+      headers: { "user-agent": "Mozilla/5.0", accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(1800),
+    });
+    if (!response.ok) return false;
+    return applyResult(await response.json(), state);
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -100,7 +115,10 @@ export async function getFourDKingSnapshot(waitMs = 1800): Promise<FourDKingSnap
     };
 
     const timer = setTimeout(() => {
-      finish(state.gd || state.gd6 ? { ...state, at: Date.now() } : null);
+      void (async () => {
+        if (!state.gd || !state.gd6) await readHttpFallback(state);
+        finish(state.gd || state.gd6 ? { ...state, at: Date.now() } : null);
+      })();
     }, waitMs);
 
     socket.on("connect", () => {
@@ -113,7 +131,10 @@ export async function getFourDKingSnapshot(waitMs = 1800): Promise<FourDKingSnap
       quiet = setTimeout(() => finish({ ...state, at: Date.now() }), 80);
     });
     socket.on("connect_error", () => {
-      finish(recent ? { ...recent, at: Date.now() } : null);
+      void (async () => {
+        await readHttpFallback(state);
+        finish(state.gd || state.gd6 ? { ...state, at: Date.now() } : recent ? { ...recent, at: Date.now() } : null);
+      })();
     });
   });
 

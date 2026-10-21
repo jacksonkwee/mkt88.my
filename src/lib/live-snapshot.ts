@@ -5,6 +5,7 @@ import { getSiteContent } from "./site-store";
 import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
 import { getFourDKingSnapshot, type FourDKingSnapshot } from "./fourdking";
 import { assertCardBindings } from "./card-contracts";
+import { GD_SOURCE_PRIORITY, mergeGrandDragonState } from "./grand-dragon-state.mjs";
 import { after } from "next/server";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
@@ -92,6 +93,7 @@ let gdRefreshing = false;
 let gdNextAttempt = 0;
 let gdPageDownUntil = 0;
 let gdPageFailures = 0;
+let gdLiveState: any = null;
 /*
  * Which booth each Grand Dragon number was seen in today.
  *
@@ -2008,7 +2010,6 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const sgMirrorCards = parseCards(sgTotoPage);
   const gdSocketValues = gdSocketBoard(gdSocket);
   if (gdSocketValues) {
-    liveCards["table-13"] = mergeCardPayload(liveCards["table-13"] || {}, gdSocketValues);
     noteSource("fourdking", "4DKing Socket 豪龙实时", { ok: true });
   }
   /*
@@ -2179,10 +2180,40 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * Refusing that board would have kept the mirror's numbers on the card during
    * exactly the minutes the official one is ahead.
    */
-  if (gd4 && (!gd?.strict || checkSource("grand-dragon", "Grand Dragon 豪龙（官方）", "table-13", gd4))) {
-    const base = (cards["table-13"] || {}) as Record<string, string>;
-    if (drawNotOlder(gd4.date, base.date)) cards["table-13"] = mergeCardPayload(base, gd4);
-  }
+  const officialGdAccepted = !!gd4
+    && (!gd?.strict || checkSource("grand-dragon", "Grand Dragon 豪龙（官方）", "table-13", gd4));
+  const gdSocketParts = gdSocketSix(gdSocket);
+  const gdCandidates = [
+    ...(officialGdAccepted ? [{
+      source: "official",
+      priority: GD_SOURCE_PRIORITY.official,
+      at: gd?.at || 0,
+      date: gd4?.date,
+      values: gd4,
+      six: gd?.six,
+      jp7: gd?.jp,
+    }] : []),
+    ...(gdSocketValues ? [{
+      source: "socket",
+      priority: GD_SOURCE_PRIORITY.socket,
+      at: gdSocket?.at || 0,
+      date: gdSocketValues.date,
+      values: gdSocketValues,
+      six: gdSocketParts.six,
+      jp7: gdSocketParts.jp,
+    }] : []),
+    ...(cards["table-13"] ? [{
+      source: "mirror",
+      priority: GD_SOURCE_PRIORITY.mirror,
+      at: Date.now(),
+      date: cards["table-13"].date,
+      values: cards["table-13"],
+      six: null,
+      jp7: null,
+    }] : []),
+  ];
+  for (const candidate of gdCandidates) gdLiveState = mergeGrandDragonState(gdLiveState, candidate);
+  if (gdLiveState) cards["table-13"] = { ...gdLiveState.values };
   /*
    * Special Cash Sweep from the operator's own feed. This one carries its draw
    * date, so an older draw can never land under today's heading.
@@ -2713,20 +2744,9 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * typed for; it stops winning once the feed has a newer draw (see the pass
    * below, which refuses a typed board older than the card).
    */
-  const socketSix = gdSocketSix(gdSocket);
-  const gd6Feed = gd?.six || null;
-  const socketSixDay = drawDay(socketSix.six?.date);
-  const officialSixDay = drawDay(gd6Feed?.date);
-  const socketSixWins = !!socketSix.six && (
-    !gd6Feed ||
-    socketSixDay > officialSixDay ||
-    (socketSixDay === officialSixDay && (gdSocket?.at || 0) >= (gd?.at || 0))
-  );
-  const liveGd6 = socketSixWins ? socketSix.six : gd6Feed;
-  const liveGdJp = socketSixWins
-    ? { ...(gd?.jp || {}), ...(socketSix.jp || {}) }
-    : { ...(socketSix.jp || {}), ...(gd?.jp || {}) };
-  if (socketSixWins) noteSource("fourdking:gd6", "4DKing Socket 豪龙 6D", { ok: true });
+  const liveGd6 = (gdLiveState?.six || gd?.six || null) as SixEntry;
+  const liveGdJp = (gdLiveState?.jp7 || gd?.jp || {}) as Record<string, string>;
+  if (gdSocketParts.six) noteSource("fourdking:gd6", "4DKing Socket 豪龙 6D", { ok: true });
   if (liveGd6?.date && drawNotOlder(liveGd6.date, (cards["table-14"] as Record<string, string> | undefined)?.date)) {
     const base = (cards["table-14"] || {}) as Record<string, string>;
     cards["table-14"] = mergeCardPayload(base, { date: liveGd6.date, six_main: liveGd6.main, ...liveGd6.subs });
