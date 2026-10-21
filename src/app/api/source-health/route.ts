@@ -34,11 +34,20 @@ function pastArchiveHealth() {
 export async function GET(req: Request) {
   const sources = await getSourceHealth();
   const bad = sources.filter((s) => !s.ok);
+  const past = pastArchiveHealth();
   if (new URL(req.url).searchParams.get("summary") === "1") {
     return NextResponse.json(
       // The reason is included: it is about our own plumbing, and knowing WHICH
       // shape changed is what turns "something is wrong" into a ten-minute fix.
-      { at: Date.now(), bad: bad.map((s) => ({ source: s.name, why: s.why || "shape changed" })) },
+      {
+        at: Date.now(),
+        bad: bad.map((s) => ({ source: s.name, why: s.why || "shape changed" })),
+        past: {
+          windowDays: past.windowDays,
+          complete: past.complete,
+          incomplete: past.incomplete.map((x) => x.date),
+        },
+      },
       { headers: { "cache-control": "public, s-maxage=30" } }
     );
   }
@@ -46,5 +55,5 @@ export async function GET(req: Request) {
   if (!verifyToken(store.get(COOKIE_NAME)?.value)) {
     return NextResponse.json({ error: "unauthorised" }, { status: 401 });
   }
-  return NextResponse.json({ at: Date.now(), bad: bad.length, sources, past: pastArchiveHealth() });
+  return NextResponse.json({ at: Date.now(), bad: bad.length, sources, past });
 }
