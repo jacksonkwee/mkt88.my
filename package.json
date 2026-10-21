@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 8888",
-    "prebuild": "node scripts/check-card-contracts.mjs",
+    "prebuild": "node scripts/check-card-contracts.mjs && node scripts/check-past-results.mjs",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 8888",
     "start-render": "next start -H 0.0.0.0 -p ${PORT:-8888}",
     "start-railway": "next start -H 0.0.0.0 -p ${PORT:-8888}",
     "check:results": "node scripts/check-results.mjs",
     "check:gd": "node scripts/check-grand-dragon.mjs",
-    "check:gd:live": "node scripts/check-grand-dragon.mjs https://www.mkt88.my"
+    "check:gd:live": "node scripts/check-grand-dragon.mjs https://www.mkt88.my",
+    "check:past": "node scripts/check-past-results.mjs",
+    "check:past:live": "node scripts/check-past-results.mjs https://www.mkt88.my"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

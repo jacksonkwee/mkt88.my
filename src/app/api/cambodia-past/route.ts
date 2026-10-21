@@ -7,6 +7,7 @@ import hariPastRaw from "../../../lib/hari-past.json";
 import { DEEP } from "../../../lib/deep-past-cards";
 import perdanaPastRaw from "../../../lib/perdana-past.json";
 import hari4dPastRaw from "../../../lib/hari-4d-past.json";
+import { coreResultComplete, pastRecordStatus } from "../../../lib/past-completeness.mjs";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -506,8 +507,8 @@ export async function GET(req: NextRequest) {
     }>)[date];
     // A stored date is not a stored result. The old code treated a record with
     // gd: null as complete and never asked the operator again.
-    const bundledGd = bundled?.gd ? bundled : null;
-    const bundledNine = bundled?.nine ? bundled : null;
+    const bundledGd = bundled && coreResultComplete(bundled, "gd") ? bundled : null;
+    const bundledNine = bundled && coreResultComplete(bundled, "nine") ? bundled : null;
 
     const [perdanaHtml, h1530, h1930, gdPartsIn, ninePartsIn, gdNew, nineNew, ninePage] = await Promise.all([
       perdanaHtmlP,
@@ -608,9 +609,11 @@ export async function GET(req: NextRequest) {
       nine6: nineParts?.nine6 || null, nineJp: nineParts?.nineJp || null,
       perdana: perd, hari,
     };
+    const status = pastRecordStatus(payload);
+    const response = { ...payload, status };
     if (pastMemo.size > 400) pastMemo.clear();
-    pastMemo.set(date, { at: Date.now(), data: payload });
-    return NextResponse.json(payload);
+    pastMemo.set(date, { at: Date.now(), data: response });
+    return NextResponse.json(response);
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 502 });
   }

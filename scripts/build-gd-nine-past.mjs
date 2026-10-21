@@ -8,6 +8,7 @@
 //
 //   node scripts/build-gd-nine-past.mjs --days 180
 import fs from "node:fs";
+import { coreResultComplete, pastRecordStatus } from "../src/lib/past-completeness.mjs";
 
 const OUT = "src/lib/gd-nine-past.json";
 const API = "https://mkt88-my.vercel.app/api/cambodia-past?date=";
@@ -40,7 +41,9 @@ if (explicitDates.length) {
      * gd: null. Those are re-fetched for the last 30 days instead of being
      * skipped for ever.
      */
-    if (!store[key] || (!store[key].gd && i <= 30)) wanted.push(key);
+    if (!store[key] || i <= 30 && (
+      !coreResultComplete(store[key], "gd") || !coreResultComplete(store[key], "nine")
+    )) wanted.push(key);
   }
 }
 
@@ -194,7 +197,7 @@ async function gdFrom4DKing(date) {
   } catch { return null; }
 }
 
-let added = 0, empty = 0, failed = 0;
+let added = 0, empty = 0, failed = 0, unresolved = 0;
 for (const date of wanted) {
   try {
     let j = {};
@@ -202,8 +205,8 @@ for (const date of wanted) {
       const r = await fetch(API + date, { signal: AbortSignal.timeout(60000) });
       if (r.ok) j = await r.json();
     } catch { /* direct sources below still work */ }
-    const rec = {};
-    for (const f of FIELDS) if (j[f] !== undefined) rec[f] = j[f];
+    const rec = { ...(store[date] || {}) };
+    for (const f of FIELDS) if (j[f] != null && rec[f] == null) rec[f] = j[f];
     if (!rec.gd || !rec.gd6 || !rec.gdjp4 || !rec.gdjp7) {
       const [official, king] = await Promise.all([gdFromOfficial(date), gdFrom4DKing(date)]);
       rec.gd ||= official?.gd || king?.gd || null;
@@ -217,9 +220,20 @@ for (const date of wanted) {
       if (gdm) rec.gd = gdm;
     }
     // A date with neither game is not worth storing - the live path will retry it.
-    if (!rec.gd && !rec.nine) { empty++; continue; }
+    if (!rec.gd && !rec.nine) {
+      empty++;
+      unresolved++;
+      console.log(`  ${date} unresolved: no Grand Dragon or Nine Lotto result`);
+      continue;
+    }
+    rec._status = pastRecordStatus(rec);
+    rec._checkedAt = new Date().toISOString();
     store[date] = rec;
     added++;
+    if (!coreResultComplete(rec, "gd") || !coreResultComplete(rec, "nine")) {
+      unresolved++;
+      console.log(`  ${date} unresolved: ${JSON.stringify(rec._status)}`);
+    }
     if (added % 20 === 0) {
       fs.writeFileSync(OUT, JSON.stringify(store), "utf8");
       console.log(`  ${added} days stored (latest ${date})`);
@@ -232,6 +246,14 @@ for (const date of wanted) {
 }
 
 const sorted = {};
-for (const k of Object.keys(store).sort()) sorted[k] = store[k];
+for (const k of Object.keys(store).sort()) {
+  const entry = { ...store[k] };
+  entry._status = pastRecordStatus(entry);
+  sorted[k] = entry;
+}
 fs.writeFileSync(OUT, JSON.stringify(sorted), "utf8");
 console.log(`done: +${added} days, ${empty} empty, ${failed} failed -> ${OUT} (${Math.round(fs.statSync(OUT).size / 1024)} KB, ${Object.keys(sorted).length} days)`);
+if (unresolved) {
+  console.error(`reconcile incomplete: ${unresolved} date(s) still missing a full GD or Nine result`);
+  process.exitCode = 1;
+}

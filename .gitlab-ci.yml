@@ -34,12 +34,17 @@ number-history:
     - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_PIPELINE_SOURCE == "web"
   script:
+    - node scripts/check-card-contracts.mjs
     - node scripts/refresh-number-history.mjs
     # Lucky HariHari and Grand Dragon/Nine Lotto past draws live in bundled
     # copies that only the PC's daily task used to extend - it stopped on
     # 28-09-2026, which left the hot-numbers page showing HariHari only up to
     # 09-10-2026 (reported 12 Oct 2026). They are refreshed here too now.
-    - node scripts/build-gd-nine-past.mjs --days 3
+    # Inspect the full recent window. Complete dates are skipped, so this is
+    # cheap; partial or missing GD/Nine records are retried every day.
+    - RECONCILE_FAILED=0
+    - node scripts/build-gd-nine-past.mjs --days 30 || RECONCILE_FAILED=1
+    - node scripts/check-past-results.mjs
     - node scripts/build-hari-past.mjs --days 3
     - node scripts/build-number-stats.mjs
     - git config user.name "mkt88-results-bot"
@@ -51,14 +56,20 @@ number-history:
     - |
       if git diff --cached --quiet; then
         echo "nothing new today"
-        exit 0
-      fi
-    - git commit -m "Number history updated $(date -u '+%Y-%m-%d %H:%M UTC')"
-    # Two ways to push: the job token (needs "Allow Git push requests" in the
-    # CI/CD settings) or a Project Access Token kept in GIT_PUSH_TOKEN.
-    - |
-      if [ -n "$GIT_PUSH_TOKEN" ]; then
-        git push "https://oauth2:${GIT_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
       else
-        git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+        git commit -m "Number history updated $(date -u '+%Y-%m-%d %H:%M UTC')"
+        # Two ways to push: the job token (needs "Allow Git push requests" in
+        # the CI/CD settings) or a Project Access Token kept in GIT_PUSH_TOKEN.
+        if [ -n "$GIT_PUSH_TOKEN" ]; then
+          git push "https://oauth2:${GIT_PUSH_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+        else
+          git push "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git" HEAD:${CI_COMMIT_REF_NAME}
+        fi
+      fi
+    # Still save every repair that succeeded, then fail the job so the owner is
+    # notified about dates that no source could complete.
+    - |
+      if [ "$RECONCILE_FAILED" -ne 0 ]; then
+        echo "Recent past-result reconciliation is incomplete"
+        exit 1
       fi
