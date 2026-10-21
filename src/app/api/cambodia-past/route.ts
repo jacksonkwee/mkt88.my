@@ -504,23 +504,27 @@ export async function GET(req: NextRequest) {
       gd?: Set | null; nine?: Set | null; gd6?: SixParts | null; gdjp4?: Record<string, string>;
       gdjp7?: Record<string, string>; nine6?: SixParts | null; nineJp?: Record<string, string>;
     }>)[date];
+    // A stored date is not a stored result. The old code treated a record with
+    // gd: null as complete and never asked the operator again.
+    const bundledGd = bundled?.gd ? bundled : null;
+    const bundledNine = bundled?.nine ? bundled : null;
 
     const [perdanaHtml, h1530, h1930, gdPartsIn, ninePartsIn, gdNew, nineNew, ninePage] = await Promise.all([
       perdanaHtmlP,
       hariAt("15:30"),
       hariAt("19:30"),
-      bundled
+      bundledGd
         ? Promise.resolve({
-            four: bundled.gd || undefined, gd6: bundled.gd6 || undefined,
-            gdjp4: bundled.gdjp4, gdjp7: bundled.gdjp7,
+            four: bundledGd.gd || undefined, gd6: bundledGd.gd6 || undefined,
+            gdjp4: bundledGd.gdjp4, gdjp7: bundledGd.gdjp7,
           })
         : gdPastParts(date),
-      bundled
-        ? Promise.resolve({ four: bundled.nine || undefined, nine6: bundled.nine6 || undefined, nineJp: bundled.nineJp })
+      bundledNine
+        ? Promise.resolve({ four: bundledNine.nine || undefined, nine6: bundledNine.nine6 || undefined, nineJp: bundledNine.nineJp })
         : ninePastParts(date),
-      settled || bundled ? Promise.resolve(true) : gdHasNewDraw(date),
-      settled || bundled ? Promise.resolve(true) : nineHasNewDraw(date),
-      bundled ? Promise.resolve("") : httpGet("https://9lotto.com/result/" + nDate).catch(() => ""),
+      settled || bundledGd ? Promise.resolve(true) : gdHasNewDraw(date),
+      settled || bundledNine ? Promise.resolve(true) : nineHasNewDraw(date),
+      bundledNine ? Promise.resolve("") : httpGet("https://9lotto.com/result/" + nDate).catch(() => ""),
     ]);
 
     const perd = parsePerdanaHtml(perdanaHtml);
