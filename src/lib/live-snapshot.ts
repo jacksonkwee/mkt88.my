@@ -2083,6 +2083,15 @@ export async function buildSnapshot(): Promise<Snapshot> {
     for (const k of ["first_prize", "second_prize", "third_prize"]) {
       if (k in payload) merged[k] = payload[k];
     }
+    /*
+     * A blank special/consolation in Magnum's own live feed means that column
+     * has not been drawn yet. It must not keep a mirror value: during a live
+     * draw the mirror copied S12 into S13, and mergeCardPayload preserved that
+     * stale copy because the official "----" looked like "no news".
+     */
+    for (const [k, v] of Object.entries(payload)) {
+      if (k.startsWith("special-") || k.startsWith("consolation-")) merged[k] = v;
+    }
     cards["table-1"] = merged;
     /*
      * Magnum Jackpot Gold, straight from the operator - board and both prizes.
@@ -3207,6 +3216,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
   {
     const c = cards["table-1"] as Record<string, string> | undefined;
     if (c) {
+      /*
+       * During the live draw the mirror has repeatedly copied column 12 into
+       * column 13 while the operator still has S13 blank. Legitimate duplicate
+       * numbers elsewhere in Magnum's grid are preserved; only this known
+       * adjacent copy is refused.
+       */
+      if (c["special-13"] && c["special-13"] === c["special-12"]) c["special-13"] = "----";
       for (const k of ["first_prize", "second_prize", "third_prize"]) {
         const won = (c[k] || "").trim();
         if (!/^\d{4}$/.test(won)) continue;

@@ -112,6 +112,16 @@ async function main() {
   check("all nine slots are filled", slots.every((d) => d !== ""), JSON.stringify(slots));
   check("the separator sits in slot 7", slots[6] === "+", 'slot 7 = "' + slots[6] + '"');
 
+  section("Magnum live draw columns");
+  const magnum = cards["table-1"] || {};
+  const s12 = String(magnum["special-12"] || "").trim();
+  const s13 = String(magnum["special-13"] || "").trim();
+  check(
+    "special column 13 is not copied from column 12",
+    isDash(s12) || isDash(s13) || s12 !== s13,
+    "S12=" + (s12 || "blank") + " S13=" + (s13 || "blank")
+  );
+
   section("Grand Dragon shows a complete, correctly dated draw");
   const gd6 = cam.gd6;
   const gdjp7 = cam.gdjp7 || {};
