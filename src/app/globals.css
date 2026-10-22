@@ -1402,3 +1402,10 @@ body.mkt-in-app.mkt-boot-wait::before {
 .card.outer-box.table-17 [data-id="consolation-9"]::before { content: "V "; }
 .card.outer-box.table-13 [data-id="consolation-10"]::before,
 .card.outer-box.table-17 [data-id="consolation-10"]::before { content: "W "; }
+
+/*
+ * Jackpot amounts change through the day, so the figure baked into the captured
+ * markup is normally a little behind. Keep the row hidden until the first live
+ * snapshot has been applied, so a stale amount is never read as the real one.
+ */
+html:not(.mkt-jp-ready) [data-id*="jackpot"] { visibility: hidden; }

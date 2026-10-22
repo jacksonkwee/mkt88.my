@@ -380,6 +380,8 @@ const BOOT_SCRIPT = `
     snap = next;
     window.__MKT_SNAP__ = next;
     run();
+    // The first real snapshot is in: the jackpot rows may be revealed.
+    revealJackpot();
   }
   function pull(url, fn){ try { fetch(url, { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(fn).catch(function(){}); } catch(e){} }
 
@@ -401,6 +403,51 @@ const BOOT_SCRIPT = `
   setInterval(function(){ if(document.visibilityState === "visible") pullAll(); }, 15000);
   document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible") pullAll(); });
   pullAll();
+  /*
+   * Jackpot amounts tick during the day, so the figure captured into the markup
+   * is usually a little behind the operator's - and Sports Toto's lands a few
+   * seconds after the others because its own site refuses us. Showing that old
+   * number made the card read as wrong (reported 22 Oct 2026). Blank it until
+   * the snapshot supplies the current one; the row stays hidden until the first
+   * snapshot has been applied, with a timeout so a failed fetch cannot leave it
+   * invisible for good.
+   */
+  function clearStaleJackpot(){
+    try {
+      var jpEls = document.querySelectorAll('[data-id*="jackpot"]');
+      for (var ji = 0; ji < jpEls.length; ji++){
+        var jt = (jpEls[ji].textContent || "").trim();
+        // No regex: this script lives in a template literal, which eats the
+        // backslashes (see the note above).
+        if (jt.charAt(0) === "R" && jt.charAt(1) === "M") {
+          jpEls[ji].setAttribute("data-jp-stale", jt);
+          jpEls[ji].textContent = "----";
+        }
+      }
+    } catch(e){}
+  }
+  /*
+   * Show the jackpot rows once a snapshot has landed - but never put the
+   * captured figure on screen again. A cell that React re-rendered back to the
+   * old amount, or one the snapshot never filled, stays blank rather than
+   * showing a number that is out of date.
+   */
+  function revealJackpot(){
+    try {
+      var jpEls = document.querySelectorAll('[data-id*="jackpot"]');
+      for (var ji = 0; ji < jpEls.length; ji++){
+        var old = jpEls[ji].getAttribute("data-jp-stale");
+        var now = (jpEls[ji].textContent || "").trim();
+        if (old && (now === old || now === "----")) jpEls[ji].textContent = "----";
+        jpEls[ji].removeAttribute("data-jp-stale");
+      }
+      document.documentElement.classList.add("mkt-jp-ready");
+    } catch(e){}
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", clearStaleJackpot);
+  else clearStaleJackpot();
+  // Fallback: if no snapshot arrives, still show the rows - blanked, never stale.
+  setTimeout(revealJackpot, 6000);
   function pullAll(){ pull("/api/home-live", publish); pull("/api/cambodia-live", publish); }
 })();
 `;
