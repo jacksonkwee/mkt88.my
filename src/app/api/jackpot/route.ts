@@ -10,14 +10,14 @@ function digest(value: string): Buffer {
 }
 
 function authorized(req: NextRequest): boolean {
-  const expected = process.env.JACKPOT_INGEST_SECRET || "";
+  const expected = process.env.JACKPOT_INGEST_SECRET || process.env.ADMIN_SECRET || "";
   const header = req.headers.get("authorization") || "";
   const supplied = /^Bearer\s+(.+)$/i.exec(header)?.[1] || req.headers.get("x-mkt88-secret") || "";
   return !!expected && timingSafeEqual(digest(expected), digest(supplied));
 }
 
 export async function POST(req: NextRequest) {
-  if (!process.env.JACKPOT_INGEST_SECRET) {
+  if (!process.env.JACKPOT_INGEST_SECRET && !process.env.ADMIN_SECRET) {
     return NextResponse.json({ error: "jackpot receiver is not configured" }, { status: 503 });
   }
   if (!authorized(req)) {
