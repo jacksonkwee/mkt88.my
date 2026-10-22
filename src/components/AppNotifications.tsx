@@ -1,13 +1,17 @@
 "use client";
 
 import { isCapacitorApp } from "../lib/is-capacitor-app";
+import {
+  LUCKY_ID_BASE,
+  LUCKY_ID_RANGE,
+  luckyAlarmPlan,
+  malaysiaDate,
+} from "../lib/lucky-reminders.mjs";
 
 import { useEffect } from "react";
 
 export const CHANNEL_ID = "mkt88-live-draw";
-const NOTIFICATION_1600 = 1600;
-const NOTIFICATION_1800 = 1800;
-const NOTIFICATION_1830 = 1830;
+const OLD_LUCKY_IDS = [1600, 1800, 1830];
 
 /** Fingerprint of the reminder plan, so it is only rebuilt when it changes. */
 const PLAN_KEY = "mkt_live_notif_plan";
@@ -24,33 +28,6 @@ export type LocalNotificationsPlugin = {
     cb: (data: { notification?: { id?: number | string; body?: string; extra?: { lucky?: unknown } } }) => void
   ) => { remove?: () => void } | undefined;
 };
-
-/** The Malaysia date, so the number turns over at local midnight. */
-function myToday(): string {
-  try {
-    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
-  } catch {
-    return new Date().toISOString().slice(0, 10);
-  }
-}
-
-/*
- * The number belongs to the DAY.
- *
- * An Android repeating notification repeats its text verbatim, so a number
- * drawn once when the plan was laid down said the same thing every morning -
- * the same number as yesterday (reported 9 Oct 2026). It is derived from the
- * date instead, and the plan below carries that date, so the first open on a
- * new day lays the three reminders down again with that day's numbers.
- */
-function luckyNumber(seed: string): string {
-  let h = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return String((h >>> 0) % 10000).padStart(4, "0");
-}
 
 /**
  * This install's own id.
@@ -72,18 +49,6 @@ function deviceId(): string {
   } catch {
     return "anon";
   }
-}
-
-/** The three numbers of one day, forced apart from each other. */
-function dailyLuckyNumbers(seed: string): [string, string, string] {
-  const out: string[] = [luckyNumber(seed + "|16:00")];
-  for (const slot of ["|18:00", "|18:30"]) {
-    let n = luckyNumber(seed + slot);
-    let guard = 0;
-    while (out.includes(n) && guard++ < 10000) n = String((Number(n) + 7) % 10000).padStart(4, "0");
-    out.push(n);
-  }
-  return out as [string, string, string];
 }
 
 /*
@@ -157,9 +122,9 @@ export function upcomingSpecialAlarms(now = Date.now(), dates: string[] = []): S
   });
   return out;
 }
-const ALL_IDS = (dates: string[]) => [
+const ALL_IDS = (dates: string[], luckyIds: number[]) => [
   ...upcomingSpecialAlarms(Date.now(), dates).map((a) => a.id),
-  NOTIFICATION_1600, NOTIFICATION_1800, NOTIFICATION_1830,
+  ...luckyIds,
 ];
 
 type CapacitorGlobal = {
@@ -255,10 +220,15 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
           // first open on a new day lays the three reminders down again with
           // that day's numbers instead of repeating yesterday for ever. v6
           // carries the owner's special-draw list too, so adding or removing a
-          // date re-lays the alarms the next time the app is opened.
+          // date re-lays the alarms the next time the app is opened. v7 lays
+          // one-off lucky alarms for 90 days, so a phone that is not opened
+          // still gets a different set tomorrow.
           const specialDraws = await fetchSpecialDrawDates();
-          const today = myToday();
-          const plan = "v6:" + today + ":" + specialDraws.join(",");
+          const today = malaysiaDate();
+          const device = deviceId();
+          const luckyPlan = luckyAlarmPlan({ deviceId: device });
+          const luckyIds = luckyPlan.map((alarm) => alarm.id);
+          const plan = "v7:" + today + ":" + specialDraws.join(",");
           let remembered = "";
           try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
 
@@ -268,59 +238,37 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
             for (const n of got?.notifications || []) pending.add(Number(n.id));
           } catch { /* no list - rebuild below */ }
 
-          if (remembered === plan && ALL_IDS(specialDraws).every((id) => pending.has(id))) return;
+          if (remembered === plan && ALL_IDS(specialDraws, luckyIds).every((id) => pending.has(id))) return;
 
           // Clear our own ids, including any left behind by an older plan.
           await ln.cancel?.({
             notifications: [
               ...Array.from({ length: SPECIAL_ID_RANGE }, (_, i) => SPECIAL_ID_BASE + i),
               ...Array.from({ length: 200 }, (_, i) => 3000 + i),
-              NOTIFICATION_1600,
-              NOTIFICATION_1800,
-              NOTIFICATION_1830,
+              ...Array.from({ length: LUCKY_ID_RANGE }, (_, i) => LUCKY_ID_BASE + i),
+              ...OLD_LUCKY_IDS,
             ].map((id) => ({ id })),
           });
 
-          // Per user, per day, and the three of them different from each other.
-          const [earlyLucky, firstLucky, secondLucky] = dailyLuckyNumbers(deviceId() + "|" + today);
+          // One-off alarms: Android never repeats yesterday's text, even if
+          // this phone is not opened again before tomorrow's notifications.
           await ln.schedule?.({
             notifications: [
-              {
-                id: NOTIFICATION_1600,
+              ...luckyPlan.map((alarm) => ({
+                id: alarm.id,
                 title: "恭喜发财 幸运号码",
-                body: `16:00 4D Live 开奖提醒\n幸运号码：${earlyLucky}`,
-                largeBody: `16:00 4D Live 开奖提醒\n恭喜发财 幸运号码：${earlyLucky}`,
+                body: alarm.body,
+                largeBody: alarm.largeBody,
                 channelId: CHANNEL_ID,
                 autoCancel: true,
                 // The popup reuses this exact number, so what the lock screen
                 // showed is what opens with the app.
-                extra: { lucky: earlyLucky },
-                schedule: { on: { hour: 16, minute: 0 }, repeats: true, allowWhileIdle: true },
-              },
-              {
-                id: NOTIFICATION_1800,
-                title: "恭喜发财 幸运号码",
-                body: `18:00 4D Live 开奖开始\n幸运号码：${firstLucky}`,
-                largeBody: `18:00 4D Live 开奖开始\n恭喜发财 幸运号码：${firstLucky}`,
-                channelId: CHANNEL_ID,
-                autoCancel: true,
-                // The popup reuses this exact number, so what the lock screen
-                // showed is what opens with the app.
-                extra: { lucky: firstLucky },
-                schedule: { on: { hour: 18, minute: 0 }, repeats: true, allowWhileIdle: true },
-              },
-              {
-                id: NOTIFICATION_1830,
-                title: "恭喜发财 幸运号码",
-                body: `18:30 4D Live 开奖进行中\n幸运号码：${secondLucky}`,
-                largeBody: `18:30 4D Live 开奖进行中\n恭喜发财 幸运号码：${secondLucky}`,
-                channelId: CHANNEL_ID,
-                autoCancel: true,
-                // The popup reuses this exact number, so what the lock screen
-                // showed is what opens with the app.
-                extra: { lucky: secondLucky },
-                schedule: { on: { hour: 18, minute: 30 }, repeats: true, allowWhileIdle: true },
-              },
+                extra: { lucky: alarm.number },
+                schedule: {
+                  on: { year: alarm.year, month: alarm.month, day: alarm.day, hour: alarm.hour, minute: alarm.minute },
+                  allowWhileIdle: true,
+                },
+              })),
               // One-off special draws: 12pm, 3pm and 6:10pm on the date - and
               // only the times still ahead of us.
               ...upcomingSpecialAlarms(Date.now(), specialDraws).map((a) => {
@@ -361,7 +309,7 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
     if (!ln) return;
     const h = ln.addListener?.("localNotificationActionPerformed", (ev) => {
       const id = Number(ev?.notification?.id ?? 0);
-      if (id !== NOTIFICATION_1600 && id !== NOTIFICATION_1800 && id !== NOTIFICATION_1830) return;
+      if (id < LUCKY_ID_BASE) return;
       // The number rides along on the notification, so the popup repeats the
       // number the user actually saw instead of drawing a fresh one.
       //
