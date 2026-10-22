@@ -7,6 +7,8 @@ import { getFourDKingSnapshot, type FourDKingSnapshot } from "./fourdking";
 import { assertCardBindings } from "./card-contracts";
 import { GD_SOURCE_PRIORITY, mergeGrandDragonState } from "./grand-dragon-state.mjs";
 import { after } from "next/server";
+import { jackpotCardFields } from "./jackpot-feed";
+import { getJackpotFeed } from "./jackpot-store";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -1962,7 +1964,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Only today's read counts. A host that has been blocked since yesterday must
   // not leave yesterday's board looking like this evening's answer.
   const gd = gdOfficial && gdOfficial.iso === today.iso ? gdOfficial : null;
-  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored, gdSocket] = await Promise.all([
+  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored, gdSocket, jackpotFeed] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://live4dresult.net/singapore-4d-results/"),
@@ -1998,6 +2000,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     totoResults(),
     readSgGuard(),
     getFourDKingSnapshot(),
+    getJackpotFeed(),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.
@@ -2278,6 +2281,16 @@ export async function buildSnapshot(): Promise<Snapshot> {
     // A newer draw is taken as it stands, so its empty slots cannot keep the
     // previous draw's numbers (see mergeCardPayload).
     if (drawNotOlder(vals.date, base.date)) cards[cls] = mergeCardPayload(base, vals);
+  }
+  /*
+   * Official jackpots are captured by the VPS browser, sent to /api/jackpot and
+   * shared through Firestore. Use them last so a mirror's captured amount can
+   * never overwrite the current figure. A missing or stale feed clears these
+   * fields; the first live snapshot is what reveals the hidden jackpot rows.
+   */
+  const officialJackpots = jackpotCardFields(jackpotFeed);
+  for (const cls of ["table-1", "table-4"] as const) {
+    cards[cls] = { ...(cards[cls] || {}), ...officialJackpots[cls] };
   }
   /*
    * Grand Dragon and Nine Lotto publish THIRTEEN special numbers (A-M), but
