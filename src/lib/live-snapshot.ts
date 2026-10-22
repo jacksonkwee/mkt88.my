@@ -2293,7 +2293,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * fields; the first live snapshot is what reveals the hidden jackpot rows.
    */
   const officialJackpots = jackpotCardFields(jackpotFeed);
-  for (const cls of ["table-1", "table-4", "table-6"] as const) {
+  for (const cls of ["table-1", "table-4"] as const) {
     cards[cls] = { ...(cards[cls] || {}), ...officialJackpots[cls] };
   }
   /*
@@ -2663,6 +2663,23 @@ export async function buildSnapshot(): Promise<Snapshot> {
       const hIs = hNow && hNow.set ? hNow.set.date : undefined;
       if (hBefore && hWas && hIs && isOlder(hIs, hWas)) hari[t] = hBefore;
       else if (hBefore && !hNow) hari[t] = hBefore;
+    }
+  }
+  /*
+   * Firestore is a fallback for Sports Toto's two jackpot figures, not a
+   * replacement for the 4D board. Only fill an existing complete card; a
+   * temporary official-API miss must not create a jackpot-only table-6.
+   */
+  const totoCard = cards["table-6"];
+  const fallbackToto = officialJackpots["table-6"];
+  if (totoCard) {
+    if (!isDash(fallbackToto.first_jackpot_prize)) {
+      totoCard.first_jackpot_prize = fallbackToto.first_jackpot_prize;
+      totoCard.first_jackpot_status = "";
+    }
+    if (!isDash(fallbackToto.second_jackpot_prize)) {
+      totoCard.second_jackpot_prize = fallbackToto.second_jackpot_prize;
+      totoCard.second_jackpot_status = "";
     }
   }
 
