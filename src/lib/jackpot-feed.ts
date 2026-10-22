@@ -16,7 +16,7 @@ export type JackpotFeed = {
   sportstoto: JackpotOperator;
 };
 
-export type JackpotCardFields = Record<"table-1" | "table-4", Record<string, string>>;
+export type JackpotCardFields = Record<"table-1" | "table-4" | "table-6", Record<string, string>>;
 
 function amount(value: unknown): string | undefined {
   if (typeof value !== "string" && typeof value !== "number") return undefined;
@@ -85,6 +85,12 @@ export function jackpotCardFields(feed: JackpotFeed | null): JackpotCardFields {
       second_jackpot_status: "",
       third_jackpot_prize: feed?.damacai.jp3d || "----",
       third_jackpot_status: "",
+    },
+    "table-6": {
+      first_jackpot_prize: feed?.sportstoto.jp1 || "----",
+      first_jackpot_status: "",
+      second_jackpot_prize: feed?.sportstoto.jp2 || "----",
+      second_jackpot_status: "",
     },
   };
 }

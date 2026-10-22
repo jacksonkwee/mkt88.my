@@ -1078,6 +1078,12 @@ const totoNum = (v: unknown) => String(v ?? "").trim();
 /** table-6 (4D) and table-7 (5D, 6D, Star/Power/Supreme) from the operator. */
 function totoCards(j: Record<string, any> | null): { four?: Record<string, string>; fiveSix?: Record<string, string> } {
   if (!j) return {};
+  const rm = (v: unknown) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n > 0
+      ? "RM " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : "----";
+  };
   const d4 = totoNewest(j["4dResult"]);
   const iso4 = String(d4?.DrawDate ?? "").slice(0, 10);
   let four: Record<string, string> | undefined;
@@ -1100,6 +1106,10 @@ function totoCards(j: Record<string, any> | null): { four?: Record<string, strin
     v["special-14"] = "";
     v["special-15"] = "";
     for (let i = 1; i <= 10; i++) v["consolation-" + i] = totoNum(d4["ConsolationNo" + i]) || "----";
+    v.first_jackpot_prize = rm(d4.Jackpot1);
+    v.first_jackpot_status = "";
+    v.second_jackpot_prize = rm(d4.Jackpot2);
+    v.second_jackpot_status = "";
     four = v;
   }
 
@@ -1128,12 +1138,6 @@ function totoCards(j: Record<string, any> | null): { four?: Record<string, strin
       }
     }
   }
-  const rm = (v: unknown) => {
-    const n = Number(v);
-    return Number.isFinite(n) && n > 0
-      ? "RM " + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      : "----";
-  };
   const lotto = (o: any, prefix: string, bonus: boolean) => {
     if (!o) return;
     const nums = [1, 2, 3, 4, 5, 6].map((i) => totoNum(o["DrawnNo" + i]));
@@ -2289,7 +2293,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
    * fields; the first live snapshot is what reveals the hidden jackpot rows.
    */
   const officialJackpots = jackpotCardFields(jackpotFeed);
-  for (const cls of ["table-1", "table-4"] as const) {
+  for (const cls of ["table-1", "table-4", "table-6"] as const) {
     cards[cls] = { ...(cards[cls] || {}), ...officialJackpots[cls] };
   }
   /*
@@ -2631,7 +2635,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     four = officialFour || liveFour;
   }
   if (four) {
-    cards["table-6"] = four;
+    cards["table-6"] = { ...(cards["table-6"] || {}), ...four };
     noteSource("sports-toto", "Sports Toto 多多（官方）", { ok: true });
   }
   if (toto.fiveSix) cards["table-7"] = toto.fiveSix;

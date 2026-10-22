@@ -122,6 +122,11 @@ async function main() {
     "S12=" + (s12 || "blank") + " S13=" + (s13 || "blank")
   );
 
+  section("Sports Toto jackpots");
+  const toto = cards["table-6"] || {};
+  check("4D Jackpot 1 present", !isDash(toto.first_jackpot_prize), JSON.stringify(toto.first_jackpot_prize || ""));
+  check("4D Jackpot 2 present", !isDash(toto.second_jackpot_prize), JSON.stringify(toto.second_jackpot_prize || ""));
+
   section("Grand Dragon shows a complete, correctly dated draw");
   const gd6 = cam.gd6;
   const gdjp7 = cam.gdjp7 || {};
