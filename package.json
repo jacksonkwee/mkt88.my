@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 -p 8888",
-    "prebuild": "node scripts/check-card-contracts.mjs && node scripts/check-past-results.mjs && node scripts/check-grand-dragon-state.mjs",
+    "prebuild": "node scripts/check-card-contracts.mjs && node scripts/check-past-results.mjs && node scripts/check-grand-dragon-state.mjs && node scripts/check-lucky-reminders.mjs",
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 8888",
     "start-render": "next start -H 0.0.0.0 -p ${PORT:-8888}",

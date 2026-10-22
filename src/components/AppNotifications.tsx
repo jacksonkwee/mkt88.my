@@ -159,7 +159,7 @@ export function localNotifications(): LocalNotificationsPlugin | null {
 /**
  * Android app reminders. The app runs the live website in a WebView, so this
  * component talks to the native Local Notifications plugin when available.
- * It schedules two daily Malaysia-time reminders at 18:00 and 18:30.
+ * It schedules three daily Malaysia-time reminders at 16:00, 18:00 and 18:30.
  */
 export default function AppNotifications({ enabled }: { enabled?: boolean }) {
   /*
