@@ -99,6 +99,7 @@ async function checkOnce() {
   const sportsTotoPage = await request("/result/sportstoto");
   const homePage = await request("/");
   const sitemap = await request("/sitemap.xml");
+  const sourceHealth = await request("/api/source-health?summary=1");
   const after = JSON.parse((await request("/api/home-live")).text);
 
   for (const [label, result] of [
@@ -108,6 +109,7 @@ async function checkOnce() {
     ["Sports Toto page", sportsTotoPage],
     ["home page", homePage],
     ["sitemap", sitemap],
+    ["source health", sourceHealth],
   ]) {
     if (!result.response.ok) errors.push(`${label} returned HTTP ${result.response.status}`);
   }
@@ -146,6 +148,9 @@ async function checkOnce() {
   if (!powerPage.text.includes("Power Toto 6/55 FAQ") || !powerPage.text.includes('"FAQPage"')) {
     errors.push("Power Toto FAQ content or structured data is missing");
   }
+  if (!magnumPage.text.includes("Magnum 4D Jackpot FAQ") || !magnumPage.text.includes('"FAQPage"')) {
+    errors.push("Magnum Jackpot FAQ content or structured data is missing");
+  }
   if (!sportsTotoPage.text.includes('href="/result/power-toto"')) {
     errors.push("Sports Toto page is missing the Power Toto internal link");
   }
@@ -160,6 +165,24 @@ async function checkOnce() {
   if (!homePage.text.includes('href="/result/magnum-4d-jackpot"')
     || !homePage.text.includes('href="/result/power-toto"')) {
     errors.push("Home page is missing one or both jackpot internal links");
+  }
+  if (!magnumPage.text.includes('href="/past-results"')
+    || !powerPage.text.includes('href="/past-results"')) {
+    errors.push("A jackpot page is missing the past-results link");
+  }
+  if (!magnumPage.text.includes('href="/result/power-toto"')
+    || !powerPage.text.includes('href="/result/magnum-4d-jackpot"')) {
+    errors.push("The jackpot pages are missing their cross-links");
+  }
+  if (sourceHealth.response.ok) {
+    try {
+      const health = JSON.parse(sourceHealth.text);
+      for (const source of health.bad || []) {
+        errors.push(`Data source ${source.source}: ${source.why || "unhealthy"}`);
+      }
+    } catch {
+      errors.push("Source-health response is not valid JSON");
+    }
   }
   if (!sitemap.text.includes("/result/magnum-4d-jackpot")) errors.push("sitemap is missing /result/magnum-4d-jackpot");
   if (!sitemap.text.includes("/result/power-toto")) errors.push("sitemap is missing /result/power-toto");

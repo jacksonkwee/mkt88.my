@@ -188,6 +188,11 @@ export default async function PowerTotoPage() {
         <p className="mb-0">
           <a href="/draw-schedule">Full 4D and lotto draw schedule</a>
         </p>
+
+        <h2 className="h5 mt-4">Other jackpot result</h2>
+        <p className="mb-0">
+          <a href="/result/magnum-4d-jackpot">Magnum 4D Jackpot 1, Jackpot 2 and Jackpot Gold</a>
+        </p>
       </main>
       <Footer />
       <GoogleAdsense />

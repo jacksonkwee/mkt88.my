@@ -4,6 +4,10 @@ The `live-pages` GitLab job checks the deployed jackpot pages after each push to
 `main`. When the check still fails after its cold-start retries, it can send the
 error details to a webhook and/or Telegram.
 
+The scheduled `number-history` job also sends an alert when its archive refresh
+or reconciliation fails. Deployment failure is covered by the `live-pages` job:
+it waits for the expected commit and reports when that deployment never appears.
+
 Configure at least one channel in
 **GitLab -> Settings -> CI/CD -> Variables**. Mark secrets as **Masked**; use
 **Protected** if the production branch is protected.

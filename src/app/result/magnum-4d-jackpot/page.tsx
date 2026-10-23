@@ -71,17 +71,58 @@ export default async function MagnumJackpotPage() {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: "Magnum 4D Jackpot Result",
-    url: "https://www.mkt88.my" + PATH,
-    description:
-      "Magnum 4D Jackpot 1 and Jackpot 2 prize amounts for the latest draw, updated after every draw.",
-    isPartOf: { "@type": "WebSite", name: "MKT88 4D Results", url: "https://www.mkt88.my/" },
-    about: {
-      "@type": "Thing",
-      name: "Magnum 4D Jackpot",
-      description: "Malaysia Magnum 4D Jackpot 1 and Jackpot 2 prize pool.",
-    },
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: "Magnum 4D Jackpot Result",
+        url: "https://www.mkt88.my" + PATH,
+        description:
+          "Magnum 4D Jackpot 1 and Jackpot 2 prize amounts for the latest draw, updated after every draw.",
+        isPartOf: { "@type": "WebSite", name: "MKT88 4D Results", url: "https://www.mkt88.my/" },
+        about: {
+          "@type": "Thing",
+          name: "Magnum 4D Jackpot",
+          description: "Malaysia Magnum 4D Jackpot 1 and Jackpot 2 prize pool.",
+        },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "When is Magnum 4D Jackpot drawn?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Magnum 4D, 4D Jackpot and 4D Jackpot Gold are usually drawn on Wednesday, Saturday and Sunday, with the draw starting at about 7:00 PM Malaysia time.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "What is Magnum 4D Jackpot Gold?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "4D Jackpot Gold is a Magnum game using six digits plus a golden number, with its own Jackpot 1 and Jackpot 2 prize pools.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Why can the Magnum 4D Jackpot amounts change?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "The published prize pools can change as sales build and after a draw. They can also roll over when nobody wins, so this page uses the latest live snapshot.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Where can I find past Magnum Jackpot results?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: "Past draw dates are available in the MKT88 past-results archive and in the full Magnum result pages.",
+            },
+          },
+        ],
+      },
+    ],
   };
 
   return (
@@ -141,8 +182,38 @@ export default async function MagnumJackpotPage() {
         <h2 className="h5 mt-4">When does Magnum draw?</h2>
         <p>
           Magnum 4D, 4D Jackpot and 4D Jackpot Gold are drawn three times a week, usually on Wednesday,
-          Saturday and Sunday in the evening. Results and the new jackpot amounts are published shortly
-          after each draw.
+          Saturday and Sunday. The draw schedule lists the start at about 7:00 PM Malaysia time
+          (GMT+8). Results and the new jackpot amounts are published after the operator completes the
+          draw.
+        </p>
+
+        <h2 className="h5 mt-4">Past Magnum Jackpot results</h2>
+        <p>
+          Browse the <a href="/past-results">past-results archive</a> for earlier draw dates, or open
+          the <a href="/result/magnum">full Magnum result</a> for the latest 4D, Magnum Life and
+          Jackpot Gold boards.
+        </p>
+
+        <h2 className="h5 mt-4">Magnum 4D Jackpot FAQ</h2>
+        <h3 className="h6 mt-3">When is Magnum 4D Jackpot drawn?</h3>
+        <p>
+          Magnum draws are usually held on Wednesday, Saturday and Sunday, with the listed start time
+          at about 7:00 PM Malaysia time.
+        </p>
+        <h3 className="h6 mt-3">What is Magnum 4D Jackpot Gold?</h3>
+        <p>
+          Jackpot Gold uses six digits plus a golden number and has its own Jackpot 1 and Jackpot 2
+          prize pools.
+        </p>
+        <h3 className="h6 mt-3">Why can the jackpot amounts change?</h3>
+        <p>
+          The pools can change as sales build and after a draw. They can also roll over when nobody
+          wins, so the amounts above come from the latest live snapshot.
+        </p>
+        <h3 className="h6 mt-3">Where can I find past Magnum Jackpot results?</h3>
+        <p>
+          Use the <a href="/past-results">past-results archive</a> or the
+          <a href="/result/magnum"> full Magnum result page</a>.
         </p>
 
         <h2 className="h5 mt-4">See the full Magnum result</h2>
@@ -154,6 +225,11 @@ export default async function MagnumJackpotPage() {
         </p>
         <p className="mb-0">
           <a href="/draw-schedule">Full 4D draw schedule</a>
+        </p>
+
+        <h2 className="h5 mt-4">Other jackpot result</h2>
+        <p className="mb-0">
+          <a href="/result/power-toto">Power Toto 6/55 winning numbers and jackpot</a>
         </p>
       </main>
       <Footer />

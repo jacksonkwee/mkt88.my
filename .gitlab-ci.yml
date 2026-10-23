@@ -95,3 +95,8 @@ number-history:
         echo "Recent past-result reconciliation is incomplete"
         exit 1
       fi
+  after_script:
+    - |
+      if [ "$CI_JOB_STATUS" = "failed" ]; then
+        node scripts/send-alert.mjs "MKT88 number history update failed" "GitLab job: $CI_JOB_URL"
+      fi
