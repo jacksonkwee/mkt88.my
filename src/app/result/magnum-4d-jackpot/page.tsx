@@ -32,7 +32,10 @@ const money = (v?: string) => (v && v.trim() ? v.trim() : "----");
 export default async function MagnumJackpotPage() {
   // A failed snapshot must not break the page: the headings and the explanation
   // are the part Google indexes, and the amounts fall back to "----".
-  const snap = await getSnapshot().catch(() => null);
+  // `wait: true` is what the /api/home-live route uses. Without it this page
+  // rendered from an un-warmed instance and showed "----" even though the API
+  // had the real amounts.
+  const snap = await getSnapshot({ wait: true }).catch(() => null);
   const jackpot: Card = (snap?.cards?.["table-1"] || {}) as Card;
   const gold: Card = (snap?.cards?.["table-2"] || {}) as Card;
 
