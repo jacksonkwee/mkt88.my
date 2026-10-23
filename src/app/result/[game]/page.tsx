@@ -68,6 +68,18 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
           <GameColumns ids={def.cardIds} snap={snapProp} />
         </main>
       </div>
+      {game === "sportstoto" ? (
+        <section className="container py-3" aria-labelledby="power-toto-link">
+          <div className="border rounded p-3">
+            <h2 id="power-toto-link" className="h5 mb-1">Power Toto 6/55 Result</h2>
+            <p className="mb-2">
+              See the latest Power Toto winning numbers and jackpot, with draw time and past-result
+              links.
+            </p>
+            <a href="/result/power-toto">Open Power Toto 6/55 result</a>
+          </div>
+        </section>
+      ) : null}
       <Footer />
       <GoogleAdsense />
       <LiveResults />

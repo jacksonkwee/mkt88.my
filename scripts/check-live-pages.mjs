@@ -75,12 +75,14 @@ try {
   const before = JSON.parse((await request("/api/home-live")).text);
   const magnumPage = await request("/result/magnum-4d-jackpot");
   const powerPage = await request("/result/power-toto");
+  const sportsTotoPage = await request("/result/sportstoto");
   const sitemap = await request("/sitemap.xml");
   const after = JSON.parse((await request("/api/home-live")).text);
 
   for (const [label, result] of [
     ["Magnum page", magnumPage],
     ["Power Toto page", powerPage],
+    ["Sports Toto page", sportsTotoPage],
     ["sitemap", sitemap],
   ]) {
     if (!result.response.ok) errors.push(`${label} returned HTTP ${result.response.status}`);
@@ -111,6 +113,17 @@ try {
   }
   if (!magnumPage.text.includes("application/ld+json") || !powerPage.text.includes("application/ld+json")) {
     errors.push("A jackpot page is missing JSON-LD");
+  }
+  const expectedDate = String(toto.date || "").slice(0, 10);
+  const powerTitle = /<title>(.*?)<\/title>/.exec(powerPage.text)?.[1] || "";
+  if (expectedDate && !powerTitle.includes(expectedDate)) {
+    errors.push(`Power Toto title is missing the latest draw date ${expectedDate}`);
+  }
+  if (!powerPage.text.includes("Power Toto 6/55 FAQ") || !powerPage.text.includes('"FAQPage"')) {
+    errors.push("Power Toto FAQ content or structured data is missing");
+  }
+  if (!sportsTotoPage.text.includes('href="/result/power-toto"')) {
+    errors.push("Sports Toto page is missing the Power Toto internal link");
   }
   if (!sitemap.text.includes("/result/magnum-4d-jackpot")) errors.push("sitemap is missing /result/magnum-4d-jackpot");
   if (!sitemap.text.includes("/result/power-toto")) errors.push("sitemap is missing /result/power-toto");

@@ -14,6 +14,7 @@ import hariPastRaw from "./hari-past.json";
 import { DEEP, DEEP_CARDS, deepDates } from "./deep-past-cards";
 import perdanaPastRaw from "./perdana-past.json";
 import hari4dPastRaw from "./hari-4d-past.json";
+import { after } from "next/server";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -91,6 +92,7 @@ function afterDate(fromDate: string, toDate: string): string[] {
 
 let myTables: Record<string, string[]> = { ...MY_BASE.tables };
 let myScan: Promise<void> | null = null;
+let myScanQueued = false;
 let myAt = 0;
 const MY_TTL = 3 * 60 * 60 * 1000;
 
@@ -117,6 +119,22 @@ async function scanRecent(): Promise<void> {
   for (const [d, t] of found) if (t) map[d] = t;
   myTables = map;
   myAt = Date.now();
+}
+
+/** Start the refresher after the page response instead of inside a static render. */
+function queueRecentScan(): void {
+  if (myScan || myScanQueued || Date.now() - myAt < MY_TTL) return;
+  myScanQueued = true;
+  const run = () => {
+    myScanQueued = false;
+    if (myScan) return;
+    myScan = scanRecent().catch(() => {}).finally(() => { myScan = null; });
+  };
+  try {
+    after(run);
+  } catch {
+    setTimeout(run, 0);
+  }
 }
 
 /**
@@ -174,9 +192,7 @@ export function getKhDatesByGame(): KhByGame {
 }
 
 export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; myTables: Record<string, string[]>; khByGame: KhByGame }> {
-  if (!myScan && Date.now() - myAt >= MY_TTL) {
-    myScan = scanRecent().catch(() => { }).finally(() => { myScan = null; });
-  }
+  queueRecentScan();
   const khByGame = getKhDatesByGame();
   const kh = [...new Set(Object.values(khByGame).flat())].sort();
   // Fold the stored deep archive into the Malaysia / Singapore date list.
