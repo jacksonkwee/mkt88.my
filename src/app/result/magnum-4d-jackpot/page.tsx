@@ -11,36 +11,63 @@ const PATH = "/result/magnum-4d-jackpot";
 // each request prevents a build-time "----" page from remaining in the ISR cache.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Magnum 4D Jackpot Result 万能 4D 积宝 - Jackpot 1 & 2 Prize Today",
-  description:
-    "Magnum 4D Jackpot 1 and Jackpot 2 prize amounts for the latest draw, updated after every Magnum draw, plus 4D Jackpot Gold and the draw schedule.",
-  alternates: { canonical: PATH },
-  openGraph: {
-    title: "Magnum 4D Jackpot Result - Jackpot 1 & 2 Prize",
-    description: "Current Magnum 4D Jackpot 1 and Jackpot 2 prize amounts after each draw.",
-    url: "https://www.mkt88.my" + PATH,
-    type: "website",
-  },
-};
-
 type Card = Record<string, string>;
 
 const money = (v?: string) => (v && v.trim() ? v.trim() : "----");
+const shortDate = (date?: string) => (date || "").replace(/\s+\([A-Za-z]{3}\)\s*$/, "");
 
-export default async function MagnumJackpotPage() {
-  // A failed snapshot must not break the page: the headings and the explanation
-  // are the part Google indexes, and the amounts fall back to "----".
+async function readMagnumJackpot() {
   const snap = await getSnapshot({ wait: true }).catch(() => null);
   const jackpot: Card = (snap?.cards?.["table-1"] || {}) as Card;
   const gold: Card = (snap?.cards?.["table-2"] || {}) as Card;
-
-  const drawDate = gold.date || jackpot.date || "";
-  const drawNo = gold.draw_no || jackpot.draw_no || "";
   const jp1 = money(jackpot.first_jackpot_prize);
   const jp2 = money(jackpot.second_jackpot_prize);
   const gold1 = money(gold.first_jackpot_prize);
   const gold2 = money(gold.second_jackpot_prize);
+  return {
+    jackpot,
+    gold,
+    drawDate: shortDate(gold.date || jackpot.date),
+    drawNo: gold.draw_no || jackpot.draw_no || "",
+    jp1,
+    jp2,
+    gold1,
+    gold2,
+  };
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const { drawDate, jp1, jp2, gold1, gold2 } = await readMagnumJackpot();
+  const title = drawDate
+    ? `Magnum 4D Jackpot Result ${drawDate} - Jackpot 1 & 2 Prize`
+    : "Magnum 4D Jackpot Result - Jackpot 1 & 2 Prize Today";
+  const amounts = [
+    jp1 !== "----" ? `Jackpot 1: ${jp1}` : "",
+    jp2 !== "----" ? `Jackpot 2: ${jp2}` : "",
+    gold1 !== "----" ? `4D Jackpot Gold 1: ${gold1}` : "",
+    gold2 !== "----" ? `4D Jackpot Gold 2: ${gold2}` : "",
+  ].filter(Boolean);
+  const description = (drawDate
+    ? `Magnum 4D Jackpot result for ${drawDate}.`
+    : "Magnum 4D Jackpot 1 and Jackpot 2 prize amounts for the latest draw.")
+    + (amounts.length ? ` ${amounts.join(". ")}.` : "");
+  return {
+    title,
+    description,
+    alternates: { canonical: PATH },
+    openGraph: {
+      title,
+      description,
+      url: "https://www.mkt88.my" + PATH,
+      type: "website",
+    },
+  };
+}
+
+export default async function MagnumJackpotPage() {
+  // A failed snapshot must not break the page: the headings and the explanation
+  // are the part Google indexes, and the amounts fall back to "----".
+  const { drawDate, drawNo, jp1, jp2, gold1, gold2 } = await readMagnumJackpot();
 
   const jsonLd = {
     "@context": "https://schema.org",

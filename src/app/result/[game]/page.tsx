@@ -47,6 +47,23 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   const pastDates = await getPastDateLists();
   const myDates = pastDates.my;
   const khDates = pastDates.kh;
+  const related = game === "sportstoto"
+    ? {
+        id: "power-toto-link",
+        title: "Power Toto 6/55 Result",
+        text: "See the latest Power Toto winning numbers and jackpot, with draw time and past-result links.",
+        href: "/result/power-toto",
+        label: "Open Power Toto 6/55 result",
+      }
+    : game === "magnum"
+      ? {
+          id: "magnum-jackpot-link",
+          title: "Magnum 4D Jackpot Result",
+          text: "See the latest Magnum Jackpot 1 and Jackpot 2 amounts, plus 4D Jackpot Gold.",
+          href: "/result/magnum-4d-jackpot",
+          label: "Open Magnum 4D Jackpot result",
+        }
+      : null;
   return (
     <>
       <Header />
@@ -68,15 +85,12 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
           <GameColumns ids={def.cardIds} snap={snapProp} />
         </main>
       </div>
-      {game === "sportstoto" ? (
-        <section className="container py-3" aria-labelledby="power-toto-link">
+      {related ? (
+        <section className="container py-3" aria-labelledby={related.id}>
           <div className="border rounded p-3">
-            <h2 id="power-toto-link" className="h5 mb-1">Power Toto 6/55 Result</h2>
-            <p className="mb-2">
-              See the latest Power Toto winning numbers and jackpot, with draw time and past-result
-              links.
-            </p>
-            <a href="/result/power-toto">Open Power Toto 6/55 result</a>
+            <h2 id={related.id} className="h5 mb-1">{related.title}</h2>
+            <p className="mb-2">{related.text}</p>
+            <a href={related.href}>{related.label}</a>
           </div>
         </section>
       ) : null}

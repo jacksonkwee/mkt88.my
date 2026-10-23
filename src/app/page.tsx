@@ -74,6 +74,7 @@ export default async function Home() {
           { href: "/favourites", label: "Favourite Numbers 收藏号码" },
           { href: "/past-results", label: "Past Results 过去开彩" },
           { href: "/lotto-4d", label: "Lotto 4D 柬埔寨" },
+          { href: "/result/magnum-4d-jackpot", label: "Magnum 4D Jackpot 万能积宝" },
           { href: "/result/power-toto", label: "Power Toto 6/55 多多积宝" },
           { href: "/singapore-4d-results", label: "Singapore 4D 新加坡" },
           { href: "/sabah-sarawak-4d-results", label: "Sabah Sarawak 东马" }

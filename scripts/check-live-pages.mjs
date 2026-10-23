@@ -74,14 +74,18 @@ async function checkOnce() {
   const before = JSON.parse((await request("/api/home-live")).text);
   const magnumPage = await request("/result/magnum-4d-jackpot");
   const powerPage = await request("/result/power-toto");
+  const magnumGamePage = await request("/result/magnum");
   const sportsTotoPage = await request("/result/sportstoto");
+  const homePage = await request("/");
   const sitemap = await request("/sitemap.xml");
   const after = JSON.parse((await request("/api/home-live")).text);
 
   for (const [label, result] of [
     ["Magnum page", magnumPage],
     ["Power Toto page", powerPage],
+    ["Magnum game page", magnumGamePage],
     ["Sports Toto page", sportsTotoPage],
+    ["home page", homePage],
     ["sitemap", sitemap],
   ]) {
     if (!result.response.ok) errors.push(`${label} returned HTTP ${result.response.status}`);
@@ -123,6 +127,18 @@ async function checkOnce() {
   }
   if (!sportsTotoPage.text.includes('href="/result/power-toto"')) {
     errors.push("Sports Toto page is missing the Power Toto internal link");
+  }
+  const expectedMagnumDate = String(gold.date || magnum.date || "").slice(0, 10);
+  const magnumTitle = /<title>(.*?)<\/title>/.exec(magnumPage.text)?.[1] || "";
+  if (expectedMagnumDate && !magnumTitle.includes(expectedMagnumDate)) {
+    errors.push(`Magnum Jackpot title is missing the latest draw date ${expectedMagnumDate}`);
+  }
+  if (!magnumGamePage.text.includes('href="/result/magnum-4d-jackpot"')) {
+    errors.push("Magnum page is missing the Magnum Jackpot internal link");
+  }
+  if (!homePage.text.includes('href="/result/magnum-4d-jackpot"')
+    || !homePage.text.includes('href="/result/power-toto"')) {
+    errors.push("Home page is missing one or both jackpot internal links");
   }
   if (!sitemap.text.includes("/result/magnum-4d-jackpot")) errors.push("sitemap is missing /result/magnum-4d-jackpot");
   if (!sitemap.text.includes("/result/power-toto")) errors.push("sitemap is missing /result/power-toto");
