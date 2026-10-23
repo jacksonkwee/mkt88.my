@@ -1,3 +1,5 @@
+import { sendLiveCheckAlert } from "./live-check-alert.mjs";
+
 const BASE = (process.env.LIVE_BASE_URL || "https://www.mkt88.my").replace(/\/+$/, "");
 const args = process.argv.slice(2);
 const expectedCommit = args.includes("--expect-commit")
@@ -66,6 +68,25 @@ function compare(label, pageValue, apiValue) {
     errors.push(`${label}: API has ${apiValue}, page shows ${pageValue || "nothing"}`);
   } else if (pageValue !== apiValue) {
     errors.push(`${label}: page ${pageValue} does not match API ${apiValue}`);
+  }
+}
+
+async function notifyFailure(title, details) {
+  const result = await sendLiveCheckAlert({
+    title,
+    details,
+    base: BASE,
+    commit: expectedCommit,
+  });
+  if (!result.configured) {
+    console.log("No alert channel configured; failure is recorded in the GitLab job.");
+    return;
+  }
+  if (result.failures.length) {
+    console.error("Alert delivery failed:");
+    for (const failure of result.failures) console.error(" - " + failure);
+  } else {
+    console.log(`Failure alert sent to ${result.sent} channel(s).`);
   }
 }
 
@@ -144,6 +165,25 @@ async function checkOnce() {
   if (!sitemap.text.includes("/result/power-toto")) errors.push("sitemap is missing /result/power-toto");
 }
 
+if (args.includes("--test-alert")) {
+  const result = await sendLiveCheckAlert({
+    title: "Notification test",
+    details: "Manual test from scripts/check-live-pages.mjs.",
+    base: BASE,
+    commit: expectedCommit,
+  });
+  if (!result.configured) {
+    console.error("No alert channel configured. Set ALERT_WEBHOOK_URL or TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID.");
+    process.exit(1);
+  }
+  if (result.failures.length) {
+    for (const failure of result.failures) console.error(" - " + failure);
+    process.exit(1);
+  }
+  console.log(`Test alert sent to ${result.sent} channel(s).`);
+  process.exit(0);
+}
+
 try {
   await waitForDeployment();
   for (let attempt = 1; attempt <= 6; attempt++) {
@@ -161,10 +201,13 @@ try {
   if (errors.length) {
     console.error("Live jackpot checks failed:");
     for (const error of errors) console.error(" - " + error);
+    await notifyFailure("Live jackpot checks failed", errors.join("\n"));
     process.exit(1);
   }
   console.log("Live jackpot checks passed.");
 } catch (error) {
-  console.error(error instanceof Error ? error.message : error);
+  const details = error instanceof Error ? error.message : String(error);
+  console.error(details);
+  await notifyFailure("Deployment verification failed", details);
   process.exit(1);
 }
