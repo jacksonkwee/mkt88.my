@@ -46,7 +46,15 @@ With the variables set locally:
 node scripts/check-live-pages.mjs --test-alert
 ```
 
-Or run the `live-pages` job manually after adding the variables.
+Or use GitLab:
+
+1. Open **Build -> Pipelines**.
+2. Click **Run pipeline**.
+3. Select `main` and run it.
+4. Open the new pipeline and click the play button beside `alert-test`.
+
+The daily number-history job is manual in a web pipeline, so it does not run
+just because the alert test was requested.
 
 If no channel is configured, the GitLab job still fails normally and prints a
 warning that no external alert was sent.

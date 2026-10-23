@@ -39,12 +39,22 @@ live-pages:
   script:
     - node scripts/check-live-pages.mjs --expect-commit "$CI_COMMIT_SHA"
 
+alert-test:
+  image: node:20
+  timeout: 3m
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  script:
+    - node scripts/check-live-pages.mjs --test-alert
+
 number-history:
   image: node:20
   timeout: 30m
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
   script:
     - node scripts/check-card-contracts.mjs
     - node scripts/refresh-number-history.mjs
