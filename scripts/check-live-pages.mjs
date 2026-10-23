@@ -5,7 +5,7 @@ const expectedCommit = args.includes("--expect-commit")
   : "";
 const waitMs = Number(process.env.LIVE_DEPLOY_WAIT_MS || 8 * 60_000);
 
-const errors = [];
+let errors = [];
 const dash = (value) => !value || /^----+$/.test(String(value).trim());
 
 async function request(path) {
@@ -69,9 +69,8 @@ function compare(label, pageValue, apiValue) {
   }
 }
 
-try {
-  await waitForDeployment();
-
+async function checkOnce() {
+  errors = [];
   const before = JSON.parse((await request("/api/home-live")).text);
   const magnumPage = await request("/result/magnum-4d-jackpot");
   const powerPage = await request("/result/power-toto");
@@ -127,7 +126,22 @@ try {
   }
   if (!sitemap.text.includes("/result/magnum-4d-jackpot")) errors.push("sitemap is missing /result/magnum-4d-jackpot");
   if (!sitemap.text.includes("/result/power-toto")) errors.push("sitemap is missing /result/power-toto");
+}
 
+try {
+  await waitForDeployment();
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    try {
+      await checkOnce();
+    } catch (error) {
+      errors = [error instanceof Error ? error.message : String(error)];
+    }
+    if (!errors.length) break;
+    if (attempt < 6) {
+      console.log(`Attempt ${attempt} not ready: ${errors.join("; ")}`);
+      await new Promise((resolve) => setTimeout(resolve, 5_000));
+    }
+  }
   if (errors.length) {
     console.error("Live jackpot checks failed:");
     for (const error of errors) console.error(" - " + error);
