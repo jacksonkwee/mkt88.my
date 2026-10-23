@@ -24,6 +24,7 @@ const STATIC_PAGES: { path: string; priority: number; changeFrequency: MetadataR
   { path: "/east/sabah88", priority: 0.8, changeFrequency: "daily" },
   { path: "/east/cashsweep", priority: 0.8, changeFrequency: "daily" },
   { path: "/result/magnum", priority: 0.9, changeFrequency: "hourly" },
+  { path: "/result/magnum-4d-jackpot", priority: 0.9, changeFrequency: "hourly" },
   { path: "/result/sportstoto", priority: 0.9, changeFrequency: "hourly" },
   { path: "/result/damacai", priority: 0.9, changeFrequency: "hourly" },
   { path: "/result/grand-dragon", priority: 0.8, changeFrequency: "hourly" },
