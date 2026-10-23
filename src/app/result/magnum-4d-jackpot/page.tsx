@@ -7,10 +7,9 @@ import { getSnapshot } from "../../../lib/live-snapshot";
 
 const PATH = "/result/magnum-4d-jackpot";
 
-// The jackpot amounts move during the day, so this page is regenerated every
-// minute instead of being frozen at build time. It is a light page (no cards),
-// so the regeneration is cheap.
-export const revalidate = 60;
+// These amounts change after every draw. Rendering this route on the server for
+// each request prevents a build-time "----" page from remaining in the ISR cache.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Magnum 4D Jackpot Result 万能 4D 积宝 - Jackpot 1 & 2 Prize Today",
@@ -32,9 +31,6 @@ const money = (v?: string) => (v && v.trim() ? v.trim() : "----");
 export default async function MagnumJackpotPage() {
   // A failed snapshot must not break the page: the headings and the explanation
   // are the part Google indexes, and the amounts fall back to "----".
-  // `wait: true` is what the /api/home-live route uses. Without it this page
-  // rendered from an un-warmed instance and showed "----" even though the API
-  // had the real amounts.
   const snap = await getSnapshot({ wait: true }).catch(() => null);
   const jackpot: Card = (snap?.cards?.["table-1"] || {}) as Card;
   const gold: Card = (snap?.cards?.["table-2"] || {}) as Card;
