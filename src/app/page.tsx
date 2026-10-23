@@ -10,6 +10,14 @@ import DirectTopAd from "../components/sites/mkt88/app/DirectTopAd";
 import GoogleAdsense from "../components/GoogleAdsense";
 import SeoText from "../components/SeoText";
 import { getPastDateLists } from "../lib/past-dates";
+import type { Metadata } from "next";
+
+// The home page inherited its title and description from the root layout but
+// never declared a canonical, so /, ?utm=... and the app's own entry URL all
+// competed as separate pages. This pins it to the one address.
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 export default async function Home() {
   /*
