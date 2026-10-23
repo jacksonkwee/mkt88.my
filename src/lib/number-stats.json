@@ -1315,10 +1315,10 @@
    "key": "lucky",
    "name": "Lucky HariHari 4D",
    "zh": "天天好运",
-   "draws": 2277,
+   "draws": 2279,
    "from": "2021-09-14",
-   "to": "2026-10-21",
-   "totalAppearances": 52380,
+   "to": "2026-10-22",
+   "totalAppearances": 52426,
    "hot": [
     {
      "num": "3601",
@@ -1349,6 +1349,12 @@
      "count": 14,
      "first": 0,
      "last": "2026-08-18"
+    },
+    {
+     "num": "4694",
+     "count": 14,
+     "first": 2,
+     "last": "2026-10-22"
     },
     {
      "num": "4970",
@@ -1402,12 +1408,6 @@
      "num": "4246",
      "count": 13,
      "first": 0,
-     "last": "2026-07-10"
-    },
-    {
-     "num": "4694",
-     "count": 13,
-     "first": 2,
      "last": "2026-07-10"
     },
     {
