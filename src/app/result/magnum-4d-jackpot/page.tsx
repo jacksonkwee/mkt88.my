@@ -7,6 +7,11 @@ import { getSnapshot } from "../../../lib/live-snapshot";
 
 const PATH = "/result/magnum-4d-jackpot";
 
+// The jackpot amounts move during the day, so this page is regenerated every
+// minute instead of being frozen at build time. It is a light page (no cards),
+// so the regeneration is cheap.
+export const revalidate = 60;
+
 export const metadata: Metadata = {
   title: "Magnum 4D Jackpot Result 万能 4D 积宝 - Jackpot 1 & 2 Prize Today",
   description:
