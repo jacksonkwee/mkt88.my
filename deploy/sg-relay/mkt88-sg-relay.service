@@ -1,0 +1,20 @@
+[Unit]
+Description=MKT88 Singapore 4D live relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+EnvironmentFile=/etc/mkt88-sg-relay.env
+ExecStart=/usr/local/bin/mkt88-sg-relay
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+RestrictAddressFamilies=AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target
