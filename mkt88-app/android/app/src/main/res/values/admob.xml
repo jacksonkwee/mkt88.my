@@ -2,5 +2,8 @@
 <resources>
     <!-- Production AdMob IDs. -->
     <string name="admob_app_id" translatable="false">ca-app-pub-3670692731712446~7038128120</string>
-    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-3670692731712446/3884999525</string>
+    <!-- Unit 3884999525 did not belong to this app, so every request was
+         ignored and AdMob reported zero. 7667601943 is the banner that exists
+         under app ca-app-pub-3670692731712446~7038128120 (checked 24 Oct 2026). -->
+    <string name="admob_banner_unit_id" translatable="false">ca-app-pub-3670692731712446/7667601943</string>
 </resources>
