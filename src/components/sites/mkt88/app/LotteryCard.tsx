@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { rewriteHtml, toLocal } from "./site-paths";
 import { toSimplified } from "../../../../lib/zh-simplified";
 import { liveCellFor } from "./snapshot-values";
+import { setZodiacImage } from "./zodiac";
 
 export interface CardCellAttrs {
   width?: string;
@@ -46,8 +47,8 @@ export interface CardOverride {
   prizeSet?: { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null;
 }
 
-function Cell(props: { cell: CardCell; override?: string; frozen?: boolean; drawMoved?: boolean }) {
-  const { cell, override, frozen, drawMoved } = props;
+function Cell(props: { cell: CardCell; override?: string; zodiac?: string; frozen?: boolean; drawMoved?: boolean }) {
+  const { cell, override, zodiac, frozen, drawMoved } = props;
   const style: CSSProperties | undefined = undefined;
   const attrs: Record<string, unknown> = {};
   const dataId = cell.attrs?.["data-id"] || "";
@@ -88,7 +89,10 @@ function Cell(props: { cell: CardCell; override?: string; frozen?: boolean; draw
   if (cell.attrs?.colspan) attrs.colSpan = Number(cell.attrs.colspan);
   if (cell.attrs?.rowspan) attrs.rowSpan = Number(cell.attrs.rowspan);
   if (cell.attrs?.["data-id"]) attrs["data-id"] = cell.attrs["data-id"];
-  const html = fresh ? override! : staleDraw ? "----" : rewriteHtml(cell.html || "");
+  const baseHtml = rewriteHtml(cell.html || "");
+  const html = /\bdata-id=["']zodiac["']/i.test(cell.html || "") && zodiac !== undefined
+    ? setZodiacImage(baseHtml, zodiac)
+    : fresh ? override! : staleDraw ? "----" : baseHtml;
   const Tag = cell.tag === "th" ? "th" : "td";
 
 
@@ -123,6 +127,9 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
   // draw has moved on, and the numbers still baked into the card are last
   // draw's.
   const drawMoved = Boolean(dateText) && Boolean(h.date) && dateText !== h.date;
+  const zodiac = values && Object.prototype.hasOwnProperty.call(values, "zodiac")
+    ? values.zodiac
+    : drawMoved ? "" : undefined;
   const headerClass = ["row", "mx-0", "align-items-center", "justify-content-center", h.bgCls, "position-relative"]
     .filter(Boolean)
     .join(" ");
@@ -186,7 +193,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
                           else if (ti === 2) override = prizeSet.cons?.[n];
                         }
                       }
-                      return <Cell key={ci} cell={c} override={override} frozen={frozen} drawMoved={drawMoved} />;
+                      return <Cell key={ci} cell={c} override={override} zodiac={zodiac} frozen={frozen} drawMoved={drawMoved} />;
                     })}
                   </tr>
                 ))}

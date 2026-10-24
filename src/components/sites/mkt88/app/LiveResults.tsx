@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { gameBySlug } from "./GameDefs";
 import { markLiveValue, copyMayWrite } from "./snapshot-values";
+import { zodiacImage } from "./zodiac";
 import { jackpotLetterOf, nextJackpotLetter } from "../../../../lib/jackpot-letter.mjs";
 
 /**
@@ -1096,6 +1097,11 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
         // letting those overwrite good numbers made the cards rewrite (and
         // flash) on every single refresh.
         if (!v || v === "-") continue;
+        if (id === "zodiac") {
+          const img = card.querySelector('img[data-id="zodiac"]') as HTMLImageElement | null;
+          if (img) img.src = zodiacImage(v);
+          continue;
+        }
         /*
          * Magnum is taken exactly as the snapshot has it, blanks included. It
          * is the only game with no second writer on the phone - the operator's
@@ -1114,6 +1120,10 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
          */
         if (!copyMayWrite(el, vals.date, curDate)) continue;
         setText(el, v);
+      }
+      if (newDraw && cls === "table-6" && !Object.prototype.hasOwnProperty.call(vals, "zodiac")) {
+        const img = card.querySelector('img[data-id="zodiac"]') as HTMLImageElement | null;
+        if (img) img.src = zodiacImage("");
       }
       /*
        * Grand Dragon and Nine Lotto publish only thirteen special numbers

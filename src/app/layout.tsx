@@ -146,6 +146,11 @@ const BOOT_SCRIPT = `
   window.__MKT_BOOT__ = true;
   var changed = false;
   function txt(el, v){ if(!el || v === undefined || v === null || v === "") return; var id = el.getAttribute ? (el.getAttribute("data-id") || "") : ""; if(/^six_/.test(id) && /^----+$/.test(String(v).trim())) return; if((el.textContent||"").trim() !== v){ el.textContent = v; changed = true; } if(el.classList.contains("live-pending")){ el.classList.remove("live-pending"); changed = true; } }
+  function zodiacPic(v){
+    var key = String(v || "").trim().toLowerCase();
+    var files = { rat:"rat", ox:"ox", tiger:"tiger", rabbit:"rabbit", dragon:"dragon", snake:"snake", horse:"horse", goat:"goat", sheep:"goat", monkey:"monkey", rooster:"rooster", chicken:"rooster", dog:"dog", boar:"boar", pig:"boar" };
+    return "/sites/mkt88/app/theme-assets/images/zodiac/" + (files[key] || "empty") + ".png";
+  }
   // Draw dates arrive as dd-mm-yyyy (or yyyy-mm-dd). A source that is one draw
   // behind must never drag a card back: that is what made the numbers flicker
   // between today's result and yesterday's.
@@ -181,8 +186,13 @@ const BOOT_SCRIPT = `
           if(v === undefined || v === null || v === "" || v === "-") return;
           var el = nodes[i].querySelector('[data-id="' + id + '"]');
           if(phoneOwnsCell(el, vals.date, __cardDate)) return;   // the phone's own board stands
+          if(id === "zodiac" && el && el.tagName === "IMG"){ var zp = zodiacPic(v); if(el.getAttribute("src") !== zp){ el.setAttribute("src", zp); changed = true; } return; }
           txt(el, v);
         });
+        if(cls === "table-6" && vals.date && __cardDate && vals.date !== __cardDate && !Object.prototype.hasOwnProperty.call(vals, "zodiac")){
+          var zi = nodes[i].querySelector('img[data-id="zodiac"]');
+          if(zi) zi.setAttribute("src", zodiacPic(""));
+        }
       }
     });
   }

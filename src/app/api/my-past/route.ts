@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getViewHtml } from "../../../components/sites/mkt88/app/past-data";
 import { rewriteHtml, stripAdHtml } from "../../../components/sites/mkt88/app/site-paths";
+import { setZodiacImage } from "../../../components/sites/mkt88/app/zodiac";
 import recent from "./recent.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
@@ -13,6 +14,43 @@ async function httpGet(url: string): Promise<string> {
   });
   if (!res.ok) throw new Error("upstream " + res.status);
   return await res.text();
+}
+
+const zodiacCache = new Map<string, { at: number; value: string }>();
+
+async function totoZodiac(date: string): Promise<string> {
+  const cached = zodiacCache.get(date);
+  if (cached && Date.now() - cached.at < 60_000) return cached.value;
+  try {
+    const live = await fetch("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (live.ok) {
+      const toto = ((await live.json()) as { T?: { DD?: string; ZODIAC?: string } }).T;
+      const image = /zodiac\/([a-z]+)\.png/i.exec(String(toto?.ZODIAC || ""))?.[1]?.toLowerCase();
+      if (image && String(toto?.DD || "").includes(date.split("-").reverse().join("-"))) {
+        zodiacCache.set(date, { at: Date.now(), value: image });
+        return image;
+      }
+    }
+    const res = await fetch("https://api.sportstoto.com.my/api/v1/app/GetResults", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", "User-Agent": UA },
+      body: "{}",
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    });
+    if (!res.ok) return "";
+    const json = (await res.json()) as { "4dResult"?: { DrawDate?: string; Zodiac?: string }[] };
+    const draw = (json["4dResult"] || []).find((item) => String(item.DrawDate || "").startsWith(date));
+    const value = String(draw?.Zodiac || "").trim().toLowerCase();
+    zodiacCache.set(date, { at: Date.now(), value });
+    return value;
+  } catch {
+    return "";
+  }
 }
 
 /** Keep the result cards even if an ad-removal pass is too aggressive. */
@@ -62,7 +100,9 @@ export async function GET(req: NextRequest) {
     const descIdx = content.indexOf('<div class="description">');
     if (descIdx >= 0) content = content.slice(0, descIdx);
 
-    return NextResponse.json({ date, html: cleanFetchedHtml(content) });
+    let html = cleanFetchedHtml(content);
+    if (/\bdata-id=["']zodiac["']/i.test(html)) html = setZodiacImage(html, await totoZodiac(date));
+    return NextResponse.json({ date, html });
   } catch (e) {
     return NextResponse.json({ date, html: "", error: String(e) });
   }

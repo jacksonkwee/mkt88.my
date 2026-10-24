@@ -9,10 +9,11 @@ const HOST_WWW = "https://www.live4dresult.net";
 /** Convert a same-site absolute/relative URL into a local asset URL. */
 export function toLocal(src: string): string {
   if (!src) return src;
-  if (src.startsWith(HOST)) return ASSET_BASE + src.slice(HOST.length);
+  const legacy = src.replace(/\/wp-content\/themes\/[^/]+\/assets\/images\//gi, "/theme-assets/images/");
+  if (legacy.startsWith(HOST)) return ASSET_BASE + legacy.slice(HOST.length);
   if (src.startsWith("//")) return "https:" + src;
-  if (src.startsWith("/") && !src.startsWith("/sites/")) return ASSET_BASE + src;
-  return src;
+  if (legacy.startsWith("/") && !legacy.startsWith("/sites/")) return ASSET_BASE + legacy;
+  return legacy;
 }
 
 /**
@@ -26,6 +27,7 @@ export function toLocal(src: string): string {
 export function rewriteHtml(html: string): string {
   let h = html.replace(new RegExp(HOST.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), "");
   h = h.replace(new RegExp(HOST_WWW.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"), "");
+  h = h.replace(/\/wp-content\/themes\/[^/]+\/assets\/images\//gi, "/theme-assets/images/");
   h = h.replace(/(src=")(\/[^"]*)/g, (_m, p: string, path: string) =>
     p + (path.startsWith("/sites/") ? path : ASSET_BASE + path)
   );

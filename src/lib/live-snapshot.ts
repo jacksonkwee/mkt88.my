@@ -1110,6 +1110,8 @@ function totoCards(j: Record<string, any> | null): { four?: Record<string, strin
     v.first_jackpot_status = "";
     v.second_jackpot_prize = rm(d4.Jackpot2);
     v.second_jackpot_status = "";
+    const zodiac = String(d4.Zodiac || "").trim().toLowerCase();
+    if (zodiac) v.zodiac = zodiac;
     four = v;
   }
 
@@ -1155,6 +1157,19 @@ function totoCards(j: Record<string, any> | null): { four?: Record<string, strin
   if (n655) six.power_toto_first_jackpot_prize = rm(n655.Jackpot);
   if (n658) six.supreme_toto_first_jackpot_prize = rm(n658.Jackpot);
   return { four, fiveSix: Object.keys(six).length ? six : undefined };
+}
+
+/** The mirror carries the current draw's zodiac before the official archive updates. */
+function totoMirrorZodiac(feed: unknown): Record<string, string> | null {
+  if (!feed) return null;
+  try {
+    const toto = (typeof feed === "string" ? JSON.parse(feed) : feed)?.T;
+    const date = String(toto?.DD || "");
+    const image = /zodiac\/([a-z]+)\.png/i.exec(String(toto?.ZODIAC || ""))?.[1]?.toLowerCase();
+    return date && image ? { date, zodiac: image } : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -1204,6 +1219,8 @@ function parseTotoLive(text: string): Record<string, string> | null {
   four.first_prize = top[0] || "----";
   four.second_prize = top[1] || "----";
   four.third_prize = top[2] || "----";
+  const zodiac = /TOTO 4D ZODIAC\s+(RAT|OX|TIGER|RABBIT|DRAGON|SNAKE|HORSE|GOAT|SHEEP|MONKEY|ROOSTER|CHICKEN|DOG|BOAR|PIG)\b/i.exec(text)?.[1];
+  if (zodiac) four.zodiac = zodiac.toLowerCase();
   // A board with only the date is not a draw yet.
   const hasNumber = Object.entries(four).some(([k, v]) =>
     (k.startsWith("special-") || k.startsWith("consolation-") || /prize$/.test(k)) && /^\d{4}$/.test(v));
@@ -1884,6 +1901,11 @@ const SG_GUARD_DOC = "state/sg4d";
 const SG_GUARD_MS = 10_000;
 let sgGuard: { at: number; board: Record<string, string> | null } | null = null;
 
+const TOTO_GUARD_DOC = "state/toto4d";
+const TOTO_GUARD_MS = 10_000;
+type TotoGuard = { four: Record<string, string> | null };
+let totoGuard: { at: number; board: TotoGuard | null } | null = null;
+
 function sgDay(v?: Record<string, string> | string): number {
   const s = typeof v === "string" ? v : v?.date;
   const m = /(\d{2})-(\d{2})-(\d{4})/.exec(s || "");
@@ -1958,6 +1980,35 @@ async function writeSgGuard(board: Record<string, string>): Promise<void> {
   ]);
 }
 
+async function readTotoGuard(): Promise<TotoGuard | null> {
+  if (!pushConfigured()) return null;
+  if (totoGuard && totoGuard.board && Date.now() - totoGuard.at < TOTO_GUARD_MS) return totoGuard.board;
+  const doc = await Promise.race([
+    firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(TOTO_GUARD_DOC),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), 900)),
+  ]);
+  const raw = doc?.fields?.json?.stringValue;
+  if (!raw) return null;
+  try {
+    const board = JSON.parse(raw) as TotoGuard;
+    if (!board?.four?.date) return null;
+    totoGuard = { at: Date.now(), board };
+    return board;
+  } catch {
+    return null;
+  }
+}
+
+async function writeTotoGuard(four: Record<string, string>): Promise<void> {
+  if (!pushConfigured() || !four.date) return;
+  const board = { four };
+  totoGuard = { at: Date.now(), board };
+  await Promise.race([
+    firestorePut(TOTO_GUARD_DOC, { json: JSON.stringify(board) }),
+    new Promise<void>((resolve) => setTimeout(resolve, 1200)),
+  ]);
+}
+
 export async function buildSnapshot(): Promise<Snapshot> {
   const today = myDate(0);
   const yest = myDate(-1);
@@ -1968,7 +2019,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Only today's read counts. A host that has been blocked since yesterday must
   // not leave yesterday's board looking like this evening's answer.
   const gd = gdOfficial && gdOfficial.iso === today.iso ? gdOfficial : null;
-  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored, gdSocket, jackpotFeed] = await Promise.all([
+  const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored, totoStored, gdSocket, jackpotFeed] = await Promise.all([
     get("https://live4dresult.net/"),
     get("https://live4dresult.net/sabah-sarawak-4d-results/"),
     get("https://live4dresult.net/singapore-4d-results/"),
@@ -2003,6 +2054,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
     damacaiToday(today.iso),
     totoResults(),
     readSgGuard(),
+    readTotoGuard(),
     getFourDKingSnapshot(),
     getJackpotFeed(),
   ]);
@@ -2626,6 +2678,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   const toto = totoCards(totoRes);
   const liveFour = totoLiveCache?.four;
   const officialFour = toto.four;
+  const mirrorZodiac = totoMirrorZodiac(feed);
   let four: Record<string, string> | undefined;
   if (officialFour && liveFour) {
     if (isOlder(officialFour.date, liveFour.date)) four = liveFour;
@@ -2633,6 +2686,19 @@ export async function buildSnapshot(): Promise<Snapshot> {
     else four = addNew(liveFour, officialFour);
   } else {
     four = officialFour || liveFour;
+  }
+  // Every Vercel instance has its own totoLiveCache. A cold instance otherwise
+  // serves the previous archive draw while another serves the live draw, which
+  // makes the card jump back and forth. Share the newest board through Firestore.
+  const totoParts = [totoStored?.four || null, cache?.cards?.["table-6"] || null, mirrorZodiac, four]
+    .filter((b): b is Record<string, string> => !!b && dayScore(b.date) > 0);
+  if (totoParts.length) {
+    const newest = Math.max(...totoParts.map((b) => dayScore(b.date)));
+    let stable: Record<string, string> = {};
+    for (const part of totoParts) {
+      if (dayScore(part.date) === newest) stable = addNew(stable, part);
+    }
+    four = stable;
   }
   if (four) {
     cards["table-6"] = { ...(cards["table-6"] || {}), ...four };
@@ -2663,6 +2729,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
       const hIs = hNow && hNow.set ? hNow.set.date : undefined;
       if (hBefore && hWas && hIs && isOlder(hIs, hWas)) hari[t] = hBefore;
       else if (hBefore && !hNow) hari[t] = hBefore;
+    }
+  }
+  const finalToto = cards["table-6"];
+  if (finalToto && finalToto.date) {
+    const stored = totoStored?.four;
+    if (!stored || dayScore(finalToto.date) > dayScore(stored.date) ||
+      (dayScore(finalToto.date) === dayScore(stored.date) && !sgSame(stored, finalToto))) {
+      await writeTotoGuard(finalToto);
     }
   }
   /*
