@@ -48,4 +48,9 @@
     </application>
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The 16:00 / 18:00 / 18:30 lucky-number reminders are exact alarms.
+         Android 12+ refuses setExactAndAllowWhileIdle without this, and the
+         failure is silent, so the notifications never fired (reported 24 Oct
+         2026). The user still has to allow "Alarms & reminders" once. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 </manifest>
