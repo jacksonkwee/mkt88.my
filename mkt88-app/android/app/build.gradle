@@ -43,6 +43,18 @@ android {
             signingConfig signingConfigs.release
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        /*
+         * Tester build: identical to release except it points at Google's test
+         * ad unit (see src/testing/res/values/admob.xml). Internal and closed
+         * testers tapping a real ad unit is what AdMob counts as invalid
+         * traffic, so the testers get this build and the store gets `release`.
+         * Same signing key, so it installs over a normal release install.
+         */
+        qa {
+            initWith release
+            signingConfig signingConfigs.release
+            matchingFallbacks = ['release']
+        }
     }
 }
 
