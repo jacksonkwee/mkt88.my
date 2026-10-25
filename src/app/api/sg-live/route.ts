@@ -13,7 +13,13 @@ import { firestorePut } from "../../../lib/fcm";
  */
 export const dynamic = "force-dynamic";
 
-const KEY = process.env.SG_PUSH_KEY || "mkt-sg-7Q4t9pLm2XvR8sKd";
+/*
+ * Fixed rather than read from the environment: Vercel already carries an
+ * unrelated SG_PUSH_KEY value, and every push was being rejected with 401
+ * (25 Oct 2026). The secret is only a guard against stray posts to a route that
+ * writes six numbers; rotating it means editing this line and the VPS script.
+ */
+const KEY = "mkt-sg-7Q4t9pLm2XvR8sKd";
 const DOC = "state/sg4d";
 
 export async function POST(req: Request) {
