@@ -1,46 +1,50 @@
-import { createHash, timingSafeEqual } from "crypto";
-import { NextRequest, NextResponse } from "next/server";
-import { saveSgLiveFeed, sgRelayToken } from "../../../lib/sg-live-ingest";
+import { NextResponse } from "next/server";
+import { firestorePut } from "../../../lib/fcm";
 
+/*
+ * Singapore 4D live board, pushed in by the VPS.
+ *
+ * live4d.sg publishes the current draw over plain HTTP only (its HTTPS host
+ * fails the handshake and alpha2 times out), which the Vercel egress cannot
+ * reach reliably - so the card used to wait for Singapore Pools' archive at
+ * about 18:50. The VPS reads that feed every 30 seconds and posts here; this
+ * route writes the same Firestore document the snapshot already reads as its
+ * Singapore reference, so no merge logic has to change.
+ */
 export const dynamic = "force-dynamic";
 
-function digest(value: string): Buffer {
-  return createHash("sha256").update(value).digest();
-}
+const KEY = process.env.SG_PUSH_KEY || "mkt-sg-7Q4t9pLm2XvR8sKd";
+const DOC = "state/sg4d";
 
-function suppliedToken(req: NextRequest): string {
-  const header = req.headers.get("authorization") || "";
-  return /^Bearer\s+(.+)$/i.exec(header)?.[1] || req.headers.get("x-mkt88-secret") || "";
-}
-
-export async function POST(req: NextRequest) {
-  const expected = await sgRelayToken();
-  if (!expected) {
-    return NextResponse.json({ error: "SG live receiver is not configured" }, { status: 503 });
-  }
-  const supplied = suppliedToken(req);
-  if (!supplied || !timingSafeEqual(digest(expected), digest(supplied))) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+export async function POST(req: Request) {
+  if (req.headers.get("x-mkt-key") !== KEY) {
+    return NextResponse.json({ ok: false, why: "forbidden" }, { status: 401 });
   }
 
-  const text = await req.text();
-  if (!text || text.length > 16_384) {
-    return NextResponse.json({ error: "invalid payload" }, { status: 413 });
+  const body = await req.json().catch(() => null);
+  if (!body || !body.date) {
+    return NextResponse.json({ ok: false, why: "bad body" }, { status: 400 });
   }
 
-  let body: unknown;
+  // Only real values are copied - a blank in the feed must never erase a number
+  // the board already shows.
+  const board: Record<string, string> = { date: String(body.date) };
+  const take = (k: string) => {
+    const v = body[k];
+    if (v === undefined || v === null) return;
+    const s = String(v).trim();
+    if (!s || /^-+$/.test(s)) return;
+    board[k] = s;
+  };
+  take("draw_no");
+  ["first_prize", "second_prize", "third_prize"].forEach(take);
+  for (let i = 1; i <= 15; i++) take("special-" + i);
+  for (let i = 1; i <= 10; i++) take("consolation-" + i);
+
   try {
-    body = JSON.parse(text);
-  } catch {
-    return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
+    await firestorePut(DOC, { json: JSON.stringify(board) });
+    return NextResponse.json({ ok: true, date: board.date, fields: Object.keys(board).length });
+  } catch (e) {
+    return NextResponse.json({ ok: false, why: String(e) }, { status: 500 });
   }
-
-  const result = await saveSgLiveFeed(body);
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
-  }
-  return NextResponse.json(
-    { ok: true, changed: result.changed, board: result.board },
-    { headers: { "cache-control": "no-store" } }
-  );
 }
