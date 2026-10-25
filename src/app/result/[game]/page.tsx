@@ -47,23 +47,46 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   const pastDates = await getPastDateLists();
   const myDates = pastDates.my;
   const khDates = pastDates.kh;
-  const related = game === "sportstoto"
-    ? {
-        id: "power-toto-link",
-        title: "Power Toto 6/55 Result",
-        text: "See the latest Power Toto winning numbers and jackpot, with draw time and past-result links.",
-        href: "/result/power-toto",
-        label: "Open Power Toto 6/55 result",
-      }
+  /*
+   * Sports Toto runs three separate 6-number games beside the 4D draw, and each
+   * now has its own page. They are listed together so a reader landing on the
+   * 4D result can reach Star Toto and Supreme Toto as easily as Power Toto.
+   */
+  const relatedList = game === "sportstoto"
+    ? [
+        {
+          id: "power-toto-link",
+          title: "Power Toto 6/55 Result",
+          text: "See the latest Power Toto winning numbers and jackpot, with draw time and past-result links.",
+          href: "/result/power-toto",
+          label: "Open Power Toto 6/55 result",
+        },
+        {
+          id: "star-toto-link",
+          title: "Star Toto 6/50 Result",
+          text: "See the latest Star Toto winning numbers and jackpot, with draw time and past-result links.",
+          href: "/result/star-toto",
+          label: "Open Star Toto 6/50 result",
+        },
+        {
+          id: "supreme-toto-link",
+          title: "Supreme Toto 6/58 Result",
+          text: "See the latest Supreme Toto winning numbers and jackpot, with draw time and past-result links.",
+          href: "/result/supreme-toto",
+          label: "Open Supreme Toto 6/58 result",
+        },
+      ]
     : game === "magnum"
-      ? {
-          id: "magnum-jackpot-link",
-          title: "Magnum 4D Jackpot Result",
-          text: "See the latest Magnum Jackpot 1 and Jackpot 2 amounts, plus 4D Jackpot Gold.",
-          href: "/result/magnum-4d-jackpot",
-          label: "Open Magnum 4D Jackpot result",
-        }
-      : null;
+      ? [
+          {
+            id: "magnum-jackpot-link",
+            title: "Magnum 4D Jackpot Result",
+            text: "See the latest Magnum Jackpot 1 and Jackpot 2 amounts, plus 4D Jackpot Gold.",
+            href: "/result/magnum-4d-jackpot",
+            label: "Open Magnum 4D Jackpot result",
+          },
+        ]
+      : [];
   return (
     <>
       <Header />
@@ -85,12 +108,18 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
           <GameColumns ids={def.cardIds} snap={snapProp} />
         </main>
       </div>
-      {related ? (
-        <section className="container py-3" aria-labelledby={related.id}>
-          <div className="border rounded p-3">
-            <h2 id={related.id} className="h5 mb-1">{related.title}</h2>
-            <p className="mb-2">{related.text}</p>
-            <a href={related.href}>{related.label}</a>
+      {relatedList.length ? (
+        <section className="container py-3">
+          <div className="row g-3">
+            {relatedList.map((item) => (
+              <div className="col-md-4" key={item.id}>
+                <div className="border rounded p-3 h-100" aria-labelledby={item.id}>
+                  <h2 id={item.id} className="h5 mb-1">{item.title}</h2>
+                  <p className="mb-2">{item.text}</p>
+                  <a href={item.href}>{item.label}</a>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       ) : null}
