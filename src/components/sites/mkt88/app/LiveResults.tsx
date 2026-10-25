@@ -1021,13 +1021,8 @@ async function updateSGOfficial() {
   } catch { /* ignore */ }
 }
 
-function feedDig(v: string | undefined): string {
-  return v && /^\d{4}$/.test(v) ? v : "----";
-}
-
-/** Instant Cambodia fallback from the live4d2u.net live feed. Used only when the
- *  Grand Dragon card has no published number yet for today (e.g. mid-draw). */
-async function updateCambodiaFeed() {
+/** Sports Toto's zodiac changes with each draw. */
+async function updateTotoZodiac() {
   try {
     const u = "https://www.live4d2u.net/liveosx.json?ts=" + Date.now();
     const txt = await fetchText(u);
@@ -1044,24 +1039,6 @@ async function updateCambodiaFeed() {
           if (cur.includes("zodiac") || (!cur.includes("logo") && cur !== src)) im.src = src;
         }
       }
-    }
-    if (!j || !j.G) return;
-    const g = j.G;
-    const cards = [...document.querySelectorAll(".card.outer-box.table-13:not(.mkt-past)")];
-    if (!cards.length) return;
-    const set = (card: Element, id: string, v: string) => {
-      const el = card.querySelector('[data-id="' + id + '"]');
-      if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
-    };
-    for (const card of cards) {
-      const f1 = card.querySelector('[data-id="first_prize"]');
-      if (f1 && /^\d{4}$/.test((f1.textContent || "").trim())) continue; // already has today
-      if (g.DD) set(card, "date", g.DD);
-      (["first_prize", "second_prize", "third_prize"]).forEach((id, i) => set(card, id, feedDig(g["P" + (i + 1)])));
-      for (let i = 1; i <= 13; i++) set(card, "special-" + i, feedDig(g["S" + i]));
-      for (let i = 14; i <= 15; i++) set(card, "special-" + i, "");
-      for (let i = 1; i <= 10; i++) set(card, "consolation-" + i, feedDig(g["C" + i]));
-      flash(card);
     }
   } catch { /* ignore */ }
 }
@@ -1284,7 +1261,7 @@ async function refreshOnce(full = true) {
          */
         updateGdNineCards(),
         updateSGOfficial(),
-        updateCambodiaFeed(),
+        updateTotoZodiac(),
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncFromServerFast();
@@ -1298,11 +1275,10 @@ async function refreshOnce(full = true) {
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
       await syncFromServerFast();
       if (!full) return;
-      // Grand Dragon (table-13) is NOT mirrored from live4dresult.net - see the
-      // note in refresh(): that page's blank Special cells slid our numbers one
-      // column left. updateCambodiaFeed() below writes them correctly.
+      // Grand Dragon is read from the operator and the server snapshot only.
+      // A second live4d2u writer raced those values and made numbers blink.
       await updateGdNineCards();
-      await updateCambodiaFeed();
+      await updateTotoZodiac();
     }
   } catch {
     // ignore transient failures
