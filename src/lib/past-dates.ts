@@ -15,6 +15,7 @@ import { DEEP, DEEP_CARDS, deepDates } from "./deep-past-cards";
 import perdanaPastRaw from "./perdana-past.json";
 import hari4dPastRaw from "./hari-4d-past.json";
 import { after } from "next/server";
+import { getSpecialDrawDates, SPECIAL_DRAW_TABLES } from "./special-draws";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -204,6 +205,14 @@ export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; 
   const newestMy = Object.keys(tables).sort().pop() || MY_BASE.to;
   for (const d of afterDate(newestMy, shiftIso(todayIso(), -1))) {
     if (isMyDrawDay(d) && !tables[d]) tables[d] = MY_DRAW_TABLES;
+  }
+  // Special draws can fall on another weekday (27 Oct 2026 was a Tuesday).
+  // They are already announced in /admin, so use that same list for history.
+  const lastResultDate = shiftIso(todayIso(), -1);
+  for (const d of await getSpecialDrawDates()) {
+    if (d <= lastResultDate) {
+      tables[d] = [...new Set([...(tables[d] || []), ...SPECIAL_DRAW_TABLES])];
+    }
   }
   myTables = tables;
   return { my: Object.keys(tables).sort(), kh, myTables: tables, khByGame };

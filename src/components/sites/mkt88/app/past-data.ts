@@ -43,7 +43,7 @@ function buildDates(): string[] {
 
 export const PAST_DATES: string[] = buildDates();
 
-export const DEFAULT_PAST_DATE: string = parsed.dates[parsed.dates.length - 1];
+export const DEFAULT_PAST_DATE: string = PAST_DATES[PAST_DATES.length - 1] || parsed.dates[parsed.dates.length - 1];
 
 export function getPastEntry(date: string): PastEntry | undefined {
   return parsed.entries[date];
