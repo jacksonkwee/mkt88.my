@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { firestorePut } from "../../../lib/fcm";
+import { firestoreGet, firestorePut } from "../../../lib/fcm";
 
 /*
  * Singapore 4D live board, pushed in by the VPS.
@@ -22,6 +22,31 @@ export const dynamic = "force-dynamic";
 const KEY = "mkt-sg-7Q4t9pLm2XvR8sKd";
 const DOC = "state/sg4d";
 
+type Board = Record<string, string>;
+
+function dayOf(board: Board): number {
+  const match = /(\d{2})-(\d{2})-(\d{4})/.exec(board.date || "");
+  return match ? Date.UTC(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : 0;
+}
+
+function hasLiveSignal(board: Board): boolean {
+  const live = (value?: string) => /^\d{4}$/.test(String(value || "").trim());
+  return ["first_prize", "second_prize", "third_prize"].some((key) => live(board[key])) ||
+    Array.from({ length: 15 }, (_, i) => board["special-" + (i + 1)]).some(live);
+}
+
+async function storedBoard(): Promise<Board | null> {
+  const doc = await firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(DOC);
+  const raw = doc?.fields?.json?.stringValue;
+  if (!raw) return null;
+  try {
+    const board = JSON.parse(raw) as Board;
+    return dayOf(board) ? board : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(req: Request) {
   if (req.headers.get("x-mkt-key") !== KEY) {
     return NextResponse.json({ ok: false, why: "forbidden" }, { status: 401 });
@@ -34,22 +59,47 @@ export async function POST(req: Request) {
 
   // Only real values are copied - a blank in the feed must never erase a number
   // the board already shows.
-  const board: Record<string, string> = { date: String(body.date) };
+  const incoming: Board = { date: String(body.date) };
   const take = (k: string) => {
     const v = body[k];
     if (v === undefined || v === null) return;
     const s = String(v).trim();
     if (!s || /^-+$/.test(s)) return;
-    board[k] = s;
+    incoming[k] = s;
   };
   take("draw_no");
-  ["first_prize", "second_prize", "third_prize"].forEach(take);
+  for (const key of ["first_prize", "second_prize", "third_prize"]) take(key);
   for (let i = 1; i <= 15; i++) take("special-" + i);
   for (let i = 1; i <= 10; i++) take("consolation-" + i);
 
+  /*
+   * live4d.sg opens a new draw with consolations only. That is not enough to
+   * move the card away from the last complete draw: doing so produced a
+   * 31/10 date above 28/10 numbers. Wait for a main prize or a special.
+   */
+  if (!dayOf(incoming) || !hasLiveSignal(incoming)) {
+    return NextResponse.json(
+      { ok: true, ignored: "waiting for main or special numbers" },
+      { headers: { "cache-control": "no-store" } }
+    );
+  }
+
   try {
+    const stored = await storedBoard();
+    if (stored && dayOf(stored) > dayOf(incoming)) {
+      return NextResponse.json(
+        { ok: true, ignored: "a newer draw is already stored", date: stored.date },
+        { headers: { "cache-control": "no-store" } }
+      );
+    }
+    const board = stored && dayOf(stored) === dayOf(incoming)
+      ? { ...stored, ...incoming }
+      : incoming;
     await firestorePut(DOC, { json: JSON.stringify(board) });
-    return NextResponse.json({ ok: true, date: board.date, fields: Object.keys(board).length });
+    return NextResponse.json(
+      { ok: true, date: board.date, fields: Object.keys(board).length },
+      { headers: { "cache-control": "no-store" } }
+    );
   } catch (e) {
     return NextResponse.json({ ok: false, why: String(e) }, { status: 500 });
   }

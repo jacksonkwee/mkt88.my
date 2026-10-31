@@ -1962,7 +1962,7 @@ async function readSgGuard(): Promise<Record<string, string> | null> {
   if (raw) {
     try {
       const parsed = JSON.parse(raw) as Record<string, string>;
-      if (sgDay(parsed)) board = parsed;
+      if (sgDay(parsed) && sgHasAnyLive(parsed)) board = parsed;
     } catch { /* a broken document is ignored */ }
   }
   // A failed or not-yet-created document is retried on the next build; only a
@@ -2516,7 +2516,7 @@ export async function buildSnapshot(): Promise<Snapshot> {
   {
     const c = cards["table-11"] as Record<string, string> | undefined;
     const storedDay = sgDay(sgStored || undefined);
-    if (sgStored && freshSg(sgStored) && storedDay > sgDay(c || undefined)) {
+    if (sgStored && sgHasAnyLive(sgStored) && freshSg(sgStored) && storedDay > sgDay(c || undefined)) {
       cards["table-11"] = { ...sgStored };
     }
     const final = cards["table-11"] as Record<string, string> | undefined;
