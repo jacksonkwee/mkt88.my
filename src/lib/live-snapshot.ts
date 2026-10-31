@@ -2,7 +2,7 @@ import perdanaOfficial from "./perdana-official.json";
 import sgLiveCapture from "../../data/sg-live.json";
 import { checkGrid, flushSourceHealth, noteSource } from "./source-health";
 import { getSiteContent } from "./site-store";
-import { firestoreGet, firestorePut, pushConfigured } from "./fcm";
+import { firestoreGet, firestorePut, firestorePutIfUnchanged, pushConfigured } from "./fcm";
 import { getFourDKingSnapshot, type FourDKingSnapshot } from "./fourdking";
 import { assertCardBindings } from "./card-contracts";
 import { GD_SOURCE_PRIORITY, mergeGrandDragonState } from "./grand-dragon-state.mjs";
@@ -1973,11 +1973,31 @@ async function readSgGuard(): Promise<Record<string, string> | null> {
 async function writeSgGuard(board: Record<string, string>): Promise<void> {
   if (!pushConfigured()) return;
   if (!sgGuardWindow()) return;
-  sgGuard = { at: Date.now(), board };
-  await Promise.race([
-    firestorePut(SG_GUARD_DOC, { json: JSON.stringify(board) }),
-    new Promise<void>((resolve) => setTimeout(() => resolve(), 1200)),
-  ]);
+  let candidate = board;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const doc = await firestoreGet<{ updateTime?: string; fields?: { json?: { stringValue?: string } } }>(SG_GUARD_DOC);
+    let current: Record<string, string> | null = null;
+    try {
+      const raw = doc?.fields?.json?.stringValue;
+      current = raw ? JSON.parse(raw) as Record<string, string> : null;
+    } catch { /* replace a broken board with this valid one */ }
+
+    if (current && sgDay(current) > sgDay(candidate)) {
+      sgGuard = { at: Date.now(), board: current };
+      return;
+    }
+    if (current && sgDay(current) === sgDay(candidate)) candidate = sgMerge(current, candidate);
+    if (!sgHasAnyLive(candidate)) return;
+
+    const saved = await Promise.race([
+      firestorePutIfUnchanged(SG_GUARD_DOC, { json: JSON.stringify(candidate) }, doc?.updateTime ?? null),
+      new Promise<false>((resolve) => setTimeout(() => resolve(false), 1200)),
+    ]);
+    if (saved) {
+      sgGuard = { at: Date.now(), board: candidate };
+      return;
+    }
+  }
 }
 
 async function readTotoGuard(): Promise<TotoGuard | null> {

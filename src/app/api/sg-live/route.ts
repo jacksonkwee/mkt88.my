@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { firestoreGet, firestorePut } from "../../../lib/fcm";
+import { firestoreGet, firestorePutIfUnchanged } from "../../../lib/fcm";
 
 /*
  * Singapore 4D live board, pushed in by the VPS.
@@ -35,15 +35,15 @@ function hasLiveSignal(board: Board): boolean {
     Array.from({ length: 15 }, (_, i) => board["special-" + (i + 1)]).some(live);
 }
 
-async function storedBoard(): Promise<Board | null> {
-  const doc = await firestoreGet<{ fields?: { json?: { stringValue?: string } } }>(DOC);
+async function storedBoard(): Promise<{ board: Board | null; updateTime: string | null }> {
+  const doc = await firestoreGet<{ updateTime?: string; fields?: { json?: { stringValue?: string } } }>(DOC);
   const raw = doc?.fields?.json?.stringValue;
-  if (!raw) return null;
+  if (!raw) return { board: null, updateTime: doc?.updateTime ?? null };
   try {
     const board = JSON.parse(raw) as Board;
-    return dayOf(board) ? board : null;
+    return { board: dayOf(board) ? board : null, updateTime: doc?.updateTime ?? null };
   } catch {
-    return null;
+    return { board: null, updateTime: doc?.updateTime ?? null };
   }
 }
 
@@ -85,20 +85,32 @@ export async function POST(req: Request) {
   }
 
   try {
-    const stored = await storedBoard();
-    if (stored && dayOf(stored) > dayOf(incoming)) {
-      return NextResponse.json(
-        { ok: true, ignored: "a newer draw is already stored", date: stored.date },
-        { headers: { "cache-control": "no-store" } }
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const stored = await storedBoard();
+      if (stored.board && dayOf(stored.board) > dayOf(incoming)) {
+        return NextResponse.json(
+          { ok: true, ignored: "a newer draw is already stored", date: stored.board.date },
+          { headers: { "cache-control": "no-store" } }
+        );
+      }
+      const board = stored.board && dayOf(stored.board) === dayOf(incoming)
+        ? { ...stored.board, ...incoming }
+        : incoming;
+      const saved = await firestorePutIfUnchanged(
+        DOC,
+        { json: JSON.stringify(board) },
+        stored.updateTime
       );
+      if (saved) {
+        return NextResponse.json(
+          { ok: true, date: board.date, fields: Object.keys(board).length },
+          { headers: { "cache-control": "no-store" } }
+        );
+      }
     }
-    const board = stored && dayOf(stored) === dayOf(incoming)
-      ? { ...stored, ...incoming }
-      : incoming;
-    await firestorePut(DOC, { json: JSON.stringify(board) });
     return NextResponse.json(
-      { ok: true, date: board.date, fields: Object.keys(board).length },
-      { headers: { "cache-control": "no-store" } }
+      { ok: false, why: "concurrent update, retry" },
+      { status: 503, headers: { "cache-control": "no-store" } }
     );
   } catch (e) {
     return NextResponse.json({ ok: false, why: String(e) }, { status: 500 });
