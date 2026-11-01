@@ -3,7 +3,7 @@ export const LUCKY_DAYS = 90;
 export const LUCKY_ID_RANGE = LUCKY_DAYS * 3 + 3;
 
 export const LUCKY_SLOTS = [
-  { hour: 16, minute: 0, label: "16:00 4D Live 开奖提醒" },
+  { hour: 14, minute: 0, label: "14:00 4D Live 开奖提醒" },
   { hour: 18, minute: 0, label: "18:00 4D Live 开奖开始" },
   { hour: 18, minute: 30, label: "18:30 4D Live 开奖进行中" },
 ];

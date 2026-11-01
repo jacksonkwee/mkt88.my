@@ -104,12 +104,19 @@ const nextConfig = {
         ],
       },
       {
-        // v2.21 is the build that carries the push plugin (server push for a
-        // closed app). It is what public/app-version.json points at.
+        // v2.21 is kept for older download links.
         source: "/mkt88-4d-v2.21.apk",
         headers: [
           { key: "Content-Type", value: "application/vnd.android.package-archive" },
           { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.21.apk"' },
+        ],
+      },
+      {
+        // Current build: carries exact-alarm support for lucky reminders.
+        source: "/mkt88-4d-v2.26.apk",
+        headers: [
+          { key: "Content-Type", value: "application/vnd.android.package-archive" },
+          { key: "Content-Disposition", value: 'attachment; filename="mkt88-4d-v2.26.apk"' },
         ],
       },
       // Pages (and the phone app's WebView) must always revalidate, otherwise a

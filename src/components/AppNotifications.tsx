@@ -19,6 +19,8 @@ const PLAN_KEY = "mkt_live_notif_plan";
 export type LocalNotificationsPlugin = {
   checkPermissions?: () => Promise<{ display?: string }>;
   requestPermissions?: () => Promise<{ display?: string }>;
+  checkExactNotificationSetting?: () => Promise<{ exact_alarm?: string }>;
+  changeExactNotificationSetting?: () => Promise<{ exact_alarm?: string }>;
   createChannel?: (channel: Record<string, unknown>) => Promise<void>;
   cancel?: (options: { notifications: { id: number }[] }) => Promise<void>;
   getPending?: () => Promise<{ notifications?: { id?: number | string }[] }>;
@@ -159,7 +161,7 @@ export function localNotifications(): LocalNotificationsPlugin | null {
 /**
  * Android app reminders. The app runs the live website in a WebView, so this
  * component talks to the native Local Notifications plugin when available.
- * It schedules three daily Malaysia-time reminders at 16:00, 18:00 and 18:30.
+ * It schedules three daily Malaysia-time reminders at 14:00, 18:00 and 18:30.
  */
 export default function AppNotifications({ enabled }: { enabled?: boolean }) {
   /*
@@ -184,6 +186,10 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
           if (before?.display !== "granted") await ln.requestPermissions?.();
           const after = await ln.checkPermissions?.();
           if (after?.display !== "granted") return;
+
+          let exact = await ln.checkExactNotificationSetting?.();
+          if (exact?.exact_alarm !== "granted") exact = await ln.changeExactNotificationSetting?.();
+          if (exact && exact.exact_alarm !== "granted") return;
 
           try {
             await ln.createChannel?.({
@@ -220,7 +226,8 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
           // first open on a new day lays the three reminders down again with
           // that day's numbers instead of repeating yesterday for ever. v6
           // carries the owner's special-draw list too, so adding or removing a
-          // date re-lays the alarms the next time the app is opened. v7 lays
+          // date re-lays the alarms the next time the app is opened. v8 moves
+          // the first reminder from 16:00 to 14:00. v7 laid
           // one-off lucky alarms for 90 days, so a phone that is not opened
           // still gets a different set tomorrow.
           const specialDraws = await fetchSpecialDrawDates();
@@ -228,7 +235,7 @@ export default function AppNotifications({ enabled }: { enabled?: boolean }) {
           const device = deviceId();
           const luckyPlan = luckyAlarmPlan({ deviceId: device });
           const luckyIds = luckyPlan.map((alarm) => alarm.id);
-          const plan = "v7:" + today + ":" + specialDraws.join(",");
+          const plan = "v8:" + today + ":" + specialDraws.join(",");
           let remembered = "";
           try { remembered = window.localStorage.getItem(PLAN_KEY) || ""; } catch { /* private mode */ }
 

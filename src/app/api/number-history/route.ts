@@ -7,6 +7,7 @@ import {
   DB, PRIZE_NAMES, hitsFromDbMany, hitsFromHtmlMany, regionOf,
   fmtIso, todayIso, epochDay, isoFromEpoch, type PrizeName, type RawHit,
 } from "../../../components/sites/mkt88/app/number-history/engine";
+import { getSnapshot } from "../../../lib/live-snapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,65 @@ function logoForGame(game: string): string {
   return "";
 }
 
+const SNAPSHOT_GAMES: Record<string, string> = {
+  "table-1": "Magnum 4D",
+  "table-4": "Da Ma Cai 1+3D",
+  "table-6": "SportsToto 4D",
+  "table-8": "Sandakan 4D",
+  "table-9": "Special CashSweep 4D",
+  "table-10": "Sabah 88 4D",
+  "table-11": "Singapore 4D",
+  "table-13": "Grand Dragon 4D",
+  "table-17": "Nine Lotto",
+};
+
+function snapshotCardHits(cards: Record<string, Record<string, string>>, nums: Set<string>): RawHit[] {
+  const out: RawHit[] = [];
+  for (const [table, game] of Object.entries(SNAPSHOT_GAMES)) {
+    const card = cards[table];
+    if (!card?.date) continue;
+    const match = /(\d{2})-(\d{2})-(\d{4})/.exec(card.date);
+    if (!match) continue;
+    const date = `${match[3]}-${match[2]}-${match[1]}`;
+    const day = epochDay(date);
+    for (const [key, value] of Object.entries(card)) {
+      if (!nums.has(value)) continue;
+      let prize: PrizeName | null = null;
+      if (key === "first_prize") prize = "1st";
+      else if (key === "second_prize") prize = "2nd";
+      else if (key === "third_prize") prize = "3rd";
+      else if (/^special-(?:[1-9]|1[0-5])$/.test(key)) prize = "Special";
+      else if (/^consolation-(?:\d|10)$/.test(key)) prize = "Consolation";
+      if (prize) out.push({ num: value, date, day, game, logo: "", table, prize });
+    }
+  }
+  return out;
+}
+
+function snapshotSetHits(
+  sets: Record<string, { prize?: string[]; special?: string[]; cons?: string[]; date?: string } | null>,
+  game: string,
+  table: string,
+  nums: Set<string>
+): RawHit[] {
+  const out: RawHit[] = [];
+  for (const set of Object.values(sets)) {
+    const match = /(\d{2})-(\d{2})-(\d{4})/.exec(set?.date || "");
+    if (!set || !match) continue;
+    const date = `${match[3]}-${match[2]}-${match[1]}`;
+    const day = epochDay(date);
+    const rows: [string | undefined, PrizeName][] = [
+      [set.prize?.[0], "1st"], [set.prize?.[1], "2nd"], [set.prize?.[2], "3rd"],
+      ...(set.special || []).map((value) => [value, "Special"] as [string, PrizeName]),
+      ...(set.cons || []).map((value) => [value, "Consolation"] as [string, PrizeName]),
+    ];
+    for (const [value, prize] of rows) {
+      if (value && nums.has(value)) out.push({ num: value, date, day, game, logo: "", table, prize });
+    }
+  }
+  return out;
+}
+
 /**
  * Names that differ only in how a source spells the game.
  *
@@ -56,6 +116,7 @@ const MAX_NUMS = 60;
 
 /** Ten minutes: one upstream fetch per date, reused by every lookup. */
 const PAGE_TTL = 10 * 60 * 1000;
+const LIVE_TTL = 30 * 1000;
 /** Big enough to hold the whole un-archived window plus the homepage. */
 const PAGE_CACHE_MAX = 90;
 
@@ -204,7 +265,7 @@ export async function GET(req: NextRequest) {
   if (!nums.length) return NextResponse.json({ nums: [], num: "", matches: [], total: 0 });
   const numSet = new Set(nums);
 
-  const answerKey = nums.slice().sort().join(",");
+  const answerKey = nums.slice().sort().join(",") + ":" + Math.floor(Date.now() / LIVE_TTL);
   const remembered = answerCache.get(answerKey);
   if (remembered && Date.now() - remembered.at < ANSWER_TTL) {
     return NextResponse.json(remembered.body);
@@ -269,6 +330,20 @@ export async function GET(req: NextRequest) {
     const sources = [e.html, e.khHtml].filter(Boolean) as string[];
     for (const src of sources) for (const h of hitsFromHtmlMany(src, numSet, iso)) add(h);
   }
+  // The app's own live snapshot already merges every operator source. Use it
+  // first for the current draw, including East Malaysia, Singapore and both
+  // Cambodia draw times that the archive home page omits.
+  try {
+    const snapshot = await getSnapshot({ wait: true });
+    for (const h of snapshotCardHits(snapshot.cards, numSet)) add(h);
+    for (const h of snapshotSetHits(snapshot.perdana, "Perdana Lottery 4D", "table-16", numSet)) add(h);
+    const hariSets = Object.fromEntries(
+      Object.entries(snapshot.hari).map(([slot, entry]) => [slot, entry?.set || null])
+    );
+    for (const h of snapshotSetHits(hariSets, "Lucky HariHari 4D", "table-15", numSet)) add(h);
+  } catch {
+    // The external archive pages below remain the fallback.
+  }
 
   // 3) The current live homepage (freshly drawn numbers appear instantly).
   // 4) Every date the offline archive cannot answer for.
@@ -278,13 +353,18 @@ export async function GET(req: NextRequest) {
   //    These two used to run one after the other, so a slow upstream page
   //    held the whole search up twice. They do not depend on each other, so
   //    ask for both at once.
-  const [home, pages] = await Promise.all([
-    fetchHtml("https://live4dresult.net/"),
+  const [home, east, singapore, cambodia, pages] = await Promise.all([
+    fetchHtml("https://live4dresult.net/", LIVE_TTL),
+    fetchHtml("https://live4dresult.net/sabah-sarawak-4d-results/", LIVE_TTL),
+    fetchHtml("https://live4dresult.net/singapore-4d-results/", LIVE_TTL),
+    fetchHtml("https://live4dresult.net/cambodia-4d-results/", LIVE_TTL),
     mapLimit(gapDates(today), 6, async (d) =>
       [d, await fetchHtml("https://live4dresult.net/past-results/" + d, DAY_TTL)] as const
     ),
   ]);
-  if (home) for (const h of hitsFromHtmlMany(home, numSet, today)) add(h);
+  for (const live of [home, east, singapore, cambodia]) {
+    if (live) for (const h of hitsFromHtmlMany(live, numSet, today)) add(h);
+  }
   for (const [iso, html] of pages) {
     if (html) for (const h of hitsFromHtmlMany(html, numSet, iso)) add(h);
   }

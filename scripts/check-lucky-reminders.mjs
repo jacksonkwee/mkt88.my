@@ -20,6 +20,11 @@ const numbers = plan.map((alarm) => alarm.number);
 if (numbers.length !== 270 || numbers.length !== new Set(numbers).size) {
   throw new Error(`expected 270 unique reminders, got ${numbers.length}`);
 }
+const slots = [...new Set(plan.map((alarm) => `${alarm.hour}:${String(alarm.minute).padStart(2, "0")}`))].sort();
+if (slots.join(",") !== "14:00,18:00,18:30") {
+  throw new Error(`expected 14:00, 18:00 and 18:30 reminders, got ${slots.join(", ")}`);
+}
 
 console.log("Lucky reminders: 270 unique one-off notifications");
+console.log("Daily slots: " + slots.join(" / "));
 console.log("21/22/23 Oct: " + days.map((set) => set.join("/")).join(" | "));
