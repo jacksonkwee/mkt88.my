@@ -1,0 +1,13 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - mkt88_caddy_data:/data
+      - mkt88_caddy_config:/config
+
+volumes:
+  mkt88_caddy_data:
+  mkt88_caddy_config:

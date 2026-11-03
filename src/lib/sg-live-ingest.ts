@@ -45,7 +45,7 @@ export function normalizeSgLiveFeed(input: unknown): Record<string, string> | nu
   const match = /^(\d{4})(\d{2})(\d{2})$/.exec(String(result.date || ""));
   if (!match) return null;
   const iso = `${match[1]}-${match[2]}-${match[3]}`;
-  if (iso !== singaporeToday()) return null;
+  if (iso > singaporeToday()) return null;
 
   const values: Record<string, string> = {};
   for (const item of Array.isArray(result.n) ? result.n : []) {

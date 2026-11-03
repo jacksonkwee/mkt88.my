@@ -1,0 +1,8 @@
+{
+  email admin@mkt88.my
+}
+
+mkt88.my, www.mkt88.my {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:3000
+}
