@@ -287,9 +287,89 @@ function sixMainOf(html: string): string | null {
   const m = /6D\s*1st\s*Prize\s+([0-9](?:\s*[0-9]){5})/.exec(txt);
   return m ? m[1].replace(/\s+/g, "") : null;
 }
+
+type GdApiJson = Record<string, unknown>;
+
+/**
+ * The operator's app API is reachable when the public results page is not.
+ * It is the same data source the GD app uses and already carries the complete
+ * 4D board, 6D draw and both jackpot values.
+ */
+async function gdApiResult(date: string): Promise<GdApiJson | null> {
+  const [y, m, d] = date.split("-").map(Number);
+  for (const host of ["result.gdlotto.com", "result.gdlotto.net"]) {
+    try {
+      const raw = await httpGet(`https://${host}/api/result/${y}/${m}/${d}`, 8000, 1);
+      const json = JSON.parse(raw) as GdApiJson;
+      if (String(json?.DrawDate || "").slice(0, 10) === date) return json;
+    } catch { /* try the other host */ }
+  }
+  return null;
+}
+
+function usdAmount(value: unknown): string {
+  const match = String(value ?? "").match(/[\d,.]+/);
+  const amount = match ? Number(match[0].replace(/,/g, "")) : NaN;
+  return Number.isFinite(amount) && amount > 0
+    ? "USD " + amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "";
+}
+
+function gdApiParts(json: GdApiJson): {
+  four?: Set;
+  gd6?: SixParts;
+  gdjp4?: Record<string, string>;
+  gdjp7?: Record<string, string>;
+} | null {
+  const drawNo = String(json.DrawCode || "").trim();
+  const winners = [json.DrawNumber1, json.DrawNumber2, json.DrawNumber3]
+    .map((value) => String(value ?? "").trim().toUpperCase());
+  if (!winners.every((letter) => /^[A-W]$/.test(letter))) return null;
+
+  const value = (letter: string): string => {
+    const number = String(json["DrawNumber" + letter] ?? "").trim();
+    return /^\d{4}$/.test(number) ? number : "----";
+  };
+  const cell = (letter: string): string => winners.includes(letter) ? "----" : value(letter);
+  const four: Set = {
+    prize: winners.map(value),
+    special: [..."ABCDEFGHIJKLM"].map(cell),
+    cons: [..."NOPQRSTUVW"].map(cell),
+    drawNo: drawNo || undefined,
+  };
+
+  const main = String(json.DrawNumber6D ?? "").trim();
+  const gd6 = /^\d{6}$/.test(main) ? { main, subs: mainSubs(main) } : undefined;
+
+  const gdjp4: Record<string, string> = {};
+  const pool4 = usdAmount(json.JackpotPrize);
+  if (pool4) gdjp4.jp4_pool = pool4;
+  const letter4 = String(json.DrawNumberJackpot ?? "").trim().toUpperCase();
+  if (/^[A-M]$/.test(letter4)) gdjp4.jp4_letter = letter4;
+  const units4 = String(json.JackpotWinner ?? "").trim();
+  if (/^\d+$/.test(units4)) gdjp4.jp4_units = units4;
+
+  const gdjp7: Record<string, string> = {};
+  const seven = String(json.DrawNumber7D ?? "").trim();
+  const pool7 = usdAmount(json.Jackpot61DPool);
+  if (pool7 && /^\d{7}$/.test(seven) && seven.slice(0, 6) === main) {
+    gdjp7.jp7_pool = pool7;
+    gdjp7.jp7_grand = seven.slice(0, 6) + " + " + seven.slice(6);
+  }
+
+  return {
+    four,
+    gd6,
+    gdjp4: Object.keys(gdjp4).length ? gdjp4 : undefined,
+    gdjp7: Object.keys(gdjp7).length ? gdjp7 : undefined,
+  };
+}
+
 /** True only when the requested date itself has a new official draw (its 6D
  *  number differs from the previous day's, or there is no previous number). */
 async function gdHasNewDraw(date: string): Promise<boolean> {
+  const api = await gdApiResult(date);
+  if (api) return /^\d{6}$/.test(String(api.DrawNumber6D ?? "").trim());
   try {
     const [y, m, d] = date.split("-");
     const prev = prevDayIso(date);
@@ -337,6 +417,11 @@ async function nineHasNewDraw(date: string): Promise<boolean> {
 
 /** Grand Dragon 6D + jackpot info for a past draw date. */
 async function gdPastParts(date: string): Promise<{ four?: Set; gd6?: SixParts; gdjp4?: Record<string, string>; gdjp7?: Record<string, string> } | null> {
+  const api = await gdApiResult(date);
+  if (api) {
+    const parts = gdApiParts(api);
+    if (parts) return parts;
+  }
   try {
     const [y, m, d] = date.split("-");
     const html = await httpGet("https://gdlotto.com/results/ajax/_result.aspx?past=1&v=1&d=" + m + "/" + d + "/" + y);

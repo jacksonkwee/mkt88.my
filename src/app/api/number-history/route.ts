@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PAST_DATES, getPastEntry } from "../../../components/sites/mkt88/app/past-data";
 import { toLocal } from "../../../components/sites/mkt88/app/site-paths";
 import deepRaw from "../../../lib/deep-past.json";
+import gdNinePastRaw from "../../../lib/gd-nine-past.json";
 import { DEEP_CARDS } from "../../../lib/deep-past-cards";
 import {
   DB, PRIZE_NAMES, hitsFromDbMany, hitsFromHtmlMany, regionOf,
@@ -97,6 +98,35 @@ function snapshotSetHits(
     ];
     for (const [value, prize] of rows) {
       if (value && nums.has(value)) out.push({ num: value, date, day, game, logo: "", table, prize });
+    }
+  }
+  return out;
+}
+
+/** The app's own Grand Dragon / Nine Lotto archive, keyed by ISO date. */
+function bundledKhHits(nums: Set<string>): RawHit[] {
+  const out: RawHit[] = [];
+  const bundle = gdNinePastRaw as unknown as Record<string, {
+    gd?: { prize?: string[]; special?: string[]; cons?: string[] } | null;
+    nine?: { prize?: string[]; special?: string[]; cons?: string[] } | null;
+  }>;
+  const games = [
+    ["gd", "Grand Dragon 4D", "table-13"],
+    ["nine", "Nine Lotto", "table-17"],
+  ] as const;
+  for (const [date, record] of Object.entries(bundle)) {
+    const day = epochDay(date);
+    for (const [key, game, table] of games) {
+      const set = record[key];
+      if (!set) continue;
+      const rows: [string | undefined, PrizeName][] = [
+        [set.prize?.[0], "1st"], [set.prize?.[1], "2nd"], [set.prize?.[2], "3rd"],
+        ...(set.special || []).map((value) => [value, "Special"] as [string, PrizeName]),
+        ...(set.cons || []).map((value) => [value, "Consolation"] as [string, PrizeName]),
+      ];
+      for (const [value, prize] of rows) {
+        if (value && nums.has(value)) out.push({ num: value, date, day, game, logo: "", table, prize });
+      }
     }
   }
   return out;
@@ -316,6 +346,7 @@ export async function GET(req: NextRequest) {
 
   // 0) The deep archive the game pages already show.
   for (const h of hitsFromDeepMany(numSet)) add(h);
+  for (const h of bundledKhHits(numSet)) add(h);
 
   // 1) Offline database of archived draws (all years the source keeps).
   for (const h of hitsFromDbMany(numSet)) add(h);

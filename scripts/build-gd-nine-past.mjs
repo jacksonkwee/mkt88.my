@@ -11,7 +11,7 @@ import fs from "node:fs";
 import { coreResultComplete, pastRecordStatus } from "../src/lib/past-completeness.mjs";
 
 const OUT = "src/lib/gd-nine-past.json";
-const API = "https://mkt88-my.vercel.app/api/cambodia-past?date=";
+const API = (process.env.MKT88_BASE || "https://www.mkt88.my").replace(/\/+$/, "") + "/api/cambodia-past?date=";
 const FIELDS = ["gd", "nine", "gd6", "gdjp4", "gdjp7", "nine6", "nineJp"];
 
 const args = process.argv.slice(2);
