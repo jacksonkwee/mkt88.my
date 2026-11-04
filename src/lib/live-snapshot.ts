@@ -2710,7 +2710,14 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Every Vercel instance has its own totoLiveCache. A cold instance otherwise
   // serves the previous archive draw while another serves the live draw, which
   // makes the card jump back and forth. Share the newest board through Firestore.
-  const totoParts = [totoStored?.four || null, cache?.cards?.["table-6"] || null, mirrorZodiac, four]
+  const totoParts = [
+    totoStored?.four || null,
+    homeCards["table-6"] || null,
+    liveCards["table-6"] || null,
+    cache?.cards?.["table-6"] || null,
+    mirrorZodiac,
+    four,
+  ]
     .filter((b): b is Record<string, string> => !!b && dayScore(b.date) > 0);
   if (totoParts.length) {
     const newest = Math.max(...totoParts.map((b) => dayScore(b.date)));
@@ -3351,6 +3358,37 @@ export async function buildSnapshot(): Promise<Snapshot> {
        * adjacent copy is refused.
        */
       if (c["special-13"] && c["special-13"] === c["special-12"]) c["special-13"] = "----";
+      for (const k of ["first_prize", "second_prize", "third_prize"]) {
+        const won = (c[k] || "").trim();
+        if (!/^\d{4}$/.test(won)) continue;
+        for (let i = 1; i <= 13; i++) {
+          const cell = "special-" + i;
+          if ((c[cell] || "").trim() === won) { c[cell] = "----"; break; }
+        }
+      }
+    }
+  }
+
+  /*
+   * Sports Toto also draws its three main prizes out of the thirteen special
+   * cells. The live feed marks those cells with "****" until the top prizes are
+   * picked, then some mirrors repeat the chosen numbers in both rows. Clear the
+   * matching special cells once so the card shows the same three holes as the
+   * operator.
+   */
+  {
+    const c = cards["table-6"] as Record<string, string> | undefined;
+    if (c) {
+      const seen = new Set<string>();
+      for (let i = 1; i <= 15; i++) {
+        const key = "special-" + i;
+        const value = String(c[key] || "").trim();
+        if (i > 13 || !/^\d{4}$/.test(value) || seen.has(value)) {
+          c[key] = "----";
+          continue;
+        }
+        seen.add(value);
+      }
       for (const k of ["first_prize", "second_prize", "third_prize"]) {
         const won = (c[k] || "").trim();
         if (!/^\d{4}$/.test(won)) continue;
