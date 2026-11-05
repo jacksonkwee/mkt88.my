@@ -43,6 +43,26 @@ const BODY: Record<string, string> = {
   zh: "现场开彩进行中 · 点击查看最新成绩",
 };
 
+/** Where tapping each game's reminder should open. */
+const ROUTE_BY_GAME: Record<string, string> = {
+  "table-1": "/result/magnum",
+  "table-2": "/result/magnum-4d-jackpot",
+  "table-3": "/result/magnum",
+  "table-4": "/result/damacai",
+  "table-5": "/result/damacai",
+  "table-6": "/result/sportstoto",
+  "table-7": "/result/sportstoto",
+  "table-8": "/sabah-sarawak-4d-results?op=sandakan",
+  "table-9": "/sabah-sarawak-4d-results?op=cashsweep",
+  "table-10": "/sabah-sarawak-4d-results?op=sabah88",
+  "table-11": "/singapore-4d-results",
+  "table-12": "/singapore-4d-results",
+  "table-13": "/result/grand-dragon",
+  "table-17": "/result/nine-lotto",
+  "table-16": "/result/perdana",
+  "table-15": "/result/lucky-harihari",
+};
+
 /**
  * Which days each game runs and the window its numbers are being published in.
  *
@@ -290,7 +310,7 @@ export async function checkAndPush(opts: { force?: boolean } = {}): Promise<Push
     const name = (GAME_NAMES[cls] || cls) + (time ? " " + time : "");
     games.push(name);
     for (const [lang, list] of byLang) {
-      const r = await sendToTokens(list, name, BODY[lang] || BODY.en);
+      const r = await sendToTokens(list, name, BODY[lang] || BODY.en, ROUTE_BY_GAME[cls] || "/");
       sent += r.sent;
       for (const id of r.dead) if (!dead.includes(id)) dead.push(id);
     }

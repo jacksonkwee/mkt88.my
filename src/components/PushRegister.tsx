@@ -24,7 +24,11 @@ type PushPlugin = {
   register?: () => Promise<void>;
   addListener?: (
     eventName: string,
-    cb: (data: { value?: string }) => void
+    cb: (data: {
+      value?: string;
+      data?: Record<string, unknown>;
+      notification?: { data?: Record<string, unknown> };
+    }) => void
   ) => { remove?: () => void } | undefined;
 };
 
@@ -88,7 +92,7 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
           if (before?.receive !== "granted") await plugin.requestPermissions?.();
           const after = await plugin.checkPermissions?.();
           if (after?.receive !== "granted") return;
-          const handle = plugin.addListener?.("registration", (data) => {
+          const registration = plugin.addListener?.("registration", (data) => {
             const value = String(data?.value || "").trim();
             if (value) {
               setToken(value);
@@ -97,7 +101,17 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
               try { window.localStorage.setItem("mkt_push_token", value); } catch { /* private mode */ }
             }
           });
-          detach = () => { try { handle?.remove?.(); } catch { /* nothing to clean up */ } };
+          const action = plugin.addListener?.("pushNotificationActionPerformed", (event) => {
+            const data = event?.notification?.data || event?.data || {};
+            const url = String(data.url || "").trim();
+            if (!/^\/(?!\/)/.test(url)) return;
+            document.body.classList.remove("mkt-home-open", "mkt-boot-wait");
+            window.location.assign(url);
+          });
+          detach = () => {
+            try { registration?.remove?.(); } catch { /* nothing to clean up */ }
+            try { action?.remove?.(); } catch { /* nothing to clean up */ }
+          };
           await plugin.register?.();
         } catch {
           // A phone that refuses push still gets everything else the app does.
