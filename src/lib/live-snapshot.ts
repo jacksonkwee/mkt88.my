@@ -61,7 +61,21 @@ const FRESH_MS = 2500;
 let cache: Snapshot | null = null;
 let warming = false;
 let inflight: Promise<Snapshot> | null = null;
+let inflightStarted = 0;
 let warmer: ReturnType<typeof setInterval> | null = null;
+
+const SNAPSHOT_WAIT_MS = 8000;
+const SNAPSHOT_BUILD_LIMIT_MS = 45000;
+
+function within<T>(work: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    work.then(
+      (value) => { clearTimeout(timer); resolve(value); },
+      (error) => { clearTimeout(timer); reject(error); }
+    );
+  });
+}
 
 /**
  * Grand Dragon's official board, refreshed beside the snapshot instead of
@@ -255,7 +269,12 @@ function refreshGdOfficial(iso: string): void {
 function rebuildOnce(): Promise<Snapshot> {
   if (!inflight) {
     warming = true;
-    inflight = buildSnapshot().finally(() => { inflight = null; warming = false; });
+    inflightStarted = Date.now();
+    inflight = buildSnapshot().finally(() => {
+      inflight = null;
+      inflightStarted = 0;
+      warming = false;
+    });
   }
   return inflight;
 }
@@ -3452,7 +3471,13 @@ export async function getSnapshot(opts: { wait?: boolean } = {}): Promise<Snapsh
     return cached;
   }
   // Polling endpoints wait: a copy older than FRESH_MS is not worth sending.
-  try { return await rebuildOnce(); }
+  try {
+    return await within(
+      rebuildOnce(),
+      SNAPSHOT_WAIT_MS,
+      "snapshot refresh timed out"
+    );
+  }
   catch (e) {
     // A failed sweep must not turn into a blank page - keep the last good copy.
     if (cached && usable) return cached;
@@ -3495,6 +3520,13 @@ export async function getSnapshotForRender(): Promise<Snapshot> {
 
 export function startWarmer() {
   if (warmer) return;
-  warmer = setInterval(() => { void rebuildOnce().catch(() => {}); }, SNAPSHOT_TTL);
+  if (process.env.NEXT_PHASE === "phase-production-build") return;
+  warmer = setInterval(() => {
+    if (inflight && inflightStarted && Date.now() - inflightStarted > SNAPSHOT_BUILD_LIMIT_MS) {
+      console.error("snapshot build exceeded 45 seconds; restarting service");
+      process.exit(1);
+    }
+    void rebuildOnce().catch(() => {});
+  }, SNAPSHOT_TTL);
   (warmer as unknown as { unref?: () => void }).unref?.();
 }
