@@ -13,6 +13,13 @@ import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
 import { getPastDateLists } from "../../../lib/past-dates";
 
 /*
+ * Live values come from the client polling /api/home-live. Re-rendering this
+ * page on the server every five seconds only added a Firestore read to the
+ * first tap; the page markup itself is safe to keep static between deployments.
+ */
+export const revalidate = 31_536_000;
+
+/*
  * This page stays static on purpose.
  *
  * It was briefly revalidated every 30 seconds so its HTML would carry a live

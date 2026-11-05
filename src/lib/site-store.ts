@@ -48,6 +48,8 @@ const FILE = path.join(process.cwd(), "data", "admin", "site.json");
  * Firebase.
  */
 const DOC = "config/site";
+const CONTENT_CACHE_MS = 5 * 60_000;
+let cachedContent: { at: number; value: SiteContent } | null = null;
 
 const emptyUnit = (): AdUnit => ({ enabled: false, image: "", link: "" });
 
@@ -127,22 +129,37 @@ async function writeRemote(next: SiteContent): Promise<boolean> {
 }
 
 export async function getSiteContent(): Promise<SiteContent> {
+  if (cachedContent && Date.now() - cachedContent.at < CONTENT_CACHE_MS) {
+    return clone(cachedContent.value);
+  }
   const remote = await readRemote();
-  if (remote) return merge(remote, {});
+  if (remote) {
+    const value = merge(remote, {});
+    cachedContent = { at: Date.now(), value };
+    return clone(value);
+  }
   try {
     const data = JSON.parse(await fs.readFile(FILE, "utf8")) as Partial<SiteContent>;
-    return merge(data, {});
+    const value = merge(data, {});
+    cachedContent = { at: Date.now(), value };
+    return clone(value);
   } catch {
-    return clone(DEFAULTS);
+    const value = clone(DEFAULTS);
+    cachedContent = { at: Date.now(), value };
+    return clone(value);
   }
 }
 
 export async function saveSiteContent(patch: Partial<SiteContent>): Promise<SiteContent> {
   const cur = await getSiteContent();
   const next = merge(cur, patch);
-  if (await writeRemote(next)) return next;
+  if (await writeRemote(next)) {
+    cachedContent = { at: Date.now(), value: clone(next) };
+    return next;
+  }
   // No Firebase here (a local run) - the committed file is still the store.
   await fs.mkdir(path.dirname(FILE), { recursive: true });
   await fs.writeFile(FILE, JSON.stringify(next, null, 2), "utf8");
+  cachedContent = { at: Date.now(), value: clone(next) };
   return next;
 }

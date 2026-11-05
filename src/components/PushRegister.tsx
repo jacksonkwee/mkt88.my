@@ -54,6 +54,24 @@ function pushPlugin(): PushPlugin | null {
   }
 }
 
+/** Old notifications carry url="/"; recover their game from the title. */
+function notificationRoute(url: string, title: string): string {
+  if (/^\/(?!\/)/.test(url) && url !== "/") return url;
+  if (/magnum.*jackpot/i.test(title)) return "/result/magnum-4d-jackpot";
+  if (/magnum/i.test(title)) return "/result/magnum";
+  if (/da\s*ma\s*cai/i.test(title)) return "/result/damacai";
+  if (/sports\s*toto/i.test(title)) return "/result/sportstoto";
+  if (/sandakan/i.test(title)) return "/sabah-sarawak-4d-results?op=sandakan";
+  if (/cash\s*sweep/i.test(title)) return "/sabah-sarawak-4d-results?op=cashsweep";
+  if (/sabah/i.test(title)) return "/sabah-sarawak-4d-results?op=sabah88";
+  if (/singapore/i.test(title)) return "/singapore-4d-results";
+  if (/grand\s*dragon/i.test(title)) return "/result/grand-dragon";
+  if (/nine\s*lotto/i.test(title)) return "/result/nine-lotto";
+  if (/perdana/i.test(title)) return "/result/perdana";
+  if (/hari/i.test(title)) return "/result/lucky-harihari";
+  return "/";
+}
+
 export default function PushRegister({ enabled }: { enabled?: boolean }) {
   const on = enabled ?? isCapacitorApp();
   const [lang] = useLang();
@@ -103,8 +121,7 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
           });
           const action = plugin.addListener?.("pushNotificationActionPerformed", (event) => {
             const data = event?.notification?.data || event?.data || {};
-            const url = String(data.url || "").trim();
-            if (!/^\/(?!\/)/.test(url)) return;
+            const url = notificationRoute(String(data.url || "").trim(), String(data.title || ""));
             document.body.classList.remove("mkt-home-open", "mkt-boot-wait");
             window.location.assign(url);
           });
