@@ -510,7 +510,9 @@ function showJackpotLetter(cardId: string, nums: string) {
     card.querySelectorAll("td.lottery-number[data-letter]").forEach((el) => {
       const v = (el.textContent || "").trim();
       const L = el.getAttribute("data-letter") || "";
-      if (wanted.includes(v) && L && !letters.includes(L)) letters.push(L);
+      // A consolation can repeat a special number. Only A-M can be the
+      // jackpot letter; including N-W produced a stray "O" on HariHari.
+      if (wanted.includes(v) && /^[A-M]$/.test(L) && !letters.includes(L)) letters.push(L);
     });
     const cell = jackpotLetterCell(card);
     if (cell) cell.textContent = letters.join(" · ") || "----";
