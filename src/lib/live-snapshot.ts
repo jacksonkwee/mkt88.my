@@ -77,6 +77,25 @@ function within<T>(work: Promise<T>, timeoutMs: number, message: string): Promis
   });
 }
 
+const sourceWarnings = new Map<string, number>();
+
+/** One stalled source becomes an empty answer for this build, never a global stall. */
+function source<T>(
+  name: string,
+  work: Promise<T>,
+  fallback: T,
+  timeoutMs = 6000
+): Promise<T> {
+  return within(work, timeoutMs, `${name} timed out`).catch((error) => {
+    const now = Date.now();
+    if (now - (sourceWarnings.get(name) || 0) > 60000) {
+      sourceWarnings.set(name, now);
+      console.error(`[snapshot] ${name}: ${String((error as Error)?.message || error)}`);
+    }
+    return fallback;
+  });
+}
+
 /**
  * Grand Dragon's official board, refreshed beside the snapshot instead of
  * inside it.
@@ -2054,17 +2073,17 @@ export async function buildSnapshot(): Promise<Snapshot> {
   // Grand Dragon's official board is read beside this sweep, never inside it -
   // see refreshGdOfficial(). Everything else here is answered by one of these.
   refreshGdOfficial(today.iso);
-  await loadGdBooths(today.iso);
+  await source("Grand Dragon booth history", loadGdBooths(today.iso), undefined, 2000);
   // Only today's read counts. A host that has been blocked since yesterday must
   // not leave yesterday's board looking like this evening's answer.
   const gd = gdOfficial && gdOfficial.iso === today.iso ? gdOfficial : null;
   const [home, east, sgTotoPage, sg, sgToto, feed, perToday, perYest, h15, h19, h15y, h19y, nineOfficial, sgLive4d, magnumToday, sabah88, cashSweep, stc4d, damacai, totoRes, sgStored, totoStored, gdSocket, jackpotFeed] = await Promise.all([
-    get("https://live4dresult.net/"),
-    get("https://live4dresult.net/sabah-sarawak-4d-results/"),
-    get("https://live4dresult.net/singapore-4d-results/"),
-    get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
-    get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html?v=" + singaporeArchiveVersion()),
-    get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true),
+    source("Live4D home", get("https://live4dresult.net/"), null),
+    source("Live4D East Malaysia", get("https://live4dresult.net/sabah-sarawak-4d-results/"), null),
+    source("Live4D Singapore", get("https://live4dresult.net/singapore-4d-results/"), null),
+    source("Singapore Pools 4D", get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/fourd_result_top_draws_en.html?v=" + singaporeArchiveVersion()), null),
+    source("Singapore Pools Toto", get("https://www.singaporepools.com.sg/DataFileArchive/Lottery/Output/toto_result_top_draws_en.html?v=" + singaporeArchiveVersion()), null),
+    source("live4d2u feed", get("https://www.live4d2u.net/liveosx.json?ts=" + Date.now(), true), null),
     /*
      * Perdana's own page, asked directly. Measured on 15 Oct 2026 the server
      * gets it in about two seconds, so the old 2.5s cap - set when this host was
@@ -2078,24 +2097,24 @@ export async function buildSnapshot(): Promise<Snapshot> {
      * cycle keeps the last good copy on the card, and the next cycle is only
      * four seconds away.
      */
-    get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 1800, 0),
-    get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 1800, 0),
-    hariFor("15:30", today.iso, today.noPad),
-    hariFor("19:30", today.iso, today.noPad),
-    hariFor("15:30", yest.iso, yest.noPad),
-    hariFor("19:30", yest.iso, yest.noPad),
-    nineOfficialToday(today.iso),
-    live4dSgToday(today.iso),
-    magnumLiveToday(today.iso),
-    sabah88Today(),
-    cashSweepToday(),
-    stc4dToday(),
-    damacaiToday(today.iso),
-    totoResults(),
-    readSgGuard(),
-    readTotoGuard(),
-    getFourDKingSnapshot(),
-    getJackpotFeed(),
+    source("Perdana today", get(`https://www.perdana4d.com/Results/4D?processDate=${today.iso}`, false, 1800, 0), null, 3000),
+    source("Perdana yesterday", get(`https://www.perdana4d.com/Results/4D?processDate=${yest.iso}`, false, 1800, 0), null, 3000),
+    source("HariHari 15:30 today", hariFor("15:30", today.iso, today.noPad), null),
+    source("HariHari 19:30 today", hariFor("19:30", today.iso, today.noPad), null),
+    source("HariHari 15:30 yesterday", hariFor("15:30", yest.iso, yest.noPad), null),
+    source("HariHari 19:30 yesterday", hariFor("19:30", yest.iso, yest.noPad), null),
+    source("Nine Lotto", nineOfficialToday(today.iso), { four: null, six: null, jp: null, six61: null }),
+    source("Singapore live4d", live4dSgToday(today.iso), null),
+    source("Magnum", magnumLiveToday(today.iso), null),
+    source("Sabah 88", sabah88Today(), null),
+    source("Cash Sweep", cashSweepToday(), null),
+    source("Sandakan", stc4dToday(), null),
+    source("Da Ma Cai", damacaiToday(today.iso), null),
+    source("Sports Toto", totoResults(), null),
+    source("Singapore guard", readSgGuard(), null),
+    source("Sports Toto guard", readTotoGuard(), null),
+    source("4DKing", getFourDKingSnapshot(), null),
+    source("Jackpot feed", getJackpotFeed(), null),
   ]);
 
   // Prefer direct/current feeds over the cloned home page.

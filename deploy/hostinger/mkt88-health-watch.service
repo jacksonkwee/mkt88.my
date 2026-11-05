@@ -1,0 +1,13 @@
+[Unit]
+Description=MKT88 live snapshot health watchdog
+After=mkt88-site.service
+Wants=mkt88-site.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/mkt88-health-watch
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
