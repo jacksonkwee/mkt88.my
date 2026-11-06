@@ -2,6 +2,7 @@ package com.mkt88.app;
 
 import android.graphics.Color;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -11,11 +12,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebResourceRequest;
 import android.widget.FrameLayout;
 
 import androidx.core.splashscreen.SplashScreen;
 
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Bridge;
+import com.getcapacitor.BridgeWebViewClient;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
@@ -41,6 +45,30 @@ public class MainActivity extends BridgeActivity {
   private final Handler appHandler = new Handler(Looper.getMainLooper());
   private AdView bannerAd;
   private static final String HOME_URL = "https://www.mkt88.my/";
+
+  private static final class MktWebViewClient extends BridgeWebViewClient {
+    MktWebViewClient(Bridge bridge) {
+      super(bridge);
+    }
+
+    private static boolean isAppHost(Uri url) {
+      String host = url.getHost();
+      return "mkt88.my".equals(host) || "www.mkt88.my".equals(host);
+    }
+
+    @Override
+    public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+      if (isAppHost(request.getUrl())) return false;
+      return super.shouldOverrideUrlLoading(view, request);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+      if (isAppHost(Uri.parse(url))) return false;
+      return super.shouldOverrideUrlLoading(view, url);
+    }
+  }
 
   /**
    * Retry delays for a banner that failed to load, then a steady 10-minute retry.
@@ -228,6 +256,9 @@ public class MainActivity extends BridgeActivity {
   private void configureWebView() {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
+    if (getBridge() != null) {
+      getBridge().setWebViewClient(new MktWebViewClient(getBridge()));
+    }
 
     webView.setBackgroundColor(Color.TRANSPARENT);
     webView.setVisibility(View.VISIBLE);
