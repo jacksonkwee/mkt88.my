@@ -97,7 +97,8 @@ const BOOT_SCRIPT = `
   // The installed app needs these on <body> before the first paint, so its main
   // screen is up and the results page never shows first. It is done here rather
   // than on the server so that one cached copy of the page suits everybody.
-  if (/MKT88Android|Capacitor|Android.*; wv\\)/i.test(navigator.userAgent || '')) {
+  var __mktApp = /MKT88Android|Capacitor|Android.*; wv\\)/i.test(navigator.userAgent || '');
+  if (__mktApp) {
     // The admin pages stay uncovered: the first page is an overlay, and on
     // /admin/login it sat on top of the password box (reported 15 Oct 2026).
     // No regex here: this script lives inside a template literal, which eats
@@ -151,6 +152,22 @@ const BOOT_SCRIPT = `
           window.location.assign(queuedHref);
         }
       }, 8000);
+    }, true);
+  }
+  if (__mktApp) {
+    /*
+     * Result numbers are tappable before React has attached AppTools. The old
+     * handler only existed after hydration, so a quick tap on a visible number
+     * did nothing. Handle the app's primary number-history action here too.
+     */
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      var cell = t && t.closest ? t.closest('.lottery-number,.lottery-prize-number') : null;
+      if (!cell || cell.closest('a')) return;
+      var num = (cell.textContent || '').replace(/[^0-9]/g, '');
+      if (num.length !== 4) return;
+      e.preventDefault();
+      window.location.assign('/number-history?num=' + num);
     }, true);
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
