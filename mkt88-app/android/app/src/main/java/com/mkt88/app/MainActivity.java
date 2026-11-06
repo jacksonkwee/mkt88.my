@@ -1,6 +1,7 @@
 package com.mkt88.app;
 
 import android.graphics.Color;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,6 +40,7 @@ public class MainActivity extends BridgeActivity {
   private AppUpdateManager appUpdateManager;
   private final Handler appHandler = new Handler(Looper.getMainLooper());
   private AdView bannerAd;
+  private static final String HOME_URL = "https://www.mkt88.my/";
 
   /**
    * Retry delays for a banner that failed to load, then a steady 10-minute retry.
@@ -59,6 +61,7 @@ public class MainActivity extends BridgeActivity {
     super.onCreate(savedInstanceState);
     showSplashBackground();
     configureWebView();
+    loadFreshHome();
     checkForAppUpdate();
     startWebViewReadyCheck();
     installResultBridge();
@@ -83,6 +86,13 @@ public class MainActivity extends BridgeActivity {
     super.onStart();
     // Do not clear the WebView cache here. The website sends no-cache for live
     // data, while static assets should stay cached for a fast app.
+  }
+
+  @Override
+  public void onNewIntent(Intent intent) {
+    super.onNewIntent(intent);
+    setIntent(intent);
+    loadFreshHome();
   }
 
   @Override
@@ -258,6 +268,33 @@ public class MainActivity extends BridgeActivity {
     String ua = settings.getUserAgentString();
     if (ua != null && !ua.contains("MKT88Android")) {
       settings.setUserAgentString(ua + " MKT88Android");
+    }
+  }
+
+  /**
+   * Start each launcher tap from a clean home page.
+   *
+   * Android's singleTask activity keeps the WebView and its previous URL alive
+   * between launches. That is why the first open could resume an old page or an
+   * old cached bundle, while closing the app and opening it again appeared to
+   * fix it. The unique query forces a network document; clearing only the HTTP
+   * cache keeps favourites, notifications and login data intact.
+   */
+  private void loadFreshHome() {
+    WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+    if (webView == null) return;
+    try {
+      webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+      webView.clearCache(true);
+      webView.clearHistory();
+      webView.loadUrl(HOME_URL + "?appLaunch=" + System.currentTimeMillis());
+      appHandler.postDelayed(() -> {
+        if (webView.getSettings() != null) {
+          webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+        }
+      }, 5000);
+    } catch (Exception ignored) {
+      // A cache reset failure must not stop the app from opening.
     }
   }
 
