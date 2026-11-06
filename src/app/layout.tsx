@@ -126,6 +126,7 @@ const BOOT_SCRIPT = `
      * it as soon as it is alive - one tap, no reload, a spinner in between.
      */
     var __mktBusy = false;
+    window.addEventListener('mkt-nav-ready', function () { __mktBusy = false; });
     document.addEventListener('click', function (e) {
       if (window.__mktGoHome) return;                 // hydrated: the app handles it
       var t = e.target;
@@ -142,6 +143,7 @@ const BOOT_SCRIPT = `
       // second app launch.
       window.dispatchEvent(new Event('mkt-queued-nav'));
       window.setTimeout(function () {
+        __mktBusy = false;
         document.body.className = document.body.className.replace(' mkt-boot-wait', '');
         if (window.__mktQueuedHref === queuedHref) {
           window.__mktQueuedHref = null;

@@ -180,6 +180,14 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   const pathname = usePathname();
   /** The route the first page is waiting for, so the site stays hidden until it arrives. */
   const pendingNav = useRef<string | null>(null);
+  const navFallback = useRef<number | null>(null);
+
+  const clearNavFallback = () => {
+    if (navFallback.current !== null) {
+      window.clearTimeout(navFallback.current);
+      navFallback.current = null;
+    }
+  };
 
   /**
    * Tapping a tile must not show the results page on the way there. The site
@@ -189,6 +197,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   useEffect(() => {
     if (!open || !pendingNav.current) return;
     if (pathname !== pendingNav.current) {
+      clearNavFallback();
       pendingNav.current = null;
       setPending(null);
       setOpen(false);
@@ -216,12 +225,21 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     }
     if (path.startsWith("/") && path !== pathname) {
       pendingNav.current = pathname || "/";
-      // The tap is registered: show it on the tile and refuse further taps
-      // until the page arrives (a second tap restarted the fetch, which is
-      // what made a slow page feel like a dead button).
+      // Show the tap immediately and keep the first page up until the route
+      // lands. A later tile may replace this target instead of being ignored.
       setPending(path);
+      clearNavFallback();
+      navFallback.current = window.setTimeout(() => {
+        navFallback.current = null;
+        pendingNav.current = null;
+        setPending(null);
+        // The WebView router did not land. A full page load is slower, but it
+        // guarantees that a second game still opens after returning home.
+        window.location.assign(href);
+      }, 2500);
       return;
     }
+    clearNavFallback();
     setOpen(false);
   };
 
@@ -242,6 +260,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
       document.body.classList.remove("mkt-boot-wait");
       openPage(href);
       router.push(href);
+      window.dispatchEvent(new Event("mkt-nav-ready"));
     };
     window.addEventListener("mkt-queued-nav", flush);
     flush();
@@ -342,10 +361,19 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // The header logo asks for this screen back, so tapping MKT 发发 on any
   // results page returns to the first page.
   useEffect(() => {
-    const onHome = () => setOpen(true);
+    const onHome = () => {
+      clearNavFallback();
+      pendingNav.current = null;
+      setPending(null);
+      setOpen(true);
+      window.dispatchEvent(new Event("mkt-nav-ready"));
+    };
     window.addEventListener("mkt-home", onHome);
     return () => window.removeEventListener("mkt-home", onHome);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => clearNavFallback, []);
 
   /*
    * Hooks the phone's back key uses.
@@ -427,7 +455,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           <img loading="lazy" src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6, pointerEvents: pending ? "none" : undefined }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (
             <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
               <span style={ICON_BOX}>
@@ -465,7 +493,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
           {tr("seeLive", lang)}
         </button>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, pointerEvents: pending ? "none" : undefined }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
           {actions.map((t) => (
             <Nav
               key={t.name}
