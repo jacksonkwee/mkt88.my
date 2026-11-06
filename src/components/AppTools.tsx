@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FAV_EVENT, YELLOW, cellScope, isNum, loadFavs, type Fav } from "../lib/favourites";
+import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { Star } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
@@ -34,14 +35,20 @@ function gameName(el: Element | null): string {
  */
 export default function AppTools() {
   const path = usePathname() || "";
-  // In the app a full page load re-shows the first page, so tapping a result
-  // number has to move between pages inside the app instead.
   const router = useRouter();
   const hidden = HIDDEN.some((h) => path === h || path.startsWith(h + "/"));
   const [favs, setFavs] = useState<Fav[]>([]);
   const [toast, setToast] = useState<{ num: string; game: string; prize: string } | null>(null);
   const seen = useRef<Set<string>>(new Set());
   const toastTimer = useRef<number | null>(null);
+  const openHistory = useCallback((num: string) => {
+    const href = "/number-history?num=" + num;
+    // Some Android WebViews stop completing Next client-side navigation after
+    // the app has been open for a while. Result numbers are a primary action,
+    // so the app takes the direct page-load path instead of a blank tap.
+    if (isCapacitorApp()) window.location.assign(href);
+    else router.push(href);
+  }, [router]);
 
   useEffect(() => {
     setFavs(loadFavs());
@@ -66,11 +73,11 @@ export default function AppTools() {
       const cell = t.closest(".lottery-number, .lottery-prize-number") as HTMLElement | null;
       if (!cell || cell.closest("a")) return;
       const num = (cell.textContent || "").replace(/\s+/g, "");
-      if (isNum(num)) router.push("/number-history?num=" + num);
+      if (isNum(num)) openHistory(num);
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, [hidden, router]);
+  }, [hidden, openHistory]);
 
   // Highlight favourite numbers (yellow) and raise a special notification.
   useEffect(() => {
@@ -143,7 +150,7 @@ export default function AppTools() {
 
   return (
     <div id="mkt-toast"
-      onClick={() => { const n = toast.num; setToast(null); router.push("/number-history?num=" + n); }}
+      onClick={() => { const n = toast.num; setToast(null); openHistory(n); }}
       style={{
         position: "fixed", left: 12, bottom: 12, zIndex: 9991, background: "#fff", border: "2px solid " + RED,
         borderLeft: "8px solid " + YELLOW, borderRadius: 12, padding: "10px 14px", boxShadow: "0 6px 20px rgba(0,0,0,0.25)",

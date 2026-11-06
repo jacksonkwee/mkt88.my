@@ -213,7 +213,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    * coming back through the logo and tapping the game whose route we are still
    * on has to move the track explicitly (reported 17 Oct 2026).
    */
-  const openPage = (href: string) => {
+  const openPage = (href: string, event?: React.MouseEvent<HTMLAnchorElement>): boolean => {
     const path = href.split("?")[0];
     // The three east games share one route and differ only by ?op=, so the
     // path alone cannot tell the pager which one was tapped.
@@ -222,6 +222,16 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     const slot = game ? game[1] : east ? east[1] : "";
     if (slot) {
       try { window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: gamePagerIndex(slot) } })); } catch { /* not a browser */ }
+    }
+    if (isCapacitorApp() && href.startsWith("/")) {
+      const target = href.split("#")[0];
+      const current = window.location.pathname + window.location.search;
+      if (target !== current) {
+        event?.preventDefault();
+        setPending(path);
+        window.location.assign(href);
+        return true;
+      }
     }
     if (path.startsWith("/") && path !== pathname) {
       pendingNav.current = pathname || "/";
@@ -237,10 +247,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         // guarantees that a second game still opens after returning home.
         window.location.assign(href);
       }, 2500);
-      return;
+      return false;
     }
     clearNavFallback();
     setOpen(false);
+    return false;
   };
 
   /*
@@ -457,7 +468,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
           {games.map((t) => (
-            <Nav key={t.name} href={t.href} onClick={() => openPage(t.href)}>
+            <Nav key={t.name} href={t.href} onClick={(e) => openPage(t.href, e)}>
               <span style={ICON_BOX}>
                 {pending === t.href ? (
                   <span className="mkt-spin" aria-label="Loading" />
@@ -482,7 +493,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
              * instead of closing onto an empty background.
              */
             if (typeof document !== "undefined" && document.getElementById("mkt-app-shell")) {
-              openPage("/4dresults");
+              if (openPage("/4dresults")) return;
               router.push("/4dresults");
               return;
             }
@@ -511,7 +522,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
                 // Close the first page as the link opens. Without this the
                 // overlay stayed on top and the page it opened showed behind
                 // it, which read as the bottom tiles not working at all.
-                openPage(t.href);
+                openPage(t.href, e);
               }}
             >
               <span style={ICON_BOX}>
@@ -637,7 +648,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
             {/* Tap the number to see its full record in Number History. */}
             <Link
               href={"/number-history?num=" + lucky}
-              onClick={() => { setLucky(null); openPage("/number-history?num=" + lucky); }}
+              onClick={(e) => { e.preventDefault(); setLucky(null); openPage("/number-history?num=" + lucky, e); }}
               title={tr("luckyTip", lang)}
               style={{ display: "block", fontSize: 32, fontWeight: 900, letterSpacing: 8, color: ACCENT, margin: "14px 0 10px", background: "#fff7e6", borderRadius: RADIUS, padding: "8px 0", fontVariantNumeric: "tabular-nums", textDecoration: "none" }}
             >{lucky}</Link>
