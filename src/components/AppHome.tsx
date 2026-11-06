@@ -233,15 +233,21 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    * (reported 17 Oct 2026: tapping straight after launch took two seconds and
    * needed several taps, while the same tap a second later was instant).
    */
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     const w = window as unknown as { __mktQueuedHref?: string | null };
-    const href = w.__mktQueuedHref;
-    if (!href) return;
-    w.__mktQueuedHref = null;
-    openPage(href);
-    router.push(href);
+    const flush = () => {
+      const href = w.__mktQueuedHref;
+      if (!href) return;
+      w.__mktQueuedHref = null;
+      document.body.classList.remove("mkt-boot-wait");
+      openPage(href);
+      router.push(href);
+    };
+    window.addEventListener("mkt-queued-nav", flush);
+    flush();
+    return () => window.removeEventListener("mkt-queued-nav", flush);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router, pathname]);
 
   /*
    * Warm the one tool page people tap most. One static route, once, after the
@@ -349,7 +355,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    * So back lands on the home screen from any page, and only leaves the app when
    * there is nowhere left to go back to.
    */
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     const w = window as unknown as { __mktAtHome?: () => boolean; __mktGoHome?: () => void };
     w.__mktAtHome = () => document.body.classList.contains(HOME_OPEN_CLASS);
     w.__mktGoHome = () => window.dispatchEvent(new Event("mkt-home"));

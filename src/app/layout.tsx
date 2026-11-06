@@ -134,11 +134,20 @@ const BOOT_SCRIPT = `
       e.preventDefault();
       if (__mktBusy) return;
       __mktBusy = true;
-      window.__mktQueuedHref = a.getAttribute('href');
+      var queuedHref = a.getAttribute('href');
+      window.__mktQueuedHref = queuedHref;
       document.body.className += ' mkt-boot-wait';
+      // AppHome may already be mounted but not yet have installed its global
+      // hooks. Let it consume this tap immediately instead of waiting for a
+      // second app launch.
+      window.dispatchEvent(new Event('mkt-queued-nav'));
       window.setTimeout(function () {
-        window.__mktQueuedHref = null;
         document.body.className = document.body.className.replace(' mkt-boot-wait', '');
+        if (window.__mktQueuedHref === queuedHref) {
+          window.__mktQueuedHref = null;
+          // React never consumed it: a full navigation is the safe fallback.
+          window.location.assign(queuedHref);
+        }
       }, 8000);
     }, true);
   }
