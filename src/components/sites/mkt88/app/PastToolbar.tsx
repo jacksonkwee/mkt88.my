@@ -6,14 +6,15 @@ import { PAST_DATES, formatDateWithDay } from "./past-data";
 interface Props {
   current: string;
   view: "my" | "kh";
+  dates?: string[];
 }
 
 const ASSET = "/sites/mkt88/app";
 const CAL = ASSET + "/theme-assets/images/icon/calendar.png?v=1";
 
-export default function PastToolbar({ current, view }: Props) {
+export default function PastToolbar({ current, view, dates: suppliedDates }: Props) {
   const [open, setOpen] = useState(false);
-  const idx = PAST_DATES.indexOf(current);
+  const dates = suppliedDates?.length ? suppliedDates : PAST_DATES;
 
   return (
     <>
@@ -36,7 +37,20 @@ export default function PastToolbar({ current, view }: Props) {
                 className="dropdown-menu show text-left"
                 style={{ position: "absolute", left: 0, top: "100%", zIndex: 2000, maxHeight: 320, overflowY: "auto" }}
               >
-                {PAST_DATES.slice()
+                <div className="px-2 pb-2">
+                  <input
+                    type="date"
+                    aria-label="Choose past result date"
+                    value={current}
+                    min={dates[0]}
+                    max={dates[dates.length - 1]}
+                    onChange={(e) => {
+                      if (e.target.value) window.location.href = "/past-results/" + e.target.value + (view === "kh" ? "/cambodia" : "");
+                    }}
+                    style={{ width: "100%", minHeight: 40, padding: "6px 8px" }}
+                  />
+                </div>
+                {dates.slice(-120)
                   .reverse()
                   .map((d) => (
                     <a key={d} className="dropdown-item" href={"/past-results/" + d} onClick={() => setOpen(false)}>

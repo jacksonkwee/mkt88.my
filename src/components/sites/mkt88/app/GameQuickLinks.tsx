@@ -24,7 +24,7 @@ const TILE_NAME: Record<string, string> = {
   "lucky-harihari": "Lucky Hari",
 };
 
-function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
+function Tile({ href, logo, name, zh, active, refreshing, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; refreshing?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
   /*
    * The tile's aria-label carries brand, "4D" and the Chinese name, even though
    * only the brand is drawn - see the note on the label below.
@@ -56,6 +56,7 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
       /* Which game the reader is on, for the palette below and for anyone
          navigating the strip without seeing it. */
       aria-current={active ? "page" : undefined}
+      aria-busy={refreshing || undefined}
       aria-label={[brand, suffix, zh].filter(Boolean).join(" ")}
       style={{
         display: "flex",
@@ -90,10 +91,12 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
           background: "var(--j-page)",
           overflow: "hidden",
           marginBottom: 4,
+          position: "relative",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img loading="lazy" src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain" }} />
+        <img loading="lazy" src={logo} alt={name} style={{ width: 28, height: 28, objectFit: "contain", opacity: refreshing ? 0.25 : 1 }} />
+        {refreshing ? <span className="mkt-spin" aria-hidden="true" style={{ position: "absolute" }} /> : null}
       </span>
       {/*
        * One line: logo + brand.
@@ -113,8 +116,10 @@ function Tile({ href, logo, name, zh, active, aRef, onClick, onPointerDown }: { 
 
 export default function GameQuickLinks() {
   const [activeIdx, setActiveIdx] = useState(-1);
+  const [refreshingIdx, setRefreshingIdx] = useState(-1);
   const refs = useRef<(HTMLAnchorElement | null)[]>([]);
   const rowRef = useRef<HTMLDivElement>(null);
+  const refreshTimer = useRef<number | undefined>(undefined);
   // Where the finger went down, so a swipe of the icon row is not mistaken for
   // a tap on whichever icon the swipe happened to end over.
   const downAt = useRef<{ x: number; y: number } | null>(null);
@@ -132,8 +137,16 @@ export default function GameQuickLinks() {
     const track = document.querySelector(".mkt-pager-track");
     if (!track || track.getClientRects().length === 0) return;
     e.preventDefault();
-    setActiveIdx(i);
-    window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: i } }));
+    if (i !== activeIdx) {
+      setActiveIdx(i);
+      window.dispatchEvent(new CustomEvent("mktpager-go", { detail: { index: i } }));
+    }
+    setRefreshingIdx(i);
+    if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+    refreshTimer.current = window.setTimeout(() => setRefreshingIdx(-1), 9500);
+    window.dispatchEvent(new CustomEvent("mkt-refresh-current", {
+      detail: { slug: PAGER_ORDER[i] },
+    }));
   };
   // Highlight the icon that matches the page you are on (web/desktop too).
   useEffect(() => {
@@ -159,6 +172,19 @@ export default function GameQuickLinks() {
     };
     window.addEventListener("mktpager", onPager);
     return () => window.removeEventListener("mktpager", onPager);
+  }, []);
+  useEffect(() => {
+    const onRefreshDone = (e: Event) => {
+      const d = (e as CustomEvent).detail;
+      if (!d || typeof d.slug !== "string" || d.slug !== PAGER_ORDER[refreshingIdx]) return;
+      if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
+      setRefreshingIdx(-1);
+    };
+    window.addEventListener("mkt-refresh-current-done", onRefreshDone);
+    return () => window.removeEventListener("mkt-refresh-current-done", onRefreshDone);
+  }, [refreshingIdx]);
+  useEffect(() => () => {
+    if (refreshTimer.current) window.clearTimeout(refreshTimer.current);
   }, []);
   /**
    * Centre the active game icon. Swiping the results and tapping an icon both
@@ -215,7 +241,7 @@ export default function GameQuickLinks() {
       }}
     >
       {items.map((it, i) => (
-        <Tile key={i} href={it.href} logo={it.logo} name={TILE_NAME[PAGER_ORDER[i]] || it.name} zh={it.zh} active={i === activeIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }} />
+        <Tile key={i} href={it.href} logo={it.logo} name={TILE_NAME[PAGER_ORDER[i]] || it.name} zh={it.zh} active={i === activeIdx} refreshing={i === refreshingIdx} aRef={(el) => { refs.current[i] = el; }} onClick={(e) => onTileClick(e, i)} onPointerDown={(e) => { downAt.current = { x: e.clientX, y: e.clientY }; }} />
       ))}
     </div>
   );

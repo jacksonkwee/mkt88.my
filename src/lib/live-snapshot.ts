@@ -9,6 +9,7 @@ import { GD_SOURCE_PRIORITY, mergeGrandDragonState } from "./grand-dragon-state.
 import { after } from "next/server";
 import { jackpotCardFields } from "./jackpot-feed";
 import { getJackpotFeed } from "./jackpot-store";
+import { archiveLiveSnapshot } from "./past-archive";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -3456,6 +3457,12 @@ export async function buildSnapshot(): Promise<Snapshot> {
    */
   try { after(() => flushSourceHealth()); } catch { void flushSourceHealth(); }
   cache = snap;
+  /*
+   * Keep a copy of every settled board in the app's own history store. The
+   * past-results page reads this copy first, so an unrelated results website
+   * going down cannot erase the dates this app has already captured.
+   */
+  try { after(() => archiveLiveSnapshot(snap)); } catch { void archiveLiveSnapshot(snap); }
   return snap;
 }
 

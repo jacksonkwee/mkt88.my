@@ -11,9 +11,8 @@ export const metadata: Metadata = {
   description: "Cambodia 4D past draw results.",
 };
 
-export function generateStaticParams() {
-  return PAST_DATES.map((date) => ({ date }));
-}
+// Read the app's own stored archive when the date is requested.
+export const dynamic = "force-dynamic";
 
 export default async function CambodiaPastDatePage({ params }: { params: Promise<{ date: string }> }) {
   const { date } = await params;

@@ -25,3 +25,6 @@ backups/
 .tools/
 *-firebase-adminsdk-*.json
 firebase-service-account.json
+
+# Runtime history captured by the app itself.
+/data/past-archive.json

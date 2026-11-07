@@ -1185,11 +1185,12 @@ function letterNinePrizes() {
 }
 
 /** One fast request (server-cached, pre-warmed) that fills every live card. */
-async function syncFromServerFast(): Promise<boolean> {
+async function syncFromServerFast(force = false): Promise<boolean> {
   try {
+    const suffix = force ? "?manual=" + Date.now() : "";
     const [homeRes, camRes] = await Promise.all([
-      fetch("/api/home-live", { cache: "no-store" }).catch(() => null),
-      fetch("/api/cambodia-live", { cache: "no-store" }).catch(() => null),
+      fetch("/api/home-live" + suffix, { cache: "no-store" }).catch(() => null),
+      fetch("/api/cambodia-live" + suffix, { cache: "no-store" }).catch(() => null),
     ]);
     let did = false;
     if (homeRes && homeRes.ok) {
@@ -1240,14 +1241,14 @@ function applyCambodiaFeed(j: FastFeed): boolean {
  * number twice (reported 11 Oct 2026). Its card positions are simply not the
  * operator's positions.
  */
-async function refreshOnce(full = true) {
+async function refreshOnce(full = true, force = false) {
   const path = syncPath();
   try {
     if (path === "/" || path === "/4dresults" || path === "/4dresults/") {
       // The server snapshot is pre-warmed and cheap, so it always runs, and it
       // now holds every card on this page - Perdana 4D and Lucky HariHari
       // included, which the server reads itself.
-      await syncFromServerFast();
+      await syncFromServerFast(force);
       if (full) await Promise.all([
         /*
          * The phone no longer mirrors the aggregator's pages (decided 15 Oct
@@ -1266,16 +1267,16 @@ async function refreshOnce(full = true) {
         updateTotoZodiac(),
       ]);
     } else if (path === "/sabah-sarawak-4d-results") {
-      await syncFromServerFast();
+      await syncFromServerFast(force);
     } else if (path === "/singapore-4d-results") {
-      await syncFromServerFast();
+      await syncFromServerFast(force);
       if (full) {
         // Same rule as the home page: the Singapore Toto card comes from the
         // server snapshot, not from a second copy fetched by the phone.
         await updateSGOfficial();
       }
     } else if (path === "/lotto-4d" || path === "/cambodia-4d-results") {
-      await syncFromServerFast();
+      await syncFromServerFast(force);
       if (!full) return;
       // Grand Dragon is read from the operator and the server snapshot only.
       // A second live4d2u writer raced those values and made numbers blink.
@@ -1392,6 +1393,28 @@ export default function LiveResults() {
         tick();
       }
     };
+    let manualBusy = false;
+    const onManualRefresh = async (e: Event) => {
+      const d = (e as CustomEvent).detail;
+      const slug = d && typeof d.slug === "string" ? d.slug : "";
+      if (!alive || manualBusy) return;
+      manualBusy = true;
+      try {
+        await Promise.race([
+          refreshOnce(true, true),
+          new Promise((r) => window.setTimeout(r, 9000)),
+        ]);
+        if (alive) collectSnapshot();
+      } finally {
+        manualBusy = false;
+        if (alive) {
+          window.dispatchEvent(new CustomEvent("mkt-refresh-current-done", {
+            detail: { slug },
+          }));
+        }
+      }
+    };
+    window.addEventListener("mkt-refresh-current", onManualRefresh);
     document.addEventListener("visibilitychange", onVis);
     return () => {
       alive = false;
@@ -1399,6 +1422,7 @@ export default function LiveResults() {
       window.clearInterval(fastTimer);
       window.clearInterval(snapTimer);
       window.clearTimeout(restoreTimer);
+      window.removeEventListener("mkt-refresh-current", onManualRefresh);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, []);

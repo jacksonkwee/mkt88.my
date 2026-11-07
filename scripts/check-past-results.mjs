@@ -1,5 +1,42 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { coreResultComplete, pastRecordStatus } from "../src/lib/past-completeness.mjs";
+
+/*
+ * The page's first source is now our own archive. Check that the archive can
+ * still rebuild a known past draw before a deploy can replace a working site.
+ */
+const history = JSON.parse(readFileSync(new URL("../src/components/sites/mkt88/app/number-history-db.json", import.meta.url), "utf8"));
+const DAY0 = Date.UTC(2020, 0, 1);
+const dayOffset = (iso) => Math.round((Date.parse(iso + "T00:00:00Z") - DAY0) / 86400000) - history.dayBase;
+const requiredTables = new Set(["table-1", "table-4", "table-6", "table-8", "table-9", "table-10", "table-11"]);
+const fixtureOffset = dayOffset("2024-04-06");
+const rebuilt = new Map();
+for (const rows of Object.values(history.hits)) {
+  for (const [day, gameIndex, prizeIndex] of rows) {
+    if (day !== fixtureOffset) continue;
+    const table = history.games[gameIndex]?.table;
+    if (!requiredTables.has(table)) continue;
+    let tiers = rebuilt.get(table);
+    if (!tiers) rebuilt.set(table, tiers = new Set());
+    tiers.add(prizeIndex);
+  }
+}
+for (const table of requiredTables) {
+  const tiers = rebuilt.get(table);
+  if (!tiers || ![0, 1, 2].every((tier) => tiers.has(tier))) {
+    throw new Error(`Local past archive cannot rebuild ${table} for 2024-04-06`);
+  }
+}
+
+const archiveFile = process.env.MKT88_PAST_STORE || new URL("../data/past-archive.json", import.meta.url);
+if (existsSync(archiveFile)) {
+  const archive = JSON.parse(readFileSync(archiveFile, "utf8"));
+  for (const [date, entry] of Object.entries(archive)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !String(entry?.html || "").includes('class="card outer-box')) {
+      throw new Error(`Local app archive has an invalid entry for ${date}`);
+    }
+  }
+}
 
 /*
  * This guard validates the archive that the Windows scheduled tasks harvest on

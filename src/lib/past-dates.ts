@@ -16,6 +16,7 @@ import perdanaPastRaw from "./perdana-past.json";
 import hari4dPastRaw from "./hari-4d-past.json";
 import { after } from "next/server";
 import { getSpecialDrawDates, SPECIAL_DRAW_TABLES } from "./special-draws";
+import { localHistoryDateTables } from "./local-past";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -197,7 +198,7 @@ export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; 
   const khByGame = getKhDatesByGame();
   const kh = [...new Set(Object.values(khByGame).flat())].sort();
   // Fold the stored deep archive into the Malaysia / Singapore date list.
-  const tables: Record<string, string[]> = { ...myTables };
+  const tables: Record<string, string[]> = { ...localHistoryDateTables(), ...myTables };
   for (const d of deepDates()) { const t = deepTables(d); if (t.length) tables[d] = t; }
   // Fill in every Malaysia draw day between the newest stored date and
   // yesterday, so the list stays current even when the rolling scan cannot

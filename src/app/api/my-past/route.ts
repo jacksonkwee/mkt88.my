@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getViewHtml } from "../../../components/sites/mkt88/app/past-data";
 import { rewriteHtml, stripAdHtml } from "../../../components/sites/mkt88/app/site-paths";
 import { setZodiacImage } from "../../../components/sites/mkt88/app/zodiac";
+import { getArchivedPast } from "../../../lib/past-archive";
+import { buildLocalPastHtml } from "../../../lib/local-past";
 import recent from "./recent.json";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
@@ -72,7 +74,12 @@ export async function GET(req: NextRequest) {
   try {
     const fallback = (recent as Record<string, string>)[date];
     const stored = getViewHtml(date, "my");
-    let source = stored;
+    let source: string | null = stored;
+    if (!source) {
+      const archived = await getArchivedPast(date);
+      if (archived) source = archived.html;
+    }
+    if (!source) source = buildLocalPastHtml(date);
     if (!source) {
       try {
         source = await httpGet("https://live4dresult.net/past-results/" + date);
@@ -84,7 +91,7 @@ export async function GET(req: NextRequest) {
 
     // The archive answers every date with *some* page, so make sure the page we
     // got really is the Malaysia / Singapore grid before showing anything.
-    if (!/card outer-box table-(?:1|2|3|4|5|6|7|8|9|10|11)"/.test(source)) source = "";
+    if (!/class="card outer-box[^"]*\btable-(?:1|2|3|4|5|6|7|8|9|10|11)\b/.test(source)) source = "";
 
     // The upstream archive does not always wrap the cards in #row, so start at
     // the first result card when that marker is absent.

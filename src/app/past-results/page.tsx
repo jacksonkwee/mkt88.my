@@ -6,6 +6,7 @@ import { DEFAULT_PAST_DATE } from "../../components/sites/mkt88/app/past-data";
 import Footer from "../../components/sites/mkt88/app/Footer";
 import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
+import { getPastDateLists } from "../../lib/past-dates";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/past-results" },
@@ -13,12 +14,18 @@ export const metadata: Metadata = {
   description: "Past 4D draw results for Magnum, Sports Toto, DaMaCai, Singapore Pools and more.",
 };
 
-export default function PastResultsPage() {
+// The default date is the newest draw in the app's own archive, so it has to be
+// resolved when the page is requested rather than frozen into the build.
+export const dynamic = "force-dynamic";
+
+export default async function PastResultsPage() {
+  const { my } = await getPastDateLists();
+  const latest = my[my.length - 1] || DEFAULT_PAST_DATE;
   return (
     <>
       <Header />
       <RegionButtons />
-      <PastResultsView date={DEFAULT_PAST_DATE} />
+      <PastResultsView date={latest} />
       <SeoText
         heading="Past 4D Results 过去开彩记录"
         paragraphs={[

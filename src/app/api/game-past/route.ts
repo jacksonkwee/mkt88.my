@@ -4,6 +4,8 @@ import { rewriteHtml, stripAdHtml } from "../../../components/sites/mkt88/app/si
 import recent from "../my-past/recent.json";
 import { GAME_TABLES } from "../../../components/sites/mkt88/app/game-tables";
 import { DEEP_CARDS, buildDeepCard, deepHas } from "../../../lib/deep-past-cards";
+import { getArchivedPast } from "../../../lib/past-archive";
+import { buildLocalPastHtml } from "../../../lib/local-past";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -21,8 +23,8 @@ async function httpGet(url: string): Promise<string> {
 
 /** Balanced <div> slice for class="card outer-box <cls>". */
 function extractCard(html: string, cls: string): string {
-  const key = '<div class="card outer-box ' + cls + '"';
-  const start = html.indexOf(key);
+  const match = new RegExp('<div class="card outer-box[^"]*\\b' + cls + '\\b').exec(html);
+  const start = match ? match.index : -1;
   if (start < 0) return "";
   let i = start;
   let depth = 0;
@@ -60,7 +62,16 @@ async function sourceFor(date: string): Promise<string> {
     sourceCache.set(date, { at: Date.now(), html: stored });
     return stored;
   }
-  let html = "";
+  const archived = await getArchivedPast(date);
+  if (archived) {
+    sourceCache.set(date, { at: Date.now(), html: archived.html });
+    return archived.html;
+  }
+  let html = buildLocalPastHtml(date);
+  if (html) {
+    sourceCache.set(date, { at: Date.now(), html });
+    return html;
+  }
   try {
     html = await httpGet("https://live4dresult.net/past-results/" + date);
   } catch {

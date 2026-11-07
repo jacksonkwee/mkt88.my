@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   description: "Past 4D draw results for Magnum, Sports Toto, DaMaCai, Singapore Pools and more.",
 };
 
-export function generateStaticParams() {
-  return PAST_DATES.map((date) => ({ date }));
-}
+// The app's own archive is read at request time. Pre-rendering this route
+// during a build froze whichever dates happened to be present on that machine.
+export const dynamic = "force-dynamic";
 
 export default async function PastDatePage({ params }: { params: Promise<{ date: string }> }) {
   const { date } = await params;
