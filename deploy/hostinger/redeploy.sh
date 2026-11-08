@@ -66,8 +66,15 @@ if ! systemctl start mkt88-site; then
   exit 1
 fi
 
-sleep 3
-if ! curl -fsS http://127.0.0.1:3000/api/health; then
+ready=0
+for _ in $(seq 1 30); do
+  if curl -fsS http://127.0.0.1:3000/api/version >/dev/null; then
+    ready=1
+    break
+  fi
+  sleep 1
+done
+if [ "$ready" -ne 1 ]; then
   systemctl stop mkt88-site
   mv "$old" "$failed"
   mv "$backup" "$old"
@@ -75,5 +82,6 @@ if ! curl -fsS http://127.0.0.1:3000/api/health; then
   exit 1
 fi
 
+curl -fsS http://127.0.0.1:3000/api/version
 echo
 echo "DEPLOY_OK backup=$backup"
