@@ -6,15 +6,35 @@ stamp="$(date +%Y%m%d%H%M%S)"
 next="/srv/mkt88-site-next-${stamp}"
 backup="/srv/mkt88-site-prev-${stamp}"
 failed="/srv/mkt88-site-failed-${stamp}"
+swapfile="/swapfile.mkt88-build"
 
 cleanup() {
   if [ -d "$next" ]; then
     rm -rf -- "$next"
   fi
+  if swapon --show=NAME --noheadings | grep -q "$swapfile"; then
+    swapoff "$swapfile"
+  fi
+  if [ -f "$swapfile" ]; then
+    rm -f -- "$swapfile"
+  fi
 }
-trap cleanup ERR
+trap cleanup EXIT
 
 test -f "$old/package.json"
+
+# The production VPS has 4 GB RAM. Next's 43-page production build peaks above
+# that while all static pages are generated, so use temporary swap only for the
+# build. It is released by cleanup() whether deployment succeeds or fails.
+if ! swapon --show=NAME --noheadings | grep -q "$swapfile"; then
+  fallocate -l 4G "$swapfile"
+  chmod 600 "$swapfile"
+  mkswap "$swapfile"
+  swapon "$swapfile"
+fi
+export NODE_OPTIONS="${NODE_OPTIONS:-} --max-old-space-size=4096"
+free -h
+
 git clone --depth 1 --branch main \
   https://github.com/jacksonkwee/mkt88.my.git "$next"
 
