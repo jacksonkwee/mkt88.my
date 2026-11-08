@@ -89,7 +89,7 @@ async function waitFor(expression, timeout = 15_000) {
 async function goto(path) {
   currentPath = path;
   await call("Page.navigate", { url: BASE + path });
-  await waitFor("document.body !== null && document.readyState !== 'loading'");
+  await waitFor("document.body !== null && (document.readyState !== 'loading' || (document.body.innerText || '').trim().length > 20)");
   await sleep(700);
 }
 
@@ -134,6 +134,7 @@ async function visiblePastCards() {
 }
 
 async function chooseHistoryDate(date) {
+  await waitFor(`Array.from(document.querySelectorAll(".mkt-past-filter-title")).some(${visibleCheck})`, 15_000);
   let opened = false;
   for (let attempt = 0; attempt < 3 && !opened; attempt++) {
     if (!await clickVisible(".mkt-past-filter-title")) throw new Error("Past-result filter button not found");
@@ -204,7 +205,9 @@ try {
     if (/^\d{4}$/.test(wantFirst || "")) {
       await waitFor(`Array.from(document.querySelectorAll(".card.outer-box.${game.table}:not(.mkt-past)")).some(e => (${visibleCheck})(e) && (e.innerText || "").includes(${JSON.stringify(wantFirst)}))`, 15_000);
     }
-    await sleep(500);
+    // The result markup is server-rendered before React attaches the history
+    // controls. Give hydration a moment before exercising that control.
+    await sleep(1_500);
     const loaded = await evaluate(`(() => {
       const visible = (${visibleCheck});
       const card = Array.from(document.querySelectorAll(".card.outer-box:not(.mkt-past)")).find(visible);

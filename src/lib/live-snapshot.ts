@@ -1395,7 +1395,9 @@ function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
     else if (/^S\d+$/.test(z)) nums["S" + Number(z.slice(1))] = v;
     else if (/^C\d+$/.test(z)) nums["C" + Number(z.slice(1))] = v;
   }
-  if (!Object.values(nums).some((v) => /^\d{4}$/.test(v))) return null;
+  const flag = String(result.flag || "").trim();
+  const first = nums["1"] || (/^\d{4}$/.test(flag) ? flag : "");
+  if (!first && !Object.values(nums).some((v) => /^\d{4}$/.test(v))) return null;
   const vals: Record<string, string> = {
     date: weekdayOf(dateIso),
     /*
@@ -1403,7 +1405,7 @@ function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
      * in flag (today: flag "1927", n []). Without this the feed looked empty
      * and the card stayed on yesterday until the official archive published.
      */
-    first_prize: nums["1"] || (/^\d{4}$/.test(String(result.flag || "").trim()) ? String(result.flag).trim() : "----"),
+    first_prize: first || "----",
     second_prize: nums["2"] || "----",
     third_prize: nums["3"] || "----",
   };
@@ -1431,7 +1433,10 @@ async function fetchSgLive(iso: string): Promise<Record<string, string> | null> 
     const res = await fetch(url + "?ts=" + Date.now(), {
       headers: { "User-Agent": UA, Accept: "application/json" },
       cache: "no-store",
-      signal: AbortSignal.timeout(1_200),
+      // A fresh request to this feed regularly spends about two seconds at the
+      // edge/origin. The old 1.2s cap discarded those valid responses, leaving
+      // the headline cache frozen on an earlier number for the rest of the draw.
+      signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) throw new Error("SG live " + res.status);
     const board = parseLive4dSg(await res.json(), iso);
@@ -1452,8 +1457,15 @@ async function refreshSgLive(iso: string): Promise<Record<string, string> | null
   sgLiveFastBusy = true;
   try {
     const board = await fetchSgLive(iso);
-    if (board) sgLiveFastCache = { at: Date.now(), board };
-    return board || sgLiveFastCache?.board || null;
+    if (board) {
+      // live4d.sg cycles between partial payloads. A later payload can contain
+      // only the current first prize while n[] is empty; replacing the cache
+      // with it erased a 2nd/3rd prize that was already published.
+      const cached = sgLiveFastCache;
+      const merged = cached && cached.board.date === board.date ? sgMerge(cached.board, board) : board;
+      sgLiveFastCache = { at: Date.now(), board: merged };
+    }
+    return sgLiveFastCache?.board || null;
   } finally {
     sgLiveFastBusy = false;
   }
@@ -1479,9 +1491,9 @@ export function getHeadlineLive(): { at: number; cards: Record<string, Record<st
 }
 
 /** Refresh the tiny live boards without waiting for the full 11-game snapshot. */
-export function refreshHeadlineLive(): void {
+export async function refreshHeadlineLive(): Promise<void> {
   const today = myDate(0);
-  void Promise.all([
+  await Promise.all([
     refreshTotoLive(),
     refreshSgLive(today.iso),
   ]).catch(() => {});
@@ -3544,10 +3556,10 @@ export async function buildSnapshot(): Promise<Snapshot> {
  *   the app take 5.6 seconds just to receive its HTML, and the page corrects
  *   itself a second later anyway from the polling endpoint.
  */
-export async function getSnapshot(opts: { wait?: boolean } = {}): Promise<Snapshot> {
+export async function getSnapshot(opts: { wait?: boolean; force?: boolean } = {}): Promise<Snapshot> {
   startWarmer();
   const cached = cache;
-  if (cached && Date.now() - cached.at < FRESH_MS) return cached;
+  if (!opts.force && cached && Date.now() - cached.at < FRESH_MS) return cached;
   const usable = cached && Object.keys(cached.cards || {}).length > 0;
   const age = cached ? Date.now() - cached.at : Number.POSITIVE_INFINITY;
   // Page renders (wait: false) still take a copy up to MAX_STALE_MS old and
@@ -3592,16 +3604,15 @@ function emptySnapshot(): Snapshot {
  * search engine reads, so it has to carry the numbers.
  */
 export async function getSnapshotForRender(): Promise<Snapshot> {
-  startWarmer();
   const cached = cache;
   if (cached && Object.keys(cached.cards || {}).length > 0) {
-    // Refresh behind the response once the copy is past its useful age.
-    if (Date.now() - cached.at >= FRESH_MS) void rebuildOnce().catch(() => {});
+    // The page's first /api/home-live poll starts the warmer. Starting or
+    // rebuilding it here attaches no-store upstream reads to a statically
+    // rendered route, which makes Next switch that route to dynamic at runtime.
     return cached;
   }
   if (process.env.NEXT_PHASE === "phase-production-build") return await rebuildOnce();
   // Nothing cached: hand over an empty snapshot, build for the next request.
-  void rebuildOnce().catch(() => {});
   return emptySnapshot();
 }
 

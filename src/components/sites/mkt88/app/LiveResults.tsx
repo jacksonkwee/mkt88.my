@@ -325,8 +325,12 @@ function cellFor(card: Element, id: string): Element | null {
  * Only the mirror-fed cards are touched, because a sliding mirror grid is what
  * puts a repeat or a marker in the wrong cell, and an operator's own board must
  * never be rewritten.
+ *
+ * Sports Toto is deliberately absent: its live board can publish the same 4D
+ * number more than once, and blanking the later slot made a complete
+ * ten-number consolation row show only nine values.
  */
-const MIRROR_ONLY_CLASSES = ["table-2", "table-3", "table-6", "table-7", "table-13"];
+const MIRROR_ONLY_CLASSES = ["table-2", "table-3", "table-7", "table-13"];
 
 /**
  * How many special numbers each game really publishes.
@@ -1333,7 +1337,9 @@ export default function LiveResults() {
      */
     const bootSnap = (window as unknown as { __MKT_SNAP__?: { cards?: Record<string, unknown> } }).__MKT_SNAP__;
     const snapEmpty = !bootSnap || !bootSnap.cards || !Object.keys(bootSnap.cards).length;
-    const hadCache = booted && !snapEmpty ? true : applySnapshot();
+    const snapAt = Number((bootSnap as { at?: unknown } | undefined)?.at || 0);
+    const snapAncient = !!snapAt && Date.now() - snapAt > 14 * 86400000;
+    const hadCache = booted && !snapEmpty && !snapAncient ? true : applySnapshot();
     if (!hadCache && bootClasses.length) maskStaleCards(bootClasses);
     // Keep the cache warm independently of the sync (a slow source must never
     // delay the "instant results" copy of the values on screen).

@@ -1,4 +1,4 @@
-import { NextResponse, after } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getSnapshot } from "../../../lib/live-snapshot";
 import { pushConfigured } from "../../../lib/fcm";
 import { checkAndPush } from "../../../lib/push-notify";
@@ -6,8 +6,9 @@ import { checkAndPush } from "../../../lib/push-notify";
 /** Pre-warmed snapshot of every result card (+ the two-draw games). */
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const s = await getSnapshot({ wait: true });
+export async function GET(req: NextRequest) {
+  const manual = req.nextUrl.searchParams.has("manual");
+  const s = await getSnapshot({ wait: true, force: manual });
   /*
    * Every open app polls this, so it is the natural place to notice that a draw
    * has just finished and wake the phones that are closed. after() runs it once
@@ -26,7 +27,7 @@ export async function GET() {
       // old while another was rebuilding every 2.5 seconds. That is what made a
       // live number arrive up to half a minute after the other app had it.
       // Edge caching makes the freshness the same for everybody.
-      "cache-control": "public, s-maxage=1, stale-while-revalidate=1",
+      "cache-control": manual ? "no-store" : "public, s-maxage=1, stale-while-revalidate=1",
     } }
   );
 }

@@ -269,8 +269,10 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
       if (!href) return;
       w.__mktQueuedHref = null;
       document.body.classList.remove("mkt-boot-wait");
-      openPage(href);
-      router.push(href);
+      // In the installed app openPage() starts a full WebView navigation.
+      // Starting router.push() as well made both navigations race during the
+      // first tap, which could leave the WebView on a blank document.
+      if (!openPage(href)) router.push(href);
       window.dispatchEvent(new Event("mkt-nav-ready"));
     };
     window.addEventListener("mkt-queued-nav", flush);

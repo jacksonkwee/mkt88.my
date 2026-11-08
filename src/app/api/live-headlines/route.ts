@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { getHeadlineLive, refreshHeadlineLive } from "../../../lib/live-snapshot";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +10,10 @@ export const dynamic = "force-dynamic";
  * first prizes while the main sweep can still be busy elsewhere, so phones poll
  * this tiny response separately during a draw.
  */
-export async function GET() {
-  refreshHeadlineLive();
+export async function GET(req: NextRequest) {
+  const manual = req.nextUrl.searchParams.has("manual");
+  if (manual) await refreshHeadlineLive();
+  else after(refreshHeadlineLive);
   return NextResponse.json(getHeadlineLive(), {
     headers: { "cache-control": "no-store" },
   });

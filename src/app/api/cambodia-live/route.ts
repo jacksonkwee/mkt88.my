@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getSnapshot } from "../../../lib/live-snapshot";
 
 /** Perdana + Lucky HariHari + Cambodia 6D from the same pre-warmed snapshot. */
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const s = await getSnapshot({ wait: true });
+export async function GET(req: NextRequest) {
+  const manual = req.nextUrl.searchParams.has("manual");
+  const s = await getSnapshot({ wait: true, force: manual });
   const date = new Date(s.at).toISOString().slice(0, 10);
   return NextResponse.json(
     // `at` is when this copy was built: the page uses it to tell whether a
@@ -20,7 +21,7 @@ export async function GET() {
       // old while another was rebuilding every 2.5 seconds. That is what made a
       // live number arrive up to half a minute after the other app had it.
       // Edge caching makes the freshness the same for everybody.
-      "cache-control": "public, s-maxage=1, stale-while-revalidate=1",
+      "cache-control": manual ? "no-store" : "public, s-maxage=1, stale-while-revalidate=1",
     } }
   );
 }

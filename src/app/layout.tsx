@@ -224,6 +224,23 @@ const BOOT_SCRIPT = `
       }
     });
   }
+  function maskAncientCards(){
+    var cards = document.querySelectorAll(".card.outer-box[id]:not(.mkt-past)");
+    for(var ci=0; ci<cards.length; ci++){
+      var dEl = cards[ci].querySelector('[data-id="date"]');
+      var d = dayOf(dEl ? (dEl.textContent || "").trim() : "");
+      if(!d || Date.now() - d <= 14 * 86400000) continue;
+      var cells = cards[ci].querySelectorAll("[data-id], .lottery-prize-number, .lottery-number");
+      for(var ce=0; ce<cells.length; ce++){
+        var k = cells[ce].getAttribute("data-id") || "";
+        var v = (cells[ce].textContent || "").trim();
+        if(k === "date" || k === "draw_no" || /^[0-9]{3,6}$/.test(v)){
+          if(!cells[ce].hasAttribute("data-mkt-orig")) cells[ce].setAttribute("data-mkt-orig", v);
+          cells[ce].textContent = "…";
+        }
+      }
+    }
+  }
   function dot(v){ return !v || v.indexOf("----") === 0; }
   // 6D 2nd-5th rows read as "<first half> or <second half>".
   function sixText(card, subs){
@@ -393,6 +410,7 @@ const BOOT_SCRIPT = `
     changed = false;
     if(snap && snap.cards) applyCards(snap.cards, snap.at);
     applyCambodia(snap);
+    maskAncientCards();
     if(liveTreeReady){
       watchSix();
       var sixCells = document.querySelectorAll(GUARDED);
