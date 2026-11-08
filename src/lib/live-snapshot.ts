@@ -1282,7 +1282,7 @@ function totoLiveWindow(): boolean {
 /** Read the live board in the background; never hold a snapshot build for it. */
 async function refreshTotoLive(): Promise<void> {
   if (totoLiveBusy || !totoLiveWindow()) return;
-  if (totoLiveCache && Date.now() - totoLiveCache.at < 10_000) return;
+  if (totoLiveCache && Date.now() - totoLiveCache.at < 1_500) return;
   totoLiveBusy = true;
   try {
     const res = await fetch("https://r.jina.ai/https://totolive.sportstoto.com.my/stoto/?ts=" + Date.now(), {
@@ -1412,20 +1412,81 @@ function parseLive4dSg(json: any, iso: string): Record<string, string> | null {
   return vals;
 }
 
+let sgLiveFastCache: { at: number; board: Record<string, string> } | null = null;
+let sgLiveFastBusy = false;
+
+function sgLiveWindow(): boolean {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Singapore",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value || 0);
+  const mins = get("hour") * 60 + get("minute");
+  return mins >= 17 * 60 + 45 && mins <= 21 * 60;
+}
+
+async function fetchSgLive(iso: string): Promise<Record<string, string> | null> {
+  const urls = ["http://cloud.live4d.sg/api/sg4d/jlive", "http://alpha2.live4d.sg/api/sg4d/jlive"];
+  const requests = urls.map(async (url) => {
+    const res = await fetch(url + "?ts=" + Date.now(), {
+      headers: { "User-Agent": UA, Accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(1_200),
+    });
+    if (!res.ok) throw new Error("SG live " + res.status);
+    const board = parseLive4dSg(await res.json(), iso);
+    if (!board) throw new Error("SG live empty");
+    return board;
+  });
+  try {
+    return await Promise.any(requests);
+  } catch {
+    return null;
+  }
+}
+
+async function refreshSgLive(iso: string): Promise<Record<string, string> | null> {
+  if (sgLiveFastBusy) return sgLiveFastCache?.board || null;
+  if (!sgLiveWindow()) return sgLiveFastCache?.board || null;
+  if (sgLiveFastCache && Date.now() - sgLiveFastCache.at < 900) return sgLiveFastCache.board;
+  sgLiveFastBusy = true;
+  try {
+    const board = await fetchSgLive(iso);
+    if (board) sgLiveFastCache = { at: Date.now(), board };
+    return board || sgLiveFastCache?.board || null;
+  } finally {
+    sgLiveFastBusy = false;
+  }
+}
+
 async function live4dSgToday(iso: string): Promise<Record<string, string> | null> {
   // Use the operator's real jLive feed. The cawidget "jlive_hide" widget is a
   // secondary stream - its own payload says "special": "not primary" - and the
   // numbers it carries are not the draw - they disagreed with the official
   // Singapore Pools result and with the operator's own feeds.
-  for (const url of ["http://cloud.live4d.sg/api/sg4d/jlive", "http://alpha2.live4d.sg/api/sg4d/jlive"]) {
-    try {
-      const j = await get(url + "?ts=" + Date.now(), true);
-      const vals = j ? parseLive4dSg(j, iso) : null;
-      if (vals) return vals;
-    } catch { /* try the next feed */ }
-  }
-  return null;
+  return refreshSgLive(iso);
 }
+
+/** The two operator feeds that can reveal a top prize while the draw is live. */
+export function getHeadlineLive(): { at: number; cards: Record<string, Record<string, string>> } {
+  const cards: Record<string, Record<string, string>> = {};
+  if (totoLiveCache) cards["table-6"] = totoLiveCache.four;
+  if (sgLiveFastCache) cards["table-11"] = sgLiveFastCache.board;
+  return {
+    at: Math.max(totoLiveCache?.at || 0, sgLiveFastCache?.at || 0),
+    cards,
+  };
+}
+
+/** Refresh the tiny live boards without waiting for the full 11-game snapshot. */
+export function refreshHeadlineLive(): void {
+  const today = myDate(0);
+  void Promise.all([
+    refreshTotoLive(),
+    refreshSgLive(today.iso),
+  ]).catch(() => {});
+}
+
 /** Build a fresh snapshot (parallel upstream fetches). */
 /** Whatever the operator's live stream has published for Singapore so far.
  *  The stream clears itself after the draw, so the capture is what keeps the

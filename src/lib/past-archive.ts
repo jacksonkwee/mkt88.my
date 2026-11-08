@@ -36,6 +36,10 @@ function num(value: unknown): string {
   return /^\d{4}$/.test(text) ? text : "----";
 }
 
+function text(value: unknown): string {
+  return String(value ?? "").trim() || "----";
+}
+
 function todayKl(): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Kuala_Lumpur", year: "numeric", month: "2-digit", day: "2-digit",
@@ -70,6 +74,56 @@ function grid(title: string, prefix: string, values: string[], count: number): s
   return `<table class="my-1" width="100%"><tbody><tr><td colspan="5" class="lottery-prize-title text-center">${esc(title)}</td></tr>${rows.join("")}</tbody></table>`;
 }
 
+function totoExtraCard(cards: Snapshot["cards"], date: string): string {
+  const values = cards["table-7"];
+  if (!values) return "";
+  const d5 = [1, 2, 3, 4, 5, 6].map((i) => text(values["d5_number_" + i]));
+  const d6 = [1, 2, 3, 4, 5].map((i) => [
+    text(values["d6_first_number_" + i] || (i === 1 ? values.d6_number_1 : "")),
+    text(values["d6_second_number_" + i]),
+  ]);
+  const ranks = ["1st", "2nd", "3rd", "4th", "5th"];
+  const lotto = (prefix: string, name: string, bonus: boolean) => {
+    const nums = Array.from({ length: 6 }, (_, i) => text(values[prefix + "_number_" + (i + 1)]));
+    const jackpot1 = text(values[prefix + "_first_jackpot_prize"]);
+    const jackpot2 = text(values[prefix + "_second_jackpot_prize"]);
+    const cells = nums.map((value) => `<td width="15%" class="border text-center jackpot_number">${esc(value)}</td>`).join("");
+    return `<tr><td colspan="8" class="lottery-prize-title text-center">${esc(name)}</td></tr>` +
+      `<tr>${bonus ? cells + `<td width="10%" class="border text-center jackpot_number plus">+</td><td width="10%" class="border text-center jackpot_number">${esc(text(values[prefix + "_number_8"]))}</td>` : cells}</tr>` +
+      `<tr><td colspan="2" class="border text-center lottery-rank grey">Jackpot 1</td><td colspan="6" class="border text-center jackpot_prize">${esc(jackpot1)}</td></tr>` +
+      (jackpot2 !== "----" ? `<tr><td colspan="2" class="border text-center lottery-rank grey">Jackpot 2</td><td colspan="6" class="border text-center jackpot_prize">${esc(jackpot2)}</td></tr>` : "");
+  };
+  const hasNumbers = [...d5, ...d6.flat(), ...["star_toto", "power_toto", "supreme_toto"].flatMap((prefix) =>
+    Array.from({ length: 6 }, (_, i) => text(values[prefix + "_number_" + (i + 1)]))
+  )].some((value) => value !== "----");
+  if (!hasNumbers) return "";
+  return (
+    `<div class="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">` +
+      `<div class="card outer-box table-7 mkt-past" id="table-7-${date}">` +
+        `<div class="card-body p-2">` +
+          `<div class="row mx-0 align-items-center justify-content-center position-relative">` +
+            `<div class="lottery-logo"><img src="/sites/mkt88/app/theme-assets/images/logo_toto.gif?v=1" alt="logo" loading="lazy"></div>` +
+            `<div class="lottery-name">SportsToto 5D, 6D, Lotto 多多六合彩</div>` +
+          `</div>` +
+          `<div class="row mx-0 justify-content-between"><div class="date">Date: <span data-id="date">${esc(values.date || date)}</span></div></div>` +
+          `<table class="my-1" width="100%"><tbody>` +
+            `<tr><td colspan="4" class="lottery-prize-title text-center">5D</td></tr>` +
+            `<tr><td class="lottery-rank grey">1st</td><td class="lottery-number">${esc(d5[0])}</td><td class="lottery-rank grey">4th</td><td class="lottery-number">${esc(d5[3])}</td></tr>` +
+            `<tr><td class="lottery-rank grey">2nd</td><td class="lottery-number">${esc(d5[1])}</td><td class="lottery-rank grey">5th</td><td class="lottery-number">${esc(d5[4])}</td></tr>` +
+            `<tr><td class="lottery-rank grey">3rd</td><td class="lottery-number">${esc(d5[2])}</td><td class="lottery-rank grey">6th</td><td class="lottery-number">${esc(d5[5])}</td></tr>` +
+            `<tr><td colspan="4" class="lottery-prize-title text-center">6D</td></tr>` +
+            d6.map(([a, b], i) => i === 0
+              ? `<tr><td class="lottery-rank grey">1st</td><td colspan="3" class="lottery-number">${esc(a)}</td></tr>`
+              : `<tr><td class="lottery-rank grey">${ranks[i]}</td><td class="lottery-number">${esc(a)}</td><td class="lottery-rank grey">or</td><td class="lottery-number">${esc(b)}</td></tr>`
+            ).join("") +
+          `</tbody></table>` +
+          `<table class="my-1" width="100%"><tbody>${lotto("star_toto", "Star Toto 6/50", true)} ${lotto("power_toto", "Power Toto 6/55", false)} ${lotto("supreme_toto", "Supreme Toto 6/58", false)}</tbody></table>` +
+        `</div>` +
+      `</div>` +
+    `</div>`
+  );
+}
+
 function render(cards: Snapshot["cards"], date: string): string {
   const blocks: string[] = [];
   for (const table of TABLES) {
@@ -100,6 +154,8 @@ function render(cards: Snapshot["cards"], date: string): string {
       `</div>`
     );
   }
+  const totoExtra = totoExtraCard(cards, date);
+  if (totoExtra) blocks.push(totoExtra);
   return blocks.length ? `<div class="row">${blocks.join("")}</div>` : "";
 }
 

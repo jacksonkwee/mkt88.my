@@ -350,6 +350,8 @@ const BOOT_SCRIPT = `
    */
   var JP7_IDS = ["jp7_pool", "jp7_grand"];
   var GUARDED = '[data-id^="six_"],[data-id="jp7_pool"],[data-id="jp7_grand"]';
+  var watchedSix = new WeakSet();
+  var liveTreeReady = false;
   function sixWant(el){
     if(!el || !el.getAttribute) return null;
     var id = el.getAttribute("data-id") || "";
@@ -381,8 +383,8 @@ const BOOT_SCRIPT = `
     });
     var cells = document.querySelectorAll(GUARDED);
     for(var i=0;i<cells.length;i++){
-      if(cells[i].getAttribute("data-mkt-watch")) continue;
-      cells[i].setAttribute("data-mkt-watch", "1");
+      if(watchedSix.has(cells[i])) continue;
+      watchedSix.add(cells[i]);
       sixObs.observe(cells[i], { childList: true, characterData: true, subtree: true });
     }
   }
@@ -391,9 +393,11 @@ const BOOT_SCRIPT = `
     changed = false;
     if(snap && snap.cards) applyCards(snap.cards, snap.at);
     applyCambodia(snap);
-    watchSix();
-    var sixCells = document.querySelectorAll(GUARDED);
-    for(var si=0;si<sixCells.length;si++) fixSix(sixCells[si]);
+    if(liveTreeReady){
+      watchSix();
+      var sixCells = document.querySelectorAll(GUARDED);
+      for(var si=0;si<sixCells.length;si++) fixSix(sixCells[si]);
+    }
     // No event dispatch here: it made React re-render (and re-insert the stale
     // markup) in a loop. React gets its values from the server snapshot; the
     // writers above keep the DOM up to date.
@@ -424,6 +428,15 @@ const BOOT_SCRIPT = `
   function pull(url, fn){ try { fetch(url, { cache: "no-store" }).then(function(r){ return r.ok ? r.json() : null; }).then(fn).catch(function(){}); } catch(e){} }
 
   run();
+  window.addEventListener('mkt-nav-ready', function(){
+    liveTreeReady = true;
+    run();
+  }, { once: true });
+  window.setTimeout(function(){
+    if(liveTreeReady) return;
+    liveTreeReady = true;
+    run();
+  }, 2000);
   if(document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", run); }
   try {
     var pending = 0;
@@ -518,8 +531,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
        the titles lead in English, and that is what a search engine sees. The
        boot script above replaces it with the reader's own language (and the
        matching data-lang) before the first paint. */
-    <html lang="en">
-      <body className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning className="home wp-singular page-template-default page page-id-3 wp-theme-oldtheme-lottery-frontend d-flex flex-column aa-prefix-live4-">
         <script id="mkt-snapshot" type="application/json" dangerouslySetInnerHTML={{ __html: snapJson }} />
         <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
         {/* Everything the site normally shows. The app's first page hides this

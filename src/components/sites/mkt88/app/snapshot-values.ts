@@ -92,11 +92,12 @@ function sixSubs(values: Record<string, string>, subs?: Record<string, string>) 
  * leftover from the captured page - carries no stamp, so the clearing the site
  * does today still happens exactly as it does now.
  *
- * Only the four games the user asked for first are covered: Grand Dragon, Nine
- * Lotto, Perdana and Lucky HariHari. Everything else keeps today's behaviour.
+ * The games with a second live writer are covered: Grand Dragon, Nine Lotto,
+ * Perdana, Lucky HariHari, Sports Toto and Singapore. Everything else keeps
+ * today's behaviour.
  */
 export const LIVE_STAMPED_CLASSES = new Set([
-  "table-13", "table-14", "table-15", "table-16", "table-17", "table-18",
+  "table-6", "table-11", "table-13", "table-14", "table-15", "table-16", "table-17", "table-18",
 ]);
 
 export const LIVE_ATTR = "data-live-at";

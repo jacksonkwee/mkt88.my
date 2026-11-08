@@ -18,7 +18,8 @@ export default function SnapshotPage({ html }: { html: string }) {
       <div className="row">
         <div className="col-sm-12">
           <DirectTopAd />
-          <div dangerouslySetInnerHTML={{ __html: content }} />
+          {/* The inline boot script fills this captured board before hydration. */}
+          <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: content }} />
         </div>
       </div>
       <LiveResults />

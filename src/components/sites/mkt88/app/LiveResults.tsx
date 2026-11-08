@@ -1010,7 +1010,8 @@ async function updateSGOfficial() {
       if (s.dateLabel && dateScore(s.dateLabel) < dateScore(currentDate)) continue;
       const set = (id: string, v: string) => {
         const el = card.querySelector('[data-id="' + id + '"]');
-        if (el && (el.textContent || "") !== v) { el.textContent = v; el.classList.remove("live-pending"); }
+        if (!copyMayWrite(el, s.dateLabel, currentDate)) return;
+        setText(el, v);
       };
       if (s.dateLabel) set("date", s.dateLabel);
       if (s.drawNo) set("draw_no", s.drawNo);
@@ -1057,7 +1058,7 @@ const PERDANA_ID: Record<string, string> = { "15:30": "table-16-2026-09-06-1530"
 const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "19:30": "table-15-2026-09-06-1930" };
 
 /** Apply a table-class -> { dataId: value } map to every matching card. */
-function applyCardMap(cards: Record<string, Record<string, string>>) {
+function applyCardMap(cards: Record<string, Record<string, string>>, stampLive = false) {
   for (const [cls, vals] of Object.entries(cards || {})) {
     for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
       // A different draw date means the numbers on this card belong to the old
@@ -1098,7 +1099,7 @@ function applyCardMap(cards: Record<string, Record<string, string>>) {
          * clearing still happens exactly as it did.
          */
         if (!copyMayWrite(el, vals.date, curDate)) continue;
-        setText(el, v);
+        setText(el, v, stampLive);
       }
       if (newDraw && cls === "table-6" && !Object.prototype.hasOwnProperty.call(vals, "zodiac")) {
         const img = card.querySelector('img[data-id="zodiac"]') as HTMLImageElement | null;
@@ -1184,7 +1185,7 @@ function letterNinePrizes() {
   }
 }
 
-/** One fast request (server-cached, pre-warmed) that fills every live card. */
+/** The full-game fast lane. It must never wait for the two headline feeds. */
 async function syncFromServerFast(force = false): Promise<boolean> {
   try {
     const suffix = force ? "?manual=" + Date.now() : "";
@@ -1203,6 +1204,28 @@ async function syncFromServerFast(force = false): Promise<boolean> {
     }
     return did;
   } catch { return false; }
+}
+
+/**
+ * Sports Toto and Singapore have their own tiny endpoint.
+ *
+ * They used to share syncFromServerFast's Promise.all with the complete eleven-
+ * game snapshot. A slow unrelated game therefore held back these first prizes
+ * for seconds, which still looked like a live-draw freeze. This lane is
+ * independent and writes as soon as its response arrives.
+ */
+async function syncHeadlinesFast(force = false): Promise<boolean> {
+  try {
+    const res = await fetch("/api/live-headlines" + (force ? "?manual=" + Date.now() : ""), { cache: "no-store" }).catch(() => null);
+    if (!res || !res.ok) return false;
+    const h = (await res.json()) as { cards?: Record<string, Record<string, string>> };
+    if (!h || !h.cards) return false;
+    applyCardMap(h.cards, true);
+    letterNinePrizes();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Apply the Perdana + HariHari values from the fast feed. */
@@ -1248,7 +1271,7 @@ async function refreshOnce(full = true, force = false) {
       // The server snapshot is pre-warmed and cheap, so it always runs, and it
       // now holds every card on this page - Perdana 4D and Lucky HariHari
       // included, which the server reads itself.
-      await syncFromServerFast(force);
+      await Promise.all([syncFromServerFast(force), syncHeadlinesFast(force)]);
       if (full) await Promise.all([
         /*
          * The phone no longer mirrors the aggregator's pages (decided 15 Oct
@@ -1269,7 +1292,7 @@ async function refreshOnce(full = true, force = false) {
     } else if (path === "/sabah-sarawak-4d-results") {
       await syncFromServerFast(force);
     } else if (path === "/singapore-4d-results") {
-      await syncFromServerFast(force);
+      await Promise.all([syncFromServerFast(force), syncHeadlinesFast(force)]);
       if (full) {
         // Same rule as the home page: the Singapore Toto card comes from the
         // server snapshot, not from a second copy fetched by the phone.
@@ -1361,9 +1384,25 @@ export default function LiveResults() {
       catch { /* picked up on the next tick */ }
       finally { fastBusy = false; }
     };
+    let headlineBusy = false;
+    let lastHeadline = 0;
+    const headlinePoll = async () => {
+      if (headlineBusy || !alive) return;
+      if (Date.now() - lastHeadline < (anyLiveCard() ? 750 : 1500)) return;
+      headlineBusy = true;
+      try {
+        await syncHeadlinesFast();
+        lastHeadline = Date.now();
+      } catch { /* picked up on the next tick */ }
+      finally { headlineBusy = false; }
+    };
     lastFast = Date.now();
+    lastHeadline = Date.now();
     const fastTimer = window.setInterval(() => {
-      if (document.visibilityState === "visible" && alive) void fastPoll();
+      if (document.visibilityState === "visible" && alive) {
+        void fastPoll();
+        void headlinePoll();
+      }
     }, 1000);
     const tick = async () => {
       if (busy) return;

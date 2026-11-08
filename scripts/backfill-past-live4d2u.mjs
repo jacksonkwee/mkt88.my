@@ -16,7 +16,7 @@ const CONCURRENCY = 4;
 const GAMES = [
   { table: "table-1", match: /Magnum 4D/i, name: "Magnum 4D 万能", logo: "/sites/mkt88/app/theme-assets/images/logo_magnum.gif?v=1", special: 13, cons: 10 },
   { table: "table-4", match: /Da Ma Cai/i, name: "Da Ma Cai 1+3D 大马彩", logo: "/sites/mkt88/app/theme-assets/images/logo_damacai.gif?v=1", special: 10, cons: 10 },
-  { table: "table-6", match: /Sports Toto/i, name: "SportsToto 4D 多多", logo: "/sites/mkt88/app/theme-assets/images/logo_toto.gif?v=1", special: 13, cons: 10 },
+  { table: "table-6", match: /Sports\s*Toto\s*4D/i, name: "SportsToto 4D 多多", logo: "/sites/mkt88/app/theme-assets/images/logo_toto.gif?v=1", special: 13, cons: 10 },
   { table: "table-8", match: /Sandakan/i, name: "Sandakan 4D 山打根赛马会", logo: "/sites/mkt88/app/theme-assets/images/logo_stc4d.gif?v=1", special: 13, cons: 10 },
   { table: "table-9", match: /Cash\s*Sweep/i, name: "Special CashSweep 砂拉越大万", logo: "/sites/mkt88/app/theme-assets/images/logo_cashsweep.gif?v=1", special: 10, cons: 10 },
   { table: "table-10", match: /Sabah 88/i, name: "Sabah 88 4D 沙巴万字", logo: "/sites/mkt88/app/theme-assets/images/logo_sabah88.gif?v=1", special: 13, cons: 10 },
@@ -105,6 +105,65 @@ function renderCard(date, game, block) {
   );
 }
 
+function getText(block, id) {
+  const match = new RegExp(`id="${id}"[^>]*>\\s*([^<]*?)\\s*<`).exec(block);
+  return match ? String(match[1]).trim() || "----" : "----";
+}
+
+function totoLotto(block, prefix, name, bonus) {
+  const cells = Array.from({ length: 6 }, (_, i) =>
+    `<td class="border text-center jackpot_number">${esc(getText(block, "tt" + prefix + (i + 1)))}</td>`
+  ).join("");
+  const extra = bonus
+    ? `<td class="border text-center jackpot_number plus">+</td><td class="border text-center jackpot_number">${esc(getText(block, "tt" + prefix + "ex"))}</td>`
+    : "";
+  const jackpot1 = getText(block, "tt" + prefix + "jp1") !== "----"
+    ? getText(block, "tt" + prefix + "jp1")
+    : getText(block, "tt" + prefix + "jp");
+  const jackpot2 = getText(block, "tt" + prefix + "jp2");
+  return `<tr><td colspan="8" class="lottery-prize-title text-center">${esc(name)}</td></tr>` +
+    `<tr>${cells}${extra}</tr>` +
+    `<tr><td colspan="2" class="border text-center lottery-rank grey">Jackpot 1</td><td colspan="6" class="border text-center jackpot_prize">${esc(jackpot1)}</td></tr>` +
+    (jackpot2 !== "----" ? `<tr><td colspan="2" class="border text-center lottery-rank grey">Jackpot 2</td><td colspan="6" class="border text-center jackpot_prize">${esc(jackpot2)}</td></tr>` : "");
+}
+
+function renderTotoExtra(date, block) {
+  if (!block || !/Sports\s*Toto\s*5D/i.test(clean(block))) return "";
+  const d5 = [1, 2, 3, 4, 5, 6].map((i) => getText(block, "tt5d" + i));
+  const d6 = [1, 2, 3, 4, 5].map((i) => [
+    getText(block, "tt6d" + i + "a"),
+    getText(block, "tt6d" + i + "b"),
+  ]);
+  const dm = /Date:\s*(\d{2})-(\d{2})-(\d{4})/.exec(clean(block));
+  const label = dm ? `${dm[1]}-${dm[2]}-${dm[3]}` : date;
+  const drawNo = getText(block, "ttdn") === "----" ? "" : clean(getText(block, "ttdn")).replace(/^Draw No:\s*/, "");
+  return (
+    `<div class="col-12 col-sm-12 col-md-6 col-lg-4 mt-3 px-1">` +
+      `<div class="card outer-box table-7 mkt-past" id="table-7-${date}">` +
+        `<div class="card-body p-2">` +
+          `<div class="row mx-0 align-items-center justify-content-center position-relative">` +
+            `<div class="lottery-logo"><img src="/sites/mkt88/app/theme-assets/images/logo_toto.gif?v=1" alt="logo" loading="lazy"></div>` +
+            `<div class="lottery-name">SportsToto 5D, 6D, Lotto 多多六合彩</div>` +
+          `</div>` +
+          `<div class="row mx-0 justify-content-between"><div class="date">Date: <span data-id="date">${esc(label)}</span></div>${drawNo ? `<div class="date">Draw No: <span data-id="draw_no">${esc(drawNo)}</span></div>` : ""}</div>` +
+          `<table class="my-1" width="100%"><tbody>` +
+            `<tr><td colspan="4" class="lottery-prize-title text-center">5D</td></tr>` +
+            `<tr><td class="lottery-rank grey">1st</td><td class="lottery-number">${esc(d5[0])}</td><td class="lottery-rank grey">4th</td><td class="lottery-number">${esc(d5[3])}</td></tr>` +
+            `<tr><td class="lottery-rank grey">2nd</td><td class="lottery-number">${esc(d5[1])}</td><td class="lottery-rank grey">5th</td><td class="lottery-number">${esc(d5[4])}</td></tr>` +
+            `<tr><td class="lottery-rank grey">3rd</td><td class="lottery-number">${esc(d5[2])}</td><td class="lottery-rank grey">6th</td><td class="lottery-number">${esc(d5[5])}</td></tr>` +
+            `<tr><td colspan="4" class="lottery-prize-title text-center">6D</td></tr>` +
+            `<tr><td class="lottery-rank grey">1st</td><td class="lottery-number">${esc(getText(block, "tt6d1"))}</td><td colspan="2"></td></tr>` +
+            d6.slice(1).map(([a, b], i) =>
+              `<tr><td class="lottery-rank grey">${["2nd", "3rd", "4th", "5th"][i]}</td><td class="lottery-number">${esc(a)}</td><td class="lottery-rank grey">or</td><td class="lottery-number">${esc(b)}</td></tr>`
+            ).join("") +
+          `</tbody></table>` +
+          `<table class="my-1" width="100%"><tbody>${totoLotto(block, "650", "Star Toto 6/50", true)} ${totoLotto(block, "655", "Power Toto 6/55", false)} ${totoLotto(block, "658", "Supreme Toto 6/58", false)}</tbody></table>` +
+        `</div>` +
+      `</div>` +
+    `</div>`
+  );
+}
+
 async function pageFor(date) {
   const response = await fetch("https://www.live4d2u.net/past-results/" + date, {
     headers: { "user-agent": UA, accept: "text/html" },
@@ -120,6 +179,9 @@ async function pageFor(date) {
     const htmlCard = renderCard(date, game, block);
     if (htmlCard) cards.push(htmlCard);
   }
+  const totoBlock = blocks.find((candidate) => /Sports\s*Toto\s*5D/i.test(clean(candidate)));
+  const totoExtra = renderTotoExtra(date, totoBlock);
+  if (totoExtra) cards.push(totoExtra);
   return cards.length ? `<div class="row">${cards.join("")}</div>` : "";
 }
 

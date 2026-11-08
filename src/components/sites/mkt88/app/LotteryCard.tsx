@@ -47,8 +47,8 @@ export interface CardOverride {
   prizeSet?: { prize: string[]; special: string[]; cons: string[]; date?: string; drawNo?: string } | null;
 }
 
-function Cell(props: { cell: CardCell; override?: string; zodiac?: string; frozen?: boolean; drawMoved?: boolean }) {
-  const { cell, override, zodiac, frozen, drawMoved } = props;
+function Cell(props: { cell: CardCell; override?: string; values?: Record<string, string>; zodiac?: string; frozen?: boolean; drawMoved?: boolean }) {
+  const { cell, override, values, zodiac, frozen, drawMoved } = props;
   const style: CSSProperties | undefined = undefined;
   const attrs: Record<string, unknown> = {};
   const dataId = cell.attrs?.["data-id"] || "";
@@ -90,16 +90,24 @@ function Cell(props: { cell: CardCell; override?: string; zodiac?: string; froze
   if (cell.attrs?.rowspan) attrs.rowSpan = Number(cell.attrs.rowspan);
   if (cell.attrs?.["data-id"]) attrs["data-id"] = cell.attrs["data-id"];
   const baseHtml = rewriteHtml(cell.html || "");
-  const html = /\bdata-id=["']zodiac["']/i.test(cell.html || "") && zodiac !== undefined
+  let html = /\bdata-id=["']zodiac["']/i.test(cell.html || "") && zodiac !== undefined
     ? setZodiacImage(baseHtml, zodiac)
     : fresh ? override! : staleDraw ? "----" : baseHtml;
+  if (!frozen && values) {
+    html = html.replace(/(<span[^>]*data-id=["']([^"']+)["'][^>]*>)([\s\S]*?)(<\/span>)/gi, (whole, open, id, _old, close) => {
+      const next = values[id];
+      if (next === undefined || next === "") return whole;
+      const safe = String(next).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return open + safe + close;
+    });
+  }
   const Tag = cell.tag === "th" ? "th" : "td";
 
 
-  // The live boot script writes these cells before React hydrates; tell React
-  // not to warn about (or undo) the difference.
-  const liveCell = Boolean(dataId) || /lottery-prize-number|lottery-number/.test(cell.cls || "");
-  return <Tag {...attrs} style={style} suppressHydrationWarning={liveCell} dangerouslySetInnerHTML={{ __html: html }} />;
+  // The live boot script writes result cells before React hydrates. Every cell
+  // is rendered from dangerouslySetInnerHTML, so React must not treat those
+  // intentional pre-hydration writes as a broken client tree.
+  return <Tag {...attrs} style={style} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 export default function LotteryCard({ card, values, prizeSet }: { card: LotteryCardData } & CardOverride) {
@@ -193,7 +201,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
                           else if (ti === 2) override = prizeSet.cons?.[n];
                         }
                       }
-                      return <Cell key={ci} cell={c} override={override} zodiac={zodiac} frozen={frozen} drawMoved={drawMoved} />;
+                      return <Cell key={ci} cell={c} override={override} values={values} zodiac={zodiac} frozen={frozen} drawMoved={drawMoved} />;
                     })}
                   </tr>
                 ))}

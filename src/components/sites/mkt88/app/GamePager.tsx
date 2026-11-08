@@ -9,7 +9,7 @@ import { SG_CARDS } from "./sg-cards";
 import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-order";
 import { GAME_PAGER_ORDER, gamePagerIndex } from "./game-order";
 import { useDrawOrder } from "./use-draw-order";
-import { overridesFor, useSnap } from "./use-live-snapshot";
+import { overridesFor, useSnap, type Snap } from "./use-live-snapshot";
 import { splitSixCard } from "./six-split";
 import GamePastFilter from "./GamePastFilter";
 
@@ -66,6 +66,30 @@ function pagesFor(perdanaNight: boolean, hariNight: boolean): PageDef[] {
     { title: "Perdana 4D", slug: "perdana", kh: true, ids: perdanaIds(perdanaNight) },
     { title: "Lucky HariHari 天天好运", slug: "lucky-harihari", kh: true, ids: hariIds(hariNight) },
   ];
+}
+
+function embeddedSixValues(snap: Snap, id: string): Record<string, string> {
+  let six: { main: string; subs?: Record<string, string> } | null | undefined;
+  if (id.startsWith("table-14")) six = snap.gd6;
+  else if (id.startsWith("table-18")) six = snap.nine6;
+  else if (id.includes("table-15") && id.endsWith("-6d")) {
+    const time = id.includes("-1930") ? "19:30" : id.includes("-1530") ? "15:30" : "";
+    six = time && snap.hari ? snap.hari[time]?.six : null;
+  }
+  if (!six?.main && typeof window !== "undefined") {
+    const live = (window as unknown as { __MKT_SNAP__?: Snap }).__MKT_SNAP__;
+    if (id.startsWith("table-14")) six = live?.gd6;
+    else if (id.startsWith("table-18")) six = live?.nine6;
+    else if (id.includes("table-15") && id.endsWith("-6d")) {
+      const time = id.includes("-1930") ? "19:30" : id.includes("-1530") ? "15:30" : "";
+      six = time && live?.hari ? live.hari[time]?.six : null;
+    }
+  }
+  if (!six?.main) return {};
+  return {
+    six_main: six.main,
+    ...(six.subs || {}),
+  };
 }
 
 // The order lives in ./game-order so the app's first page can use it
@@ -371,15 +395,21 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
               if (sixPlus) items.push(sixPlus);
               if (jp) items.push(jp);
             }
-            return items.map((card) =>
-              / six-jp$| six-one$/.test(card.cardCls) ? (
+            return items.map((card) => {
+              const overrides = overridesFor(snap, card.id, card.cardCls);
+              const values = {
+                ...(overrides.values || {}),
+                ...embeddedSixValues(snap, card.id),
+              };
+              const props = Object.keys(values).length ? { ...overrides, values } : overrides;
+              return / six-jp$| six-one$/.test(card.cardCls) ? (
                 <div key={card.id} className="mt-3">
-                  <LotteryCard card={card} {...overridesFor(snap, card.id, card.cardCls)} />
+                  <LotteryCard card={card} {...props} />
                 </div>
               ) : (
-                <LotteryCard key={card.id} card={card} {...overridesFor(snap, card.id, card.cardCls)} />
-              )
-            );
+                <LotteryCard key={card.id} card={card} {...props} />
+              );
+            });
           })()}
           </>
           )}
