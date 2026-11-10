@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 import { tr, useLang } from "../../../../lib/i18n";
+import MonthlyBrowsingTime from "../../../MonthlyBrowsingTime";
 
 const logo = ASSET_BASE + "/logo-mkt88.webp?v=4";
 
@@ -72,6 +73,9 @@ export default function Header() {
                 </Link>
               ))}
             </div>
+          </div>
+          <div style={{ marginLeft: "auto" }}>
+            <MonthlyBrowsingTime />
           </div>
         </div>
       </nav>

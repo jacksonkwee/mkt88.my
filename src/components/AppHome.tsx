@@ -10,6 +10,7 @@ import { useLang, tr, LANG_LABEL } from "../lib/i18n";
 import { RESULT_ALERT_KEY } from "./ResultAlerts";
 import NoticeBar from "./NoticeBar";
 import { gamePagerIndex } from "./sites/mkt88/app/game-order";
+import MonthlyBrowsingTime from "./MonthlyBrowsingTime";
 
 /** Icons cropped from the artwork supplied for the app home screen. */
 const HOME = "/sites/mkt88/app/app-home";
@@ -463,9 +464,12 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         <NoticeBar />
         <div style={{ maxWidth: 520, margin: "0 auto", padding: "10px 10px 14px" }}>
         {/* Brand logo, top of the first page. */}
-        <div style={{ display: "flex", justifyContent: "center", padding: "2px 0 10px" }}>
+        <div style={{ position: "relative", display: "flex", justifyContent: "center", padding: "2px 0 10px", minHeight: 66 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img loading="lazy" src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "78%", display: "block" }} />
+          <img loading="lazy" src={MKT_LOGO} alt="MKT 发发" style={{ height: 56, width: "auto", maxWidth: "calc(100% - 190px)", display: "block" }} />
+          <div style={{ position: "absolute", right: 0, top: "50%", transform: "translateY(-50%)" }}>
+            <MonthlyBrowsingTime />
+          </div>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
