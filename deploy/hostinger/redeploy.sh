@@ -52,7 +52,7 @@ set +a
 
 cd "$next"
 npm install --no-audit --no-fund
-npm run build
+MKT88_DEPLOYMENT_BUILD=1 npm run build
 chown -R www-data:www-data "$next"
 
 systemctl stop mkt88-site

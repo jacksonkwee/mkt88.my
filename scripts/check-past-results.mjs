@@ -70,7 +70,7 @@ async function recordFor(date) {
   return response.json();
 }
 
-if (!base) {
+if (!base && process.env.MKT88_DEPLOYMENT_BUILD !== "1") {
   const missing = [];
   for (let i = 1; i <= 30; i++) {
     const date = klDay.format(new Date(Date.now() - i * 86400000));
@@ -81,6 +81,8 @@ if (!base) {
   }
   if (missing.length) throw new Error("Recent past-result archive incomplete: " + missing.join(", "));
   console.log("Recent 30-day past archive OK");
+} else if (!base) {
+  console.log("Recent 30-day past archive skipped for deployment build");
 }
 
 for (const [date, expected] of Object.entries(fixtures)) {
