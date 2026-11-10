@@ -30,6 +30,7 @@ export default function Header() {
       <nav className="navbar navbar-expand-lg navbar-light p-lg-0 py-1" style={{ position: "relative", zIndex: 2 }}>
         <div className="container">
           <a
+            data-mkt-home
             href="/"
             /* The logo is the link's only content and is decorative, so the
                link needs its own name - without one a screen reader announced
@@ -60,6 +61,11 @@ export default function Header() {
                 <Link
                   key={m.href}
                   href={m.href}
+                  onClick={(event) => {
+                    if (!isCapacitorApp()) return;
+                    event.preventDefault();
+                    window.location.assign(m.href);
+                  }}
                   /* English above, the red Chinese label under it: stacked the
                      items are about half as wide, so all five fit the row
                      without spilling past the edge of the page. */

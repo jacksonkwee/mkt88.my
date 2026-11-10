@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useLang, tr } from "../lib/i18n";
+import { isCapacitorApp } from "../lib/is-capacitor-app";
 import MonthlyBrowsingTime from "./MonthlyBrowsingTime";
 
 const RED = "#cc0000";
@@ -20,7 +21,11 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
   const [lang] = useLang();
   const box = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
-  const goHome = () => window.dispatchEvent(new Event("mkt-home"));
+  const goHome = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isCapacitorApp()) return;
+    event.preventDefault();
+    window.dispatchEvent(new Event("mkt-home"));
+  };
 
   /*
    * The bar and the logo are pinned, not sticky: on the phone the page under
@@ -57,7 +62,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
         <div style={{ position: "absolute", left: 0, right: 0, padding: "0 118px", textAlign: "center", fontWeight: 700, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", pointerEvents: "none" }}>{tr(titleKey, lang)}</div>
         <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
           <MonthlyBrowsingTime tone="red" />
-          <Link href="/" onClick={goHome} style={{ color: "#fff", fontSize: 12, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</Link>
+          <Link data-mkt-home href="/" onClick={goHome} style={{ color: "#fff", fontSize: 12, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</Link>
         </div>
       </div>
 
@@ -70,7 +75,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
         {/* display:contents keeps the link clickable without giving it a box of
             its own, so the logo is laid out exactly as it is on the screens
             that render it as a plain <img loading="lazy"> - one centred item, same size. */}
-        <Link href="/" onClick={goHome} aria-label="MKT 88 4D home" style={{ display: "contents" }}>
+        <Link data-mkt-home href="/" onClick={goHome} aria-label="MKT 88 4D home" style={{ display: "contents" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img loading="lazy" src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
         </Link>

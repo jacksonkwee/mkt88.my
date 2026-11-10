@@ -8,7 +8,7 @@ import GoogleAdsense from "../../../components/GoogleAdsense";
 import { gameBySlug } from "../../../components/sites/mkt88/app/GameDefs";
 import GamePager from "../../../components/sites/mkt88/app/GamePager";
 import GameColumns from "../../../components/sites/mkt88/app/GameColumns";
-import { getSnapshot } from "../../../lib/live-snapshot";
+import { getSnapshotForRender } from "../../../lib/live-snapshot";
 import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
 import { getPastDateLists } from "../../../lib/past-dates";
 
@@ -45,10 +45,12 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   const { game } = await params;
   const def = gameBySlug[game];
   if (!def) notFound();
-  // A copy with numbers in it beats a fast render with none: the page waits for
-  // one only when the instance has nothing cached, and a warm copy (which is the
-  // normal case right after the home page has drawn) answers at once.
-  const snap = await getSnapshot().catch(() => null);
+  // Static game pages must only read the already-built copy. Calling
+  // getSnapshot() here performed a live upstream fetch during a static render,
+  // which Next turns into "Page changed from static to dynamic at runtime" and
+  // can leave the first App navigation blank. LiveResults still refreshes the
+  // card from the browser immediately after it opens.
+  const snap = await getSnapshotForRender().catch(() => null);
   const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp } : undefined;
   const isKh = def.mode === "lotto";
   const pastDates = await getPastDateLists();

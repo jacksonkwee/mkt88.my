@@ -7,7 +7,7 @@ import GamePager from "../../../components/sites/mkt88/app/GamePager";
 import GameColumns from "../../../components/sites/mkt88/app/GameColumns";
 import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
 import { EAST_CARD_IDS } from "../../../components/sites/mkt88/app/east-cards";
-import { getSnapshot } from "../../../lib/live-snapshot";
+import { getSnapshotForRender } from "../../../lib/live-snapshot";
 import { getPastDateLists } from "../../../lib/past-dates";
 
 const OPS: Record<string, { title: string; desc: string; pager: string; name: string }> = {
@@ -40,7 +40,7 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
   const { op } = await params;
   const o = OPS[op];
   if (!o) notFound();
-  const snap = await getSnapshot().catch(() => null);
+  const snap = await getSnapshotForRender().catch(() => null);
   const snapProp = snap
     ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp }
     : undefined;

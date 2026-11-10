@@ -122,6 +122,7 @@ type WakeLockSentinelLike = { release: () => Promise<void>; released?: boolean }
 type NavigatorWithWakeLock = Navigator & {
   wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinelLike> };
 };
+type BootHomeWindow = Window & { __mktForceHome?: boolean };
 
 /**
  * The app's first screen: a tile grid of the 11 games plus the shortcuts people
@@ -136,7 +137,10 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   // The overlay's markup is always rendered now, so the server and the client
   // agree on the HTML and the page can be cached; only the body classes decide
   // whether it is actually shown, and those are set for the app before paint.
-  const [open, setOpen] = useState(() => initialOpen || (isCapacitorApp() && !isAdminPath() && isHomePath()));
+  const [open, setOpen] = useState(() => {
+    const forcedHome = typeof window !== "undefined" && Boolean((window as BootHomeWindow).__mktForceHome);
+    return initialOpen || (isCapacitorApp() && !isAdminPath() && (isHomePath() || forcedHome));
+  });
   const [lucky, setLucky] = useState<string | null>(null);
   /** The tile whose page is being fetched, so a second tap cannot restart it. */
   const [pending, setPending] = useState<string | null>(null);
@@ -374,7 +378,9 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
 
   // The header logo asks for this screen back, so tapping MKT 发发 on any
   // results page returns to the first page.
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
+    const bootWindow = window as BootHomeWindow;
+    if (bootWindow.__mktForceHome) setOpen(true);
     const onHome = () => {
       clearNavFallback();
       pendingNav.current = null;
@@ -383,6 +389,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
       window.dispatchEvent(new Event("mkt-nav-ready"));
     };
     window.addEventListener("mkt-home", onHome);
+    bootWindow.__mktForceHome = false;
     return () => window.removeEventListener("mkt-home", onHome);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

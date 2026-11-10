@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebResourceRequest;
+import android.webkit.RenderProcessGoneDetail;
 import android.widget.FrameLayout;
 
 import androidx.core.splashscreen.SplashScreen;
@@ -46,7 +47,7 @@ public class MainActivity extends BridgeActivity {
   private AdView bannerAd;
   private static final String HOME_URL = "https://www.mkt88.my/";
 
-  private static final class MktWebViewClient extends BridgeWebViewClient {
+  private final class MktWebViewClient extends BridgeWebViewClient {
     MktWebViewClient(Bridge bridge) {
       super(bridge);
     }
@@ -67,6 +68,18 @@ public class MainActivity extends BridgeActivity {
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
       if (isAppHost(Uri.parse(url))) return false;
       return super.shouldOverrideUrlLoading(view, url);
+    }
+
+    /**
+     * A crashed WebView renderer leaves the Activity alive but shows a blank,
+     * unresponsive page. Users previously had to force-close the app. Recreate
+     * the single Activity instead, which runs loadFreshHome() and restores a
+     * working page automatically.
+     */
+    @Override
+    public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
+      if (!isFinishing()) appHandler.postDelayed(MainActivity.this::recreate, 250);
+      return true;
     }
   }
 

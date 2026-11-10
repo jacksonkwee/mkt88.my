@@ -1,6 +1,6 @@
 {
-  "versionCode": 36,
-  "versionName": "2.26",
-  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.26.apk",
-  "notes": "Lucky-number reminders now run at 14:00, 18:00 and 18:30 with exact-alarm support."
+  "versionCode": 39,
+  "versionName": "2.29",
+  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.29.apk",
+  "notes": "Fixes the first-open navigation freeze and recovers automatically if the Android WebView crashes."
 }

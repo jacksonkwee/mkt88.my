@@ -128,6 +128,23 @@ const BOOT_SCRIPT = `
      */
     var __mktBusy = false;
     window.addEventListener('mkt-nav-ready', function () { __mktBusy = false; });
+    /*
+     * The logo is the app's emergency way home. Its React handler cannot help
+     * until hydration has finished, and on a busy results page that can take
+     * long enough for the anchor to do a second, competing navigation. Capture
+     * the tap in the boot script and reveal the already-rendered home layer
+     * first; AppHome adopts this state when React becomes ready.
+     */
+    window.__mktForceHome = false;
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      var homeLink = t && t.closest ? t.closest('a[data-mkt-home]') : null;
+      if (!homeLink) return;
+      e.preventDefault();
+      window.__mktForceHome = true;
+      document.body.classList.remove('mkt-boot-wait');
+      document.body.classList.add('mkt-home-open');
+    }, true);
     document.addEventListener('click', function (e) {
       if (window.__mktGoHome) return;                 // hydrated: the app handles it
       var t = e.target;
