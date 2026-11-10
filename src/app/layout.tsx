@@ -99,6 +99,24 @@ const BOOT_SCRIPT = `
   // than on the server so that one cached copy of the page suits everybody.
   var __mktApp = /MKT88Android|Capacitor|Android.*; wv\\)/i.test(navigator.userAgent || '');
   if (__mktApp) {
+    /*
+     * Remove a worker left by an older app launch before it can intercept the
+     * next navigation. WebView cache clearing does not remove Cache Storage or
+     * a Service Worker registration, and an old worker can otherwise keep
+     * serving HTML whose JavaScript chunks no longer exist.
+     */
+    try {
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistrations().then(function(rs){
+          return Promise.all(rs.map(function(r){ return r.unregister(); }));
+        }).catch(function(){});
+      }
+      if (window.caches) {
+        caches.keys().then(function(keys){
+          return Promise.all(keys.map(function(k){ return caches.delete(k); }));
+        }).catch(function(){});
+      }
+    } catch (e) {}
     // The admin pages stay uncovered: the first page is an overlay, and on
     // /admin/login it sat on top of the password box (reported 15 Oct 2026).
     // No regex here: this script lives inside a template literal, which eats

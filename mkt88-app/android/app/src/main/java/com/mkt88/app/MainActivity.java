@@ -46,6 +46,8 @@ public class MainActivity extends BridgeActivity {
   private final Handler appHandler = new Handler(Looper.getMainLooper());
   private AdView bannerAd;
   private static final String HOME_URL = "https://www.mkt88.my/";
+  private boolean stalePageRecoveryStarted = false;
+  private boolean homeClassRepairSent = false;
 
   private final class MktWebViewClient extends BridgeWebViewClient {
     MktWebViewClient(Bridge bridge) {
@@ -114,7 +116,7 @@ public class MainActivity extends BridgeActivity {
     // net: without it, a page that never loads would leave the app sitting on
     // the logo forever. It used to be 1500ms, which dropped the logo onto the
     // bare red backdrop about a second before the page appeared.
-    appHandler.postDelayed(this::markWebViewReady, 2500);
+    appHandler.postDelayed(this::markWebViewReady, 15000);
     // Ads wait ten seconds now. At 2.5s the AdMob initialisation and the first
     // banner load landed exactly when people tap their first game, and on a
     // slower phone that first tap felt dead while the ad SDK worked. Nothing
@@ -173,6 +175,16 @@ public class MainActivity extends BridgeActivity {
       + "}catch(e){return 'none';}})()";
   private static final String JS_GO_HOME =
       "(function(){try{window.__mktGoHome&&window.__mktGoHome();}catch(e){}})()";
+  private static final String JS_PAGE_STATE =
+      "(function(){try{"
+      + "var h=document.querySelector('.mkt-app-home');"
+      + "var d=h?getComputedStyle(h).display:'none';"
+      + "var t=h?(h.innerText||'').trim().length:0;"
+      + "return [document.readyState,h?1:0,d,t].join('|');"
+      + "}catch(e){return 'error|0|none|0';}})()";
+  private static final String JS_REPAIR_HOME_CLASS =
+      "(function(){try{document.body.classList.add('mkt-in-app','mkt-home-open');"
+      + "return document.body.className;}catch(e){return '';}})()";
 
   /**
    * The phone's back key always lands on the app's own first screen.
@@ -327,6 +339,8 @@ public class MainActivity extends BridgeActivity {
   private void loadFreshHome() {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
+    stalePageRecoveryStarted = false;
+    homeClassRepairSent = false;
     try {
       webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
       webView.clearCache(true);
@@ -432,18 +446,44 @@ public class MainActivity extends BridgeActivity {
   private boolean isPageReady(String value) {
     if (value == null) return false;
     String clean = value.replace("\"", "");
-    String[] parts = clean.split("\\|");
-    if (parts.length < 3) return false;
+    String[] parts = clean.split("\\|", -1);
+    if (parts.length < 4) return false;
 
     try {
-      int textLength = Integer.parseInt(parts[1].trim());
-      int scrollHeight = Integer.parseInt(parts[2].trim());
-      // Release as soon as anything real has painted. Waiting for "complete"
-      // plus a tall page kept the splash up for 5-7s on a slow connection.
-      return textLength >= 10 && scrollHeight >= 50;
+      int homePresent = Integer.parseInt(parts[1].trim());
+      int homeTextLength = Integer.parseInt(parts[3].trim());
+      // The website header alone is not a usable app screen. Keep the launch
+      // logo up until the actual home tiles are present and visible.
+      return "complete".equals(parts[0].trim())
+          && homePresent == 1
+          && !"none".equals(parts[2].trim())
+          && homeTextLength >= 20;
     } catch (NumberFormatException ignored) {
       return false;
     }
+  }
+
+  /**
+   * Old WebView/Service Worker data can keep serving HTML from an older site
+   * build. Its static scripts then 404, React cannot hydrate, and only the top
+   * header is painted. The old page is still running enough JavaScript for us
+   * to unregister its workers and clear Cache Storage, so do that once and load
+   * the current page again. Local favourites and settings are not touched.
+   */
+  private void recoverFromStalePage(WebView webView) {
+    if (stalePageRecoveryStarted) return;
+    stalePageRecoveryStarted = true;
+    String target = HOME_URL + "?appRecovery=" + System.currentTimeMillis();
+    String js =
+        "(function(){var done=false;function go(){if(done)return;done=true;"
+        + "location.replace(" + org.json.JSONObject.quote(target) + ");}"
+        + "var jobs=[];"
+        + "try{if(navigator.serviceWorker)jobs.push(navigator.serviceWorker.getRegistrations()"
+        + ".then(function(rs){return Promise.all(rs.map(function(r){return r.unregister();}));}));}catch(e){}"
+        + "try{if(window.caches)jobs.push(caches.keys().then(function(keys){"
+        + "return Promise.all(keys.map(function(k){return caches.delete(k);}));}));}catch(e){}"
+        + "Promise.all(jobs).then(go,go);setTimeout(go,1200);})()";
+    webView.evaluateJavascript(js, null);
   }
 
   private final class WebViewReadyCheck implements Runnable {
@@ -461,15 +501,23 @@ public class MainActivity extends BridgeActivity {
       }
 
       try {
-        webView.evaluateJavascript(
-            "(function(){var b=document.body;return [document.readyState,b?b.innerText.trim().length:0,b?b.scrollHeight:0].join('|');})()",
-            value -> {
-              if (isPageReady(value)) {
-                markWebViewReady();
-              } else {
-                appHandler.postDelayed(WebViewReadyCheck.this, 250);
-              }
-            });
+        webView.evaluateJavascript(JS_PAGE_STATE, value -> {
+          if (isPageReady(value)) {
+            markWebViewReady();
+            return;
+          }
+          String clean = value == null ? "" : value.replace("\"", "");
+          String[] parts = clean.split("\\|", -1);
+          if (parts.length >= 4 && !"loading".equals(parts[0].trim())) {
+            if ("0".equals(parts[1].trim())) {
+              recoverFromStalePage(webView);
+            } else if (!homeClassRepairSent && "none".equals(parts[2].trim())) {
+              homeClassRepairSent = true;
+              webView.evaluateJavascript(JS_REPAIR_HOME_CLASS, null);
+            }
+          }
+          appHandler.postDelayed(WebViewReadyCheck.this, 250);
+        });
       } catch (Exception ignored) {
         appHandler.postDelayed(this, 250);
       }
