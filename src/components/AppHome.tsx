@@ -260,33 +260,6 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   };
 
   /*
-   * A tile tapped before this component was alive (the boot script queues it).
-   *
-   * The tap that used to become a full page load is now a client-side
-   * navigation that starts the moment React is ready - one tap, no reload
-   * (reported 17 Oct 2026: tapping straight after launch took two seconds and
-   * needed several taps, while the same tap a second later was instant).
-   */
-  useIsoLayoutEffect(() => {
-    const w = window as unknown as { __mktQueuedHref?: string | null };
-    const flush = () => {
-      const href = w.__mktQueuedHref;
-      if (!href) return;
-      w.__mktQueuedHref = null;
-      document.body.classList.remove("mkt-boot-wait");
-      // In the installed app openPage() starts a full WebView navigation.
-      // Starting router.push() as well made both navigations race during the
-      // first tap, which could leave the WebView on a blank document.
-      if (!openPage(href)) router.push(href);
-      window.dispatchEvent(new Event("mkt-nav-ready"));
-    };
-    window.addEventListener("mkt-queued-nav", flush);
-    flush();
-    return () => window.removeEventListener("mkt-queued-nav", flush);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router, pathname]);
-
-  /*
    * Warm the one tool page people tap most. One static route, once, after the
    * light home is interactive - not the eleven-route burst that slowed the
    * first tap.
@@ -505,9 +478,8 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
              * grid behind it to reveal. Send 查看成绩 to the real results page
              * instead of closing onto an empty background.
              */
-            if (typeof document !== "undefined" && document.getElementById("mkt-app-shell")) {
-              if (openPage("/4dresults")) return;
-              router.push("/4dresults");
+            if (isCapacitorApp()) {
+              openPage("/4dresults");
               return;
             }
             setOpen(false);

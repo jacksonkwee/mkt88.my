@@ -136,17 +136,6 @@ const BOOT_SCRIPT = `
      * waited behind them - measured 3.6s against 0.1s without them.
      */
     /*
-     * A tap that lands before React is ready must not become a full page load.
-     *
-     * That was the whole difference the owner measured on 17 Oct 2026: tap a
-     * game the instant the app opens and it reloads the site (two seconds, and
-     * more taps because it looks dead); wait a moment and the same tap is a
-     * client-side navigation. So the tap is remembered here and AppHome takes
-     * it as soon as it is alive - one tap, no reload, a spinner in between.
-     */
-    var __mktBusy = false;
-    window.addEventListener('mkt-nav-ready', function () { __mktBusy = false; });
-    /*
      * The logo is the app's emergency way home. Its React handler cannot help
      * until hydration has finished, and on a busy results page that can take
      * long enough for the anchor to do a second, competing navigation. Capture
@@ -162,31 +151,6 @@ const BOOT_SCRIPT = `
       window.__mktForceHome = true;
       document.body.classList.remove('mkt-boot-wait');
       document.body.classList.add('mkt-home-open');
-    }, true);
-    document.addEventListener('click', function (e) {
-      if (window.__mktGoHome) return;                 // hydrated: the app handles it
-      var t = e.target;
-      var a = t && t.closest ? t.closest('.mkt-app-home a[href^="/"]') : null;
-      if (!a) return;
-      e.preventDefault();
-      if (__mktBusy) return;
-      __mktBusy = true;
-      var queuedHref = a.getAttribute('href');
-      window.__mktQueuedHref = queuedHref;
-      document.body.className += ' mkt-boot-wait';
-      // AppHome may already be mounted but not yet have installed its global
-      // hooks. Let it consume this tap immediately instead of waiting for a
-      // second app launch.
-      window.dispatchEvent(new Event('mkt-queued-nav'));
-      window.setTimeout(function () {
-        __mktBusy = false;
-        document.body.className = document.body.className.replace(' mkt-boot-wait', '');
-        if (window.__mktQueuedHref === queuedHref) {
-          window.__mktQueuedHref = null;
-          // React never consumed it: a full navigation is the safe fallback.
-          window.location.assign(queuedHref);
-        }
-      }, 8000);
     }, true);
   }
   if (__mktApp) {
