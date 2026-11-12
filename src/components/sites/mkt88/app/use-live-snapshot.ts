@@ -14,9 +14,12 @@ export { overridesFor } from "./snapshot-values";
 export type { HariEntry, PrizeSet, SixEntry, Snap } from "./snapshot-values";
 
 /**
- * The live snapshot the inline boot script already fetched (window.__MKT_SNAP__).
- * Components use it in their first render so React hydration matches the DOM the
- * boot script filled - the current draw shows with no flash and no waiting.
+ * The first render must use exactly the snapshot embedded by the server.
+ *
+ * The boot script may have received a newer live copy before React starts.
+ * Reading that copy during hydration can add markup the server did not render
+ * (for example Singapore's Draw No row), forcing React to discard and rebuild
+ * the page. Merge the live copy after hydration instead.
  */
 /** Sortable value for a card date like "28-09-2026 (Mon)". */
 function dayScore(label?: string): number {
@@ -83,7 +86,7 @@ export function useSnap(): Snap {
     return ((window as unknown as { __MKT_SNAP__?: Snap }).__MKT_SNAP__) || {};
   };
   const fromServer = useServerSnapshot() as Snap;
-  const [snap, setSnap] = useState<Snap>(() => keepNewest(fromServer, read()));
+  const [snap, setSnap] = useState<Snap>(fromServer);
   useEffect(() => {
     const on = () => setSnap((prev) => keepNewest(prev, read()));
     on();
