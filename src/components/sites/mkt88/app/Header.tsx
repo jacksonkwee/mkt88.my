@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
-import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 import { tr, useLang } from "../../../../lib/i18n";
 import MonthlyBrowsingTime from "../../../MonthlyBrowsingTime";
 
@@ -37,18 +36,6 @@ export default function Header() {
                "link" and nothing else (measured 14 Oct 2026). */
             aria-label={"MKT 88 4D · " + tr("home", lang)}
             style={{ textDecoration: "none" }}
-            onClick={(e) => {
-              // Inside the app the logo means the tile screen. A real root
-              // navigation unmounts the current page and its requests.
-              if (isCapacitorApp()) {
-                e.preventDefault();
-                if (window.location.pathname === "/") {
-                  window.dispatchEvent(new CustomEvent("mkt-home"));
-                } else {
-                  window.location.assign("/?appLaunch=" + Date.now());
-                }
-              }
-            }}
           >
             <div className="d-flex flex-column align-items-center mr-2">
               <img src={logo} style={{ height: 48, width: "auto" }} alt="" />
@@ -65,11 +52,6 @@ export default function Header() {
                 <Link
                   key={m.href}
                   href={m.href}
-                  onClick={(event) => {
-                    if (!isCapacitorApp()) return;
-                    event.preventDefault();
-                    window.location.assign(m.href);
-                  }}
                   /* English above, the red Chinese label under it: stacked the
                      items are about half as wide, so all five fit the row
                      without spilling past the edge of the page. */

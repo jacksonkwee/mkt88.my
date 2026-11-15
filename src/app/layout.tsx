@@ -165,19 +165,6 @@ const BOOT_SCRIPT = `
      * prefetches at launch and a tap that came while they were still running
      * waited behind them - measured 3.6s against 0.1s without them.
      */
-    /*
-     * The logo returns to the actual root route. The old pre-hydration handler
-     * only revealed an overlay above the current page, so a busy history page
-     * stayed mounted and could keep every later tile from navigating.
-     */
-    document.addEventListener('click', function (e) {
-      var t = e.target;
-      var homeLink = t && t.closest ? t.closest('a[data-mkt-home]') : null;
-      if (!homeLink) return;
-      e.preventDefault();
-      e.stopPropagation();
-      window.location.assign('/?appLaunch=' + Date.now());
-    }, true);
   }
   if (__mktApp) {
     /*
