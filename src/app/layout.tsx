@@ -155,8 +155,9 @@ const BOOT_SCRIPT = `
       if (!homeLink) return;
       e.preventDefault();
       e.stopImmediatePropagation();
+      var target = '/?appLaunch=' + Date.now();
       try { window.stop(); } catch (err) {}
-      window.location.replace('/?appLaunch=' + Date.now());
+      setTimeout(function () { window.location.replace(target); }, 50);
     }, true);
     /*
      * Before AppHome has hydrated, Next may still intercept a tile tap and
