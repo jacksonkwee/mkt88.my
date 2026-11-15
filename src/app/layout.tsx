@@ -130,6 +130,21 @@ const BOOT_SCRIPT = `
     var __mktHome = __mktPath === '/' || __mktPath === '';
     document.body.className += ' mkt-in-app' + (__mktHome && __mktPath.indexOf('/admin') !== 0 ? ' mkt-home-open' : '');
     /*
+     * The WebView can change history without giving AppHome a new pathname
+     * render. Keep the first-page layer tied to the real URL as a fallback, so
+     * it can never cover the game or history page after a client-side route
+     * change.
+     */
+    function __mktSyncHomeLayer() {
+      var path = location.pathname || '';
+      if (path !== '/' && path !== '') {
+        document.body.classList.remove('mkt-home-open');
+        document.body.classList.remove('mkt-boot-wait');
+      }
+    }
+    window.addEventListener('popstate', __mktSyncHomeLayer);
+    setInterval(__mktSyncHomeLayer, 100);
+    /*
      * Before AppHome has hydrated, Next may still intercept a tile tap and
      * change the URL without closing the server-rendered home overlay. There
      * is no React state yet to close it. Force the ordinary document
