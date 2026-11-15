@@ -550,6 +550,10 @@ public class MainActivity extends BridgeActivity {
           try {
             String current = webView.getUrl();
             String target = url == null ? "" : url.trim();
+            if (target.startsWith("/")) target = "https://www.mkt88.my" + target;
+            else if (!target.isEmpty() && !target.startsWith("https://") && !target.startsWith("http://")) {
+              target = "https://www.mkt88.my/" + target;
+            }
             if (target.isEmpty() || target.equals(current)) {
               webView.reload();
             } else {
