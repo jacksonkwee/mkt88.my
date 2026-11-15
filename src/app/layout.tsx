@@ -145,6 +145,20 @@ const BOOT_SCRIPT = `
     window.addEventListener('popstate', __mktSyncHomeLayer);
     setInterval(__mktSyncHomeLayer, 100);
     /*
+     * Home must still work while the current page is loading. A normal anchor
+     * or router push can be swallowed by the navigation already in progress;
+     * stop it first, then replace the document explicitly.
+     */
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      var homeLink = t && t.closest ? t.closest('a[data-mkt-home]') : null;
+      if (!homeLink) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      try { window.stop(); } catch (err) {}
+      window.location.replace('/?appLaunch=' + Date.now());
+    }, true);
+    /*
      * Before AppHome has hydrated, Next may still intercept a tile tap and
      * change the URL without closing the server-rendered home overlay. There
      * is no React state yet to close it. Force the ordinary document
