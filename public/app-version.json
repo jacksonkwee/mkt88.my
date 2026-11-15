@@ -1,6 +1,6 @@
 {
-  "versionCode": 40,
-  "versionName": "2.30",
-  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.30.apk",
-  "notes": "Clears stale first-open page data, keeps the launch screen until the home screen is ready, and recovers automatically if the Android WebView crashes."
+  "versionCode": 41,
+  "versionName": "2.31",
+  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.31.apk",
+  "notes": "Game logos on LIVE RESULTS now force-refresh through Android WebView, including when the page is stalled before React starts."
 }

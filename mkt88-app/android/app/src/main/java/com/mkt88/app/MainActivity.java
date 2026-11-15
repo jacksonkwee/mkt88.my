@@ -536,6 +536,33 @@ public class MainActivity extends BridgeActivity {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
     if (webView == null) return;
     webView.addJavascriptInterface(new Object() {
+      /**
+       * Reload the selected game from native code.
+       *
+       * The web page's in-place refresh depends on React being alive. When the
+       * WebView has painted a stalled LIVE RESULTS page, that JavaScript state
+       * may never run. Reloading through WebView guarantees a fresh document
+       * and also rebuilds the renderer/compositor.
+       */
+      @android.webkit.JavascriptInterface
+      public void refresh(final String url) {
+        appHandler.post(() -> {
+          try {
+            String current = webView.getUrl();
+            String target = url == null ? "" : url.trim();
+            if (target.isEmpty() || target.equals(current)) {
+              webView.reload();
+            } else {
+              webView.loadUrl(target);
+            }
+            webView.invalidate();
+            appHandler.postDelayed(webView::invalidate, 250);
+          } catch (Exception ignored) {
+            // The ordinary link remains as the web-side fallback.
+          }
+        });
+      }
+
       @android.webkit.JavascriptInterface
       public void get(final String url, final String id) {
         new Thread(() -> {

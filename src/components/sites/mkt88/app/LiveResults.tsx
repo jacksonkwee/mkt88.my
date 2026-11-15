@@ -1461,8 +1461,10 @@ export default function LiveResults() {
     };
     window.addEventListener("mkt-refresh-current", onManualRefresh);
     document.addEventListener("visibilitychange", onVis);
+    (window as Window & { __mktLiveReady?: boolean }).__mktLiveReady = true;
     return () => {
       alive = false;
+      (window as Window & { __mktLiveReady?: boolean }).__mktLiveReady = false;
       if (timer) window.clearTimeout(timer);
       window.clearInterval(fastTimer);
       window.clearInterval(snapTimer);

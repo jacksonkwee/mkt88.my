@@ -159,6 +159,16 @@ const BOOT_SCRIPT = `
       e.stopPropagation();
       window.location.assign(tile.getAttribute('href'));
     }, true);
+    document.addEventListener('click', function (e) {
+      if (window.__mktLiveReady) return;
+      var t = e.target;
+      var tile = t && t.closest ? t.closest('a[data-mkt-game-refresh]') : null;
+      var native = window.mktNative;
+      if (!tile || !native || typeof native.refresh !== 'function') return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      native.refresh(tile.getAttribute('href') || window.location.href);
+    }, true);
     /*
      * The pages behind the tiles are prefetched by the router once React has
      * hydrated (see AppHome). Doing it here as well fired fifteen document

@@ -24,6 +24,8 @@ const TILE_NAME: Record<string, string> = {
   "lucky-harihari": "Lucky Hari",
 };
 
+type NativeRefreshBridge = { refresh?: (url: string) => void };
+
 function Tile({ href, logo, name, zh, active, refreshing, aRef, onClick, onPointerDown }: { href: string; logo: string; name: string; zh?: string; active?: boolean; refreshing?: boolean; aRef?: (el: HTMLAnchorElement | null) => void; onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void; onPointerDown?: (e: React.PointerEvent<HTMLAnchorElement>) => void }) {
   /*
    * The tile's aria-label carries brand, "4D" and the Chinese name, even though
@@ -49,6 +51,7 @@ function Tile({ href, logo, name, zh, active, refreshing, aRef, onClick, onPoint
     <a
       ref={aRef}
       href={href}
+      data-mkt-game-refresh="true"
       onPointerDown={onPointerDown}
       onClick={onClick}
       className="mkt-press"
@@ -134,6 +137,14 @@ export default function GameQuickLinks() {
     // Scrolling the icon row also fires a click on the icon it ends on. Let
     // that do nothing, otherwise the row snaps back and cannot be scrolled.
     if (down && (Math.abs(e.clientX - down.x) > 10 || Math.abs(e.clientY - down.y) > 10)) return;
+    const native = (window as Window & { mktNative?: NativeRefreshBridge; __mktLiveReady?: boolean }).mktNative;
+    const liveReady = (window as Window & { __mktLiveReady?: boolean }).__mktLiveReady === true;
+    if (!liveReady && typeof native?.refresh === "function") {
+      e.preventDefault();
+      setRefreshingIdx(i);
+      native.refresh(refs.current[i]?.href || window.location.href);
+      return;
+    }
     const track = document.querySelector(".mkt-pager-track");
     if (!track || track.getClientRects().length === 0) return;
     e.preventDefault();
@@ -222,6 +233,7 @@ export default function GameQuickLinks() {
   return (
     <div
       ref={rowRef}
+      className="mkt-game-quick-links"
       style={{
         display: "flex",
         // stretch so every tile is the height of the tallest one, whatever its
