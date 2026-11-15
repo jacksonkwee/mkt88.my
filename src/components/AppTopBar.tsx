@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isCapacitorApp } from "../lib/is-capacitor-app";
 import { useLang, tr } from "../lib/i18n";
 import MonthlyBrowsingTime from "./MonthlyBrowsingTime";
 
@@ -67,7 +68,17 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
       <div style={{ display: "flex", justifyContent: "center", padding: "5px 0 0", background: "var(--j-page, #f7f7f4)" }}>
         {/* Give the logo a real box. display:contents leaves no hit-test area
             in Android WebView, so tapping the visible artwork did nothing. */}
-        <a data-mkt-home href="/" aria-label="MKT 88 4D home" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 44 }}>
+        <a
+          data-mkt-home
+          href="/"
+          aria-label="MKT 88 4D home"
+          onClick={(event) => {
+            if (!isCapacitorApp()) return;
+            event.preventDefault();
+            window.location.reload();
+          }}
+          style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 44 }}
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img loading="lazy" src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
         </a>

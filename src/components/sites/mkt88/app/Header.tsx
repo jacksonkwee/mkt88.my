@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
+import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
 import { tr, useLang } from "../../../../lib/i18n";
 import MonthlyBrowsingTime from "../../../MonthlyBrowsingTime";
 
@@ -36,6 +37,11 @@ export default function Header() {
                "link" and nothing else (measured 14 Oct 2026). */
             aria-label={"MKT 88 4D · " + tr("home", lang)}
             style={{ textDecoration: "none" }}
+            onClick={(event) => {
+              if (!isCapacitorApp()) return;
+              event.preventDefault();
+              window.location.reload();
+            }}
           >
             <div className="d-flex flex-column align-items-center mr-2">
               <img src={logo} style={{ height: 48, width: "auto" }} alt="" />
