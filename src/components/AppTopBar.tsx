@@ -66,10 +66,9 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
       {/* The app's own screens sit under the same palette as the site, so this
           reads the page token instead of a second cold grey (16 Oct 2026). */}
       <div style={{ display: "flex", justifyContent: "center", padding: "5px 0 0", background: "var(--j-page, #f7f7f4)" }}>
-        {/* display:contents keeps the link clickable without giving it a box of
-            its own, so the logo is laid out exactly as it is on the screens
-            that render it as a plain <img loading="lazy"> - one centred item, same size. */}
-        <Link data-mkt-home href="/" aria-label="MKT 88 4D home" style={{ display: "contents" }}>
+        {/* Give the logo a real box. display:contents leaves no hit-test area
+            in Android WebView, so tapping the visible artwork did nothing. */}
+        <Link data-mkt-home href="/" aria-label="MKT 88 4D home" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 44 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img loading="lazy" src={LOGO} alt="MKT 发发" style={{ height: 44, width: "auto", maxWidth: "70%", display: "block" }} />
         </Link>
