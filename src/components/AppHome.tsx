@@ -200,8 +200,11 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
    * first page dismissed - so the page you picked appears directly.
    */
   useEffect(() => {
-    if (!open || !pendingNav.current) return;
-    if (pathname !== pendingNav.current) {
+    if (!open) return;
+    // The overlay is only valid on the root route. This must not depend on
+    // pendingNav: hydration can hand the tap to Next's router, which changes
+    // pathname without the Capacitor full-load branch ever registering it.
+    if (pathname !== "/" && !isAdminPath()) {
       clearNavFallback();
       pendingNav.current = null;
       setPending(null);
