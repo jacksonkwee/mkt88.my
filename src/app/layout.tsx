@@ -130,6 +130,21 @@ const BOOT_SCRIPT = `
     var __mktHome = __mktPath === '/' || __mktPath === '';
     document.body.className += ' mkt-in-app' + (__mktHome && __mktPath.indexOf('/admin') !== 0 ? ' mkt-home-open' : '');
     /*
+     * Before AppHome has hydrated, Next may still intercept a tile tap and
+     * change the URL without closing the server-rendered home overlay. There
+     * is no React state yet to close it. Force the ordinary document
+     * navigation for that first tap; once hydrated, AppHome handles the tap.
+     */
+    document.addEventListener('click', function (e) {
+      if (window.__mktGoHome) return;
+      var t = e.target;
+      var tile = t && t.closest ? t.closest('.mkt-app-home a[href^="/"]') : null;
+      if (!tile) return;
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.assign(tile.getAttribute('href'));
+    }, true);
+    /*
      * The pages behind the tiles are prefetched by the router once React has
      * hydrated (see AppHome). Doing it here as well fired fifteen document
      * prefetches at launch and a tap that came while they were still running
