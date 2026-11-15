@@ -48,6 +48,7 @@ public class MainActivity extends BridgeActivity {
   private static final String HOME_URL = "https://www.mkt88.my/";
   private boolean stalePageRecoveryStarted = false;
   private boolean homeClassRepairSent = false;
+  private boolean repaintReloadPending = false;
 
   private final class MktWebViewClient extends BridgeWebViewClient {
     MktWebViewClient(Bridge bridge) {
@@ -82,6 +83,19 @@ public class MainActivity extends BridgeActivity {
     public boolean onRenderProcessGone(WebView view, RenderProcessGoneDetail detail) {
       if (!isFinishing()) appHandler.postDelayed(MainActivity.this::recreate, 250);
       return true;
+    }
+
+    @Override
+    public void onPageFinished(WebView view, String url) {
+      super.onPageFinished(view, url);
+      if (!repaintReloadPending || isFinishing()) return;
+      repaintReloadPending = false;
+      view.setLayerType(View.LAYER_TYPE_NONE, null);
+      appHandler.postDelayed(() -> {
+        view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        view.invalidate();
+        view.reload();
+      }, 250);
     }
   }
 
@@ -555,8 +569,10 @@ public class MainActivity extends BridgeActivity {
               target = "https://www.mkt88.my/" + target;
             }
             if (target.isEmpty() || target.equals(current)) {
+              repaintReloadPending = true;
               webView.reload();
             } else {
+              repaintReloadPending = true;
               webView.loadUrl(target);
             }
             webView.invalidate();
