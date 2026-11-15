@@ -107,19 +107,6 @@ export default function NumberHistoryApp() {
     setExample(String(Math.floor(Math.random() * 10000)).padStart(4, "0"));
   }, []);
 
-  /**
-   * Warm the archive as soon as the screen opens.
-   *
-   * A search has to read the whole offline archive and, on the first run of the
-   * day, pull the last few days from the upstream pages. That fetch is what made
-   * the first lookup feel slow, and it is cached for the day once it has been
-   * done. Asking for one number in the background pays that cost while the
-   * visitor is still typing; the answer itself is thrown away.
-   */
-  useEffect(() => {
-    fetch("/api/number-history?nums=0000").catch(() => {});
-  }, []);
-
   /** The 大伯公 API returns the chart kind in Chinese; show it in the reader's language. */
   const kindLabel = (k: string) =>
     k === "万字图" ? tr("dbgKind10k", lang) : k === "大伯公千字图" ? tr("dbgKind1k", lang) : k;
@@ -142,10 +129,14 @@ export default function NumberHistoryApp() {
   const [favs, setFavs] = useState<Fav[]>([]);
   const mounted = useRef(true);
   const reqId = useRef(0);
+  const requestController = useRef<AbortController | null>(null);
 
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => {
+      mounted.current = false;
+      requestController.current?.abort();
+    };
   }, []);
 
   useEffect(() => {
@@ -167,20 +158,33 @@ export default function NumberHistoryApp() {
     const list = nums.filter(isNum).slice(0, 60);
     if (!list.length) { setData(null); return; }
     const id = ++reqId.current;
+    requestController.current?.abort();
+    const controller = new AbortController();
+    requestController.current = controller;
+    const timeout = window.setTimeout(() => controller.abort(), 25000);
     setLoading(true);
     setErrKey("");
-    fetch("/api/number-history?nums=" + list.join(","), { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
+    fetch("/api/number-history?nums=" + list.join(","), { cache: "no-store", signal: controller.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error("history request failed: " + r.status);
+        return r.json();
+      })
       .then((j) => {
         if (!mounted.current || id !== reqId.current) return;
-        setData(expandRows(j));
+        const next = expandRows(j);
+        if (!next || !Array.isArray(next.matches)) {
+          throw new Error("invalid history response");
+        }
+        setData(next);
         setLoading(false);
       })
       .catch(() => {
         if (!mounted.current || id !== reqId.current) return;
+        setData(null);
         setErrKey("nhLoadFail");
         setLoading(false);
-      });
+      })
+      .finally(() => window.clearTimeout(timeout));
   }, []);
 
   useEffect(() => {
@@ -210,7 +214,11 @@ export default function NumberHistoryApp() {
   }, [selected, primary, perms, reverseSet]);
 
   const pick = (n: string) => { setSelected([n]); setInput(n); };
-  const search = () => { if (isNum(input)) { setSelected([input]); fetchFor([input]); } };
+  const search = () => {
+    if (!isNum(input) || loading) return;
+    if (selected.length === 1 && selected[0] === input) fetchFor([input]);
+    else setSelected([input]);
+  };
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -368,9 +376,17 @@ export default function NumberHistoryApp() {
         {selected.length ? (
           <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.1)", overflow: "hidden" }}>
             {loading ? (
-              <div style={{ padding: 30, textAlign: "center", color: "var(--muted)" }}>{tr("nhSearching", lang)}</div>
+              <div style={{ padding: 30, textAlign: "center", color: "var(--muted)" }}>
+                {tr("nhSearching", lang)}
+                <div style={{ fontSize: 12, marginTop: 6 }}>{tr("nhWaitHint", lang)}</div>
+              </div>
             ) : errKey ? (
-              <div style={{ padding: 30, textAlign: "center", color: RED }}>{tr(errKey, lang)}</div>
+              <div style={{ padding: 30, textAlign: "center", color: RED }}>
+                <div>{tr(errKey, lang)}</div>
+                <button type="button" onClick={() => fetchFor(selected)} style={{ marginTop: 12, padding: "7px 18px", border: 0, borderRadius: 12, background: RED, color: "#fff", fontWeight: 700 }}>
+                  {tr("nhRetry", lang)}
+                </button>
+              </div>
             ) : filtered.length === 0 ? (
               <div style={{ padding: 30, textAlign: "center", color: "var(--muted)" }}>
                 {tr("nhNoDraw", lang)}

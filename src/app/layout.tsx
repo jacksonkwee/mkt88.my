@@ -136,21 +136,17 @@ const BOOT_SCRIPT = `
      * waited behind them - measured 3.6s against 0.1s without them.
      */
     /*
-     * The logo is the app's emergency way home. Its React handler cannot help
-     * until hydration has finished, and on a busy results page that can take
-     * long enough for the anchor to do a second, competing navigation. Capture
-     * the tap in the boot script and reveal the already-rendered home layer
-     * first; AppHome adopts this state when React becomes ready.
+     * The logo returns to the actual root route. The old pre-hydration handler
+     * only revealed an overlay above the current page, so a busy history page
+     * stayed mounted and could keep every later tile from navigating.
      */
-    window.__mktForceHome = false;
     document.addEventListener('click', function (e) {
       var t = e.target;
       var homeLink = t && t.closest ? t.closest('a[data-mkt-home]') : null;
       if (!homeLink) return;
       e.preventDefault();
-      window.__mktForceHome = true;
-      document.body.classList.remove('mkt-boot-wait');
-      document.body.classList.add('mkt-home-open');
+      e.stopPropagation();
+      window.location.assign('/?appLaunch=' + Date.now());
     }, true);
   }
   if (__mktApp) {
@@ -168,6 +164,13 @@ const BOOT_SCRIPT = `
       e.preventDefault();
       window.location.assign('/number-history?num=' + num);
     }, true);
+  }
+  // The app home has no result cards to keep live. Starting the card writer,
+  // MutationObserver and background polling there competed with the first tap
+  // on slower phones. The game page runs this work after the navigation.
+  if (__mktApp && __mktHome) {
+    window.__MKT_BOOT__ = true;
+    return;
   }
   if (__mktPath.indexOf('/past-results') === 0) { window.__MKT_BOOT__ = true; return; }
   window.__MKT_BOOT__ = true;

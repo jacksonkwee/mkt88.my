@@ -8,7 +8,7 @@ import {
   DB, PRIZE_NAMES, hitsFromDbMany, hitsFromHtmlMany, regionOf,
   fmtIso, todayIso, epochDay, isoFromEpoch, type PrizeName, type RawHit,
 } from "../../../components/sites/mkt88/app/number-history/engine";
-import { getSnapshot } from "../../../lib/live-snapshot";
+import { getSnapshotForRender } from "../../../lib/live-snapshot";
 
 export const dynamic = "force-dynamic";
 
@@ -147,10 +147,12 @@ const MAX_NUMS = 60;
 /** Ten minutes: one upstream fetch per date, reused by every lookup. */
 const PAGE_TTL = 10 * 60 * 1000;
 const LIVE_TTL = 30 * 1000;
+const PAGE_TIMEOUT_MS = 12 * 1000;
 /** Big enough to hold the whole un-archived window plus the homepage. */
 const PAGE_CACHE_MAX = 90;
 
 const pageCache = new Map<string, { at: number; html: string }>();
+const pageInflight = new Map<string, Promise<string>>();
 
 /**
  * Finished answers, keyed by the numbers asked for.
@@ -174,19 +176,33 @@ const DAY_TTL = 24 * 60 * 60 * 1000;
 async function fetchHtml(url: string, ttl: number = PAGE_TTL): Promise<string> {
   const hit = pageCache.get(url);
   if (hit && Date.now() - hit.at < ttl) return hit.html;
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": UA, Accept: "*/*" }, cache: "no-store", signal: AbortSignal.timeout(20000) });
-    if (!res.ok) return "";
-    const html = await res.text();
-    pageCache.set(url, { at: Date.now(), html });
-    while (pageCache.size > PAGE_CACHE_MAX) {
-      const first = pageCache.keys().next().value;
-      if (!first) break;
-      pageCache.delete(first);
+  const pending = pageInflight.get(url);
+  if (pending) return pending;
+  const request = (async () => {
+    try {
+      const res = await fetch(url, {
+        headers: { "User-Agent": UA, Accept: "*/*" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(PAGE_TIMEOUT_MS),
+      });
+      if (!res.ok) return "";
+      const html = await res.text();
+      pageCache.set(url, { at: Date.now(), html });
+      while (pageCache.size > PAGE_CACHE_MAX) {
+        const first = pageCache.keys().next().value;
+        if (!first) break;
+        pageCache.delete(first);
+      }
+      return html;
+    } catch {
+      return "";
     }
-    return html;
-  } catch {
-    return "";
+  })();
+  pageInflight.set(url, request);
+  try {
+    return await request;
+  } finally {
+    pageInflight.delete(url);
   }
 }
 
@@ -365,7 +381,7 @@ export async function GET(req: NextRequest) {
   // first for the current draw, including East Malaysia, Singapore and both
   // Cambodia draw times that the archive home page omits.
   try {
-    const snapshot = await getSnapshot({ wait: true });
+    const snapshot = await getSnapshotForRender();
     for (const h of snapshotCardHits(snapshot.cards, numSet)) add(h);
     for (const h of snapshotSetHits(snapshot.perdana, "Perdana Lottery 4D", "table-16", numSet)) add(h);
     const hariSets = Object.fromEntries(

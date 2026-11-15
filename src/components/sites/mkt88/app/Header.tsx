@@ -38,11 +38,15 @@ export default function Header() {
             aria-label={"MKT 88 4D · " + tr("home", lang)}
             style={{ textDecoration: "none" }}
             onClick={(e) => {
-              // Inside the app the logo means "first page" - the tile screen -
-              // rather than the website home.
+              // Inside the app the logo means the tile screen. A real root
+              // navigation unmounts the current page and its requests.
               if (isCapacitorApp()) {
                 e.preventDefault();
-                window.dispatchEvent(new CustomEvent("mkt-home"));
+                if (window.location.pathname === "/") {
+                  window.dispatchEvent(new CustomEvent("mkt-home"));
+                } else {
+                  window.location.assign("/?appLaunch=" + Date.now());
+                }
               }
             }}
           >

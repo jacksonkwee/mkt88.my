@@ -349,12 +349,18 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
     setOpen(true);
   }, []);
 
-  // The header logo asks for this screen back, so tapping MKT 发发 on any
-  // results page returns to the first page.
+  // The header logo and Android back key ask for the app home. Navigate to the
+  // actual root route so the page behind it unmounts; showing the overlay over
+  // a stuck history page left its requests and state alive and blocked the next
+  // game navigation.
   useIsoLayoutEffect(() => {
     const bootWindow = window as BootHomeWindow;
     if (bootWindow.__mktForceHome) setOpen(true);
     const onHome = () => {
+      if (isCapacitorApp() && !isHomePath()) {
+        window.location.assign("/?appLaunch=" + Date.now());
+        return;
+      }
       clearNavFallback();
       pendingNav.current = null;
       setPending(null);
