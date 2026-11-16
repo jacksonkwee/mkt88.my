@@ -72,7 +72,10 @@ fi
 chmod --reference="$env_file" "${env_file}.next"
 mv "${env_file}.next" "$env_file"
 
-systemctl stop mkt88-site
+if ! timeout 20s systemctl stop mkt88-site; then
+  systemctl kill --kill-who=main -s KILL mkt88-site || true
+  systemctl reset-failed mkt88-site || true
+fi
 mv "$old" "$backup"
 mv "$next" "$old"
 
