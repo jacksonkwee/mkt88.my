@@ -171,6 +171,7 @@ export const STRINGS: Record<string, Row> = {
   nhOf:            { en: "of", ms: "daripada", zh: "/" },
   nhResultOne:     { en: "result", ms: "hasil", zh: "个结果" },
   nhResultMany:    { en: "results", ms: "hasil", zh: "个结果" },
+  nhLoadMore:      { en: "Load more results", ms: "Muatkan lebih banyak hasil", zh: "加载更多记录" },
   nhCompanies:     { en: "companies", ms: "syarikat", zh: "间公司" },
   nhFav:           { en: "Favourite", ms: "Kegemaran", zh: "收藏" },
   nhEmpty:         { en: "Type a 4-digit number above to see every draw where it appeared.", ms: "Taip nombor 4 digit di atas untuk melihat setiap cabutan ia muncul.", zh: "在上方输入 4 位号码，即可看到它出现过的每一次开彩。" },

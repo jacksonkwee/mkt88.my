@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
+import { navigateInApp } from "../lib/app-navigation";
 import { useLang } from "../lib/i18n";
 import { RESULT_ALERT_KEY } from "./ResultAlerts";
 
@@ -123,7 +124,8 @@ export default function PushRegister({ enabled }: { enabled?: boolean }) {
             const data = event?.notification?.data || event?.data || {};
             const url = notificationRoute(String(data.url || "").trim(), String(data.title || ""));
             document.body.classList.remove("mkt-home-open", "mkt-boot-wait");
-            window.location.assign(url);
+            if (isCapacitorApp()) navigateInApp(url);
+            else window.location.assign(url);
           });
           detach = () => {
             try { registration?.remove?.(); } catch { /* nothing to clean up */ }

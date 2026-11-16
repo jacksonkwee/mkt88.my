@@ -157,7 +157,10 @@ const BOOT_SCRIPT = `
       if (!tile) return;
       e.preventDefault();
       e.stopPropagation();
-      window.location.assign(tile.getAttribute('href'));
+      var native = window.mktNative;
+      var href = tile.getAttribute('href');
+      if (native && typeof native.navigate === 'function') native.navigate(href);
+      else window.location.assign(href);
     }, true);
     document.addEventListener('click', function (e) {
       if (window.__mktLiveReady) return;
@@ -189,7 +192,9 @@ const BOOT_SCRIPT = `
       var num = (cell.textContent || '').replace(/[^0-9]/g, '');
       if (num.length !== 4) return;
       e.preventDefault();
-      window.location.assign('/number-history?num=' + num);
+      var native = window.mktNative;
+      if (native && typeof native.navigate === 'function') native.navigate('/number-history?num=' + num);
+      else window.location.assign('/number-history?num=' + num);
     }, true);
   }
   // The app home has no result cards to keep live. Starting the card writer,

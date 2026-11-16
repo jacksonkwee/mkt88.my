@@ -48,7 +48,6 @@ public class MainActivity extends BridgeActivity {
   private static final String HOME_URL = "https://www.mkt88.my/";
   private boolean stalePageRecoveryStarted = false;
   private boolean homeClassRepairSent = false;
-  private boolean repaintReloadPending = false;
 
   private final class MktWebViewClient extends BridgeWebViewClient {
     MktWebViewClient(Bridge bridge) {
@@ -85,18 +84,6 @@ public class MainActivity extends BridgeActivity {
       return true;
     }
 
-    @Override
-    public void onPageFinished(WebView view, String url) {
-      super.onPageFinished(view, url);
-      if (!repaintReloadPending || isFinishing()) return;
-      repaintReloadPending = false;
-      view.setLayerType(View.LAYER_TYPE_NONE, null);
-      appHandler.postDelayed(() -> {
-        view.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-        view.invalidate();
-        view.reload();
-      }, 250);
-    }
   }
 
   /**
@@ -194,8 +181,9 @@ public class MainActivity extends BridgeActivity {
       + "var h=document.querySelector('.mkt-app-home');"
       + "var d=h?getComputedStyle(h).display:'none';"
       + "var t=h?(h.innerText||'').trim().length:0;"
-      + "return [document.readyState,h?1:0,d,t].join('|');"
-      + "}catch(e){return 'error|0|none|0';}})()";
+      + "var r=typeof window.__mktGoHome==='function'?1:0;"
+      + "return [document.readyState,h?1:0,d,t,r].join('|');"
+      + "}catch(e){return 'error|0|none|0|0';}})()";
   private static final String JS_REPAIR_HOME_CLASS =
       "(function(){try{document.body.classList.add('mkt-in-app','mkt-home-open');"
       + "return document.body.className;}catch(e){return '';}})()";
@@ -347,8 +335,10 @@ public class MainActivity extends BridgeActivity {
    * Android's singleTask activity keeps the WebView and its previous URL alive
    * between launches. That is why the first open could resume an old page or an
    * old cached bundle, while closing the app and opening it again appeared to
-   * fix it. The unique query forces a network document; clearing only the HTTP
-   * cache keeps favourites, notifications and login data intact.
+   * fix it. The unique query forces a network document while static assets stay
+   * cached. Clearing the whole WebView cache here left the first tap racing a
+   * five-second no-cache window, which could leave the game document parsed but
+   * never interactive.
    */
   private void loadFreshHome() {
     WebView webView = getBridge() != null ? getBridge().getWebView() : null;
@@ -356,17 +346,12 @@ public class MainActivity extends BridgeActivity {
     stalePageRecoveryStarted = false;
     homeClassRepairSent = false;
     try {
-      webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
-      webView.clearCache(true);
+      webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
+      webView.stopLoading();
       webView.clearHistory();
       webView.loadUrl(HOME_URL + "?appLaunch=" + System.currentTimeMillis());
-      appHandler.postDelayed(() -> {
-        if (webView.getSettings() != null) {
-          webView.getSettings().setCacheMode(WebSettings.LOAD_DEFAULT);
-        }
-      }, 5000);
     } catch (Exception ignored) {
-      // A cache reset failure must not stop the app from opening.
+      // A failed cache/history reset must not stop the app from opening.
     }
   }
 
@@ -466,12 +451,14 @@ public class MainActivity extends BridgeActivity {
     try {
       int homePresent = Integer.parseInt(parts[1].trim());
       int homeTextLength = Integer.parseInt(parts[3].trim());
+      int homeInteractive = parts.length >= 5 ? Integer.parseInt(parts[4].trim()) : 1;
       // The website header alone is not a usable app screen. Keep the launch
-      // logo up until the actual home tiles are present and visible.
+      // logo up until the actual home tiles are present, visible and hydrated.
       return "complete".equals(parts[0].trim())
           && homePresent == 1
           && !"none".equals(parts[2].trim())
-          && homeTextLength >= 20;
+          && homeTextLength >= 20
+          && homeInteractive == 1;
     } catch (NumberFormatException ignored) {
       return false;
     }
@@ -551,28 +538,47 @@ public class MainActivity extends BridgeActivity {
     if (webView == null) return;
     webView.addJavascriptInterface(new Object() {
       /**
+       * Open an ordinary app page through the shell.
+       *
+       * A main document can remain in the loading state forever in WebView.
+       * loadUrl() starts from a clean navigation instead of waiting for that
+       * request, and stopping the old load prevents it from taking the new page
+       * down with it.
+       */
+      @android.webkit.JavascriptInterface
+      public void navigate(final String url) {
+        appHandler.post(() -> {
+          try {
+            String target = normalizeAppUrl(url);
+            if (target.isEmpty()) return;
+            webView.stopLoading();
+            webView.loadUrl(target);
+            webView.invalidate();
+          } catch (Exception ignored) {
+            // The ordinary href remains available if native navigation fails.
+          }
+        });
+      }
+
+      /**
        * Reload the selected game from native code.
        *
        * The web page's in-place refresh depends on React being alive. When the
        * WebView has painted a stalled LIVE RESULTS page, that JavaScript state
-       * may never run. Reloading through WebView guarantees a fresh document
-       * and also rebuilds the renderer/compositor.
+       * may never run. Reloading through WebView cancels the stalled request
+       * and starts one fresh document without immediately reloading it again.
        */
       @android.webkit.JavascriptInterface
       public void refresh(final String url) {
         appHandler.post(() -> {
           try {
             String current = webView.getUrl();
-            String target = url == null ? "" : url.trim();
-            if (target.startsWith("/")) target = "https://www.mkt88.my" + target;
-            else if (!target.isEmpty() && !target.startsWith("https://") && !target.startsWith("http://")) {
-              target = "https://www.mkt88.my/" + target;
-            }
+            String target = normalizeAppUrl(url);
             if (target.isEmpty() || target.equals(current)) {
-              repaintReloadPending = true;
+              webView.stopLoading();
               webView.reload();
             } else {
-              repaintReloadPending = true;
+              webView.stopLoading();
               webView.loadUrl(target);
             }
             webView.invalidate();
@@ -619,6 +625,19 @@ public class MainActivity extends BridgeActivity {
         }).start();
       }
     }, "mktNative");
+  }
+
+  private String normalizeAppUrl(String url) {
+    String target = url == null ? "" : url.trim();
+    if (target.startsWith("/")) target = "https://www.mkt88.my" + target;
+    else if (!target.isEmpty() && !target.startsWith("https://")) return "";
+    Uri parsed = Uri.parse(target);
+    String host = parsed.getHost() == null ? "" : parsed.getHost().toLowerCase();
+    if (!"https".equals(parsed.getScheme())
+        || (!"mkt88.my".equals(host) && !"www.mkt88.my".equals(host))) {
+      return "";
+    }
+    return parsed.toString();
   }
 
   private void postResult(final WebView webView, final String id, final String body) {

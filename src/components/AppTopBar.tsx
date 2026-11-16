@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
+import { navigateInApp } from "../lib/app-navigation";
 import { useLang, tr } from "../lib/i18n";
 import MonthlyBrowsingTime from "./MonthlyBrowsingTime";
 
@@ -24,9 +25,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
     if (!isCapacitorApp()) return;
     event.preventDefault();
     const target = "/?appLaunch=" + Date.now();
-    const native = (window as Window & { mktNative?: { refresh?: (url: string) => void } }).mktNative;
-    if (typeof native?.refresh === "function") native.refresh(target);
-    else window.location.assign(target);
+    navigateInApp(target);
   };
 
   /*

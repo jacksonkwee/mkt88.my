@@ -54,7 +54,7 @@ const PRIZE_COLORS: Record<string, string> = {
 const REGION_KEY: Record<string, string> = { "M'sia": "nhR1", "Sab, Sar": "nhR2", Spore: "nhR3", Others: "nhR4" };
 const PRIZE_KEY: Record<string, string> = { "1st": "nhP1", "2nd": "nhP2", "3rd": "nhP3", Special: "nhPS", Consolation: "nhPC" };
 const PRIZE_SHORT_KEY: Record<string, string> = { "1st": "nhP1short", "2nd": "nhP2short", "3rd": "nhP3short", Special: "nhPSshort", Consolation: "nhPCshort" };
-const MAX_ROWS = 400;
+const PAGE_ROWS = 100;
 
 /** The 11 game companies used by the app, plus a catch-all bucket. */
 const COMPANIES: { key: string; label: string; re: RegExp }[] = [
@@ -127,6 +127,7 @@ export default function NumberHistoryApp() {
   const [loading, setLoading] = useState(false);
   const [errKey, setErrKey] = useState("");
   const [favs, setFavs] = useState<Fav[]>([]);
+  const [shownRows, setShownRows] = useState(PAGE_ROWS);
   const mounted = useRef(true);
   const reqId = useRef(0);
   const requestController = useRef<AbortController | null>(null);
@@ -228,6 +229,10 @@ export default function NumberHistoryApp() {
     if (companies.length) list = list.filter((m) => companies.includes(companyOf(m.game)));
     return list;
   }, [data, regions, prizes, companies]);
+
+  useEffect(() => {
+    setShownRows(PAGE_ROWS);
+  }, [filtered]);
 
   /** Companies that actually appear in this search, with result counts. */
   const companyCounts = useMemo(() => {
@@ -397,7 +402,7 @@ export default function NumberHistoryApp() {
                 {/* Count on the left, Favourite on the same line on the right. */}
                 <div style={{ padding: "8px 10px", borderBottom: "1px solid var(--j-border)", fontSize: 12, color: "var(--muted)", display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    {tr("nhShowing", lang)} {Math.min(filtered.length, MAX_ROWS)} {tr("nhOf", lang)} {filtered.length} {filtered.length === 1 ? tr("nhResultOne", lang) : tr("nhResultMany", lang)}
+                    {tr("nhShowing", lang)} {Math.min(filtered.length, shownRows)} {tr("nhOf", lang)} {filtered.length} {filtered.length === 1 ? tr("nhResultOne", lang) : tr("nhResultMany", lang)}
                     {regions.length ? " · " + regions.map((r) => tr(REGION_KEY[r] || "", lang)).join(" + ") : ""}
                     {prizes.length ? " · " + prizes.map((p) => tr(PRIZE_KEY[p] || "", lang)).join(" + ") : ""}
                     {companies.length ? " · " + companies.length + " " + tr("nhCompanies", lang) : ""}
@@ -409,7 +414,7 @@ export default function NumberHistoryApp() {
                     </Link>
                   ) : null}
                 </div>
-                {filtered.slice(0, MAX_ROWS).map((m, i) => {
+                {filtered.slice(0, shownRows).map((m, i) => {
                   const fav = isFav(m.num);
                   return (
                     <div key={i} style={{ display: "flex", alignItems: "center", gap: 7, padding: "9px 10px", borderBottom: "1px solid #f0f0f0", background: fav ? YELLOW : "#fff", whiteSpace: "nowrap" }}>
@@ -423,6 +428,17 @@ export default function NumberHistoryApp() {
                     </div>
                   );
                 })}
+                {shownRows < filtered.length ? (
+                  <div style={{ padding: 12, textAlign: "center", borderTop: "1px solid var(--j-border)", background: "#fff" }}>
+                    <button
+                      type="button"
+                      onClick={() => setShownRows((count) => Math.min(filtered.length, count + PAGE_ROWS))}
+                      style={{ padding: "10px 18px", border: 0, borderRadius: 12, background: RED, color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer" }}
+                    >
+                      {tr("nhLoadMore", lang)} ({filtered.length - shownRows})
+                    </button>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

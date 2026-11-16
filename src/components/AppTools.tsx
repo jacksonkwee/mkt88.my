@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FAV_EVENT, YELLOW, cellScope, isNum, loadFavs, type Fav } from "../lib/favourites";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
+import { navigateInApp } from "../lib/app-navigation";
 import { Star } from "@phosphor-icons/react";
 
 const RED = "#cc0000";
@@ -46,7 +47,7 @@ export default function AppTools() {
     // Some Android WebViews stop completing Next client-side navigation after
     // the app has been open for a while. Result numbers are a primary action,
     // so the app takes the direct page-load path instead of a blank tap.
-    if (isCapacitorApp()) window.location.assign(href);
+    if (isCapacitorApp()) navigateInApp(href);
     else router.push(href);
   }, [router]);
 

@@ -1,6 +1,6 @@
 {
-  "versionCode": 42,
-  "versionName": "2.32",
-  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.32.apk",
-  "notes": "Restores MKT logo home navigation and keeps native game-logo refresh on stalled LIVE RESULTS pages."
+  "versionCode": 43,
+  "versionName": "2.33",
+  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.33.apk",
+  "notes": "Fixes first-tap navigation stalls, makes MKT logo and game navigation reliable, adds paged number-history results, and updates the 15 Nov Grand Dragon/Nine Lotto archive."
 }

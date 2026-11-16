@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { GAME_DEFS, EAST_LINKS } from "./sites/mkt88/app/GameDefs";
 import { isCapacitorApp } from "../lib/is-capacitor-app";
+import { navigateInApp } from "../lib/app-navigation";
 import { GearSix } from "@phosphor-icons/react";
 import { useLang, tr, LANG_LABEL } from "../lib/i18n";
 import { RESULT_ALERT_KEY } from "./ResultAlerts";
@@ -238,7 +239,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
       if (target !== current) {
         event?.preventDefault();
         setPending(path);
-        window.location.assign(href);
+        navigateInApp(href);
         return true;
       }
     }
@@ -254,7 +255,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
         setPending(null);
         // The WebView router did not land. A full page load is slower, but it
         // guarantees that a second game still opens after returning home.
-        window.location.assign(href);
+        navigateInApp(href);
       }, 2500);
       return false;
     }
@@ -346,7 +347,7 @@ export default function AppHome({ initialOpen = false }: { initialOpen?: boolean
   useIsoLayoutEffect(() => {
     const onHome = () => {
       if (isCapacitorApp() && !isHomePath()) {
-        window.location.assign("/?appLaunch=" + Date.now());
+        navigateInApp("/?appLaunch=" + Date.now());
         return;
       }
       clearNavFallback();

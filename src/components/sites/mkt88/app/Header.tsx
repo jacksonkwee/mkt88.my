@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ASSET_BASE } from "./site-paths";
 import { isCapacitorApp } from "../../../../lib/is-capacitor-app";
+import { navigateInApp } from "../../../../lib/app-navigation";
 import { tr, useLang } from "../../../../lib/i18n";
 import MonthlyBrowsingTime from "../../../MonthlyBrowsingTime";
 
@@ -41,9 +42,7 @@ export default function Header() {
               if (!isCapacitorApp()) return;
               event.preventDefault();
               const target = "/?appLaunch=" + Date.now();
-              const native = (window as Window & { mktNative?: { refresh?: (url: string) => void } }).mktNative;
-              if (typeof native?.refresh === "function") native.refresh(target);
-              else window.location.assign(target);
+              navigateInApp(target);
             }}
           >
             <div className="d-flex flex-column align-items-center mr-2">
