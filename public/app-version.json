@@ -1,6 +1,6 @@
 {
-  "versionCode": 41,
-  "versionName": "2.31",
-  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.31.apk",
-  "notes": "Game logos on LIVE RESULTS now force-refresh through Android WebView, including when the page is stalled before React starts."
+  "versionCode": 42,
+  "versionName": "2.32",
+  "apkUrl": "https://www.mkt88.my/mkt88-4d-v2.32.apk",
+  "notes": "Restores MKT logo home navigation and keeps native game-logo refresh on stalled LIVE RESULTS pages."
 }
