@@ -3,6 +3,18 @@
 }
 
 mkt88.my, www.mkt88.my {
-  encode zstd gzip
-  reverse_proxy 127.0.0.1:3000
+  # Android WebView can leave a gzip/chunked main document in the loading
+  # state forever after a page navigation. Strip Accept-Encoding before the
+  # request reaches Next.js so the app gets identity HTML with a
+  # Content-Length; normal browsers keep their existing compression path.
+  @mkt_android header User-Agent *MKT88Android*
+  handle @mkt_android {
+    reverse_proxy 127.0.0.1:3000 {
+      header_up -Accept-Encoding
+    }
+  }
+  handle {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:3000
+  }
 }
