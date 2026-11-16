@@ -20,6 +20,14 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
   const [lang] = useLang();
   const box = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState(0);
+  const goHome = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!isCapacitorApp()) return;
+    event.preventDefault();
+    const target = "/?appLaunch=" + Date.now();
+    const native = (window as Window & { mktNative?: { refresh?: (url: string) => void } }).mktNative;
+    if (typeof native?.refresh === "function") native.refresh(target);
+    else window.location.assign(target);
+  };
 
   /*
    * The bar and the logo are pinned, not sticky: on the phone the page under
@@ -56,7 +64,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
         <div style={{ position: "absolute", left: 0, right: 0, padding: "0 118px", textAlign: "center", fontWeight: 700, fontSize: 17, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", pointerEvents: "none" }}>{tr(titleKey, lang)}</div>
         <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
           <MonthlyBrowsingTime tone="red" />
-          <a data-mkt-home href="/" style={{ color: "#fff", fontSize: 12, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</a>
+          <a data-mkt-home href="/" onClick={goHome} style={{ color: "#fff", fontSize: 12, textDecoration: "none", padding: "6px 8px" }}>{tr("home", lang)}</a>
         </div>
       </div>
 
@@ -72,11 +80,7 @@ export default function AppTopBar({ titleKey }: { titleKey: string }) {
           data-mkt-home
           href="/"
           aria-label="MKT 88 4D home"
-          onClick={(event) => {
-            if (!isCapacitorApp()) return;
-            event.preventDefault();
-            window.location.reload();
-          }}
+          onClick={goHome}
           style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 44 }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

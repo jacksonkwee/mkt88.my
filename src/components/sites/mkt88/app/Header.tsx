@@ -40,7 +40,10 @@ export default function Header() {
             onClick={(event) => {
               if (!isCapacitorApp()) return;
               event.preventDefault();
-              window.location.reload();
+              const target = "/?appLaunch=" + Date.now();
+              const native = (window as Window & { mktNative?: { refresh?: (url: string) => void } }).mktNative;
+              if (typeof native?.refresh === "function") native.refresh(target);
+              else window.location.assign(target);
             }}
           >
             <div className="d-flex flex-column align-items-center mr-2">
