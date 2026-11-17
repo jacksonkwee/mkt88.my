@@ -8,7 +8,6 @@ import GameColumns from "../../../components/sites/mkt88/app/GameColumns";
 import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
 import { EAST_CARD_IDS } from "../../../components/sites/mkt88/app/east-cards";
 import { getSnapshotForRender } from "../../../lib/live-snapshot";
-import { getPastDateLists } from "../../../lib/past-dates";
 
 const OPS: Record<string, { title: string; desc: string; pager: string; name: string }> = {
   stc: { title: "Sandakan 4D 山打根赛马会 Result", desc: "Sandakan 4D live results.", pager: "sandakan", name: "Sandakan 4D 山打根赛马会" },
@@ -44,7 +43,6 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
   const snapProp = snap
     ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp }
     : undefined;
-  const pastDates = await getPastDateLists();
   return (
     <>
       <Header />
@@ -53,13 +51,13 @@ export default async function EastPage({ params }: { params: Promise<{ op: strin
       <h1 className="sr-only">{o.title}</h1>
       <RegionButtons />
       <div className="d-lg-none">
-        <GamePager name={o.pager} snap={snapProp} pastDates={pastDates} showPast />
+        <GamePager name={o.pager} snap={snapProp} showPast />
       </div>
       <div className="d-none d-lg-block mkt-past-scope">
         <main className="container flex-shrink-0">
           <div className="row">
             <div className="col-12">
-              <GamePastFilter slug={o.pager} name={o.name} kind="my" dates={pastDates.my} tables={pastDates.myTables} />
+              <GamePastFilter slug={o.pager} name={o.name} kind="my" />
             </div>
           </div>
           <GameColumns ids={EAST_CARD_IDS[o.pager]} snap={snapProp} wide />

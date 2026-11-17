@@ -8,7 +8,6 @@ import raw from "../../components/sites/mkt88/app/snapshots/singapore-4d-results
 import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
 import GamePastFilter from "../../components/sites/mkt88/app/GamePastFilter";
-import { getPastDateLists } from "../../lib/past-dates";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/singapore-4d-results" },
@@ -18,20 +17,18 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const { colHtml } = raw as { colHtml: string };
-  const pastDates = await getPastDateLists();
-  const myDates = pastDates.my;
   return (
     <>
       <Header />
       <RegionButtons />
       <div className="d-lg-none">
-        <GamePager name="sg" pastDates={pastDates} showPast />
+        <GamePager name="sg" showPast />
       </div>
       <div className="d-none d-lg-block mkt-past-scope">
         <div className="container flex-shrink-0">
           <div className="row">
             <div className="col-sm-12">
-              <GamePastFilter slug="sg" name="Singapore 4D" kind="my" dates={myDates} tables={pastDates.myTables} />
+              <GamePastFilter slug="sg" name="Singapore 4D" kind="my" />
             </div>
           </div>
         </div>

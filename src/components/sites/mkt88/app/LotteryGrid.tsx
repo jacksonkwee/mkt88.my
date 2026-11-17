@@ -48,28 +48,18 @@ function DesktopGrid({ snap }: { snap?: Snap }) {
   );
 }
 
-export default function LotteryGrid({ snap, pastDates, myDates }: {
+export default function LotteryGrid({ snap }: {
   snap?: unknown;
-  pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]> };
-  myDates?: string[];
 }) {
   return (
     <div id="row">
       <div className="d-lg-none">
-        <GamePager initialIndex={0} snap={snap} pastDates={pastDates} showPast />
+        <GamePager initialIndex={0} snap={snap} showPast />
       </div>
       <div className="mkt-past-scope">
-        {pastDates && myDates ? (
-          <div className="d-none d-lg-block">
-            <GamePastFilter
-              slug="home"
-              name="4D Result 马来西亚"
-              kind="my"
-              dates={myDates}
-              tables={pastDates.myTables}
-            />
-          </div>
-        ) : null}
+        <div className="d-none d-lg-block">
+          <GamePastFilter slug="home" name="4D Result 马来西亚" kind="my" />
+        </div>
         <DesktopGrid snap={snap as Snap | undefined} />
       </div>
     </div>

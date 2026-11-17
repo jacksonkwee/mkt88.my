@@ -154,11 +154,13 @@ const BOOT_SCRIPT = `
       if (window.__mktGoHome) return;
       var t = e.target;
       var tile = t && t.closest ? t.closest('.mkt-app-home a[href^="/"]') : null;
-      if (!tile) return;
+      var button = t && t.closest ? t.closest('.mkt-app-home button.mkt-press') : null;
+      if (!tile && !button) return;
       e.preventDefault();
       e.stopPropagation();
       var native = window.mktNative;
-      var href = tile.getAttribute('href');
+      var href = tile ? tile.getAttribute('href') : button ? '/4dresults' : '';
+      if (!href) return;
       if (native && typeof native.navigate === 'function') native.navigate(href);
       else window.location.assign(href);
     }, true);

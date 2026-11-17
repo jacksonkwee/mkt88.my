@@ -9,7 +9,6 @@ import { getSnapshotForRender } from "../lib/live-snapshot";
 import DirectTopAd from "../components/sites/mkt88/app/DirectTopAd";
 import GoogleAdsense from "../components/GoogleAdsense";
 import SeoText from "../components/SeoText";
-import { getPastDateLists } from "../lib/past-dates";
 import type { Metadata } from "next";
 
 // The home page inherited its title and description from the root layout but
@@ -47,7 +46,6 @@ export default async function Home() {
    */
   const snap = await getSnapshotForRender().catch(() => null);
   const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari } : undefined;
-  const pastDates = await getPastDateLists();
   return (
     <>
       <Header />
@@ -57,7 +55,7 @@ export default async function Home() {
           <div className="col-sm-12">
             <DirectTopAd />
             <LiveStatusBar />
-            <LotteryGrid snap={snapProp} pastDates={pastDates} myDates={pastDates.my} />
+            <LotteryGrid snap={snapProp} />
           </div>
         </div>
       </main>

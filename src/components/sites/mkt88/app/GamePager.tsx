@@ -96,11 +96,10 @@ function embeddedSixValues(snap: Snap, id: string): Record<string, string> {
 // without pulling this pager (and the card data) into its bundle.
 export { GAME_PAGER_ORDER, gamePagerIndex };
 
-export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pastDates, showPast }: {
+export default function GamePager({ initialIndex = 0, name, snap: serverSnap, showPast }: {
   initialIndex?: number;
   name?: string;
   snap?: unknown;
-  pastDates?: { my: string[]; kh: string[]; myTables?: Record<string, string[]>; khByGame?: Record<string, string[]> };
   showPast?: boolean;
 }) {
   const clockNight = useDrawOrder();
@@ -118,16 +117,22 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   const snap = liveSnap || (serverSnap as ReturnType<typeof useSnap>) || ctxSnap;
   // Each game follows its own published result, not the clock.
   const pages = pagesFor(perdanaNightFirst(snap, clockNight), hariNightFirst(snap, clockNight));
+  const idx = name ? gamePagerIndex(name) : initialIndex;
 
-  // Only the game the visitor opened is sent with the page; the other ten
-  // slides are filled in a moment later, right after the first screen paints.
-  // One page carrying all eleven games was why every game page opened slowly.
-  // The empty slides keep their exact size and order, so the swipe track is
-  // sitting on the right game - and can still be swiped - from the first frame.
+  /*
+   * Keep only the active slide and its two neighbours mounted.
+   *
+   * Mounting all eleven games together put every result card into the Android
+   * WebView at once. On slower phones the resulting layout, live-write scans
+   * and repaint blocked the main thread, so the next slide looked blank and
+   * even the logo could not navigate home. The placeholders keep the scroll
+   * geometry, while the next slide is rendered before it can be swiped into.
+   */
   const [ready, setReady] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(idx);
   useEffect(() => {
-    const id = window.setTimeout(() => setReady(true), 250);
-    return () => window.clearTimeout(id);
+    const id = window.requestAnimationFrame(() => setReady(true));
+    return () => window.cancelAnimationFrame(id);
   }, []);
 
   // Raw-HTML slides (Sabah 88 / Sandakan / Cash Sweep) are re-inserted by React
@@ -187,12 +192,12 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
     writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7);
     writeSix("table-18-2026-09-06-6d", snap.nine6, snap.nineJp);
   }, [snap, pages, ready]);
-  const idx = name ? gamePagerIndex(name) : initialIndex;
   const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
   const lastIdx = useRef(-1);
   const dispatchIdx = (el: HTMLDivElement) => {
     const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
+    setActiveIndex((current) => (current === idx ? current : idx));
     // Swiping to the next game jumps the page back to the top, so the game
     // title and its past-result filter are visible without scrolling up.
     if (idx !== lastIdx.current) {
@@ -269,6 +274,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
   useEffect(() => {
     const el = track.current;
     if (!el) return;
+    setActiveIndex((current) => (current === idx ? current : idx));
     let timer = 0;
     const put = () => {
       if (!el.getClientRects().length || !el.clientWidth) return false;
@@ -372,15 +378,13 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, pa
       style={{ display: "flex", overflowX: "auto", overflowY: "hidden", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch", alignItems: "flex-start" }}>
       {pages.map((pg, i) => (
         <div key={pg.title} className="mkt-past-scope" style={{ flex: "0 0 100%", scrollSnapAlign: "start", scrollSnapStop: "always", padding: "4px 2px 24px" }}>
-          {!ready && i !== idx ? null : (
+          {(!ready && i !== idx) || (ready && Math.abs(i - activeIndex) > 1) ? null : (
           <>
-          {showPast && pastDates && pg.slug ? (
+          {showPast && pg.slug ? (
             <GamePastFilter
               slug={pg.slug}
               name={pg.title}
               kind={pg.kh ? "kh" : "my"}
-              dates={pg.kh ? (pastDates.khByGame?.[pg.slug] || pastDates.kh) : pastDates.my}
-              tables={pg.kh ? undefined : pastDates.myTables}
             />
           ) : null}
           {(() => {

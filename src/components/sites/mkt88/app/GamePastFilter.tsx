@@ -40,17 +40,21 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   slug: string;
   name: string;
   kind: PastKind;
-  dates: string[];
+  dates?: string[];
   tables?: Record<string, string[]>;
 }) {
   const wanted = GAME_TABLES[slug] || [];
-  // The caller already hands us the exact dates this game has, so only the
-  // Malaysia / Singapore list needs the per-game table check.
+  const [loadedDates, setLoadedDates] = useState<string[] | null>(null);
+  const [datesLoading, setDatesLoading] = useState(false);
+  const datesLoadingRef = useRef(false);
+  const sourceDates = dates || loadedDates || [];
+  // The caller may hand us the exact dates this game has. When it does not,
+  // fetch only that game's list after the reader opens the date control.
   const list = useMemo(() => {
-    return dates
+    return sourceDates
       .filter((d) => (kind === "kh" ? true : (!tables || !tables[d] || wanted.some((t) => (tables[d] || []).includes(t)))))
       .sort();
-  }, [dates, kind, tables, wanted]);
+  }, [sourceDates, kind, tables, wanted]);
 
   const [date, setDate] = useState("");
   const [html, setHtml] = useState<string | null>(null);
@@ -90,6 +94,30 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   const hasPast = list.length > 0;
   const openFull = () => setFull(true);
 
+  const loadDates = async () => {
+    if (dates || loadedDates !== null || datesLoadingRef.current) return;
+    datesLoadingRef.current = true;
+    setDatesLoading(true);
+    try {
+      const res = await fetch("/api/game-past-dates?slug=" + encodeURIComponent(slug), { cache: "force-cache" });
+      if (!res.ok) throw new Error("load failed");
+      const json = (await res.json()) as { dates?: string[] };
+      setLoadedDates(Array.isArray(json.dates) ? json.dates : []);
+    } catch {
+      setLoadedDates([]);
+    } finally {
+      datesLoadingRef.current = false;
+      setDatesLoading(false);
+    }
+  };
+
+  const toggleDateList = () => {
+    setAppOpen((open) => {
+      if (!open) void loadDates();
+      return !open;
+    });
+  };
+
   // Newest first, grouped by month so a long history is easy to scan.
   const groups = useMemo(() => {
     const shown = full ? list : list.slice(-QUICK_COUNT);
@@ -125,13 +153,15 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
         <button
           type="button"
           className="mkt-past-filter-title"
-          onClick={() => setAppOpen((v) => !v)}
+          onClick={toggleDateList}
           style={{ color: "#cc0000", fontSize: 15, fontWeight: 700, background: "transparent", border: 0, padding: "8px 4px", cursor: "pointer", whiteSpace: "nowrap" }}
           aria-expanded={appOpen}
         >
           {name} Past Result 过去开彩
         </button>
-        {hasPast ? (
+        {datesLoading ? (
+          <span style={{ color: "var(--muted)", fontSize: 13 }}>Loading dates…</span>
+        ) : hasPast ? (
           <>
             {appOpen ? <select
               className="mkt-past-filter-select"
@@ -164,9 +194,9 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
               </>
             ) : null}
           </>
-        ) : (
+        ) : loadedDates !== null ? (
           <span style={{ color: "var(--muted)", fontSize: 13 }}>No past results yet.</span>
-        )}
+        ) : null}
       </div>
 
       {date ? (

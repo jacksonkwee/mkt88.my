@@ -8,7 +8,6 @@ import EastFilter from "../../components/sites/mkt88/app/EastFilter";
 import GoogleAdsense from "../../components/GoogleAdsense";
 import SeoText from "../../components/SeoText";
 import GamePastFilter from "../../components/sites/mkt88/app/GamePastFilter";
-import { getPastDateLists } from "../../lib/past-dates";
 import { getSnapshotForRender } from "../../lib/live-snapshot";
 
 /**
@@ -51,8 +50,6 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
   const sp = await searchParams;
   const op = sp && sp.op ? OP_NAMES[sp.op] : undefined;
   const slug = op || "east";
-  const pastDates = await getPastDateLists();
-  const myDates = pastDates.my;
   // Same rule as the home page: a render never waits on the operator sweep, or
   // the app sits on its splash for seconds before this page's first byte.
   const snap = await getSnapshotForRender().catch(() => null);
@@ -65,14 +62,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ o
       <RegionButtons />
       {op ? (
         <div className="d-lg-none">
-          <GamePager name={op || "sabah88"} pastDates={pastDates} showPast />
+          <GamePager name={op || "sabah88"} showPast />
         </div>
       ) : null}
       <div className={"mkt-past-scope" + (op ? " d-none d-lg-block" : "")}>
         <main className="container flex-shrink-0">
           <div className="row">
             <div className="col-sm-12">
-              <GamePastFilter slug={slug} name={OP_LABEL[slug]} kind="my" dates={myDates} tables={pastDates.myTables} />
+              <GamePastFilter slug={slug} name={OP_LABEL[slug]} kind="my" />
             </div>
           </div>
           {/* The three cards sit side by side, like the 4D Result page. */}

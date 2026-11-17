@@ -37,3 +37,15 @@ Read them before touching the live results pipeline.
 
 - The archive and hot-number statistics are refreshed by the GitLab schedule and
   by the PC tasks `MKT88-PastBundle` (00:10) and `MKT88-HistoryCheck` (12:00).
+
+## App pager
+
+- Never mount all eleven game slides at once. `GamePager` must keep only the
+  active game and its immediate neighbours mounted; loading every card together
+  froze older Android WebViews after the first game tap.
+- Do not put full past-result date tables into a game page's client props.
+  Fetch one game's dates after the reader opens its date control, or the page
+  ships almost 1 MB before any result can paint.
+- Any navigation change must be checked with an end-to-end swipe from Grand
+  Dragon through the last game and back to Magnum, including a result button and
+  the MKT logo returning to the app home.

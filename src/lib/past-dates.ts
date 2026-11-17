@@ -17,6 +17,7 @@ import hari4dPastRaw from "./hari-4d-past.json";
 import { after } from "next/server";
 import { getSpecialDrawDates, SPECIAL_DRAW_TABLES } from "./special-draws";
 import { localHistoryDateTables } from "./local-past";
+import { GAME_TABLES } from "../components/sites/mkt88/app/game-tables";
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
@@ -217,6 +218,23 @@ export async function getPastDateLists(): Promise<{ my: string[]; kh: string[]; 
   }
   myTables = tables;
   return { my: Object.keys(tables).sort(), kh, myTables: tables, khByGame };
+}
+
+/**
+ * The exact date list one game needs. Game pages used to receive the whole
+ * archive through a client prop, which put almost 1 MB of dates into the HTML
+ * before the first number could paint.
+ */
+export async function getPastDatesForGame(slug: string): Promise<string[]> {
+  const dates = await getPastDateLists();
+  if (slug === "grand-dragon" || slug === "nine-lotto" || slug === "perdana" || slug === "lucky-harihari") {
+    return dates.khByGame[slug] || [];
+  }
+  const wanted = GAME_TABLES[slug] || [];
+  return dates.my.filter((date) => {
+    const tables = dates.myTables[date];
+    return !tables || wanted.some((table) => tables.includes(table));
+  });
 }
 
 /** Every Cambodia date any game covers. */

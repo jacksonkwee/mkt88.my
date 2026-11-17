@@ -10,7 +10,6 @@ import GamePager from "../../../components/sites/mkt88/app/GamePager";
 import GameColumns from "../../../components/sites/mkt88/app/GameColumns";
 import { getSnapshotForRender } from "../../../lib/live-snapshot";
 import GamePastFilter from "../../../components/sites/mkt88/app/GamePastFilter";
-import { getPastDateLists } from "../../../lib/past-dates";
 
 /*
  * Live values come from the client polling /api/home-live. Re-rendering this
@@ -53,9 +52,6 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
   const snap = await getSnapshotForRender().catch(() => null);
   const snapProp = snap ? { cards: snap.cards, perdana: snap.perdana, hari: snap.hari, gd6: snap.gd6, gdjp7: snap.gdjp7, nine6: snap.nine6, nineJp: snap.nineJp } : undefined;
   const isKh = def.mode === "lotto";
-  const pastDates = await getPastDateLists();
-  const myDates = pastDates.my;
-  const khDates = pastDates.kh;
   /*
    * Sports Toto runs three separate 6-number games beside the 4D draw, and each
    * now has its own page. They are listed together so a reader landing on the
@@ -105,13 +101,13 @@ export default async function GamePage({ params }: { params: Promise<{ game: str
       <h1 className="sr-only">{def.title}</h1>
       <RegionButtons />
       <div className="d-lg-none">
-        <GamePager name={game} snap={snapProp} pastDates={pastDates} showPast />
+        <GamePager name={game} snap={snapProp} showPast />
       </div>
       <div className="d-none d-lg-block mkt-past-scope">
         <main className="container flex-shrink-0">
           <div className="row">
             <div className="col-12">
-              <GamePastFilter slug={game} name={def.name} kind={isKh ? "kh" : "my"} dates={isKh ? (pastDates.khByGame?.[game] || khDates) : myDates} tables={isKh ? undefined : pastDates.myTables} />
+              <GamePastFilter slug={game} name={def.name} kind={isKh ? "kh" : "my"} />
             </div>
           </div>
           <GameColumns ids={def.cardIds} snap={snapProp} />
