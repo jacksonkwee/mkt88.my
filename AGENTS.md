@@ -46,6 +46,9 @@ Read them before touching the live results pipeline.
 - Do not put full past-result date tables into a game page's client props.
   Fetch one game's dates after the reader opens its date control, or the page
   ships almost 1 MB before any result can paint.
+- Android HTML must be delivered with an exact `Content-Length`. Keep the
+  `mkt88-android-doc` proxy in front of Next.js; a chunked main document leaves
+  WebView stuck in `loading` with a blank body.
 - Any navigation change must be checked with an end-to-end swipe from Grand
   Dragon through the last game and back to Magnum, including a result button and
   the MKT logo returning to the app home.

@@ -60,6 +60,12 @@ cd "$next"
 npm install --no-audit --no-fund
 MKT88_DEPLOYMENT_BUILD=1 npm run build
 chown -R www-data:www-data "$next"
+install -d -m 0755 /usr/local/lib/mkt88
+install -m 0644 "$next/deploy/hostinger/android-document-proxy.mjs" \
+  /usr/local/lib/mkt88/android-document-proxy.mjs
+install -m 0644 "$next/deploy/hostinger/mkt88-android-doc.service" \
+  /etc/systemd/system/mkt88-android-doc.service
+systemctl daemon-reload
 
 env_backup="$(mktemp)"
 cp -a "$env_file" "$env_backup"
@@ -106,4 +112,40 @@ fi
 
 curl -fsS http://127.0.0.1:3000/api/version
 echo
+
+# Next streams HTML as chunked responses. Android WebView can leave that
+# response in the loading state forever, so send app documents through the
+# small proxy that adds a real Content-Length. Restarting Caddy is required
+# because its Caddyfile is a file bind mount and the site directory was swapped.
+systemctl enable --now mkt88-android-doc.service
+systemctl restart mkt88-android-doc.service
+docker restart mkt88-site-caddy-1 >/dev/null
+
+android_ready=0
+for _ in $(seq 1 20); do
+  if curl -fsSI -H "User-Agent: MKT88Android" \
+    https://www.mkt88.my/result/grand-dragon | grep -qi '^content-length:'; then
+    android_ready=1
+    break
+  fi
+  sleep 1
+done
+if [ "$android_ready" -ne 1 ]; then
+  systemctl stop mkt88-site
+  mv "$old" "$failed"
+  mv "$backup" "$old"
+  cp -a "$env_backup" "$env_file"
+  systemctl start mkt88-site
+  docker restart mkt88-site-caddy-1 >/dev/null
+  exit 1
+fi
+
+mapfile -t stale_backups < <(
+  find /srv -mindepth 1 -maxdepth 1 -type d -name 'mkt88-site-prev-*' \
+    -printf '%T@ %p\n' | sort -nr | tail -n +3 | cut -d' ' -f2-
+)
+if ((${#stale_backups[@]})); then
+  rm -rf -- "${stale_backups[@]}"
+fi
+
 echo "DEPLOY_OK commit=$commit backup=$backup"

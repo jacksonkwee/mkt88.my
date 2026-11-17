@@ -1,0 +1,22 @@
+[Unit]
+Description=MKT88 Android document response proxy
+After=network-online.target mkt88-site.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+Environment=NODE_ENV=production
+Environment=MKT88_UPSTREAM_PORT=3000
+Environment=MKT88_ANDROID_PROXY_PORT=3001
+ExecStart=/usr/bin/node /usr/local/lib/mkt88/android-document-proxy.mjs
+Restart=always
+RestartSec=2
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
