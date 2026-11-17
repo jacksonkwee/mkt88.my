@@ -124,7 +124,9 @@ docker restart mkt88-site-caddy-1 >/dev/null
 android_ready=0
 for _ in $(seq 1 20); do
   if curl -fsSI -H "User-Agent: MKT88Android" \
-    https://www.mkt88.my/result/grand-dragon | grep -qi '^content-length:'; then
+    https://www.mkt88.my/result/grand-dragon | grep -qi '^content-length:' \
+    && curl -fsSI -H "User-Agent: MKT88Android" \
+    https://www.mkt88.my/result/grand-dragon | grep -qi '^alt-svc: clear'; then
     android_ready=1
     break
   fi
