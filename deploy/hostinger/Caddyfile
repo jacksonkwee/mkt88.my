@@ -1,8 +1,12 @@
 {
   email admin@mkt88.my
+  servers {
+    protocols h1 h2
+  }
 }
 
 mkt88.my, www.mkt88.my {
+  header Alt-Svc "clear"
   # Android WebView can leave a gzip/chunked main document in the loading
   # state forever after a page navigation. The document proxy buffers HTML and
   # supplies an exact Content-Length; normal browsers keep their existing path.

@@ -49,6 +49,9 @@ Read them before touching the live results pipeline.
 - Android HTML must be delivered with an exact `Content-Length`. Keep the
   `mkt88-android-doc` proxy in front of Next.js; a chunked main document leaves
   WebView stuck in `loading` with a blank body.
+- Keep the public listener on HTTP/1.1 and HTTP/2 and return
+  `Alt-Svc: clear`. Cached HTTP/3 routes reproduced the intermittent blank
+  document even when an HTTP/1.1 request looked healthy.
 - Any navigation change must be checked with an end-to-end swipe from Grand
   Dragon through the last game and back to Magnum, including a result button and
   the MKT logo returning to the app home.
