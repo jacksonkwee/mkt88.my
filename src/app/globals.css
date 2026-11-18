@@ -1232,41 +1232,51 @@ body.mkt-in-app .mkt-btn-secondary {
 }
 
 /*
- * The web result columns can be narrower than a phone. At desktop widths the
- * four Cambodia game cards were about 342px wide, but the consolation table
- * still grew to 359px and the 22px numbers plus A-W labels crowded each cell.
- * The app already uses 17px at its phone width and has no problem, so the web
- * uses that same size and gives both five-column grids fixed 20% columns.
- * Keep this scoped away from .mkt-in-app so the Android rendering is unchanged.
+ * Grand Dragon's consolation grid is the reference presentation for all four
+ * Cambodia cards on both the website and the Android WebView. Before this,
+ * desktop used 22px in narrow columns while the app kept 22px on its wider
+ * phone card, and the special-letter positioning differed from consolation.
+ * One size, one row height and five equal columns keep every grid predictable.
  */
-@media (min-width: 431px) {
-  body:not(.mkt-in-app) :is(
-    .card.outer-box.table-13,
-    .card.outer-box.table-15,
-    .card.outer-box.table-16,
-    .card.outer-box.table-17
-  ) {
-    --mkt-cambodia-number: 17px;
-  }
-  body:not(.mkt-in-app) :is(
-    .card.outer-box.table-13,
-    .card.outer-box.table-15,
-    .card.outer-box.table-16,
-    .card.outer-box.table-17
-  ) :is(table:nth-of-type(2), table:nth-of-type(3)) {
-    width: 100% !important;
-    table-layout: fixed !important;
-  }
-  body:not(.mkt-in-app) :is(
-    .card.outer-box.table-13,
-    .card.outer-box.table-15,
-    .card.outer-box.table-16,
-    .card.outer-box.table-17
-  ) :is(table:nth-of-type(2), table:nth-of-type(3)) td.lottery-number {
-    width: 20% !important;
-    padding-left: 1px !important;
-    padding-right: 1px !important;
-  }
+:is(
+  .card.outer-box.table-13,
+  .card.outer-box.table-15,
+  .card.outer-box.table-16,
+  .card.outer-box.table-17
+) {
+  --mkt-cambodia-number: 17px;
+}
+:is(
+  .card.outer-box.table-13,
+  .card.outer-box.table-15,
+  .card.outer-box.table-16,
+  .card.outer-box.table-17
+) :is(table:nth-of-type(2), table:nth-of-type(3)) {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+:is(
+  .card.outer-box.table-13,
+  .card.outer-box.table-15,
+  .card.outer-box.table-16,
+  .card.outer-box.table-17
+) :is(table:nth-of-type(2), table:nth-of-type(3)) td.lottery-number {
+  width: 20% !important;
+  padding-left: 1px !important;
+  padding-right: 1px !important;
+}
+:is(
+  .card.outer-box.table-13,
+  .card.outer-box.table-15,
+  .card.outer-box.table-16,
+  .card.outer-box.table-17
+) table:nth-of-type(2) td.lottery-number::before {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  font-size: 0.75em !important;
+  margin-right: 1px !important;
 }
 
 /* One language at a time.
