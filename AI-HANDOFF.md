@@ -33,6 +33,23 @@ The production redeploy script clones the GitHub `main` branch.
 5. Run the full app pager test after navigation changes: start Grand Dragon,
    swipe through the last game, swipe back to Magnum, click a result control,
    then tap the MKT logo and confirm the app home returns.
+6. Live result values are written into the DOM outside React. `GamePager`
+   snapshots those values in `rememberCardDom()` before a virtualised slide is
+   unmounted and restores their stamps in `restoreLiveStamps()`. Snapshot writes
+   must call `copyMayWrite()` so an older copy cannot put the previous value back
+   on the first frame after remount. Do not move this state into `LotteryCard`:
+   that file must remain server-render compatible.
+
+Native regression checks, with the emulator running and App WebView forwarded to
+`tcp:9223`:
+
+```powershell
+node qa-scripts/check-native-live-flicker.js
+node qa-scripts/check-native-all-swipe.js
+```
+
+Expected results are respectively `ok: true` while the card is
+`unmounted: true`, and `ok: true` for all eleven slides plus the home return.
 
 ## Environment variables
 
