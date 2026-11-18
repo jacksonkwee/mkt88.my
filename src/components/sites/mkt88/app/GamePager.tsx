@@ -10,7 +10,7 @@ import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-o
 import { GAME_PAGER_ORDER, gamePagerIndex } from "./game-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap, type Snap } from "./use-live-snapshot";
-import { rememberCardDom, restoreLiveStamps } from "./snapshot-values";
+import { copyMayWrite, rememberCardDom, restoreLiveStamps } from "./snapshot-values";
 import { splitSixCard } from "./six-split";
 import GamePastFilter from "./GamePastFilter";
 
@@ -155,13 +155,14 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
         // date - back to the older result. This write had no such rule, which is
         // how a live card flipped to yesterday and back during a draw.
         const dateEl = card.querySelector('[data-id="date"]');
-        const curDay = dateScore(dateEl ? (dateEl.textContent || "") : "");
+        const curDate = dateEl ? (dateEl.textContent || "").trim() : "";
+        const curDay = dateScore(curDate);
         const inDay = dateScore(vals.date);
         if (inDay && curDay && inDay < curDay) continue;
         for (const [id, v] of Object.entries(vals)) {
           if (!v || /^----+$/.test(v) || v === "-") continue; // never blank a value
           const el = card.querySelector('[data-id="' + id + '"]');
-          if (el && (el.textContent || "").trim() !== v) {
+          if (el && (el.textContent || "").trim() !== v && copyMayWrite(el, vals.date, curDate)) {
             el.textContent = v;
             el.classList.remove("live-pending");
           }
@@ -169,24 +170,29 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
       }
     }
     const ok = (v?: string) => !!v && !/^----+$/.test(v);
-    const put = (card: Element, id: string, v?: string) => {
+    const put = (card: Element, id: string, v?: string, copyDate?: string) => {
       if (!ok(v)) return;
       const el = card.querySelector('[data-id="' + id + '"]');
-      if (el && (el.textContent || "").trim() !== v) { el.textContent = v as string; el.classList.remove("live-pending"); }
+      const cardDate = card.querySelector('[data-id="date"]');
+      const currentDate = cardDate ? (cardDate.textContent || "").trim() : "";
+      if (el && (el.textContent || "").trim() !== v && copyMayWrite(el, copyDate, currentDate)) {
+        el.textContent = v as string;
+        el.classList.remove("live-pending");
+      }
     };
-    const writeSix = (baseId: string, m: { main: string; subs?: Record<string, string> } | null | undefined, jp: Record<string, string> | null | undefined) => {
+    const writeSix = (baseId: string, m: { main: string; subs?: Record<string, string> } | null | undefined, jp: Record<string, string> | null | undefined, copyDate?: string) => {
       for (const card of Array.from(root.querySelectorAll('[id="' + baseId + '"]'))) {
         if (!m) continue;
-        put(card, "six_main", m.main);
+        put(card, "six_main", m.main, copyDate);
         for (const n of [2, 3, 4, 5]) {
           const a = m.subs?.["six_" + n + "a"], b = m.subs?.["six_" + n + "b"];
           if (!ok(a) && !ok(b)) continue;
-          put(card, "six_" + n, (ok(a) ? a : "----") + " or " + (ok(b) ? b : "----"));
+          put(card, "six_" + n, (ok(a) ? a : "----") + " or " + (ok(b) ? b : "----"), copyDate);
         }
       }
       for (const card of Array.from(root.querySelectorAll('[id="' + baseId + '-jp"]'))) {
         if (jp) {
-          for (const [id, v] of Object.entries(jp)) put(card, id, v);
+          for (const [id, v] of Object.entries(jp)) put(card, id, v, copyDate);
         } else {
           // No settled jackpot for this draw: clear the card instead of leaving
           // the previous draw's pool and grand prize under today's date.
@@ -197,8 +203,8 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
         }
       }
     };
-    writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7);
-    writeSix("table-18-2026-09-06-6d", snap.nine6, snap.nineJp);
+    writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7, snap.cards?.["table-13"]?.date);
+    writeSix("table-18-2026-09-06-6d", snap.nine6, snap.nineJp, snap.cards?.["table-17"]?.date);
   }, [snap, pages, ready]);
   const start = useRef<{ x: number; y: number } | null>(null);
   const lastIdx = useRef(-1);
