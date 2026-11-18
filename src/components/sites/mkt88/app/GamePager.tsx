@@ -10,6 +10,7 @@ import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-o
 import { GAME_PAGER_ORDER, gamePagerIndex } from "./game-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap, type Snap } from "./use-live-snapshot";
+import { rememberCardDom } from "./snapshot-values";
 import { splitSixCard } from "./six-split";
 import GamePastFilter from "./GamePastFilter";
 
@@ -130,6 +131,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
    */
   const [ready, setReady] = useState(false);
   const [activeIndex, setActiveIndex] = useState(idx);
+  const activeIndexRef = useRef(idx);
   useEffect(() => {
     const id = window.requestAnimationFrame(() => setReady(true));
     return () => window.cancelAnimationFrame(id);
@@ -197,7 +199,16 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
   const lastIdx = useRef(-1);
   const dispatchIdx = (el: HTMLDivElement) => {
     const idx = Math.round(el.scrollLeft / Math.max(1, el.clientWidth));
-    setActiveIndex((current) => (current === idx ? current : idx));
+    const previous = activeIndexRef.current;
+    if (idx !== previous) {
+      for (let i = 0; i < el.children.length; i++) {
+        if (Math.abs(i - previous) > 1 || Math.abs(i - idx) <= 1) continue;
+        const slide = el.children[i];
+        for (const card of Array.from(slide.querySelectorAll(".card.outer-box"))) rememberCardDom(card);
+      }
+      activeIndexRef.current = idx;
+      setActiveIndex(idx);
+    }
     // Swiping to the next game jumps the page back to the top, so the game
     // title and its past-result filter are visible without scrolling up.
     if (idx !== lastIdx.current) {
@@ -274,6 +285,7 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
   useEffect(() => {
     const el = track.current;
     if (!el) return;
+    activeIndexRef.current = idx;
     setActiveIndex((current) => (current === idx ? current : idx));
     let timer = 0;
     const put = () => {

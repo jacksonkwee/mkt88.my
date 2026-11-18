@@ -161,6 +161,75 @@ export function markLiveValue(el: Element | null, v: string): void {
 }
 
 /**
+ * Preserve the current visible board before a virtualised slide is unmounted.
+ *
+ * The pager deliberately keeps only three slides mounted. If a live result was
+ * written straight into the DOM, unmounting discarded it and a later remount
+ * first rendered the older server copy. The next poll wrote the live number
+ * back, which made every number blink while swiping during a draw.
+ */
+export function rememberCardDom(card: Element | null): void {
+  if (!card) return;
+  const cls = cardClassOf(card);
+  if (!cls) return;
+  const dateEl = card.querySelector('[data-id="date"]');
+  const date = dateEl ? (dateEl.textContent || "").trim() : "";
+  const at = Date.now();
+  const remember = (target: Element, key: string, value: string) => {
+    if (!key) return;
+    const mark: LiveMark = { v: value, at, date };
+    const vals = liveCards.get(cls) || new Map<string, LiveMark>();
+    vals.set(key, mark);
+    liveCards.set(cls, vals);
+    const pos = numberCellKey(target);
+    if (pos) {
+      const cells = liveCells.get(cls) || new Map<string, LiveMark>();
+      cells.set(pos, mark);
+      liveCells.set(cls, cells);
+    }
+  };
+  for (const el of Array.from(card.querySelectorAll("[data-id]"))) {
+    const id = el.getAttribute("data-id") || "";
+    if (!id) continue;
+    const value = el instanceof HTMLImageElement ? el.getAttribute("src") || "" : (el.textContent || "").trim();
+    remember(el, id, value);
+  }
+  for (const table of Array.from(card.querySelectorAll("table"))) {
+    for (const el of Array.from(table.querySelectorAll("td.lottery-prize-number, td.lottery-number"))) {
+      remember(el, "", (el.textContent || "").trim());
+    }
+  }
+}
+
+/** Restore live-write timestamps after a virtualised card is mounted again. */
+export function restoreLiveStamps(card: Element | null): void {
+  if (!card) return;
+  const cls = cardClassOf(card);
+  if (!cls) return;
+  const idMarks = liveCards.get(cls);
+  if (idMarks) {
+    for (const [id, mark] of idMarks) {
+      const el = card.querySelector('[data-id="' + id + '"]');
+      if (el && Number(el.getAttribute(LIVE_ATTR) || 0) < mark.at) {
+        el.setAttribute(LIVE_ATTR, String(mark.at));
+      }
+    }
+  }
+  const cellMarks = liveCells.get(cls);
+  if (!cellMarks) return;
+  const tables = Array.from(card.querySelectorAll("table"));
+  for (let ti = 0; ti < tables.length; ti++) {
+    const cells = tables[ti].querySelectorAll("td.lottery-prize-number, td.lottery-number");
+    for (let ci = 0; ci < cells.length; ci++) {
+      const mark = cellMarks.get(ti + ":" + ci);
+      if (mark && Number(cells[ci].getAttribute(LIVE_ATTR) || 0) < mark.at) {
+        cells[ci].setAttribute(LIVE_ATTR, String(mark.at));
+      }
+    }
+  }
+}
+
+/**
  * The value a phone-side source put in this cell of this card.
  *
  * It wins when it belongs to the same draw the copy is showing (the phone read
@@ -168,7 +237,7 @@ export function markLiveValue(el: Element | null, v: string): void {
  * copy was built. A copy for a newer draw wins, as it must.
  */
 export function liveCellFor(cls: string, tableIndex: number, cellIndex: number, copyDate?: string, copyAt?: number): string | undefined {
-  if (!cls || !LIVE_STAMPED_CLASSES.has(cls)) return undefined;
+  if (!cls) return undefined;
   const hit = liveCells.get(cls)?.get(tableIndex + ":" + cellIndex);
   if (!hit) return undefined;
   const markDay = dayValue(hit.date), copyDay = dayValue(copyDate);
@@ -211,11 +280,11 @@ export function copyMayWrite(el: Element | null, copyDate?: string, cardDate?: s
 
 /** The values a phone-side source wrote since this copy was built. */
 export function liveValuesFor(cls: string, copyAt?: number): Record<string, string> {
-  if (!cls || !LIVE_STAMPED_CLASSES.has(cls) || !copyAt) return {};
+  if (!cls) return {};
   const vals = liveCards.get(cls);
   if (!vals) return {};
   const out: Record<string, string> = {};
-  for (const [id, e] of vals) if (e.at > copyAt) out[id] = e.v;
+  for (const [id, e] of vals) if (!copyAt || e.at > copyAt) out[id] = e.v;
   return out;
 }
 

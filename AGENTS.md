@@ -52,6 +52,9 @@ Read them before touching the live results pipeline.
 - Keep the public listener on HTTP/1.1 and HTTP/2 and return
   `Alt-Svc: clear`. Cached HTTP/3 routes reproduced the intermittent blank
   document even when an HTTP/1.1 request looked healthy.
+- Before a virtualised game slide is unmounted, preserve its visible card values
+  and live-write timestamps. Re-rendering from the older server snapshot made
+  every result number blink while swiping during a live draw.
 - Any navigation change must be checked with an end-to-end swipe from Grand
   Dragon through the last game and back to Magnum, including a result button and
   the MKT logo returning to the app home.
