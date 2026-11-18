@@ -10,7 +10,7 @@ import { hariIds, hariNightFirst, perdanaIds, perdanaNightFirst } from "./draw-o
 import { GAME_PAGER_ORDER, gamePagerIndex } from "./game-order";
 import { useDrawOrder } from "./use-draw-order";
 import { overridesFor, useSnap, type Snap } from "./use-live-snapshot";
-import { rememberCardDom } from "./snapshot-values";
+import { rememberCardDom, restoreLiveStamps } from "./snapshot-values";
 import { splitSixCard } from "./six-split";
 import GamePastFilter from "./GamePastFilter";
 
@@ -132,10 +132,16 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
   const [ready, setReady] = useState(false);
   const [activeIndex, setActiveIndex] = useState(idx);
   const activeIndexRef = useRef(idx);
+  const track = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const id = window.requestAnimationFrame(() => setReady(true));
     return () => window.cancelAnimationFrame(id);
   }, []);
+  useEffect(() => {
+    const root = track.current;
+    if (!root) return;
+    for (const card of Array.from(root.querySelectorAll(".card.outer-box"))) restoreLiveStamps(card);
+  }, [activeIndex, ready]);
 
   // Raw-HTML slides (Sabah 88 / Sandakan / Cash Sweep) are re-inserted by React
   // during hydration, so write the snapshot values into them here as well.
@@ -194,7 +200,6 @@ export default function GamePager({ initialIndex = 0, name, snap: serverSnap, sh
     writeSix("table-14-2026-09-06-6d", snap.gd6, snap.gdjp7);
     writeSix("table-18-2026-09-06-6d", snap.nine6, snap.nineJp);
   }, [snap, pages, ready]);
-  const track = useRef<HTMLDivElement>(null);
   const start = useRef<{ x: number; y: number } | null>(null);
   const lastIdx = useRef(-1);
   const dispatchIdx = (el: HTMLDivElement) => {

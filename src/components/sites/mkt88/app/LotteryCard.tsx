@@ -1,11 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { rewriteHtml, toLocal } from "./site-paths";
 import { toSimplified } from "../../../../lib/zh-simplified";
 import { liveCellFor } from "./snapshot-values";
 import { setZodiacImage } from "./zodiac";
-import { restoreLiveStamps } from "./snapshot-values";
-
-const useBrowserLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export interface CardCellAttrs {
   width?: string;
@@ -114,10 +111,6 @@ function Cell(props: { cell: CardCell; override?: string; values?: Record<string
 }
 
 export default function LotteryCard({ card, values, prizeSet }: { card: LotteryCardData } & CardOverride) {
-  const rootRef = useRef<HTMLDivElement>(null);
-  useBrowserLayoutEffect(() => {
-    restoreLiveStamps(rootRef.current);
-  }, [card.id]);
   const h = card.header;
   /*
    * Cards the operator only ever printed carry already-final numbers and must
@@ -149,7 +142,7 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
     .filter(Boolean)
     .join(" ");
   return (
-    <div ref={rootRef} className={card.cardCls} id={card.id}>
+    <div className={card.cardCls} id={card.id}>
       <div className="card-body p-2">
         <div className={headerClass}>
           {h.logo.src ? (
