@@ -22,18 +22,11 @@ const KH_GAME: Record<string, "gd" | "nine" | "perdana" | "hari"> = {
 const SCOPE_CLASS = "mkt-past-scope";
 const ON_CLASS = "mkt-past-on";
 
-/** Dropdown stays light: the newest few are always ready, the rest on open. */
-const QUICK_COUNT = 40;
-
 function pretty(iso: string): string {
   const [y, m, d] = iso.split("-");
   const dt = new Date(iso + "T12:00:00");
   const wk = Number.isNaN(dt.getTime()) ? "" : dt.toLocaleDateString("en-US", { weekday: "short" });
   return d + "-" + m + "-" + y + (wk ? " (" + wk + ")" : "");
-}
-
-function monthLabel(iso: string): string {
-  return iso.slice(0, 7);
 }
 
 export default function GamePastFilter({ slug, name, kind, dates, tables }: {
@@ -60,7 +53,8 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
   const [html, setHtml] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [full, setFull] = useState(false);
+  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
   const [inApp, setInApp] = useState(false);
   const [appOpen, setAppOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -92,7 +86,43 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
 
   const latest = list.length ? list[list.length - 1] : "";
   const hasPast = list.length > 0;
-  const openFull = () => setFull(true);
+  const years = useMemo(
+    () => [...new Set(list.map((d) => d.slice(0, 4)))].sort().reverse(),
+    [list]
+  );
+  const activeYear = years.includes(selectedYear) ? selectedYear : (latest.slice(0, 4) || "");
+  const months = useMemo(
+    () => [...new Set(list.filter((d) => d.startsWith(activeYear + "-")).map((d) => d.slice(0, 7)))].sort().reverse(),
+    [list, activeYear]
+  );
+  const activeMonth = months.includes(selectedMonth) ? selectedMonth : (months[0] || "");
+  const monthDates = useMemo(
+    () => list.filter((d) => d.startsWith(activeMonth + "-")).sort().reverse(),
+    [list, activeMonth]
+  );
+
+  const chooseYear = (year: string) => {
+    const nextMonths = [...new Set(
+      list.filter((d) => d.startsWith(year + "-")).map((d) => d.slice(0, 7))
+    )].sort();
+    const nextMonth = nextMonths[nextMonths.length - 1] || "";
+    const nextDates = list.filter((d) => d.startsWith(nextMonth + "-")).sort();
+    setSelectedYear(year);
+    setSelectedMonth(nextMonth);
+    setDate(nextDates[nextDates.length - 1] || "");
+  };
+
+  const chooseMonth = (month: string) => {
+    const nextDates = list.filter((d) => d.startsWith(month + "-")).sort();
+    setSelectedMonth(month);
+    setDate(nextDates[nextDates.length - 1] || "");
+  };
+
+  const showLatest = () => {
+    setDate("");
+    setSelectedYear(latest.slice(0, 4));
+    setSelectedMonth(latest.slice(0, 7));
+  };
 
   const loadDates = async () => {
     if (dates || loadedDates !== null || datesLoadingRef.current) return;
@@ -117,19 +147,6 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
       return !open;
     });
   };
-
-  // Newest first, grouped by month so a long history is easy to scan.
-  const groups = useMemo(() => {
-    const shown = full ? list : list.slice(-QUICK_COUNT);
-    const out: { label: string; items: string[] }[] = [];
-    for (let i = shown.length - 1; i >= 0; i--) {
-      const d = shown[i];
-      const label = monthLabel(d);
-      if (!out.length || out[out.length - 1].label !== label) out.push({ label, items: [] });
-      out[out.length - 1].items.push(d);
-    }
-    return out;
-  }, [list, full]);
 
   return (
     <div ref={rootRef} style={{ margin: "2px 0 2px" }}>
@@ -163,23 +180,49 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
           <span style={{ color: "var(--muted)", fontSize: 13 }}>Loading dates…</span>
         ) : hasPast ? (
           <>
-            {appOpen ? <select
-              className="mkt-past-filter-select"
-              aria-label={"Past result date for " + name}
-              value={date}
-              onPointerDown={openFull}
-              onTouchStart={openFull}
-              onFocus={openFull}
-              onChange={(e) => setDate(e.target.value)}
-              /* minHeight 44: a native select comes out about 35px tall, which
-                 is short for a finger (measured 14 Oct 2026, website). */
-              style={{ padding: "6px 10px", minHeight: 44, borderRadius: 8, border: "1px solid var(--j-border)", minWidth: 220, fontWeight: 600, background: "#fff" }}
-            >
-              <option value="">Live results (latest) 最新开奖</option>
-              {groups.flatMap((g) => g.items).map((d) => (
-                <option key={d} value={d}>{pretty(d)}</option>
-              ))}
-            </select> : null}
+            {appOpen ? <>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 600 }}>
+                Year 年份
+                <select
+                  aria-label={"Past result year for " + name}
+                  value={activeYear}
+                  onChange={(e) => chooseYear(e.target.value)}
+                  style={{ padding: "6px 8px", minHeight: 44, borderRadius: 8, border: "1px solid var(--j-border)", fontWeight: 700, background: "#fff" }}
+                >
+                  {years.map((year) => <option key={year} value={year}>{year}</option>)}
+                </select>
+              </span>
+              <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 13, fontWeight: 600 }}>
+                Month 月份
+                <select
+                  aria-label={"Past result month for " + name}
+                  value={activeMonth}
+                  onChange={(e) => chooseMonth(e.target.value)}
+                  style={{ padding: "6px 8px", minHeight: 44, borderRadius: 8, border: "1px solid var(--j-border)", fontWeight: 700, background: "#fff" }}
+                >
+                  {months.map((month) => <option key={month} value={month}>{month.slice(5)}</option>)}
+                </select>
+              </span>
+              <select
+                className="mkt-past-filter-select"
+                aria-label={"Past result date for " + name}
+                value={date}
+                onChange={(e) => {
+                  const nextDate = e.target.value;
+                  setDate(nextDate);
+                  if (nextDate) {
+                    setSelectedYear(nextDate.slice(0, 4));
+                    setSelectedMonth(nextDate.slice(0, 7));
+                  }
+                }}
+                style={{ padding: "6px 10px", minHeight: 44, borderRadius: 8, border: "1px solid var(--j-border)", minWidth: 190, fontWeight: 600, background: "#fff" }}
+              >
+                <option value="">Live results (latest) 最新开奖</option>
+                {monthDates.map((d) => (
+                  <option key={d} value={d}>{pretty(d)}</option>
+                ))}
+              </select>
+            </> : null}
 
             {!inApp ? (
               <>
@@ -203,7 +246,7 @@ export default function GamePastFilter({ slug, name, kind, dates, tables }: {
         <div className="text-center" style={{ margin: "6px 0 -2px", fontSize: 13, color: "#0a6b2d" }}>
           Showing past result for <strong>{pretty(date)}</strong>
           {" · "}
-          <a href="#" onClick={(e) => { e.preventDefault(); setDate(""); }} style={{ color: "#cc0000", fontWeight: 700 }}>
+          <a href="#" onClick={(e) => { e.preventDefault(); showLatest(); }} style={{ color: "#cc0000", fontWeight: 700 }}>
             Back to latest 返回最新
           </a>
         </div>
