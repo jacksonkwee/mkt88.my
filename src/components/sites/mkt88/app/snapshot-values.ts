@@ -139,6 +139,10 @@ export function cardClassOf(el: Element | null): string {
  */
 export function markLiveValue(el: Element | null, v: string): void {
   if (!el || typeof el.setAttribute !== "function") return;
+  // A placeholder is not a confirmed result. Stamping "----" here made the
+  // same-date write guard reject the real Singapore 2nd/3rd prize when it
+  // arrived moments later.
+  if (!v || /^----+$/.test(v.trim())) return;
   const cls = cardClassOf(el);
   if (!cls || !LIVE_STAMPED_CLASSES.has(cls)) return;
   const at = Date.now();
