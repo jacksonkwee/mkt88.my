@@ -1221,7 +1221,10 @@ function totoMirrorZodiac(feed: unknown): Record<string, string> | null {
  * text renderer. This is the operator's own board, not a mirror; the archive
  * still wins when it arrives.
  */
-function parseTotoLive(text: string): Record<string, string> | null {
+function parseTotoLive(text: string): {
+  four?: Record<string, string>;
+  fiveSix?: Record<string, string>;
+} | null {
   if (!text || !/TOTO 4D\b/i.test(text)) return null;
   const dm = /Draw Date\s*:\s*(\d{1,2})\/(\d{1,2})\/(\d{4})/i.exec(text);
   if (!dm) return null;
@@ -1260,13 +1263,52 @@ function parseTotoLive(text: string): Record<string, string> | null {
   four.third_prize = top[2] || "----";
   const zodiac = /TOTO 4D ZODIAC\s+(RAT|OX|TIGER|RABBIT|DRAGON|SNAKE|HORSE|GOAT|SHEEP|MONKEY|ROOSTER|CHICKEN|DOG|BOAR|PIG)\b/i.exec(text)?.[1];
   if (zodiac) four.zodiac = zodiac.toLowerCase();
+
+  const fiveSix: Record<string, string> = {};
+  const fiveStart = text.search(/TOTO 5D\b/i);
+  const sixStart = text.search(/TOTO 6D\b/i);
+  if (fiveStart >= 0) {
+    const fiveText = text.slice(fiveStart, sixStart > fiveStart ? sixStart : undefined);
+    for (const m of fiveText.matchAll(/\b(1st|2nd|3rd|4th|5th|6th)\s+Prize\s+(\d+)\b/gi)) {
+      const n = ["1st", "2nd", "3rd", "4th", "5th", "6th"].indexOf(m[1].toLowerCase()) + 1;
+      if (n && !fiveSix["d5_number_" + n]) fiveSix["d5_number_" + n] = m[2];
+    }
+  }
+  if (sixStart >= 0) {
+    const afterSix = text.slice(sixStart);
+    const stop = afterSix.search(/\nx\s*\n/i);
+    const sixText = stop >= 0 ? afterSix.slice(0, stop) : afterSix;
+    const ord = ["", "1st", "2nd", "3rd", "4th", "5th"];
+    for (let n = 1; n <= 5; n++) {
+      if (n === 1) {
+        const m = new RegExp("\\b" + ord[n] + "\\s+Prize\\s+(\\d{6})\\b", "i").exec(sixText);
+        if (m) fiveSix.d6_number_1 = m[1];
+      } else {
+        const m = new RegExp("\\b" + ord[n] + "\\s+Prize\\s+(\\d+)\\s+or\\s+(\\d+)\\b", "i").exec(sixText);
+        if (m) {
+          fiveSix["d6_first_number_" + n] = m[1];
+          fiveSix["d6_second_number_" + n] = m[2];
+        }
+      }
+    }
+  }
+  const hasFiveSix = Object.keys(fiveSix).some((k) => k.startsWith("d5_") || k.startsWith("d6_"));
+  if (hasFiveSix) {
+    fiveSix.date = weekdayOf(iso);
+    if (no) fiveSix.draw_no = no[1];
+  }
   // A board with only the date is not a draw yet.
   const hasNumber = Object.entries(four).some(([k, v]) =>
     (k.startsWith("special-") || k.startsWith("consolation-") || /prize$/.test(k)) && /^\d{4}$/.test(v));
-  return hasNumber ? four : null;
+  if (!hasNumber && !hasFiveSix) return null;
+  return { ...(hasNumber ? { four } : {}), ...(hasFiveSix ? { fiveSix } : {}) };
 }
 
-let totoLiveCache: { at: number; four: Record<string, string> } | null = null;
+let totoLiveCache: {
+  at: number;
+  four?: Record<string, string>;
+  fiveSix?: Record<string, string>;
+} | null = null;
 let totoLiveBusy = false;
 
 function totoLiveWindow(): boolean {
@@ -1291,8 +1333,15 @@ async function refreshTotoLive(): Promise<void> {
       signal: AbortSignal.timeout(2500),
     });
     if (!res.ok) return;
-    const four = parseTotoLive(await res.text());
-    if (four) totoLiveCache = { at: Date.now(), four };
+    const live = parseTotoLive(await res.text());
+    if (live) {
+      const prev = totoLiveCache;
+      totoLiveCache = {
+        at: Date.now(),
+        four: live.four || (prev?.four && (!live.fiveSix?.date || prev.four.date === live.fiveSix.date) ? prev.four : undefined),
+        fiveSix: live.fiveSix || (prev?.fiveSix && (!live.four?.date || prev.fiveSix.date === live.four.date) ? prev.fiveSix : undefined),
+      };
+    }
   } catch { /* the archive still updates later */ }
   finally { totoLiveBusy = false; }
 }
@@ -1482,8 +1531,9 @@ async function live4dSgToday(iso: string): Promise<Record<string, string> | null
 /** The two operator feeds that can reveal a top prize while the draw is live. */
 export function getHeadlineLive(): { at: number; cards: Record<string, Record<string, string>> } {
   const cards: Record<string, Record<string, string>> = {};
-  if (totoLiveCache) cards["table-6"] = totoLiveCache.four;
+  if (totoLiveCache?.four) cards["table-6"] = totoLiveCache.four;
   if (sgLiveFastCache) cards["table-11"] = sgLiveFastCache.board;
+  if (totoLiveCache?.fiveSix) cards["table-7"] = totoLiveCache.fiveSix;
   return {
     at: Math.max(totoLiveCache?.at || 0, sgLiveFastCache?.at || 0),
     cards,
@@ -2843,7 +2893,13 @@ export async function buildSnapshot(): Promise<Snapshot> {
     cards["table-6"] = { ...(cards["table-6"] || {}), ...four };
     noteSource("sports-toto", "Sports Toto 多多（官方）", { ok: true });
   }
-  if (toto.fiveSix) cards["table-7"] = toto.fiveSix;
+  const liveFiveSix = totoLiveCache?.fiveSix;
+  let fiveSix = toto.fiveSix;
+  if (liveFiveSix) {
+    if (!fiveSix || isOlder(fiveSix.date, liveFiveSix.date)) fiveSix = liveFiveSix;
+    else if (!isOlder(liveFiveSix.date, fiveSix.date)) fiveSix = addNew(fiveSix, liveFiveSix);
+  }
+  if (fiveSix) cards["table-7"] = fiveSix;
   const prev = cache;
   if (prev) {
     for (const [cls, vals] of Object.entries(cards)) {
