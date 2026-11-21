@@ -180,7 +180,10 @@ export function rememberCardDom(card: Element | null): void {
   const date = dateEl ? (dateEl.textContent || "").trim() : "";
   const at = Date.now();
   const remember = (target: Element, key: string, value: string) => {
-    if (!key) return;
+    // Snapshot-rendered values already live in `snap`. Remembering those made
+    // an unmounted Sports Toto slide keep its old board and win over the newer
+    // snapshot when the slide was swiped back into view.
+    if (!key || !target.hasAttribute(LIVE_ATTR)) return;
     const mark: LiveMark = { v: value, at, date };
     const vals = liveCards.get(cls) || new Map<string, LiveMark>();
     vals.set(key, mark);
