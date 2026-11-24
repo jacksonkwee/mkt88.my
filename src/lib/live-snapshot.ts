@@ -1375,6 +1375,12 @@ function ninePage(html: string, iso: string): { four: Record<string, string> | n
     second_prize: prize[1],
     third_prize: prize[2],
   };
+  const prizeLetters = [...html.matchAll(/id="n1a"[^>]*>\s*([A-W])\s*</gi)]
+    .map((m) => m[1].toUpperCase())
+    .slice(0, 3);
+  prizeLetters.forEach((letter, i) => {
+    four["__prizeLetter" + (i + 1)] = letter;
+  });
   if (drawNoM && drawNoM[1].trim()) four.draw_no = drawNoM[1].trim();
   for (let i = 1; i <= 15; i++) four["special-" + i] = special[i - 1] || "----";
   for (let i = 1; i <= 10; i++) four["consolation-" + i] = cons[i - 1] || "----";

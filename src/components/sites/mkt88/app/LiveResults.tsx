@@ -1105,6 +1105,7 @@ function applyCardMap(cards: Record<string, Record<string, string>>, stampLive =
         if (!copyMayWrite(el, vals.date, curDate)) continue;
         setText(el, v, stampLive);
       }
+      if (cls === "table-17") applyNinePrizeLetters(card, vals);
       if (newDraw && cls === "table-6" && !Object.prototype.hasOwnProperty.call(vals, "zodiac")) {
         const img = card.querySelector('img[data-id="zodiac"]') as HTMLImageElement | null;
         if (img) img.src = zodiacImage("");
@@ -1158,33 +1159,57 @@ function applyCardMap(cards: Record<string, Record<string, string>>, stampLive =
 
 /**
  * Nine Lotto's three prizes come out of its lettered special boxes, so each
- * prize row carries the letter of the box it came from - the same as Grand
- * Dragon. Nine's operator does not print that letter: where a box still holds
- * the number we match it by value; when the operator has blanked those boxes
- * (its usual board) the three blanks, read A to M, are 1st, 2nd and 3rd.
+ * prize row carries the letter of the box it came from. The operator prints
+ * that letter directly above each prize; matching blank boxes is only a
+ * fallback for an older page that does not carry the letters.
  */
+function applyNinePrizeLetters(card: Element, vals: Record<string, string>): void {
+  ["first_prize", "second_prize", "third_prize"].forEach((id, i) => {
+    const cell = cellFor(card, id);
+    if (!cell) return;
+    const letter = String(vals["__prizeLetter" + (i + 1)] || "").trim().toUpperCase();
+    if (/^[A-M]$/.test(letter) && /^\d{4}$/.test((cell.textContent || "").trim())) cell.setAttribute("data-letter", letter);
+    else cell.removeAttribute("data-letter");
+  });
+}
+
 function letterNinePrizes() {
   const cells = document.querySelectorAll(".card.outer-box.table-17:not(.mkt-past)");
   for (const card of Array.from(cells)) {
     const prizes = ["first_prize", "second_prize", "third_prize"].map((id) => card.querySelector('[data-id="' + id + '"]'));
     if (prizes.some((c) => !c)) continue;
+    const values = prizes.map((cell) => (cell?.textContent || "").trim());
+    // During a live reveal the prizes arrive one at a time. Guessing before all
+    // three are present put I on the empty 1st-prize row while only 3rd had
+    // arrived. Official letters are still shown immediately by
+    // applyNinePrizeLetters; this fallback waits until the full trio exists.
+    if (values.some((value) => !/^\d{4}$/.test(value))) continue;
+    const letters = prizes.map((cell) => (cell?.getAttribute("data-letter") || "").trim().toUpperCase());
+    if (letters.every((letter) => /^[A-M]$/.test(letter))) continue;
     const specials = Array.from(card.querySelectorAll('[data-id^="special-"]')).slice(0, 13).map((el, i) => ({
       L: "ABCDEFGHIJKLM"[i],
       v: (el.textContent || "").trim(),
     }));
-    let matched = 0;
-    prizes.forEach((cell) => {
-      if (!cell) return;
-      const v = (cell.textContent || "").trim();
-      const hit = /^\d{4}$/.test(v) ? specials.find((s) => s.v === v) : undefined;
-      if (hit) { cell.setAttribute("data-letter", hit.L); matched++; }
-    });
-    if (matched) continue;
-    const holes = specials.filter((s) => /^----+$/.test(s.v)).map((s) => s.L);
+    const used = new Set(letters.filter((letter) => /^[A-M]$/.test(letter)));
     prizes.forEach((cell, i) => {
       if (!cell) return;
-      if (holes[i]) cell.setAttribute("data-letter", holes[i]);
-      else cell.removeAttribute("data-letter");
+      if (/^[A-M]$/.test(letters[i])) return;
+      const hit = specials.find((s) => s.v === values[i] && !used.has(s.L));
+      if (hit) {
+        cell.setAttribute("data-letter", hit.L);
+        letters[i] = hit.L;
+        used.add(hit.L);
+      }
+    });
+    const holes = specials.filter((s) => /^----+$/.test(s.v) && !used.has(s.L)).map((s) => s.L);
+    prizes.forEach((cell, i) => {
+      if (!cell) return;
+      if (/^[A-M]$/.test(letters[i])) return;
+      const letter = holes.shift();
+      if (letter) {
+        cell.setAttribute("data-letter", letter);
+        used.add(letter);
+      } else cell.removeAttribute("data-letter");
     });
   }
 }
