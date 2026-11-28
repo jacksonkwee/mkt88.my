@@ -1,0 +1,55 @@
+name: Number history maintenance
+
+# The older number-history workflow was disabled manually. This replacement
+# has a distinct name so GitHub creates and enables it from the pushed file.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/number-history-maintenance.yml
+  schedule:
+    - cron: "30 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: number-history
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Bring draw history and hot numbers up to date
+        run: |
+          node scripts/refresh-number-history.mjs
+          node scripts/build-hari-past.mjs --days 20
+          node scripts/merge-local-history.mjs
+          node scripts/build-number-stats.mjs
+
+      - name: Publish the new draws
+        run: |
+          git config user.name "mkt88-results-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- \
+            src/components/sites/mkt88/app/number-history-db.json \
+            src/lib/hari-past.json \
+            src/lib/number-stats.json
+          if git diff --cached --quiet; then
+            echo "nothing new"
+            exit 0
+          fi
+          git diff --cached --stat
+          git commit -m "Number history updated $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git pull --rebase --autostash
+          git push
