@@ -10,6 +10,7 @@ import { after } from "next/server";
 import { jackpotCardFields } from "./jackpot-feed";
 import { getJackpotFeed } from "./jackpot-store";
 import { archiveLiveSnapshot } from "./past-archive";
+import { sgHeadlineCard } from "./sg-headline.mjs";
 /**
  * Server-side live snapshot: keeps a warm copy of every result card and of the
  * Perdana / Lucky HariHari draws so pages can render the CURRENT numbers in
@@ -1538,7 +1539,8 @@ async function live4dSgToday(iso: string): Promise<Record<string, string> | null
 export function getHeadlineLive(): { at: number; cards: Record<string, Record<string, string>> } {
   const cards: Record<string, Record<string, string>> = {};
   if (totoLiveCache?.four) cards["table-6"] = totoLiveCache.four;
-  if (sgLiveFastCache) cards["table-11"] = sgLiveFastCache.board;
+  const sgHeadline = sgHeadlineCard(sgLiveFastCache?.board);
+  if (sgHeadline) cards["table-11"] = sgHeadline;
   if (totoLiveCache?.fiveSix) cards["table-7"] = totoLiveCache.fiveSix;
   return {
     at: Math.max(totoLiveCache?.at || 0, sgLiveFastCache?.at || 0),
