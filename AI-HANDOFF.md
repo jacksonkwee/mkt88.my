@@ -92,6 +92,10 @@ ssh -i PATH_TO_PRIVATE_KEY root@187.127.214.151 "cd /srv/mkt88-site && bash depl
 proxy, restarts Caddy after the directory swap, verifies `Content-Length` and
 `Alt-Svc: clear`, and rolls the website back if startup fails.
 
+The installed `mkt88-auto-deploy.timer` checks GitHub `main` every five minutes
+and runs the same script when the commit changes. Build failures roll back to
+the previous directory; concurrent manual and automatic deploys share one lock.
+
 Production services:
 
 - `mkt88-site.service`

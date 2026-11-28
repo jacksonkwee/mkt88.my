@@ -10,6 +10,14 @@ swapfile="/swapfile.mkt88-build"
 env_file="/etc/mkt88-site.env"
 env_backup=""
 
+# A timer and an owner-initiated deploy must never swap directories at the
+# same time. The later caller exits and retries on its next timer tick.
+exec 9>/run/lock/mkt88-redeploy.lock
+if ! flock -n 9; then
+  echo "another MKT88 deployment is already running"
+  exit 75
+fi
+
 cleanup() {
   if [ -d "$next" ]; then
     rm -rf -- "$next"
@@ -65,6 +73,12 @@ install -m 0644 "$next/deploy/hostinger/android-document-proxy.mjs" \
   /usr/local/lib/mkt88/android-document-proxy.mjs
 install -m 0644 "$next/deploy/hostinger/mkt88-android-doc.service" \
   /etc/systemd/system/mkt88-android-doc.service
+install -m 0755 "$next/deploy/hostinger/mkt88-auto-deploy.sh" \
+  /usr/local/sbin/mkt88-auto-deploy
+install -m 0644 "$next/deploy/hostinger/mkt88-auto-deploy.service" \
+  /etc/systemd/system/mkt88-auto-deploy.service
+install -m 0644 "$next/deploy/hostinger/mkt88-auto-deploy.timer" \
+  /etc/systemd/system/mkt88-auto-deploy.timer
 systemctl daemon-reload
 
 env_backup="$(mktemp)"
@@ -119,6 +133,7 @@ echo
 # because its Caddyfile is a file bind mount and the site directory was swapped.
 systemctl enable --now mkt88-android-doc.service
 systemctl restart mkt88-android-doc.service
+systemctl enable --now mkt88-auto-deploy.timer
 docker restart mkt88-site-caddy-1 >/dev/null
 
 android_ready=0

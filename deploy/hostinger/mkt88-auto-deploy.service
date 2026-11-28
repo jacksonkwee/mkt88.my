@@ -1,0 +1,10 @@
+[Unit]
+Description=Deploy the latest MKT88 GitHub main
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/mkt88-auto-deploy
+Nice=10
+IOSchedulingClass=best-effort
