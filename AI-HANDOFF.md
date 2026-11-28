@@ -95,6 +95,7 @@ proxy, restarts Caddy after the directory swap, verifies `Content-Length` and
 The installed `mkt88-auto-deploy.timer` checks GitHub `main` every five minutes
 and runs the same script when the commit changes. Build failures roll back to
 the previous directory; concurrent manual and automatic deploys share one lock.
+Verified on the production VPS on 28 Nov 2026.
 
 Production services:
 
