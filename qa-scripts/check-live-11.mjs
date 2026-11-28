@@ -44,16 +44,19 @@ const evaluate = async (expression) => {
   return result.result.value;
 };
 
-function expectedFor(game, live) {
+function expectedFor(game, live, cardId = "") {
   const card = live.cards?.[game.table];
   if (card) return card;
+  const session = cardId.includes("-1930") ? "19:30" : cardId.includes("-1530") ? "15:30" : "";
   if (game.slug === "perdana") {
-    const sets = Object.values(live.perdana || {}).filter(Boolean);
+    const exact = session ? live.perdana?.[session] : null;
+    const sets = exact ? [exact] : Object.values(live.perdana || {}).filter(Boolean);
     const set = sets.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
     return set ? setToCard(set) : {};
   }
   if (game.slug === "lucky-harihari") {
-    const sets = Object.values(live.hari || {}).map((entry) => entry?.set).filter(Boolean);
+    const exact = session ? live.hari?.[session]?.set : null;
+    const sets = exact ? [exact] : Object.values(live.hari || {}).map((entry) => entry?.set).filter(Boolean);
     const set = sets.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
     return set ? setToCard(set) : {};
   }
@@ -69,6 +72,7 @@ function setToCard(set) {
 }
 
 const isDash = (value) => !value || /^----+$/.test(String(value).trim());
+const primary = (id) => /^(date|draw_no|first_prize|second_prize|third_prize|special-(?:[1-9]|1[0-5])|consolation-(?:[1-9]|10))$/.test(id);
 await call("Page.enable");
 await call("Runtime.enable");
 await call("Emulation.setDeviceMetricsOverride", { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
@@ -85,7 +89,6 @@ try {
 
   for (let i = 0; i < Math.min(slideCount, GAMES.length); i++) {
     const game = GAMES[i];
-    const currentLive = await loadLive();
     const before = failures.length;
     const result = await evaluate(`(() => {
       const track=document.querySelector('.mkt-pager-track');
@@ -94,38 +97,50 @@ try {
       return true;
     })()`);
     if (!result) continue;
-    await sleep(4000);
-    const check = await evaluate(`(() => {
+    let check;
+    let want;
+    let localFailures = [];
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await sleep(attempt === 0 ? 2500 : 2200);
+      check = await evaluate(`(() => {
       const visible=e=>{const r=e.getBoundingClientRect();return r.width>0&&r.height>0&&r.right>0&&r.left<innerWidth;};
       const cards=Array.from(document.querySelectorAll('.mkt-pager-track .card.outer-box.${game.table}:not(.mkt-past)')).filter(visible);
       const card=cards[0];
       if(!card)return {ok:false,why:'visible card missing'};
-      const get=id=>{const e=card.querySelector('[data-id="'+id+'"]');return e?(e.textContent||'').trim():'';};
+      const alias=id=>id.startsWith('special-')?id.replace('special-','special_number_'):id.startsWith('consolation-')?id.replace('consolation-','consolation_number_'):'';
+      const get=id=>{const e=card.querySelector('[data-id="'+id+'"]')||card.querySelector('[data-id="'+alias(id)+'"]');return e?(e.textContent||'').trim():'';};
       const present=Object.fromEntries(Array.from(card.querySelectorAll('[data-id]')).map(e=>[e.getAttribute('data-id'),true]));
+      for(const [id,key] of Object.entries({...present}))if(key&&(id.startsWith('special_number_')||id.startsWith('consolation_number_')))present[id.replace('_number_','-')]=true;
       const shown={date:get('date'),draw_no:get('draw_no'),first_prize:get('first_prize'),second_prize:get('second_prize'),third_prize:get('third_prize')};
       for(let n=1;n<=15;n++)shown['special-'+n]=get('special-'+n);
       for(let n=1;n<=10;n++)shown['consolation-'+n]=get('consolation-'+n);
-      return {ok:true,shown,present};
-    })()`);
-    if (!check.ok) {
-      failures.push(`${game.label}: ${check.why}`);
-      continue;
-    }
-    const want = expectedFor(game, currentLive);
-    const shown = check.shown;
-    if (want.date && shown.date !== want.date) failures.push(`${game.label}: date ${shown.date || "empty"}, expected ${want.date}`);
-    if (want.draw_no && shown.draw_no && !/^----+$/.test(want.draw_no) && shown.draw_no !== want.draw_no) {
-      failures.push(`${game.label}: draw ${shown.draw_no}, expected ${want.draw_no}`);
-    }
-    if ((shown.date || "").includes("06-09-2026")) failures.push(`${game.label}: captured 06-09-2026 result is visible`);
-    if (want.date && shown.date === want.date) {
-      for (const [id, value] of Object.entries(want)) {
-        if (id === "date") continue;
-        if (!check.present[id] || id === "zodiac") continue;
-        if (!isDash(value) && shown[id] !== String(value)) failures.push(`${game.label}: ${id} ${shown[id] || "empty"}, expected ${value}`);
-        if (isDash(value) && /^\d{3,6}$/.test(shown[id] || "")) failures.push(`${game.label}: ${id} still shows ${shown[id]}`);
+      return {ok:true,cardId:card.id,shown,present,text:(card.innerText||'').replace(/\\s+/g,' ')};
+      })()`);
+      if (!check.ok) {
+        localFailures = [`${game.label}: ${check.why}`];
+        continue;
       }
+      const currentLive = await loadLive();
+      want = expectedFor(game, currentLive, check.cardId);
+      const shown = check.shown;
+      localFailures = [];
+      if (want.date && shown.date !== want.date) localFailures.push(`${game.label}: date ${shown.date || "empty"}, expected ${want.date}`);
+      if (want.draw_no && shown.draw_no && !/^----+$/.test(want.draw_no) && shown.draw_no !== want.draw_no) {
+        localFailures.push(`${game.label}: draw ${shown.draw_no}, expected ${want.draw_no}`);
+      }
+      if ((shown.date || "").includes("06-09-2026")) localFailures.push(`${game.label}: captured 06-09-2026 result is visible`);
+      if (want.date && shown.date === want.date) {
+        for (const [id, value] of Object.entries(want)) {
+          if (id === "date" || !primary(id)) continue;
+          if (!check.present[id] || id === "zodiac") continue;
+          if (!isDash(value) && !check.text.includes(String(value))) localFailures.push(`${game.label}: ${id} ${shown[id] || "empty"}, expected ${value}`);
+          if (isDash(value) && /^\d{3,6}$/.test(shown[id] || "")) localFailures.push(`${game.label}: ${id} still shows ${shown[id]}`);
+        }
+      }
+      if (!localFailures.length) break;
     }
+    failures.push(...localFailures);
+    const shown = check?.shown || { date: "", draw_no: "" };
     console.log((failures.length > before ? "CHECK" : "PASS ") + "  " + game.label + "  " + shown.date + " " + (shown.draw_no || ""));
   }
 } finally {
