@@ -96,3 +96,116 @@ jobs:
       - name: Mark the run as failed when a result is wrong
         if: steps.verify.outcome == 'failure'
         run: exit 1
+
+  live-pager:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # GitHub's Ubuntu runner already includes Chrome. Launch it instead of
+      # installing another browser on the production server.
+      - name: Start headless Chrome
+        run: |
+          google-chrome \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --disable-dev-shm-usage \
+            --remote-debugging-port=9222 \
+            --remote-allow-origins='*' \
+            --user-data-dir=/tmp/mkt88-chrome \
+            about:blank \
+            >/tmp/mkt88-chrome.log 2>&1 &
+          for _ in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:9222/json/version >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/mkt88-chrome.log
+          exit 1
+
+      - name: Check all 11 live pager slides
+        id: live11
+        continue-on-error: true
+        run: node qa-scripts/check-live-11.mjs
+
+      - name: Raise an issue when a live game regresses
+        if: steps.live11.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = 'live-pager-error';
+            const run = context.serverUrl + '/' + owner + '/' + repo + '/actions/runs/' + context.runId;
+            const body = [
+              'The browser test found at least one of the 11 live game slides showing stale or missing values.',
+              '',
+              'Run: ' + run,
+            ].join('\n');
+
+            try {
+              await github.rest.issues.getLabel({ owner, repo, name: label });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner,
+                repo,
+                name: label,
+                color: 'b60205',
+                description: 'A live game slide regressed',
+              });
+            }
+
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              labels: label,
+              per_page: 5,
+            });
+            if (open.length) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: open[0].number, body });
+            } else {
+              await github.rest.issues.create({
+                owner,
+                repo,
+                title: 'Live game pager regression detected',
+                body,
+                labels: [label],
+              });
+            }
+
+      - name: Close the pager issue once all 11 pass
+        if: steps.live11.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const label = 'live-pager-error';
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'open',
+              labels: label,
+              per_page: 5,
+            });
+            for (const issue of open) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: 'All 11 live game slides now pass, so this is closed.',
+              });
+              await github.rest.issues.update({ owner, repo, issue_number: issue.number, state: 'closed' });
+            }
+
+      - name: Mark the run as failed
+        if: steps.live11.outcome == 'failure'
+        run: exit 1
