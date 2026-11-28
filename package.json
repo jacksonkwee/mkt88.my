@@ -15,6 +15,7 @@
     "check:gd": "node scripts/check-grand-dragon.mjs",
     "check:gd:live": "node scripts/check-grand-dragon.mjs https://www.mkt88.my",
     "check:gd:state": "node scripts/check-grand-dragon-state.mjs",
+    "check:live-11": "node qa-scripts/check-live-11.mjs",
     "check:past": "node scripts/check-past-results.mjs",
     "check:past:live": "node scripts/check-past-results.mjs https://www.mkt88.my"
   },

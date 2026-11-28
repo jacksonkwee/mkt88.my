@@ -1062,7 +1062,11 @@ const PERDANA_ID: Record<string, string> = { "15:30": "table-16-2026-09-06-1530"
 const HARI_ID: Record<string, string> = { "15:30": "table-15-2026-09-06-1530", "19:30": "table-15-2026-09-06-1930" };
 
 /** Apply a table-class -> { dataId: value } map to every matching card. */
-function applyCardMap(cards: Record<string, Record<string, string>>, stampLive = false) {
+function applyCardMap(
+  cards: Record<string, Record<string, string>>,
+  stampLive = false,
+  clearBlanks = false
+) {
   for (const [cls, vals] of Object.entries(cards || {})) {
     for (const card of Array.from(document.querySelectorAll(".card.outer-box." + cls + ":not(.mkt-past)"))) {
       // A different draw date means the numbers on this card belong to the old
@@ -1098,7 +1102,8 @@ function applyCardMap(cards: Record<string, Record<string, string>>, stampLive =
          * snapshot had deliberately cleared: a prize number left in the special
          * row, or the mirror's spare 14th slot, stayed on the card for good.
          */
-        if (/^----+$/.test(v) && !newDraw && cls !== "table-1") continue;   // keep good numbers unless the draw changed
+        const blank = /^----+$/.test(v);
+        if (blank && !newDraw && !clearBlanks && cls !== "table-1") continue;   // partial headline feeds keep good numbers
         const el = cellFor(card, id);
         /*
          * A cell a phone-side source has written holds the operator's own
@@ -1106,7 +1111,7 @@ function applyCardMap(cards: Record<string, Record<string, string>>, stampLive =
          * draw (see copyMayWrite). A cell nobody wrote has no stamp, so today's
          * clearing still happens exactly as it did.
          */
-        if (!copyMayWrite(el, vals.date, curDate)) continue;
+        if (!copyMayWrite(el, vals.date, curDate) && !(clearBlanks && blank)) continue;
         setText(el, v, stampLive);
       }
       if (cls === "table-17") applyNinePrizeLetters(card, vals);
@@ -1261,7 +1266,7 @@ async function syncFromServerFast(force = false): Promise<boolean> {
       };
       if (h && h.cards) {
         publishServerSnapshot(h);
-        applyCardMap(h.cards);
+        applyCardMap(h.cards, false, true);
         letterNinePrizes();
         did = true;
       }
