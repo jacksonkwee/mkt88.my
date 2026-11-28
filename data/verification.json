@@ -1,107 +1,107 @@
 {
- "checkedAt": "2026-09-30T08:15:31.663Z",
+ "checkedAt": "2026-11-28T12:03:42.734Z",
  "sgt": {
-  "day": "20260930",
-  "hour": 16
+  "day": "20261128",
+  "hour": 20
  },
  "notes": [],
  "rows": [
   {
    "game": "Magnum",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "1063/2421/5815",
-   "refDate": "27-09-2026 (Sun)",
-   "refNums": "1063/2421/5815",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "4113/7109/0434",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "4113/7109/0434",
    "source": "live4d2u",
    "state": "match"
   },
   {
    "game": "Da Ma Cai",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "2371/3396/3151",
-   "refDate": "27-09-2026 (Sun)",
-   "refNums": "2371/3396/3151",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "9934/9675/2140",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "9934/9675/2140",
    "source": "live4d2u",
    "state": "match"
   },
   {
    "game": "Sports Toto",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "9069/1317/7612",
-   "refDate": "27-09-2026 (Sun)",
-   "refNums": "9069/1317/7612",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "9620/3280/3454",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "9620/3280/3454",
    "source": "live4d2u",
    "state": "match"
   },
   {
    "game": "Sandakan",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "6709/8046/4746",
-   "refDate": "27-09-2026 (Sun)",
-   "refNums": "6709/8046/4746",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "8424/0942/9664",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "8424/0942/9664",
    "source": "live4d2u",
    "state": "match"
   },
   {
    "game": "Cash Sweep",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "4372/5825/7077",
-   "refDate": "27-09-2026 (Sun)",
-   "refNums": "4372/5825/7077",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "4929/6587/7258",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "4929/6587/7258",
    "source": "live4d2u",
    "state": "match"
   },
   {
    "game": "Sabah 88",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "3147/5743/9951",
-   "refDate": "27-09-2026 (Sun)",
-   "refNums": "3147/5743/9951",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "3039/3766/3742",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "3039/3766/3742",
    "source": "live4d2u",
    "state": "match"
   },
   {
    "game": "Grand Dragon",
-   "appDate": "29-09-2026 (Tue)",
-   "appNums": "9071/3658/9799",
-   "refDate": "29-09-2026 (Tue)",
-   "refNums": "9071/3658/9799",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "//",
+   "refDate": "28-11-2026 (Sat)",
+   "refNums": "9389/7430/7327",
    "source": "live4d2u",
-   "state": "match"
+   "state": "waiting-app"
   },
   {
    "game": "Perdana",
-   "appDate": "30-09-2026 (Wed)",
+   "appDate": "28-11-2026 (Sat)",
    "appNums": "//",
-   "refDate": "29-09-2026 (Tue)",
-   "refNums": "7415/3852/4395",
-   "source": "live4d2u",
-   "state": "ahead"
+   "refDate": "28-11-2026",
+   "refNums": "2430/4359/8213",
+   "source": "perdana4d.com (official)",
+   "state": "waiting-app"
   },
   {
    "game": "HariHari",
-   "appDate": "30-09-2026 (Wed)",
-   "appNums": "4199/7921/2583",
-   "refDate": "30-09-2026",
-   "refNums": "4199/7921/2583",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "//",
+   "refDate": "28-11-2026",
+   "refNums": "6009/2116/4979",
    "source": "hari4d.com (official)",
-   "state": "match"
+   "state": "waiting-app"
   },
   {
    "game": "Singapore",
-   "appDate": "27-09-2026 (Sun)",
-   "appNums": "8791/0860/1578",
-   "refDate": "27-09-2026",
-   "refNums": "8791/0860/1578",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "1487/8519/8599",
+   "refDate": "28-11-2026",
+   "refNums": "1487/8519/8599",
    "source": "singaporepools (official)",
    "state": "match"
   },
   {
    "game": "Nine Lotto",
-   "appDate": "29-09-2026 (Tue)",
-   "appNums": "0849/3268/4987",
-   "refDate": "29-09-2026",
-   "refNums": "0849/3268/4987",
+   "appDate": "28-11-2026 (Sat)",
+   "appNums": "8472/5276/2972",
+   "refDate": "28-11-2026",
+   "refNums": "8472/5276/2972",
    "source": "9lotto (official)",
    "state": "match"
   }
