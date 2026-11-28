@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+EnvironmentFile=-/etc/mkt88-site.env
 ExecStart=/usr/local/sbin/mkt88-auto-deploy
 Nice=10
 IOSchedulingClass=best-effort
