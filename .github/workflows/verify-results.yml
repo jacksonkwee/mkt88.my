@@ -7,6 +7,12 @@ name: Verify live results
 #
 # Free: this repository is public, so GitHub does not charge for these runs.
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/verify-results.yml
+      - qa-scripts/check-live-11.mjs
   schedule:
     - cron: "*/10 6-15 * * *"
   workflow_dispatch:
