@@ -1073,7 +1073,11 @@ function applyCardMap(cards: Record<string, Record<string, string>>, stampLive =
       const curDate = dateEl ? (dateEl.textContent || "").trim() : "";
       const inDay = dateScore(vals.date), curDay = dateScore(curDate);
       if (inDay && curDay && inDay < curDay) continue;   // stale snapshot, skip this card
-      const newDraw = !!vals.date && vals.date.trim() !== curDate;
+      const drawEl = card.querySelector('[data-id="draw_no"]');
+      const curDraw = drawEl ? (drawEl.textContent || "").trim() : "";
+      const inDraw = (vals.draw_no || "").trim();
+      const drawChanged = !!inDraw && !isDash(inDraw) && !!curDraw && !isDash(curDraw) && inDraw !== curDraw;
+      const newDraw = (!!vals.date && vals.date.trim() !== curDate) || drawChanged;
       for (const [id, v] of Object.entries(vals)) {
         // Never blank a value a live source has already filled - the same rule
         // GamePager uses when it writes the server snapshot. The snapshot still
@@ -1214,6 +1218,31 @@ function letterNinePrizes() {
   }
 }
 
+/**
+ * Publish the same server snapshot to React that applyCardMap writes to the DOM.
+ *
+ * Without this, a pager re-render used the snapshot embedded at page load and
+ * put the previous draw back until the next DOM write. Only dispatch when the
+ * cards actually changed, so the pager is not re-rendered on every poll.
+ */
+function publishServerSnapshot(next: {
+  at?: number;
+  cards?: Record<string, Record<string, string>>;
+  perdana?: unknown;
+  hari?: unknown;
+}) {
+  if (!next.cards) return;
+  const holder = window as unknown as {
+    __MKT_SNAP__?: Record<string, unknown>;
+  };
+  const prev = holder.__MKT_SNAP__ || {};
+  const cards = { ...((prev.cards as Record<string, Record<string, string>>) || {}), ...next.cards };
+  const incoming = { ...next, cards };
+  if (JSON.stringify(prev.cards || {}) === JSON.stringify(cards)) return;
+  holder.__MKT_SNAP__ = { ...prev, ...incoming };
+  window.dispatchEvent(new Event("mkt-snap"));
+}
+
 /** The full-game fast lane. It must never wait for the two headline feeds. */
 async function syncFromServerFast(force = false): Promise<boolean> {
   try {
@@ -1224,8 +1253,18 @@ async function syncFromServerFast(force = false): Promise<boolean> {
     ]);
     let did = false;
     if (homeRes && homeRes.ok) {
-      const h = (await homeRes.json()) as { cards?: Record<string, Record<string, string>> };
-      if (h && h.cards) { applyCardMap(h.cards); letterNinePrizes(); did = true; }
+      const h = (await homeRes.json()) as {
+        at?: number;
+        cards?: Record<string, Record<string, string>>;
+        perdana?: unknown;
+        hari?: unknown;
+      };
+      if (h && h.cards) {
+        publishServerSnapshot(h);
+        applyCardMap(h.cards);
+        letterNinePrizes();
+        did = true;
+      }
     }
     if (camRes && camRes.ok) {
       const j = (await camRes.json()) as FastFeed;

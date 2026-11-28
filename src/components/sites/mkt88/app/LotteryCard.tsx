@@ -134,7 +134,9 @@ export default function LotteryCard({ card, values, prizeSet }: { card: LotteryC
   // A live date that differs from the one this card was built with means the
   // draw has moved on, and the numbers still baked into the card are last
   // draw's.
-  const drawMoved = Boolean(dateText) && Boolean(h.date) && dateText !== h.date;
+  const drawMovedByDate = Boolean(dateText) && Boolean(h.date) && dateText !== h.date;
+  const drawMovedByNo = Boolean(drawText) && Boolean(h.drawNo) && drawText !== h.drawNo;
+  const drawMoved = drawMovedByDate || drawMovedByNo;
   const zodiac = values && Object.prototype.hasOwnProperty.call(values, "zodiac")
     ? values.zodiac
     : drawMoved ? "" : undefined;
